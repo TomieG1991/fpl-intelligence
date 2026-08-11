@@ -6,6 +6,30 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.3.0] - eam Strength & Fixture Intelligence
+
+### Added
+- Added fixture retrieval through FixtureRepository
+- Added team strength calculation through TeamStrength
+- Added home and away team strength baselines
+- Added overall team strength baseline
+- Added fixture matchup calculations using team strength
+- Added fixture intelligence test output
+
+### Refactored
+- Moved team strength calculations out of index.php
+- Removed repeated team searching during fixture processing
+- Updated fixture processing to use team IDs for direct team strength lookups
+- Reused calculateOverall() for combined team strength calculations
+
+### Testing
+- Verified 20 teams are loaded
+- Verified 380 fixtures are loaded
+- Verified 380 unique FPL fixtures
+- Verified team strength baselines
+- Verified fixture matchup calculations
+- Verified existing fixture intelligence results after refactoring
+
 ## [0.2.0] - 11-08-26
 
 ### Added

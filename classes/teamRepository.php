@@ -8,6 +8,17 @@ class TeamRepository
     {
         $this->db = $db;
     }
+    
+    public function getAll(): array
+    {
+        $stmt = $this->db->query("
+            SELECT *
+            FROM teams
+            ORDER BY name
+        ");
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 
     public function getTeamIdByFplId(int $fplTeamId): ?int
     {

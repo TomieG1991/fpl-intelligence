@@ -69,6 +69,17 @@ class FixtureRepository
             ':away_difficulty' => $fixture['team_a_difficulty']
         ]);
     }
+    
+    public function getAll(): array
+    {
+        $stmt = $this->db->query("
+            SELECT *
+            FROM fixtures
+            ORDER BY kickoff_time
+        ");
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 
     private function formatKickoffTime(?string $kickoffTime): ?string
     {
@@ -80,4 +91,6 @@ class FixtureRepository
 
         return $date->format('Y-m-d H:i:s');
     }
+    
+    
 }
