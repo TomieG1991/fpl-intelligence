@@ -36,4 +36,34 @@ class FPLApi
         );
 
     }
+    
+    public function getFixtures(): array
+    {
+        $url = $this->baseUrl . 'fixtures/';
+
+        $response = file_get_contents($url);
+
+        if ($response === false) {
+
+            throw new Exception(
+                "Unable to connect to FPL fixtures API"
+            );
+
+        }
+
+        $data = json_decode(
+            $response,
+            true
+        );
+
+        if (!is_array($data)) {
+
+            throw new Exception(
+                "Invalid response from FPL fixtures API"
+            );
+
+        }
+
+        return $data;
+    }
 }
