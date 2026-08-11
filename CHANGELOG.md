@@ -6,6 +6,39 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.5.0] - Fixture Analysis Run
+
+### Added
+- Added individual team fixture-run analysis to FixtureIntelligence
+- Added support for analysing a team's upcoming fixtures
+- Added home and away context to fixture-run analysis
+- Added team-specific matchup calculations
+- Added team-specific fixture difficulty ratings
+- Added fixture run output containing:
+- Gameweek
+- Home team
+- Away team
+- Home baseline
+- Away baseline
+- Home/away status
+- Matchup score
+- Difficulty rating
+
+### Refactored
+- Moved fixture-run analysis out of index.php and into FixtureIntelligence
+- Updated fixture processing to use the selected team's home or away strength appropriately
+- Removed temporary fixture-run testing output from index.php
+- Cleaned index.php so it now contains only basic application health checks
+
+### Testing
+- Verified Arsenal's first five fixtures
+- Verified home fixture matchup calculations
+- Verified away fixture matchup calculations
+- Verified home/away status detection
+- Verified fixture difficulty calculations within fixture runs
+- Verified fixture-run results against existing matchup calculations
+- Verified index.php loads correctly after removal of development tests
+
 ## [0.4.0] - Fixture Difficulty Scoring
 
 ### Added

@@ -80,6 +80,40 @@ class FixtureRepository
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+    
+    public function getUpcomingForTeam(
+        int $teamId,
+        int $limit = 5
+    ): array {
+
+        $stmt = $this->db->prepare("
+            SELECT *
+            FROM fixtures
+            WHERE (
+                home_team_id = :team_id
+                OR away_team_id = :team_id
+            )
+            AND finished = 0
+            ORDER BY gameweek ASC, kickoff_time ASC
+            LIMIT :limit
+        ");
+
+        $stmt->bindValue(
+            ':team_id',
+            $teamId,
+            PDO::PARAM_INT
+        );
+
+        $stmt->bindValue(
+            ':limit',
+            $limit,
+            PDO::PARAM_INT
+        );
+
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 
     private function formatKickoffTime(?string $kickoffTime): ?string
     {

@@ -24,4 +24,61 @@ class FixtureIntelligence
             )
         );
     }
+    
+    public function analyseFixtureRun(
+        array $fixtures,
+        array $teamStrengths,
+        int $teamId
+    ): array {
+
+        $results = [];
+
+        foreach ($fixtures as $fixture) {
+
+            $homeTeam = $teamStrengths[
+                $fixture['home_team_id']
+            ];
+
+            $awayTeam = $teamStrengths[
+                $fixture['away_team_id']
+            ];
+
+            if ($fixture['home_team_id'] === $teamId) {
+
+                $teamStrength = $homeTeam['home'];
+                $opponentStrength = $awayTeam['away'];
+
+                $isHome = true;
+
+            } else {
+
+                $teamStrength = $awayTeam['away'];
+                $opponentStrength = $homeTeam['home'];
+
+                $isHome = false;
+            }
+
+            $matchup = $this->calculateMatchup(
+                $teamStrength,
+                $opponentStrength
+            );
+
+            $difficulty = $this->calculateDifficulty(
+                $matchup
+            );
+
+            $results[] = [
+                'gameweek' => $fixture['gameweek'],
+                'home_team' => $homeTeam['name'],
+                'away_team' => $awayTeam['name'],
+                'home_baseline' => $homeTeam['home'],
+                'away_baseline' => $awayTeam['away'],
+                'is_home' => $isHome,
+                'matchup' => $matchup,
+                'difficulty' => $difficulty
+            ];
+        }
+
+        return $results;
+    }
 }
