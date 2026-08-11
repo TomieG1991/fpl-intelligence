@@ -6,7 +6,21 @@ The project follows a sprint-based development process.
 
 ---
 
-## [0.3.0] - eam Strength & Fixture Intelligence
+## [0.4.0] - Fixture Difficulty Scoring
+
+### Added
+- Added fixture difficulty calculation to FixtureIntelligence
+- Added normalised 1–5 fixture difficulty rating
+- Added difficulty output to fixture intelligence results
+- Retained raw matchup score alongside difficulty rating
+
+### Testing
+- Verified matchup scores remain unchanged
+- Verified difficulty conversion from 1–5
+- Verified fixture intelligence output using live fixture data
+- Removed temporary difficulty calculation tests after verification
+
+## [0.3.0] - Team Strength & Fixture Intelligence
 
 ### Added
 - Added fixture retrieval through FixtureRepository

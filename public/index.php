@@ -1,4 +1,3 @@
-```php
 <?php
 
 require_once '../classes/autoload.php';
@@ -124,7 +123,6 @@ $fixtures = $fixtureRepository->getAll();
 
 $fixtureIntelligence = new FixtureIntelligence();
 
-
 echo "<h2>Fixture Intelligence</h2>";
 
 echo "<table border='1' cellpadding='5'>";
@@ -136,6 +134,7 @@ echo "<tr>
         <th>Home Baseline</th>
         <th>Away Baseline</th>
         <th>Matchup</th>
+        <th>Difficulty</th>
       </tr>";
 
 
@@ -154,6 +153,10 @@ foreach (array_slice($fixtures, 0, 10) as $fixture) {
         $homeTeam['home'],
         $awayTeam['away']
     );
+    
+    $difficulty = $fixtureIntelligence->calculateDifficulty(
+        $matchup
+    );
 
 
     echo "<tr>";
@@ -169,6 +172,8 @@ foreach (array_slice($fixtures, 0, 10) as $fixture) {
     echo "<td>" . round($awayTeam['away'], 2) . "</td>";
 
     echo "<td>" . round($matchup, 2) . "</td>";
+    
+    echo "<td>{$difficulty}</td>";
 
     echo "</tr>";
 
