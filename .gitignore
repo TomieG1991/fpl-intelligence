@@ -1,4 +1,5 @@
 # Local configuration
+/config/config.php
 /config/config.local.php
 
 # Logs
