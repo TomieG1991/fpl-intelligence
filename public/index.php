@@ -2,14 +2,27 @@
 
 require_once '../classes/autoload.php';
 
+
+/*
+ * ============================================================
+ * APPLICATION HEADER
+ * ============================================================
+ */
+
 echo "<h1>FPL Intelligence v1.0</h1>";
 
 
-// Database health check
+/*
+ * ============================================================
+ * DATABASE HEALTH CHECK
+ * ============================================================
+ */
 
 try {
 
     $database = new Database();
+
+    $db = $database->getConnection();
 
     echo "<p>Database: CONNECTED ✅</p>";
 
@@ -23,7 +36,11 @@ try {
 }
 
 
-// FPL API health check
+/*
+ * ============================================================
+ * FPL API HEALTH CHECK
+ * ============================================================
+ */
 
 try {
 
@@ -46,3 +63,135 @@ try {
     echo "<p>FPL API: FAILED ❌</p>";
 
 }
+
+
+/*
+ * ============================================================
+ * REPOSITORIES
+ * ============================================================
+ */
+
+$fixtureRepository =
+    new FixtureRepository($db);
+
+$teamRepository =
+    new TeamRepository($db);
+
+
+/*
+ * ============================================================
+ * LOAD DATABASE DATA
+ * ============================================================
+ */
+
+$fixtures =
+    $fixtureRepository->getAll();
+
+$teams =
+    $teamRepository->getAll();
+
+
+/*
+ * ============================================================
+ * TEAM BASELINE STRENGTH
+ * ============================================================
+ */
+
+$teamStrength =
+    new TeamStrength();
+
+$teamStrengths =
+    $teamStrength->calculateTeamStrengths(
+        $teams
+    );
+
+
+/*
+ * ============================================================
+ * TEAM PERFORMANCE
+ * ============================================================
+ */
+
+$teamPerformance =
+    new TeamPerformance();
+
+
+/*
+ * ============================================================
+ * TEAM STRENGTH MODEL
+ * ============================================================
+ */
+
+$teamStrengthModel =
+    new TeamStrengthModel();
+
+
+/*
+ * ============================================================
+ * BUILD COMPLETE TEAM MODELS
+ * ============================================================
+ */
+
+$completeTeamModels = [];
+
+
+foreach (
+    $teamStrengths
+    as $teamId => $baseline
+) {
+
+    $performance =
+        $teamPerformance->analyse(
+            $fixtures,
+            (int) $teamId
+        );
+
+
+    $completeTeamModels[$teamId] =
+        $teamStrengthModel->buildTeamModel(
+            $baseline,
+            $performance,
+            $teamPerformance
+        );
+}
+
+/*
+ * ============================================================
+ * MODEL-BASED FIXTURE INTELLIGENCE
+ * ============================================================
+ *
+ * Convert the complete team models into the structure
+ * expected by FixtureIntelligence.
+ */
+
+$fixtureIntelligence =
+    new FixtureIntelligence();
+
+
+$modelStrengths = [];
+
+
+foreach (
+    $completeTeamModels
+    as $teamId => $teamModel
+) {
+
+    $modelStrengths[$teamId] = [
+
+        'id' =>
+            $teamModel['id'],
+
+        'name' =>
+            $teamModel['name'],
+
+        'home' =>
+            $teamModel['home'],
+
+        'away' =>
+            $teamModel['away'],
+
+        'overall' =>
+            $teamModel['overall']
+    ];
+}
+

@@ -6,6 +6,75 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.7.0] - Team Strength Historical Decay & Fixture Intelligence
+
+### Added
+
+- Added TeamStrengthHistoricalDecay for recency-weighted historical performance
+- Added configurable historical decay factor
+- Added progressive weighting where recent matches have greater influence than older matches
+- Added historical performance integration into the team strength model
+- Added opposition-adjusted performance analysis
+- Added opposition strength delta calculations
+- Added venue-aware opposition strength calculations
+- Added recovery behaviour following poor historical results
+- Added support for historical performance progression over multiple matches
+- Added fixture difficulty analysis based on team and opposition strength
+- Added fixture score ordering based on opposition strength
+- Added venue-aware fixture scoring
+- Added rolling fixture average calculations
+- Added best fixture run detection
+- Added worst fixture run detection
+- Added fixture trend analysis
+
+### Model
+
+- Historical performance is weighted according to match recency
+- The most recent completed match receives a weight of 1.00
+- Older matches receive progressively lower weights
+- Historical decay uses a configurable default factor of 0.90
+- Strong performances against stronger opposition receive a positive adjustment
+- Poor performances against weaker opposition receive a negative adjustment
+- Home fixtures use the opposition's away strength
+- Away fixtures use the opposition's home strength
+- FPL baseline strength remains the foundation of the team rating
+- Actual performance progressively influences the team rating as competitive matches accumulate
+- Fixture difficulty is derived from the relative strength of the team and its opponent
+
+### Refactored
+
+- Updated TeamStrengthModel to use TeamPerformance as the source of performance ratings
+- Updated FixtureIntelligence to consume complete team strength models
+- Updated fixture analysis to use model-based home and away team strengths
+- Removed temporary historical decay and fixture intelligence test output from index.php
+- Kept index.php focused on application health checks and core application output
+
+### Testing
+
+- Verified historical decay weight progression
+- Verified expected decay values
+- Verified recent results have greater influence than older results
+- Verified identical histories produce identical results
+- Verified single-match performance handling
+- Verified empty historical performance handling
+- Verified custom decay factors
+- Verified strong-opposition wins produce positive performance adjustments
+- Verified weak-opposition losses produce negative performance adjustments
+- Verified historical decay integration with TeamPerformance
+- Verified venue-aware opposition strength calculations
+- Verified historical recovery behaviour
+- Verified ten-match historical progression
+- Verified team strength model integration
+- Verified fixture intelligence integration with complete team models
+- Verified fixture difficulty ordering
+- Verified fixture score ordering
+- Verified difficulty bounds
+- Verified home and away fixture handling
+- Verified strong opposition produces increased fixture difficulty
+- Verified venue reversal affects fixture scoring
+- Verified fixture ordering by gameweek
+- Verified all current TeamStrength and FixtureIntelligence integration tests pass
+
 ## [0.6.0] - Team Performance & Dynamic Strength Model
 
 ### Added

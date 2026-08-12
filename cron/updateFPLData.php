@@ -35,13 +35,6 @@ try {
 
 
     foreach ($data['teams'] as $team) {
-if ($team['id'] == 1) {
-        echo '            
-<pre>';
-        print_r($team);
-        echo '</pre>';
-        exit;
-    }
 
         $sql = "
             INSERT INTO teams

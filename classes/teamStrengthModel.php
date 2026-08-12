@@ -60,10 +60,13 @@ class TeamStrengthModel
         int $played
     ): float {
 
-        return 1 -
+        return round(
+            1 -
             $this->calculateBaselineWeight(
                 $played
-            );
+            ), 
+            2
+        );
     }
 
 
