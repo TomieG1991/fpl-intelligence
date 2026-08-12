@@ -2,11 +2,10 @@
 
 require_once '../classes/autoload.php';
 
-
 echo "<h1>FPL Intelligence v1.0</h1>";
 
 
-// Database test
+// Database health check
 
 try {
 
@@ -14,17 +13,17 @@ try {
 
     echo "<p>Database: CONNECTED ✅</p>";
 
-}
-catch(Exception $e){
+} catch (Exception $e) {
 
     echo "<p>Database: FAILED ❌</p>";
 
     echo $e->getMessage();
 
+    exit;
 }
 
 
-// API test
+// FPL API health check
 
 try {
 
@@ -42,11 +41,8 @@ try {
         . count($data['teams'])
         . "</p>";
 
-}
-catch(Exception $e){
+} catch (Exception $e) {
 
     echo "<p>FPL API: FAILED ❌</p>";
-
-    echo $e->getMessage();
 
 }

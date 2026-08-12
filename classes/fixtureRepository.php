@@ -114,6 +114,18 @@ class FixtureRepository
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+    
+    public function getFinishedFixtures(): array
+    {
+        $stmt = $this->db->query("
+            SELECT *
+            FROM fixtures
+            WHERE finished = 1
+            ORDER BY gameweek ASC, kickoff_time ASC
+        ");
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 
     private function formatKickoffTime(?string $kickoffTime): ?string
     {

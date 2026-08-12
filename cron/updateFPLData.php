@@ -35,7 +35,13 @@ try {
 
 
     foreach ($data['teams'] as $team) {
-
+if ($team['id'] == 1) {
+        echo '            
+<pre>';
+        print_r($team);
+        echo '</pre>';
+        exit;
+    }
 
         $sql = "
             INSERT INTO teams
@@ -68,6 +74,14 @@ try {
 
                 name = VALUES(name),
                 short_name = VALUES(short_name),
+                strength_overall_home = VALUES(strength_overall_home),
+                strength_overall_away = VALUES(strength_overall_away),
+
+                strength_attack_home = VALUES(strength_attack_home),
+                strength_attack_away = VALUES(strength_attack_away),
+
+                strength_defence_home = VALUES(strength_defence_home),
+                strength_defence_away = VALUES(strength_defence_away),
                 updated_at = CURRENT_TIMESTAMP
 
         ";

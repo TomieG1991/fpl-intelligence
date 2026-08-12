@@ -6,6 +6,51 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.6.0] - Team Performance & Dynamic Strength Model
+
+### Added
+
+- Added TeamPerformance analysis for completed fixtures
+- Added team wins, draws, losses and points calculations
+- Added home and away performance statistics
+- Added goals for, goals against and goal difference calculations
+- Added recent-form tracking
+- Added points-per-game calculation
+- Added goals-per-game calculation
+- Added goals-against-per-game calculation
+- Added points performance rating
+- Added goal-difference performance rating
+- Added attacking performance rating
+- Added defensive performance rating
+- Added combined team performance rating
+- Added TeamStrengthModel for combining FPL baseline strength with actual performance
+- Added progressive baseline/performance weighting based on matches played
+- Added combined home, away and overall team strength ratings
+
+### Model
+
+- FPL baseline strength is used as the primary rating before competitive matches are available
+- Actual team performance progressively influences the rating as matches are played
+- Baseline weighting decreases as the number of completed matches increases
+- Performance weighting increases correspondingly as more real-world results become available
+- Team strength remains based on separate home and away baselines
+- Combined ratings are constrained by the underlying 0–100 rating system
+
+### Testing
+
+- Verified TeamPerformance returns a consistent structure when no fixtures have been completed
+- Verified finished fixture filtering
+- Verified home and away performance calculations
+- Verified points calculations
+- Verified goal difference calculations
+- Verified performance rating components
+- Verified combined performance rating
+- Verified baseline weighting at different numbers of completed matches
+- Verified TeamStrengthModel with zero completed fixtures
+- Verified all 20 teams can be processed through the complete team model
+- Verified teams retain their baseline ratings when no completed fixtures are available
+- Removed temporary team performance and strength model test output from index.php
+
 ## [0.5.0] - Fixture Analysis Run
 
 ### Added
