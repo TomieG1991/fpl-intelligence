@@ -17,7 +17,7 @@ class PlayerPerformance
             'expected_goals_per_90' => 0.10,
             'expected_assists_per_90' => 0.10,
             'clean_sheets_per_90' => 0.50,
-            'bps' => 100
+            'bps' => 1000
         ],
 
         'DEF' => [
@@ -26,7 +26,7 @@ class PlayerPerformance
             'expected_goals_per_90' => 0.40,
             'expected_assists_per_90' => 0.30,
             'clean_sheets_per_90' => 0.50,
-            'bps' => 100
+            'bps' => 1000
         ],
 
         'MID' => [
@@ -35,7 +35,7 @@ class PlayerPerformance
             'expected_goals_per_90' => 0.70,
             'expected_assists_per_90' => 0.60,
             'clean_sheets_per_90' => 0.40,
-            'bps' => 100
+            'bps' => 1000
         ],
 
         'FWD' => [
@@ -44,7 +44,7 @@ class PlayerPerformance
             'expected_goals_per_90' => 1.00,
             'expected_assists_per_90' => 0.50,
             'clean_sheets_per_90' => 0.30,
-            'bps' => 100
+            'bps' => 1000
         ]
     ];
 

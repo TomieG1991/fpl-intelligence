@@ -305,7 +305,7 @@ testPass(
 
 
 testPass(
-    'BPS rating is preserved',
+    'BPS rating is calculated correctly',
     $model['performance']['bps_rating'] === 80.00
 );
 

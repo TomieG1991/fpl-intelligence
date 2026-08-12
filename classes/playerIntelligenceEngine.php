@@ -51,94 +51,34 @@ class PlayerIntelligenceEngine
         /*
          * --------------------------------------------------------
          * STEP 1
-         * Player performance
+         * Complete player performance model
          * --------------------------------------------------------
+         *
+         * PlayerPerformance::buildModel() is responsible for:
+         *
+         * - Raw player statistics
+         * - Per-90 calculations
+         * - Normalised performance ratings
+         *
+         * The intelligence engine should use the complete model
+         * rather than calling analyse() and then attempting to
+         * reconstruct the ratings itself.
          */
 
         $performance =
-            $this->performance->analyse(
+            $this->performance->buildModel(
                 $player
             );
 
 
         /*
-         * Add per-90 performance metrics.
-         */
-
-        $performance['goals_per_90'] =
-            $this->performance
-                ->calculateGoalsPer90(
-                    $performance
-                );
-
-        $performance['assists_per_90'] =
-            $this->performance
-                ->calculateAssistsPer90(
-                    $performance
-                );
-
-        $performance['expected_goals_per_90'] =
-            $this->performance
-                ->calculateExpectedGoalsPer90(
-                    $performance
-                );
-
-        $performance['expected_assists_per_90'] =
-            $this->performance
-                ->calculateExpectedAssistsPer90(
-                    $performance
-                );
-
-        $performance['expected_goal_involvements_per_90'] =
-            $this->performance
-                ->calculateExpectedGoalInvolvementsPer90(
-                    $performance
-                );
-
-        $performance['clean_sheets_per_90'] =
-            $this->performance
-                ->calculateCleanSheetsPer90(
-                    $performance
-                );
-
-
-        /*
          * --------------------------------------------------------
          * STEP 2
-         * Performance ratings
-         * --------------------------------------------------------
-         *
-         * These are expected to already be supplied by the
-         * performance/rating model used by the project.
-         *
-         * For the initial engine implementation, preserve
-         * any existing rating values on the player data.
-         */
-
-        $performance['goals_rating'] =
-            $player['goals_rating'] ?? null;
-
-        $performance['assists_rating'] =
-            $player['assists_rating'] ?? null;
-
-        $performance['expected_goals_rating'] =
-            $player['expected_goals_rating'] ?? null;
-
-        $performance['expected_assists_rating'] =
-            $player['expected_assists_rating'] ?? null;
-
-        $performance['clean_sheets_rating'] =
-            $player['clean_sheets_rating'] ?? null;
-
-        $performance['bps_rating'] =
-            $player['bps_rating'] ?? null;
-
-
-        /*
-         * --------------------------------------------------------
-         * STEP 3
          * Player strength
          * --------------------------------------------------------
+         *
+         * PlayerStrengthModel applies the position-specific
+         * weighting to the performance ratings.
          */
 
         $strength =
@@ -149,9 +89,11 @@ class PlayerIntelligenceEngine
 
         /*
          * --------------------------------------------------------
-         * STEP 4
+         * STEP 3
          * Player value
          * --------------------------------------------------------
+         *
+         * Value is calculated from player strength and price.
          */
 
         $value =
@@ -163,7 +105,7 @@ class PlayerIntelligenceEngine
 
         /*
          * --------------------------------------------------------
-         * STEP 5
+         * STEP 4
          * Player availability
          * --------------------------------------------------------
          */
@@ -176,9 +118,19 @@ class PlayerIntelligenceEngine
 
         /*
          * --------------------------------------------------------
-         * STEP 6
+         * STEP 5
          * Overall intelligence score
          * --------------------------------------------------------
+         *
+         * The intelligence score combines:
+         *
+         * - Strength
+         * - Value
+         * - Availability
+         * - Fixture rating
+         *
+         * Missing components are handled by
+         * PlayerIntelligenceScore.
          */
 
         $intelligence =

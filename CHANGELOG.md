@@ -6,6 +6,77 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.11.0] - Front-End Friendly Player Intelligence Engine
+
+### Added
+
+- Added PlayerIntelligenceEngine to combine player analysis models into a single complete player intelligence profile
+- Added unified player identity information across performance, strength, value, availability and intelligence models
+- Added front-end-friendly player intelligence output structure
+- Added complete player performance model integration
+- Added complete player strength model integration
+- Added complete player value model integration
+- Added complete player availability model integration
+- Added fixture intelligence integration into the overall player intelligence score
+- Added support for analysing players when fixture intelligence is unavailable
+- Added cross-model identity consistency validation
+- Added BPS performance rating calculation
+- Added BPS position-specific benchmark normalisation
+- Added complete player profile output containing player, performance, strength, value, availability and intelligence sections
+
+### Model
+
+- Player identity is preserved consistently across all intelligence models
+- Player performance provides the underlying statistical and per-90 metrics
+- Player performance ratings are normalised against position-specific benchmarks
+- BPS is included as a normalised performance rating
+- Player strength receives the normalised performance ratings
+- Player value receives the calculated player strength rating
+- Player availability provides availability and reliability ratings
+- Fixture intelligence is incorporated into the overall player intelligence score when available
+- Missing fixture intelligence does not prevent a player intelligence score from being calculated
+- Intelligence scores remain constrained to the 0–100 range
+- Complete player profiles provide a consistent structure suitable for future front-end consumption
+
+### Testing
+
+- Verified PlayerIntelligenceEngine returns a valid array
+- Verified player identity is preserved
+- Verified FPL player ID is preserved
+- Verified team ID is preserved
+- Verified player name and position are preserved
+- Verified performance model integration
+- Verified performance minutes, goals and assists are preserved
+- Verified goals per 90 calculation
+- Verified assists per 90 calculation
+- Verified expected goals per 90 calculation
+- Verified expected assists per 90 calculation
+- Verified expected goal involvements per 90 calculation
+- Verified clean sheets per 90 calculation
+- Verified goals, assists, expected goals, expected assists and clean sheet ratings
+- Verified BPS rating calculation
+- Verified player strength model integration
+- Verified strength rating remains within the 0–100 range
+- Verified player value model integration
+- Verified strength-per-million calculation
+- Verified value rating remains within the 0–100 range
+- Verified value label generation
+- Verified player availability model integration
+- Verified availability and reliability ratings
+- Verified availability label generation
+- Verified intelligence score integration
+- Verified strength, value, availability and fixture ratings are correctly connected
+- Verified intelligence score remains within the 0–100 range
+- Verified intelligence label generation
+- Verified cross-model player identity consistency
+- Verified engine operates correctly when fixture rating is unavailable
+- Verified intelligence score remains valid when fixture rating is unavailable
+- Verified complete player profile structure
+- Verified front-end-friendly player intelligence output
+- **69 tests passed**
+- **0 tests failed**
+
+
 ## 0.10.0 - Transfer Target Finder
 
 ### Added
