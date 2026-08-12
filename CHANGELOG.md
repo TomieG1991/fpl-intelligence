@@ -6,6 +6,79 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.8.0] - Complete Player Intelligence Model
+
+### Added
+
+- Added PlayerPerformance model for analysing individual player statistics
+- Added per-90 performance metrics for goals, assists, expected goals, expected assists, expected goal involvements and clean sheets
+- Added PlayerStrengthModel for calculating position-specific player strength ratings
+- Added position-specific weighting for GK, DEF, MID and FWD players
+- Added normalised player performance ratings across key metrics
+- Added missing-metric handling with proportional weight redistribution
+- Added PlayerValue model for calculating player strength per £1m
+- Added player value ratings and value labels
+- Added PlayerAvailability model for calculating availability ratings from FPL chance-of-playing data
+- Added status-based availability fallback
+- Added player reliability ratings using playing minutes
+- Added availability labels
+- Added PlayerIntelligence for analysing player fixture runs
+- Added rolling fixture averages
+- Added best and worst fixture-run analysis
+- Added fixture trend analysis
+- Added PlayerModel for combining performance, strength, value and availability data into a complete player model
+
+### Model
+
+- Player performance is normalised into a consistent structure before intelligence calculations are performed
+- Per-90 metrics are used to account for differences in playing time
+- Player strength ratings use position-specific metric weightings
+- Player strength ratings are constrained to the 0–100 scale
+- Missing performance metrics are excluded and their weighting redistributed across available metrics
+- Player value is calculated from strength rating relative to player price
+- Value ratings are constrained to the 0–100 scale
+- Player availability uses FPL chance-of-playing data when available
+- FPL status is used as a fallback when explicit chance-of-playing data is unavailable
+- Reliability combines current availability with demonstrated playing involvement
+- Player fixture intelligence uses the player's team to analyse upcoming opposition and venue context
+- Player models preserve consistent player identity and position information across all analysis components
+
+### Testing
+
+- Verified PlayerPerformance model structure and player data preservation
+- Verified per-90 performance calculations
+- Verified expected-statistic per-90 calculations
+- Verified zero-minute handling
+- Verified missing optional player data handling
+- Verified PlayerStrengthModel position-specific weighting
+- Verified player strength ratings remain within the 0–100 range
+- Verified perfect and poor player strength ratings
+- Verified missing metric handling
+- Verified all position weightings total 1.00
+- Verified PlayerValue strength-per-million calculations
+- Verified value rating calculations and 0–100 capping
+- Verified value labels across all rating ranges
+- Verified missing price and strength handling
+- Verified PlayerAvailability chance-of-playing calculations
+- Verified status-based availability calculations
+- Verified availability bounds and missing data handling
+- Verified reliability calculations using playing minutes
+- Verified availability labels
+- Verified PlayerIntelligence fixture-run analysis
+- Verified home and away fixture handling
+- Verified opposition strength calculations
+- Verified rolling fixture averages
+- Verified best and worst fixture runs
+- Verified fixture trend analysis
+- Verified missing team ID handling
+- Verified empty fixture-run handling
+- Verified complete PlayerModel integration
+- Verified performance, strength, value and availability models remain connected
+- Verified player identity and position remain consistent across the complete player model
+- Verified front-end-friendly test output for the complete player model
+- All Sprint 0.8 tests passed successfully
+
+
 ## [0.7.0] - Team Strength Historical Decay & Fixture Intelligence
 
 ### Added

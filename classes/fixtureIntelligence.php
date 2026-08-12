@@ -219,7 +219,13 @@ class FixtureIntelligence
         int $gameweeks
     ): ?float {
 
-        if (empty($fixtures)) {
+        if (
+            empty($fixtures)
+            ||
+            $gameweeks <= 0
+            ||
+            count($fixtures) < $gameweeks
+        ) {
             return null;
         }
 
@@ -228,10 +234,6 @@ class FixtureIntelligence
             0,
             $gameweeks
         );
-
-        if (empty($fixtures)) {
-            return null;
-        }
 
         $scores = array_column(
             $fixtures,
