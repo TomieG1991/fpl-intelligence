@@ -6,6 +6,52 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.9.0] - Player Intelligence Scoring
+
+### Added
+
+- Added PlayerIntelligenceScore model
+- Added overall player intelligence scoring
+- Added position-independent intelligence weighting across player strength, value, availability and fixtures
+- Added player strength weighting at 35%
+- Added player value weighting at 25%
+- Added player availability weighting at 20%
+- Added fixture intelligence weighting at 20%
+- Added proportional redistribution of weighting when intelligence components are unavailable
+- Added 0–100 intelligence score normalisation
+- Added human-readable intelligence score labels
+- Added complete player intelligence score model combining all intelligence components
+
+### Model
+
+- Player strength is the largest component of the overall intelligence score
+- Player value provides the second-largest weighting
+- Player availability contributes to the overall reliability of the player
+- Fixture rating contributes to the player's short-term opportunity
+- Missing intelligence components do not invalidate the overall score
+- Available component weightings are redistributed proportionally when data is unavailable
+- Intelligence ratings are constrained to the standard 0–100 scale
+- Intelligence score labels range from Elite to Weak
+
+### Testing
+
+- Verified intelligence weight configuration
+- Verified all intelligence weights total 100%
+- Verified standard weighted intelligence score calculation
+- Verified perfect player produces a 100 intelligence score
+- Verified poor player produces a 0 intelligence score
+- Verified intelligence score ordering
+- Verified individual component influence on the overall score
+- Verified missing component weighting redistribution
+- Verified completely missing intelligence data handling
+- Verified intelligence score bounds
+- Verified intelligence score labels
+- Verified complete player intelligence model structure
+- Verified player identity and position consistency
+- Verified all intelligence components are correctly connected
+- Verified front-end-friendly intelligence output
+- Verified 37 tests with 0 failures
+
 ## [0.8.0] - Complete Player Intelligence Model
 
 ### Added
