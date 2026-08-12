@@ -6,6 +6,28 @@ The project follows a sprint-based development process.
 
 ---
 
+## 0.10.0 - Transfer Target Finder
+
+### Added
+
+- Added TransferTargetFinder model.
+- Added automatic transfer target discovery.
+- Added same-position filtering.
+- Added current-player exclusion.
+- Added transfer budget filtering.
+- Added intelligence score requirements.
+- Added availability filtering.
+- Integrated TransferRecommendation into transfer target selection.
+- Added transfer target ranking.
+- Added intelligence score tie-breaking.
+- Added configurable top-N transfer target selection.
+- Added comprehensive TransferTargetFinder tests.
+
+### Testing
+
+- 27 transfer target tests passed.
+- 0 tests failed.
+
 ## [0.9.0] - Player Intelligence Scoring
 
 ### Added

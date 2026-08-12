@@ -194,13 +194,13 @@ class PlayerAvailability
         return [
 
             'player_id' =>
-                (int) ($player['id'] ?? 0),
+                (int) ($player['player_id'] ?? 0),
 
             'fpl_player_id' =>
                 (int) ($player['fpl_player_id'] ?? 0),
 
             'name' =>
-                $player['web_name'] ?? null,
+                $player['name'] ?? null,
 
             'position' =>
                 $player['position'] ?? null,
