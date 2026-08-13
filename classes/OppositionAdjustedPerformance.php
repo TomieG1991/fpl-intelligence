@@ -6,26 +6,40 @@ class OppositionAdjustedPerformance
      * Calculate expected performance against an opponent.
      *
      * Opponent strength is represented as a 0-100 rating.
-     *
-     * Stronger opponents produce a higher expected difficulty.
      */
     public function calculateExpectedPerformance(
         float $opponentStrength
     ): float {
 
+        $opponentStrength =
+            max(
+                0,
+                min(
+                    100,
+                    $opponentStrength
+                )
+            );
+
+
         /*
-         * Convert opponent strength into an expected
-         * performance baseline.
-         *
          * 100 strength = 25 expected performance
-         * 50 strength  = 50 expected performance
-         * 0 strength   = 75 expected performance
-         *
-         * This means beating a strong team is considered
-         * more impressive than beating a weak team.
+         *  50 strength = 50 expected performance
+         *   0 strength = 75 expected performance
          */
+        $expected =
+            75
+            -
+            ($opponentStrength * 0.50);
+
+
         return round(
-            75 - ($opponentStrength * 0.50),
+            max(
+                0,
+                min(
+                    100,
+                    $expected
+                )
+            ),
             2
         );
     }
@@ -44,27 +58,53 @@ class OppositionAdjustedPerformance
 
         return match ($result) {
 
-            'W' => 100.0,
+            'W' =>
+                100.00,
 
-            'D' => 50.0,
+            'D' =>
+                50.00,
 
-            'L' => 0.0,
+            'L' =>
+                0.00,
 
-            default => 50.0
+            default =>
+                throw new InvalidArgumentException(
+                    "Invalid match result: {$result}"
+                )
         };
     }
 
 
     /**
-     * Calculate the performance delta against the opponent.
+     * Calculate the performance delta against expectation.
      *
-     * Positive = performed better than expected.
-     * Negative = performed worse than expected.
+     * Positive = better than expected.
+     * Negative = worse than expected.
      */
     public function calculateDelta(
         float $actualPerformance,
         float $expectedPerformance
     ): float {
+
+        $actualPerformance =
+            max(
+                0,
+                min(
+                    100,
+                    $actualPerformance
+                )
+            );
+
+
+        $expectedPerformance =
+            max(
+                0,
+                min(
+                    100,
+                    $expectedPerformance
+                )
+            );
+
 
         return round(
             $actualPerformance
@@ -87,12 +127,22 @@ class OppositionAdjustedPerformance
 
         $matches = [];
 
+
         foreach ($fixtures as $fixture) {
 
             /*
-             * Only analyse completed fixtures.
+             * Ignore malformed or unfinished fixtures.
              */
-            if ((int) $fixture['finished'] !== 1) {
+            if (
+                !isset(
+                    $fixture['finished'],
+                    $fixture['home_team_id'],
+                    $fixture['away_team_id']
+                )
+                ||
+                (int) $fixture['finished'] !== 1
+            ) {
+
                 continue;
             }
 
@@ -100,12 +150,13 @@ class OppositionAdjustedPerformance
             $homeTeamId =
                 (int) $fixture['home_team_id'];
 
+
             $awayTeamId =
                 (int) $fixture['away_team_id'];
 
 
             /*
-             * Ignore fixtures that don't involve
+             * Ignore fixtures that do not involve
              * the selected team.
              */
             if (
@@ -113,6 +164,7 @@ class OppositionAdjustedPerformance
                 &&
                 $awayTeamId !== $teamId
             ) {
+
                 continue;
             }
 
@@ -121,46 +173,95 @@ class OppositionAdjustedPerformance
              * Ignore fixtures without scores.
              */
             if (
+                !array_key_exists(
+                    'home_score',
+                    $fixture
+                )
+                ||
+                !array_key_exists(
+                    'away_score',
+                    $fixture
+                )
+                ||
                 $fixture['home_score'] === null
                 ||
                 $fixture['away_score'] === null
             ) {
+
                 continue;
             }
 
 
             /*
-             * Determine opponent and result.
+             * Determine opponent and venue.
              */
             if ($homeTeamId === $teamId) {
 
-                $opponentId = $awayTeamId;
+                $opponentId =
+                    $awayTeamId;
+
 
                 $teamScore =
                     (int) $fixture['home_score'];
 
+
                 $opponentScore =
                     (int) $fixture['away_score'];
 
-                $opponentStrength =
-                    (float) $teamStrengths[$opponentId]['away'];
 
-                $venue = 'Home';
+                if (
+                    !isset(
+                        $teamStrengths[$opponentId]['away']
+                    )
+                ) {
+
+                    continue;
+                }
+
+
+                $opponentStrength =
+                    (float)
+                        $teamStrengths[
+                            $opponentId
+                        ]['away'];
+
+
+                $venue =
+                    'Home';
 
             } else {
 
-                $opponentId = $homeTeamId;
+                $opponentId =
+                    $homeTeamId;
+
 
                 $teamScore =
                     (int) $fixture['away_score'];
 
+
                 $opponentScore =
                     (int) $fixture['home_score'];
 
-                $opponentStrength =
-                    (float) $teamStrengths[$opponentId]['home'];
 
-                $venue = 'Away';
+                if (
+                    !isset(
+                        $teamStrengths[$opponentId]['home']
+                    )
+                ) {
+
+                    continue;
+                }
+
+
+                $opponentStrength =
+                    (float)
+                        $teamStrengths[
+                            $opponentId
+                        ]['home'];
+
+
+                $venue =
+                    'Away';
             }
 
 
@@ -169,30 +270,32 @@ class OppositionAdjustedPerformance
              */
             if ($teamScore > $opponentScore) {
 
-                $result = 'W';
+                $result =
+                    'W';
 
             } elseif ($teamScore === $opponentScore) {
 
-                $result = 'D';
+                $result =
+                    'D';
 
             } else {
 
-                $result = 'L';
+                $result =
+                    'L';
             }
 
 
-            /*
-             * Calculate actual and expected performance.
-             */
             $actualPerformance =
                 $this->calculateActualPerformance(
                     $result
                 );
 
+
             $expectedPerformance =
                 $this->calculateExpectedPerformance(
                     $opponentStrength
                 );
+
 
             $delta =
                 $this->calculateDelta(
@@ -201,19 +304,22 @@ class OppositionAdjustedPerformance
                 );
 
 
-            /*
-             * Store match intelligence.
-             */
             $matches[] = [
 
                 'gameweek' =>
-                    (int) $fixture['gameweek'],
+                    isset($fixture['gameweek'])
+                    &&
+                    $fixture['gameweek'] !== null
+                        ? (int) $fixture['gameweek']
+                        : null,
 
                 'opponent_id' =>
                     $opponentId,
 
                 'opponent_name' =>
-                    $teamStrengths[$opponentId]['name']
+                    $teamStrengths[
+                        $opponentId
+                    ]['name']
                     ?? 'Unknown',
 
                 'venue' =>
@@ -229,7 +335,16 @@ class OppositionAdjustedPerformance
                     $opponentScore,
 
                 'opponent_strength' =>
-                    $opponentStrength,
+                    round(
+                        max(
+                            0,
+                            min(
+                                100,
+                                $opponentStrength
+                            )
+                        ),
+                        2
+                    ),
 
                 'expected_performance' =>
                     $expectedPerformance,
@@ -245,53 +360,48 @@ class OppositionAdjustedPerformance
 
         /*
          * Ensure chronological order.
+         * Null gameweeks are placed last.
          */
         usort(
             $matches,
-            fn($a, $b) =>
-                $a['gameweek'] <=> $b['gameweek']
+            function (
+                array $a,
+                array $b
+            ): int {
+
+                $gameweekA =
+                    $a['gameweek'];
+
+                $gameweekB =
+                    $b['gameweek'];
+
+
+                if (
+                    $gameweekA === null
+                    &&
+                    $gameweekB === null
+                ) {
+
+                    return 0;
+                }
+
+
+                if ($gameweekA === null) {
+                    return 1;
+                }
+
+
+                if ($gameweekB === null) {
+                    return -1;
+                }
+
+
+                return
+                    $gameweekA
+                    <=>
+                    $gameweekB;
+            }
         );
-
-
-        /*
-         * No completed matches.
-         */
-        if (empty($matches)) {
-
-            return [
-
-                'team_id' =>
-                    $teamId,
-
-                'played' =>
-                    0,
-
-                'average_performance' =>
-                    null,
-
-                'average_delta' =>
-                    null,
-
-                'matches' =>
-                    []
-            ];
-        }
-
-
-        /*
-         * Calculate averages.
-         */
-        $performances =
-            array_column(
-                $matches,
-                'actual_performance'
-            );
-
-        $deltas =
-            array_column(
-                $matches,
-                'performance_delta'
-            );
 
 
         return [
@@ -303,23 +413,71 @@ class OppositionAdjustedPerformance
                 count($matches),
 
             'average_performance' =>
-                round(
-                    array_sum($performances)
-                    /
-                    count($performances),
-                    2
+                $this->calculateAverage(
+                    $matches,
+                    'actual_performance'
                 ),
 
             'average_delta' =>
-                round(
-                    array_sum($deltas)
-                    /
-                    count($deltas),
-                    2
+                $this->calculateAverage(
+                    $matches,
+                    'performance_delta'
                 ),
 
             'matches' =>
                 $matches
         ];
+    }
+
+
+    /**
+     * Calculate the average value of a match field.
+     */
+    private function calculateAverage(
+        array $matches,
+        string $field
+    ): ?float {
+
+        if (empty($matches)) {
+            return null;
+        }
+
+
+        $values = [];
+
+
+        foreach ($matches as $match) {
+
+            if (
+                !array_key_exists(
+                    $field,
+                    $match
+                )
+                ||
+                !is_numeric(
+                    $match[$field]
+                )
+            ) {
+
+                continue;
+            }
+
+
+            $values[] =
+                (float) $match[$field];
+        }
+
+
+        if (empty($values)) {
+            return null;
+        }
+
+
+        return round(
+            array_sum($values)
+            /
+            count($values),
+            2
+        );
     }
 }

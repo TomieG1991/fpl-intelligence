@@ -6,15 +6,20 @@ class TeamPerformanceAdjusted
      * Calculate the expected result advantage based
      * on the relative strength of the two teams.
      *
-     * Positive = our team is stronger
-     * Negative = opponent is stronger
+     * Positive = our team is stronger.
+     * Negative = opponent is stronger.
      */
     public function calculateStrengthDifference(
         float $teamStrength,
         float $opponentStrength
     ): float {
 
-        return $teamStrength - $opponentStrength;
+        return round(
+            $teamStrength
+            -
+            $opponentStrength,
+            2
+        );
     }
 
 
@@ -31,21 +36,60 @@ class TeamPerformanceAdjusted
         float $opponentStrength
     ): float {
 
+        /*
+         * Team strength models use the standard
+         * 0-100 rating scale.
+         */
+        $teamStrength =
+            max(
+                0,
+                min(
+                    100,
+                    $teamStrength
+                )
+            );
+
+
+        $opponentStrength =
+            max(
+                0,
+                min(
+                    100,
+                    $opponentStrength
+                )
+            );
+
+
         $difference =
-            $teamStrength - $opponentStrength;
+            $teamStrength
+            -
+            $opponentStrength;
+
 
         /*
-         * Convert the strength difference into a
-         * controlled 0-100 expectation.
+         * Every point of strength difference moves
+         * expectation by half a point.
          *
-         * Every 100 points of strength difference
-         * represents the full range.
+         * Therefore:
+         *
+         * +100 difference = 100 expected score
+         *    0 difference = 50 expected score
+         * -100 difference = 0 expected score
          */
         $score =
-            50 + ($difference * 0.5);
+            50
+            +
+            ($difference * 0.5);
+
 
         return round(
-            max(0, min(100, $score)),
+            max(
+                0,
+                min(
+                    100,
+                    $score
+                )
+            ),
             2
         );
     }
@@ -64,14 +108,16 @@ class TeamPerformanceAdjusted
     ): float {
 
         if ($teamScore > $opponentScore) {
-            return 100.0;
+            return 100.00;
         }
+
 
         if ($teamScore === $opponentScore) {
-            return 50.0;
+            return 50.00;
         }
 
-        return 0.0;
+
+        return 0.00;
     }
 
 
@@ -85,7 +131,9 @@ class TeamPerformanceAdjusted
     ): float {
 
         return round(
-            $resultScore - $expectedScore,
+            $resultScore
+            -
+            $expectedScore,
             2
         );
     }
@@ -93,7 +141,7 @@ class TeamPerformanceAdjusted
 
     /**
      * Calculate a single match's opposition-adjusted
-     * performance score.
+     * performance model.
      */
     public function calculateMatchPerformance(
         float $teamStrength,
@@ -102,11 +150,36 @@ class TeamPerformanceAdjusted
         int $opponentScore
     ): array {
 
+        /*
+         * Keep supplied strength values inside the
+         * standard team-strength scale.
+         */
+        $teamStrength =
+            max(
+                0,
+                min(
+                    100,
+                    $teamStrength
+                )
+            );
+
+
+        $opponentStrength =
+            max(
+                0,
+                min(
+                    100,
+                    $opponentStrength
+                )
+            );
+
+
         $strengthDifference =
             $this->calculateStrengthDifference(
                 $teamStrength,
                 $opponentStrength
             );
+
 
         $expectedScore =
             $this->calculateExpectedScore(
@@ -114,11 +187,13 @@ class TeamPerformanceAdjusted
                 $opponentStrength
             );
 
+
         $resultScore =
             $this->calculateResultScore(
                 $teamScore,
                 $opponentScore
             );
+
 
         $performanceDelta =
             $this->calculatePerformanceDelta(
@@ -126,16 +201,23 @@ class TeamPerformanceAdjusted
                 $expectedScore
             );
 
+
         return [
 
             'team_strength' =>
-                round($teamStrength, 2),
+                round(
+                    $teamStrength,
+                    2
+                ),
 
             'opponent_strength' =>
-                round($opponentStrength, 2),
+                round(
+                    $opponentStrength,
+                    2
+                ),
 
             'strength_difference' =>
-                round($strengthDifference, 2),
+                $strengthDifference,
 
             'expected_score' =>
                 $expectedScore,
@@ -160,39 +242,108 @@ class TeamPerformanceAdjusted
 
         $matches = [];
 
+
         foreach ($fixtures as $fixture) {
 
-            if ((int) $fixture['finished'] !== 1) {
+            /*
+             * Ignore malformed or unfinished fixtures.
+             */
+            if (
+                !isset(
+                    $fixture['finished'],
+                    $fixture['home_team_id'],
+                    $fixture['away_team_id']
+                )
+                ||
+                (int) $fixture['finished'] !== 1
+            ) {
+
                 continue;
             }
 
+
             $homeTeamId =
                 (int) $fixture['home_team_id'];
+
 
             $awayTeamId =
                 (int) $fixture['away_team_id'];
 
 
+            /*
+             * Ignore fixtures that do not involve
+             * the selected team.
+             */
             if (
                 $homeTeamId !== $teamId
                 &&
                 $awayTeamId !== $teamId
             ) {
+
                 continue;
             }
 
 
+            /*
+             * Ignore fixtures where scores are unavailable.
+             */
             if (
+                !array_key_exists(
+                    'home_score',
+                    $fixture
+                )
+                ||
+                !array_key_exists(
+                    'away_score',
+                    $fixture
+                )
+                ||
                 $fixture['home_score'] === null
                 ||
                 $fixture['away_score'] === null
             ) {
+
+                continue;
+            }
+
+
+            /*
+             * Both teams require strength models before
+             * opposition adjustment can be calculated.
+             */
+            if (
+                !isset(
+                    $teamStrengths[$homeTeamId],
+                    $teamStrengths[$awayTeamId]
+                )
+            ) {
+
+                continue;
+            }
+
+
+            $homeStrengthModel =
+                $teamStrengths[$homeTeamId];
+
+
+            $awayStrengthModel =
+                $teamStrengths[$awayTeamId];
+
+
+            if (
+                !isset(
+                    $homeStrengthModel['home'],
+                    $awayStrengthModel['away']
+                )
+            ) {
+
                 continue;
             }
 
 
             $homeScore =
                 (int) $fixture['home_score'];
+
 
             $awayScore =
                 (int) $fixture['away_score'];
@@ -204,34 +355,56 @@ class TeamPerformanceAdjusted
             if ($homeTeamId === $teamId) {
 
                 $teamStrength =
-                    $teamStrengths[$homeTeamId]['home'];
+                    (float)
+                        $homeStrengthModel[
+                            'home'
+                        ];
+
 
                 $opponentStrength =
-                    $teamStrengths[$awayTeamId]['away'];
+                    (float)
+                        $awayStrengthModel[
+                            'away'
+                        ];
+
 
                 $teamScore =
                     $homeScore;
 
+
                 $opponentScore =
                     $awayScore;
 
-                $isHome = true;
+
+                $isHome =
+                    true;
 
             } else {
 
                 $teamStrength =
-                    $teamStrengths[$awayTeamId]['away'];
+                    (float)
+                        $awayStrengthModel[
+                            'away'
+                        ];
+
 
                 $opponentStrength =
-                    $teamStrengths[$homeTeamId]['home'];
+                    (float)
+                        $homeStrengthModel[
+                            'home'
+                        ];
+
 
                 $teamScore =
                     $awayScore;
 
+
                 $opponentScore =
                     $homeScore;
 
-                $isHome = false;
+
+                $isHome =
+                    false;
             }
 
 
@@ -244,87 +417,103 @@ class TeamPerformanceAdjusted
                 );
 
 
-            $matches[] = array_merge(
-                [
-                    'gameweek' =>
-                        (int) $fixture['gameweek'],
+            $matches[] =
+                array_merge(
+                    [
 
-                    'home_team_id' =>
-                        $homeTeamId,
+                        'gameweek' =>
+                            isset($fixture['gameweek'])
+                            &&
+                            $fixture['gameweek'] !== null
+                                ? (int)
+                                    $fixture['gameweek']
+                                : null,
 
-                    'away_team_id' =>
-                        $awayTeamId,
+                        'home_team_id' =>
+                            $homeTeamId,
 
-                    'team_score' =>
-                        $teamScore,
+                        'away_team_id' =>
+                            $awayTeamId,
 
-                    'opponent_score' =>
-                        $opponentScore,
+                        'team_score' =>
+                            $teamScore,
 
-                    'is_home' =>
-                        $isHome
-                ],
-                $match
-            );
+                        'opponent_score' =>
+                            $opponentScore,
+
+                        'is_home' =>
+                            $isHome
+                    ],
+                    $match
+                );
         }
 
 
         /*
          * Keep chronological order.
+         *
+         * Null gameweeks are placed last.
          */
         usort(
             $matches,
-            fn($a, $b) =>
-                $a['gameweek']
-                <=>
-                $b['gameweek']
+            function (
+                array $a,
+                array $b
+            ): int {
+
+                $gameweekA =
+                    $a['gameweek'];
+
+                $gameweekB =
+                    $b['gameweek'];
+
+
+                if (
+                    $gameweekA === null
+                    &&
+                    $gameweekB === null
+                ) {
+
+                    return 0;
+                }
+
+
+                if ($gameweekA === null) {
+                    return 1;
+                }
+
+
+                if ($gameweekB === null) {
+                    return -1;
+                }
+
+
+                return
+                    $gameweekA
+                    <=>
+                    $gameweekB;
+            }
         );
 
 
         /*
-         * Calculate the overall adjusted performance.
+         * Calculate average actual-result performance.
          */
-        $averagePerformance = null;
-
-        if (!empty($matches)) {
-
-            $total =
-                array_sum(
-                    array_column(
-                        $matches,
-                        'result_score'
-                    )
-                );
-
-            $averagePerformance =
-                round(
-                    $total / count($matches),
-                    2
-                );
-        }
+        $averagePerformance =
+            $this->calculateAverage(
+                $matches,
+                'result_score'
+            );
 
 
         /*
-         * Calculate average performance delta.
+         * Calculate average performance against expectation.
          */
-        $averageDelta = null;
-
-        if (!empty($matches)) {
-
-            $totalDelta =
-                array_sum(
-                    array_column(
-                        $matches,
-                        'performance_delta'
-                    )
-                );
-
-            $averageDelta =
-                round(
-                    $totalDelta / count($matches),
-                    2
-                );
-        }
+        $averageDelta =
+            $this->calculateAverage(
+                $matches,
+                'performance_delta'
+            );
 
 
         return [
@@ -344,5 +533,58 @@ class TeamPerformanceAdjusted
             'matches' =>
                 $matches
         ];
+    }
+
+
+    /**
+     * Calculate the average value of a field
+     * across analysed matches.
+     */
+    private function calculateAverage(
+        array $matches,
+        string $field
+    ): ?float {
+
+        if (empty($matches)) {
+            return null;
+        }
+
+
+        $values = [];
+
+
+        foreach ($matches as $match) {
+
+            if (
+                !array_key_exists(
+                    $field,
+                    $match
+                )
+                ||
+                !is_numeric(
+                    $match[$field]
+                )
+            ) {
+
+                continue;
+            }
+
+
+            $values[] =
+                (float) $match[$field];
+        }
+
+
+        if (empty($values)) {
+            return null;
+        }
+
+
+        return round(
+            array_sum($values)
+            /
+            count($values),
+            2
+        );
     }
 }

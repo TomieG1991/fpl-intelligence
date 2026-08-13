@@ -3,69 +3,134 @@
 class FixtureIntelligence
 {
     /**
-     * Calculate the strength matchup between the player's
-     * team and the opponent.
+     * Calculate the strength matchup between
+     * a team and its opponent.
      *
-     * Positive = favourable for the team
-     * Negative = unfavourable for the team
+     * Positive = favourable.
+     * Negative = unfavourable.
      */
     public function calculateMatchup(
         float $teamStrength,
         float $opponentStrength
     ): float {
 
-        return $teamStrength - $opponentStrength;
+        $teamStrength =
+            $this->normaliseStrength(
+                $teamStrength
+            );
+
+
+        $opponentStrength =
+            $this->normaliseStrength(
+                $opponentStrength
+            );
+
+
+        return round(
+            $teamStrength
+            -
+            $opponentStrength,
+            2
+        );
     }
 
 
     /**
-     * Convert matchup into a 0-100 fixture score.
+     * Convert team/opponent strength into
+     * a 0-100 fixture score.
      *
-     * 100 = extremely favourable
-     * 50  = balanced
-     * 0   = extremely unfavourable
+     * 100 = extremely favourable.
+     * 50  = balanced.
+     * 0   = extremely unfavourable.
      */
     public function calculateFixtureScore(
         float $teamStrength,
         float $opponentStrength
     ): float {
 
-        return (
-            $teamStrength
-            + (100 - $opponentStrength)
-        ) / 2;
+        $teamStrength =
+            $this->normaliseStrength(
+                $teamStrength
+            );
+
+
+        $opponentStrength =
+            $this->normaliseStrength(
+                $opponentStrength
+            );
+
+
+        $score =
+            (
+                $teamStrength
+                +
+                (
+                    100
+                    -
+                    $opponentStrength
+                )
+            )
+            / 2;
+
+
+        return round(
+            max(
+                0,
+                min(
+                    100,
+                    $score
+                )
+            ),
+            2
+        );
     }
 
 
     /**
-     * Convert fixture score into a 1-5 difficulty rating.
+     * Convert fixture score into a
+     * 1-5 difficulty rating.
      */
     public function calculateDifficulty(
         float $fixtureScore
     ): int {
 
+        $fixtureScore =
+            max(
+                0,
+                min(
+                    100,
+                    $fixtureScore
+                )
+            );
+
+
         if ($fixtureScore >= 85) {
             return 1;
         }
+
 
         if ($fixtureScore >= 70) {
             return 2;
         }
 
+
         if ($fixtureScore >= 55) {
             return 3;
         }
 
+
         if ($fixtureScore >= 40) {
             return 4;
         }
+
 
         return 5;
     }
 
 
     /**
-     * Convert difficulty number into a human-readable label.
+     * Convert difficulty number into
+     * a human-readable label.
      */
     public function getDifficultyLabel(
         int $difficulty
@@ -73,19 +138,29 @@ class FixtureIntelligence
 
         return match ($difficulty) {
 
-            1 => 'Excellent',
-            2 => 'Good',
-            3 => 'Average',
-            4 => 'Difficult',
-            5 => 'Very Difficult',
+            1 =>
+                'Excellent',
 
-            default => 'Unknown'
+            2 =>
+                'Good',
+
+            3 =>
+                'Average',
+
+            4 =>
+                'Difficult',
+
+            5 =>
+                'Very Difficult',
+
+            default =>
+                'Unknown'
         };
     }
 
 
     /**
-     * Analyse all fixtures for a team.
+     * Analyse all fixtures for one team.
      */
     public function analyseFixtureRun(
         array $fixtures,
@@ -95,114 +170,274 @@ class FixtureIntelligence
 
         $results = [];
 
+
         foreach ($fixtures as $fixture) {
 
             /*
-             * Ignore fixtures that don't involve this team.
+             * Fixture identity must be available.
              */
             if (
-                (int) $fixture['home_team_id'] !== $teamId
-                &&
-                (int) $fixture['away_team_id'] !== $teamId
+                !isset(
+                    $fixture['home_team_id'],
+                    $fixture['away_team_id']
+                )
             ) {
+
                 continue;
             }
 
 
-            $homeTeam = $teamStrengths[
-                $fixture['home_team_id']
-            ];
+            $homeTeamId =
+                (int)
+                    $fixture[
+                        'home_team_id'
+                    ];
 
-            $awayTeam = $teamStrengths[
-                $fixture['away_team_id']
-            ];
+
+            $awayTeamId =
+                (int)
+                    $fixture[
+                        'away_team_id'
+                    ];
 
 
             /*
-             * Determine whether our team is home or away.
+             * Ignore fixtures that do not
+             * involve the requested team.
              */
             if (
-                (int) $fixture['home_team_id'] === $teamId
+                $homeTeamId !== $teamId
+                &&
+                $awayTeamId !== $teamId
             ) {
 
-                $teamStrength = $homeTeam['home'];
-                $opponentStrength = $awayTeam['away'];
+                continue;
+            }
 
-                $isHome = true;
+
+            /*
+             * Both team-strength models are required.
+             */
+            if (
+                !isset(
+                    $teamStrengths[$homeTeamId],
+                    $teamStrengths[$awayTeamId]
+                )
+            ) {
+
+                continue;
+            }
+
+
+            $homeTeam =
+                $teamStrengths[
+                    $homeTeamId
+                ];
+
+
+            $awayTeam =
+                $teamStrengths[
+                    $awayTeamId
+                ];
+
+
+            /*
+             * Venue-specific strength data is required.
+             */
+            if (
+                !isset(
+                    $homeTeam['home'],
+                    $awayTeam['away']
+                )
+                ||
+                !is_numeric(
+                    $homeTeam['home']
+                )
+                ||
+                !is_numeric(
+                    $awayTeam['away']
+                )
+            ) {
+
+                continue;
+            }
+
+
+            /*
+             * Determine whether the selected team
+             * is home or away.
+             */
+            if ($homeTeamId === $teamId) {
+
+                $teamStrength =
+                    $this->normaliseStrength(
+                        (float)
+                            $homeTeam['home']
+                    );
+
+
+                $opponentStrength =
+                    $this->normaliseStrength(
+                        (float)
+                            $awayTeam['away']
+                    );
+
+
+                $isHome =
+                    true;
 
             } else {
 
-                $teamStrength = $awayTeam['away'];
-                $opponentStrength = $homeTeam['home'];
+                $teamStrength =
+                    $this->normaliseStrength(
+                        (float)
+                            $awayTeam['away']
+                    );
 
-                $isHome = false;
+
+                $opponentStrength =
+                    $this->normaliseStrength(
+                        (float)
+                            $homeTeam['home']
+                    );
+
+
+                $isHome =
+                    false;
             }
 
 
             /*
              * Core fixture calculations.
              */
-            $matchup = $this->calculateMatchup(
-                $teamStrength,
-                $opponentStrength
-            );
-
-            $fixtureScore = $this->calculateFixtureScore(
-                $teamStrength,
-                $opponentStrength
-            );
-
-            $difficulty = $this->calculateDifficulty(
-                $fixtureScore
-            );
-
-            $difficultyLabel = $this->getDifficultyLabel(
-                $difficulty
-            );
+            $matchup =
+                $this->calculateMatchup(
+                    $teamStrength,
+                    $opponentStrength
+                );
 
 
-            /*
-             * Store fixture intelligence.
-             */
+            $fixtureScore =
+                $this->calculateFixtureScore(
+                    $teamStrength,
+                    $opponentStrength
+                );
+
+
+            $difficulty =
+                $this->calculateDifficulty(
+                    $fixtureScore
+                );
+
+
+            $difficultyLabel =
+                $this->getDifficultyLabel(
+                    $difficulty
+                );
+
+
             $results[] = [
 
-                'gameweek' => (int) $fixture['gameweek'],
+                'gameweek' =>
+                    isset($fixture['gameweek'])
+                    &&
+                    $fixture['gameweek'] !== null
+                        ? (int)
+                            $fixture[
+                                'gameweek'
+                            ]
+                        : null,
 
-                'home_team' => $homeTeam['name'],
-                'away_team' => $awayTeam['name'],
+                'home_team' =>
+                    $homeTeam['name']
+                    ?? 'Unknown',
 
-                'is_home' => $isHome,
+                'away_team' =>
+                    $awayTeam['name']
+                    ?? 'Unknown',
 
-                'venue' => $isHome
-                    ? 'Home'
-                    : 'Away',
+                'is_home' =>
+                    $isHome,
 
-                'team_baseline' => $teamStrength,
+                'venue' =>
+                    $isHome
+                        ? 'Home'
+                        : 'Away',
 
-                'opponent_baseline' => $opponentStrength,
+                'team_baseline' =>
+                    $isHome
+                        ? $homeTeam['home']
+                        : $awayTeam['away'],
 
-                'home_baseline' => $homeTeam['home'],
+                'opponent_baseline' =>
+                    $isHome
+                        ? $awayTeam['away']
+                        : $homeTeam['home'],
 
-                'away_baseline' => $awayTeam['away'],
+                'home_baseline' =>
+                    $homeTeam['home'],
 
-                'matchup' => $matchup,
+                'away_baseline' =>
+                    $awayTeam['away'],
 
-                'fixture_score' => $fixtureScore,
+                'matchup' =>
+                    $matchup,
 
-                'difficulty' => $difficulty,
+                'fixture_score' =>
+                    $fixtureScore,
 
-                'difficulty_label' => $difficultyLabel
+                'difficulty' =>
+                    $difficulty,
+
+                'difficulty_label' =>
+                    $difficultyLabel
             ];
         }
 
 
         /*
-         * Always return fixtures in gameweek order.
+         * Always return fixtures in chronological order.
+         * Null gameweeks are placed last.
          */
         usort(
             $results,
-            fn($a, $b) =>
-                $a['gameweek'] <=> $b['gameweek']
+            function (
+                array $a,
+                array $b
+            ): int {
+
+                $gameweekA =
+                    $a['gameweek'];
+
+                $gameweekB =
+                    $b['gameweek'];
+
+
+                if (
+                    $gameweekA === null
+                    &&
+                    $gameweekB === null
+                ) {
+
+                    return 0;
+                }
+
+
+                if ($gameweekA === null) {
+                    return 1;
+                }
+
+
+                if ($gameweekB === null) {
+                    return -1;
+                }
+
+
+                return
+                    $gameweekA
+                    <=>
+                    $gameweekB;
+            }
         );
 
 
@@ -212,7 +447,7 @@ class FixtureIntelligence
 
     /**
      * Calculate the average fixture score
-     * over the next X gameweeks.
+     * over the next X fixtures.
      */
     public function calculateRollingAverage(
         array $fixtures,
@@ -226,29 +461,74 @@ class FixtureIntelligence
             ||
             count($fixtures) < $gameweeks
         ) {
+
             return null;
         }
 
-        $fixtures = array_slice(
-            $fixtures,
-            0,
-            $gameweeks
-        );
 
-        $scores = array_column(
-            $fixtures,
-            'fixture_score'
-        );
+        $selectedFixtures =
+            array_slice(
+                $fixtures,
+                0,
+                $gameweeks
+            );
+
+
+        $scores = [];
+
+
+        foreach (
+            $selectedFixtures
+            as $fixture
+        ) {
+
+            if (
+                !isset(
+                    $fixture['fixture_score']
+                )
+                ||
+                !is_numeric(
+                    $fixture[
+                        'fixture_score'
+                    ]
+                )
+            ) {
+
+                return null;
+            }
+
+
+            $scores[] =
+                max(
+                    0,
+                    min(
+                        100,
+                        (float)
+                            $fixture[
+                                'fixture_score'
+                            ]
+                    )
+                );
+        }
+
+
+        if (empty($scores)) {
+            return null;
+        }
+
 
         return round(
-            array_sum($scores) / count($scores),
+            array_sum($scores)
+            /
+            count($scores),
             2
         );
     }
 
 
     /**
-     * Calculate rolling fixture averages.
+     * Calculate standard rolling
+     * fixture averages.
      */
     public function calculateRollingAverages(
         array $fixtures
@@ -256,31 +536,36 @@ class FixtureIntelligence
 
         return [
 
-            'next_5' => $this->calculateRollingAverage(
-                $fixtures,
-                5
-            ),
+            'next_5' =>
+                $this->calculateRollingAverage(
+                    $fixtures,
+                    5
+                ),
 
-            'next_6' => $this->calculateRollingAverage(
-                $fixtures,
-                6
-            ),
+            'next_6' =>
+                $this->calculateRollingAverage(
+                    $fixtures,
+                    6
+                ),
 
-            'next_8' => $this->calculateRollingAverage(
-                $fixtures,
-                8
-            ),
+            'next_8' =>
+                $this->calculateRollingAverage(
+                    $fixtures,
+                    8
+                ),
 
-            'next_10' => $this->calculateRollingAverage(
-                $fixtures,
-                10
-            )
+            'next_10' =>
+                $this->calculateRollingAverage(
+                    $fixtures,
+                    10
+                )
         ];
     }
 
 
     /**
-     * Find the strongest consecutive fixture run.
+     * Find the strongest consecutive
+     * fixture run.
      */
     public function findBestRun(
         array $fixtures,
@@ -288,44 +573,72 @@ class FixtureIntelligence
     ): ?array {
 
         if (
+            $runLength <= 0
+            ||
             count($fixtures) < $runLength
         ) {
+
             return null;
         }
 
 
-        $bestRun = null;
-        $bestAverage = -INF;
+        $bestRun =
+            null;
+
+
+        $bestAverage =
+            -INF;
+
+
+        $maximumStart =
+            count($fixtures)
+            -
+            $runLength;
 
 
         for (
             $i = 0;
-            $i <= count($fixtures) - $runLength;
+            $i <= $maximumStart;
             $i++
         ) {
 
-            $run = array_slice(
-                $fixtures,
-                $i,
-                $runLength
-            );
+            $run =
+                array_slice(
+                    $fixtures,
+                    $i,
+                    $runLength
+                );
 
-            $average = $this->calculateRollingAverage(
-                $run,
-                $runLength
-            );
+
+            $average =
+                $this->calculateRollingAverage(
+                    $run,
+                    $runLength
+                );
+
+
+            if ($average === null) {
+                continue;
+            }
 
 
             if ($average > $bestAverage) {
 
-                $bestAverage = $average;
+                $bestAverage =
+                    $average;
+
 
                 $bestRun = [
+
                     'start_gameweek' =>
-                        $run[0]['gameweek'],
+                        $run[0]['gameweek']
+                        ?? null,
 
                     'end_gameweek' =>
-                        $run[count($run) - 1]['gameweek'],
+                        $run[
+                            count($run) - 1
+                        ]['gameweek']
+                        ?? null,
 
                     'average_score' =>
                         $average,
@@ -342,7 +655,8 @@ class FixtureIntelligence
 
 
     /**
-     * Find the weakest consecutive fixture run.
+     * Find the weakest consecutive
+     * fixture run.
      */
     public function findWorstRun(
         array $fixtures,
@@ -350,44 +664,72 @@ class FixtureIntelligence
     ): ?array {
 
         if (
+            $runLength <= 0
+            ||
             count($fixtures) < $runLength
         ) {
+
             return null;
         }
 
 
-        $worstRun = null;
-        $worstAverage = INF;
+        $worstRun =
+            null;
+
+
+        $worstAverage =
+            INF;
+
+
+        $maximumStart =
+            count($fixtures)
+            -
+            $runLength;
 
 
         for (
             $i = 0;
-            $i <= count($fixtures) - $runLength;
+            $i <= $maximumStart;
             $i++
         ) {
 
-            $run = array_slice(
-                $fixtures,
-                $i,
-                $runLength
-            );
+            $run =
+                array_slice(
+                    $fixtures,
+                    $i,
+                    $runLength
+                );
 
-            $average = $this->calculateRollingAverage(
-                $run,
-                $runLength
-            );
+
+            $average =
+                $this->calculateRollingAverage(
+                    $run,
+                    $runLength
+                );
+
+
+            if ($average === null) {
+                continue;
+            }
 
 
             if ($average < $worstAverage) {
 
-                $worstAverage = $average;
+                $worstAverage =
+                    $average;
+
 
                 $worstRun = [
+
                     'start_gameweek' =>
-                        $run[0]['gameweek'],
+                        $run[0]['gameweek']
+                        ?? null,
 
                     'end_gameweek' =>
-                        $run[count($run) - 1]['gameweek'],
+                        $run[
+                            count($run) - 1
+                        ]['gameweek']
+                        ?? null,
 
                     'average_score' =>
                         $average,
@@ -404,8 +746,8 @@ class FixtureIntelligence
 
 
     /**
-     * Determine whether the fixture run is improving,
-     * declining or stable.
+     * Determine whether the fixture run
+     * is improving, declining or stable.
      */
     public function calculateTrend(
         array $fixtures
@@ -416,20 +758,27 @@ class FixtureIntelligence
         }
 
 
-        $midpoint = (int) floor(
-            count($fixtures) / 2
-        );
+        $midpoint =
+            (int) floor(
+                count($fixtures)
+                /
+                2
+            );
 
-        $firstHalf = array_slice(
-            $fixtures,
-            0,
-            $midpoint
-        );
 
-        $secondHalf = array_slice(
-            $fixtures,
-            $midpoint
-        );
+        $firstHalf =
+            array_slice(
+                $fixtures,
+                0,
+                $midpoint
+            );
+
+
+        $secondHalf =
+            array_slice(
+                $fixtures,
+                $midpoint
+            );
 
 
         $firstAverage =
@@ -438,6 +787,7 @@ class FixtureIntelligence
                 count($firstHalf)
             );
 
+
         $secondAverage =
             $this->calculateRollingAverage(
                 $secondHalf,
@@ -445,18 +795,53 @@ class FixtureIntelligence
             );
 
 
+        if (
+            $firstAverage === null
+            ||
+            $secondAverage === null
+        ) {
+
+            return 'Insufficient Data';
+        }
+
+
         $difference =
-            $secondAverage - $firstAverage;
+            $secondAverage
+            -
+            $firstAverage;
 
 
         if ($difference >= 10) {
             return 'Improving';
         }
 
+
         if ($difference <= -10) {
             return 'Declining';
         }
 
+
         return 'Stable';
+    }
+
+
+    /**
+     * Keep strength ratings inside
+     * the standard 0-100 scale.
+     */
+    private function normaliseStrength(
+        float $strength
+    ): float {
+
+        return round(
+            max(
+                0,
+                min(
+                    100,
+                    $strength
+                )
+            ),
+            2
+        );
     }
 }

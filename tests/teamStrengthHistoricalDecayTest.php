@@ -481,17 +481,13 @@ testResult(
 /*
  * ============================================================
  * SCENARIO D
+ * Historical Fixture Processing
  * ============================================================
- *
- * Verify that TeamPerformance processes all completed
- * fixtures in chronological gameweek order internally.
- *
- * We test the raw fixture input/output indirectly through
- * the performance result rather than relying on a "matches"
- * key that TeamPerformance does not currently return.
  */
 
-heading('Scenario D: Historical Fixture Processing');
+heading(
+    'Scenario D: Historical Fixture Processing'
+);
 
 
 testResult(
@@ -499,16 +495,100 @@ testResult(
     $performanceA['played'] === 10
 );
 
+
 testResult(
     'Early losses/recent wins processes all ten matches',
     $performanceB['played'] === 10
 );
 
+
+/*
+ * TeamPerformance deliberately uses aggregate season
+ * performance rather than recency weighting.
+ *
+ * Because both histories contain exactly five wins
+ * and five losses with identical scorelines, their
+ * aggregate performance ratings should match.
+ */
+
+$performanceRatingA =
+    $teamPerformance
+        ->calculatePerformanceRating(
+            $performanceA
+        );
+
+
+$performanceRatingB =
+    $teamPerformance
+        ->calculatePerformanceRating(
+            $performanceB
+        );
+
+
+echo "Aggregate Performance A: "
+    . number_format(
+        $performanceRatingA,
+        2
+    )
+    . "<br>";
+
+
+echo "Aggregate Performance B: "
+    . number_format(
+        $performanceRatingB,
+        2
+    )
+    . "<br>";
+
+
 testResult(
-    'Reversing result order does not change the current average',
-    $performanceA['average_performance']
+    'Reversing result order does not change aggregate TeamPerformance rating',
+    $performanceRatingA
     ===
-    $performanceB['average_performance']
+    $performanceRatingB
+);
+
+
+/*
+ * Verify TeamPerformance keeps recent-form
+ * history in chronological gameweek order.
+ */
+
+$formA =
+    $performanceA['recent_form']
+    ?? [];
+
+
+$formB =
+    $performanceB['recent_form']
+    ?? [];
+
+
+testResult(
+    'Early wins/recent losses stores ten recent-form entries',
+    count($formA) === 10
+);
+
+
+testResult(
+    'Early losses/recent wins stores ten recent-form entries',
+    count($formB) === 10
+);
+
+
+testResult(
+    'First historical result is Gameweek 1',
+    isset($formA[0]['gameweek'])
+    &&
+    $formA[0]['gameweek'] === 1
+);
+
+
+testResult(
+    'Last historical result is Gameweek 10',
+    isset($formA[9]['gameweek'])
+    &&
+    $formA[9]['gameweek'] === 10
 );
 /*
  * ============================================================

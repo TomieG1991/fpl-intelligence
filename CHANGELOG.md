@@ -6,6 +6,60 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.11.5] - Team Intelligence & Fixture Model Hardening
+
+### Refactored
+
+- Hardened TeamStrength range and baseline calculations.
+- Added safer handling for missing and malformed team strength data.
+- Hardened TeamPerformance fixture processing and aggregate calculations.
+- Added safer handling for malformed fixtures and missing performance fields.
+- Improved recent-form handling and invalid limit behaviour.
+- Hardened TeamStrengthModel weighting and combined rating calculations.
+- Added baseline field validation to TeamStrengthModel.
+- Preserved original baseline value types in returned team models.
+- Hardened TeamPerformanceAdjusted opposition-adjustment processing.
+- Added safer handling for missing team-strength models and incomplete fixtures.
+- Hardened OppositionAdjustedPerformance input validation and fixture processing.
+- Added explicit invalid-result handling.
+- Hardened TeamStrengthHistoricalDecay against malformed and out-of-range performance values.
+- Updated TeamIntelligence to support modern venue-aware team strength models.
+- Preserved compatibility with legacy flat team-strength structures.
+- Updated TeamFixtureProfile to prefer already-calculated fixture intelligence.
+- Hardened legacy fixture-profile construction when strength data is incomplete.
+- Hardened FixtureIntelligence calculations, fixture processing, rolling averages, run detection and trend analysis.
+- Added support for nullable fixture gameweeks throughout team and fixture intelligence processing.
+
+### Fixed
+
+- Fixed missing team-strength data being silently converted into misleading strength values.
+- Fixed malformed fixtures potentially producing undefined-key warnings.
+- Fixed invalid recent-form limits producing unexpected results.
+- Fixed historical-decay tests referencing a non-existent `average_performance` field.
+- Removed PHP warnings from historical-decay regression testing.
+- Fixed TeamStrengthModel output type changes that broke strict model-contract assertions.
+- Fixed FixtureIntelligence baseline output type changes that broke player fixture-intelligence assertions.
+- Fixed legacy TeamIntelligence logic overriding explicit venue-aware home and away strengths.
+
+### Model
+
+- TeamStrength continues to normalise FPL baseline ratings onto a 0-100 scale.
+- TeamPerformance continues to combine points, goal difference, attack and defence ratings.
+- TeamStrengthModel continues to progressively blend FPL baseline and actual performance as matches are played.
+- Opposition-adjusted performance continues to compare actual results against opponent-strength expectations.
+- Historical decay continues to weight recent performances more heavily than older performances.
+- Fixture intelligence continues to use venue-aware team and opposition strength.
+- TeamFixtureProfile continues to use the next five fixtures as its primary short-term fixture rating.
+- TeamIntelligence continues to combine team strength and fixture rating without changing existing weighting behaviour.
+
+### Testing
+
+- Complete automated regression suite passes successfully.
+- No test files fail.
+- No test files produce errors.
+- No PHP warnings remain in the historical-decay test path.
+- Existing team-strength, venue, opposition, historical-decay, fixture-intelligence and player-fixture integration tests remain compatible.
+
 ## [0.11.4] - Database & Schema Hardening
 
 ### Added

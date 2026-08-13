@@ -4,6 +4,9 @@ class TeamStrengthModel
 {
     /**
      * Calculate the weighting given to the FPL baseline.
+     *
+     * The baseline gradually becomes less influential
+     * as actual competitive performance becomes available.
      */
     public function calculateBaselineWeight(
         int $played
@@ -13,43 +16,27 @@ class TeamStrengthModel
             return 1.00;
         }
 
-        if ($played === 1) {
-            return 0.90;
-        }
 
-        if ($played === 2) {
-            return 0.85;
-        }
+        $weights = [
 
-        if ($played === 3) {
-            return 0.80;
-        }
+            1 => 0.90,
+            2 => 0.85,
+            3 => 0.80,
+            4 => 0.75,
+            5 => 0.70,
+            6 => 0.65,
+            7 => 0.60,
+            8 => 0.55,
+            9 => 0.50
+        ];
 
-        if ($played === 4) {
-            return 0.75;
-        }
 
-        if ($played === 5) {
-            return 0.70;
-        }
-
-        if ($played === 6) {
-            return 0.65;
-        }
-
-        if ($played === 7) {
-            return 0.60;
-        }
-
-        if ($played === 8) {
-            return 0.55;
-        }
-
-        if ($played === 9) {
-            return 0.50;
-        }
-
-        return 0.45;
+        /*
+         * From ten matches onwards the baseline
+         * retains 45% influence.
+         */
+        return $weights[$played]
+            ?? 0.45;
     }
 
 
@@ -61,10 +48,11 @@ class TeamStrengthModel
     ): float {
 
         return round(
-            1 -
+            1
+            -
             $this->calculateBaselineWeight(
                 $played
-            ), 
+            ),
             2
         );
     }
@@ -80,17 +68,42 @@ class TeamStrengthModel
     ): float {
 
         /*
+         * Keep component ratings inside the standard
+         * 0-100 intelligence scale.
+         */
+        $baseline =
+            max(
+                0,
+                min(
+                    100,
+                    $baseline
+                )
+            );
+
+
+        if ($performance !== null) {
+
+            $performance =
+                max(
+                    0,
+                    min(
+                        100,
+                        $performance
+                    )
+                );
+        }
+
+
+        /*
          * No completed matches means there is no
          * performance data to use.
-         *
-         * Therefore the FPL baseline remains
-         * the complete rating.
          */
         if (
             $played <= 0
             ||
             $performance === null
         ) {
+
             return round(
                 $baseline,
                 2
@@ -103,19 +116,32 @@ class TeamStrengthModel
                 $played
             );
 
+
         $performanceWeight =
             $this->calculatePerformanceWeight(
                 $played
             );
 
 
-        return round(
+        $combined =
             (
-                $baseline * $baselineWeight
+                $baseline
+                * $baselineWeight
             )
             +
             (
-                $performance * $performanceWeight
+                $performance
+                * $performanceWeight
+            );
+
+
+        return round(
+            max(
+                0,
+                min(
+                    100,
+                    $combined
+                )
             ),
             2
         );
@@ -126,7 +152,6 @@ class TeamStrengthModel
      * Build the complete strength model for one team.
      *
      * Baseline strength comes from TeamStrength.
-     *
      * Performance rating comes from TeamPerformance.
      *
      * The two are blended according to the number
@@ -138,22 +163,66 @@ class TeamStrengthModel
         TeamPerformance $performanceModel
     ): array {
 
-        $played =
-            (int) $performance['played'];
-
-
         /*
-         * TeamPerformance is the single source
-         * of truth for the performance rating.
+         * A complete model requires valid baseline identity
+         * and home/away/overall strength values.
          */
-        $performanceRating =
-            $performanceModel->calculatePerformanceRating(
-                $performance
+        $requiredBaselineFields = [
+
+            'id',
+            'name',
+            'home',
+            'away',
+            'overall'
+        ];
+
+
+        foreach (
+            $requiredBaselineFields
+            as $field
+        ) {
+
+            if (
+                !array_key_exists(
+                    $field,
+                    $baseline
+                )
+            ) {
+
+                throw new InvalidArgumentException(
+                    "Missing team baseline field: {$field}"
+                );
+            }
+        }
+
+
+        $played =
+            max(
+                0,
+                (int) (
+                    $performance['played']
+                    ?? 0
+                )
             );
 
 
         /*
-         * Calculate combined home rating.
+         * TeamPerformance remains the single source
+         * of truth for the performance rating.
+         */
+        $performanceRating =
+            $performanceModel
+                ->calculatePerformanceRating(
+                    $performance
+                );
+
+
+        /*
+         * Calculate combined ratings.
+         *
+         * For the current model the same overall
+         * performance rating is blended into the
+         * home, away and overall baselines.
          */
         $homeRating =
             $this->calculateCombinedRating(
@@ -163,9 +232,6 @@ class TeamStrengthModel
             );
 
 
-        /*
-         * Calculate combined away rating.
-         */
         $awayRating =
             $this->calculateCombinedRating(
                 (float) $baseline['away'],
@@ -174,13 +240,22 @@ class TeamStrengthModel
             );
 
 
-        /*
-         * Calculate combined overall rating.
-         */
         $overallRating =
             $this->calculateCombinedRating(
                 (float) $baseline['overall'],
                 $performanceRating,
+                $played
+            );
+
+
+        $baselineWeight =
+            $this->calculateBaselineWeight(
+                $played
+            );
+
+
+        $performanceWeight =
+            $this->calculatePerformanceWeight(
                 $played
             );
 
@@ -218,14 +293,10 @@ class TeamStrengthModel
                 $overallRating,
 
             'baseline_weight' =>
-                $this->calculateBaselineWeight(
-                    $played
-                ),
+                $baselineWeight,
 
             'performance_weight' =>
-                $this->calculatePerformanceWeight(
-                    $played
-                )
+                $performanceWeight
         ];
     }
 }

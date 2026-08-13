@@ -14,38 +14,78 @@ class TeamPerformance
     ): array {
 
         $stats = [
-            'team_id' => $teamId,
 
-            'played' => 0,
-            'wins' => 0,
-            'draws' => 0,
-            'losses' => 0,
+            'team_id' =>
+                $teamId,
 
-            'points' => 0,
+            'played' =>
+                0,
 
-            'goals_for' => 0,
-            'goals_against' => 0,
-            'goal_difference' => 0,
+            'wins' =>
+                0,
 
-            'home_played' => 0,
-            'home_wins' => 0,
-            'home_draws' => 0,
-            'home_losses' => 0,
-            'home_points' => 0,
+            'draws' =>
+                0,
 
-            'away_played' => 0,
-            'away_wins' => 0,
-            'away_draws' => 0,
-            'away_losses' => 0,
-            'away_points' => 0,
+            'losses' =>
+                0,
 
-            'recent_form' => [],
+            'points' =>
+                0,
 
-            'home_goals_for' => 0,
-            'home_goals_against' => 0,
+            'goals_for' =>
+                0,
 
-            'away_goals_for' => 0,
-            'away_goals_against' => 0
+            'goals_against' =>
+                0,
+
+            'goal_difference' =>
+                0,
+
+            'home_played' =>
+                0,
+
+            'home_wins' =>
+                0,
+
+            'home_draws' =>
+                0,
+
+            'home_losses' =>
+                0,
+
+            'home_points' =>
+                0,
+
+            'away_played' =>
+                0,
+
+            'away_wins' =>
+                0,
+
+            'away_draws' =>
+                0,
+
+            'away_losses' =>
+                0,
+
+            'away_points' =>
+                0,
+
+            'recent_form' =>
+                [],
+
+            'home_goals_for' =>
+                0,
+
+            'home_goals_against' =>
+                0,
+
+            'away_goals_for' =>
+                0,
+
+            'away_goals_against' =>
+                0
         ];
 
 
@@ -54,20 +94,39 @@ class TeamPerformance
          */
         foreach ($fixtures as $fixture) {
 
-            if ((int) $fixture['finished'] !== 1) {
+            /*
+             * Ignore incomplete or malformed fixtures.
+             */
+            if (
+                !isset(
+                    $fixture['finished'],
+                    $fixture['home_team_id'],
+                    $fixture['away_team_id']
+                )
+                ||
+                (int) $fixture['finished'] !== 1
+            ) {
+
                 continue;
             }
 
 
-            $homeTeamId = (int) $fixture['home_team_id'];
-            $awayTeamId = (int) $fixture['away_team_id'];
+            $homeTeamId =
+                (int) $fixture['home_team_id'];
+
+            $awayTeamId =
+                (int) $fixture['away_team_id'];
 
 
+            /*
+             * Ignore fixtures not involving the selected team.
+             */
             if (
                 $homeTeamId !== $teamId
                 &&
                 $awayTeamId !== $teamId
             ) {
+
                 continue;
             }
 
@@ -76,97 +135,145 @@ class TeamPerformance
              * Ignore fixtures where scores are unavailable.
              */
             if (
+                !array_key_exists(
+                    'home_score',
+                    $fixture
+                )
+                ||
+                !array_key_exists(
+                    'away_score',
+                    $fixture
+                )
+                ||
                 $fixture['home_score'] === null
                 ||
                 $fixture['away_score'] === null
             ) {
+
                 continue;
             }
 
 
-            $homeScore = (int) $fixture['home_score'];
-            $awayScore = (int) $fixture['away_score'];
+            $homeScore =
+                (int) $fixture['home_score'];
+
+            $awayScore =
+                (int) $fixture['away_score'];
 
 
             $stats['played']++;
 
 
             /*
-             * Determine whether our team was home or away.
+             * Determine venue and scores from the
+             * selected team's perspective.
              */
             if ($homeTeamId === $teamId) {
 
-                $teamScore = $homeScore;
-                $opponentScore = $awayScore;
+                $teamScore =
+                    $homeScore;
+
+                $opponentScore =
+                    $awayScore;
+
+                $venue =
+                    'home';
 
                 $stats['home_played']++;
 
-                $stats['home_goals_for'] += $teamScore;
-                $stats['home_goals_against'] += $opponentScore;
+                $stats['home_goals_for'] +=
+                    $teamScore;
 
-                if ($teamScore > $opponentScore) {
+                $stats['home_goals_against'] +=
+                    $opponentScore;
 
-                    $result = 'W';
+            } else {
 
-                    $stats['wins']++;
+                $teamScore =
+                    $awayScore;
+
+                $opponentScore =
+                    $homeScore;
+
+                $venue =
+                    'away';
+
+                $stats['away_played']++;
+
+                $stats['away_goals_for'] +=
+                    $teamScore;
+
+                $stats['away_goals_against'] +=
+                    $opponentScore;
+            }
+
+
+            /*
+             * Determine result.
+             */
+            if ($teamScore > $opponentScore) {
+
+                $result =
+                    'W';
+
+                $stats['wins']++;
+
+                $stats['points'] +=
+                    3;
+
+
+                if ($venue === 'home') {
+
                     $stats['home_wins']++;
 
-                    $stats['points'] += 3;
-                    $stats['home_points'] += 3;
+                    $stats['home_points'] +=
+                        3;
 
-                } elseif ($teamScore === $opponentScore) {
+                } else {
 
-                    $result = 'D';
+                    $stats['away_wins']++;
 
-                    $stats['draws']++;
+                    $stats['away_points'] +=
+                        3;
+                }
+
+            } elseif ($teamScore === $opponentScore) {
+
+                $result =
+                    'D';
+
+                $stats['draws']++;
+
+                $stats['points']++;
+
+
+                if ($venue === 'home') {
+
                     $stats['home_draws']++;
 
-                    $stats['points']++;
                     $stats['home_points']++;
 
                 } else {
 
-                    $result = 'L';
+                    $stats['away_draws']++;
 
-                    $stats['losses']++;
-                    $stats['home_losses']++;
+                    $stats['away_points']++;
                 }
 
             } else {
 
-                $teamScore = $awayScore;
-                $opponentScore = $homeScore;
+                $result =
+                    'L';
 
-                $stats['away_played']++;
+                $stats['losses']++;
 
-                $stats['away_goals_for'] += $teamScore;
-                $stats['away_goals_against'] += $opponentScore;
 
-                if ($teamScore > $opponentScore) {
+                if ($venue === 'home') {
 
-                    $result = 'W';
-
-                    $stats['wins']++;
-                    $stats['away_wins']++;
-
-                    $stats['points'] += 3;
-                    $stats['away_points'] += 3;
-
-                } elseif ($teamScore === $opponentScore) {
-
-                    $result = 'D';
-
-                    $stats['draws']++;
-                    $stats['away_draws']++;
-
-                    $stats['points']++;
-                    $stats['away_points']++;
+                    $stats['home_losses']++;
 
                 } else {
 
-                    $result = 'L';
-
-                    $stats['losses']++;
                     $stats['away_losses']++;
                 }
             }
@@ -176,26 +283,40 @@ class TeamPerformance
              * Store result for recent-form calculations.
              */
             $stats['recent_form'][] = [
-                'gameweek' => (int) $fixture['gameweek'],
-                'result' => $result,
-                'goals_for' => $teamScore,
-                'goals_against' => $opponentScore
+
+                'gameweek' =>
+                    isset($fixture['gameweek'])
+                    &&
+                    $fixture['gameweek'] !== null
+                        ? (int) $fixture['gameweek']
+                        : null,
+
+                'result' =>
+                    $result,
+
+                'goals_for' =>
+                    $teamScore,
+
+                'goals_against' =>
+                    $opponentScore
             ];
         }
 
 
         /*
-         * Calculate goal difference.
+         * Calculate aggregate goals.
          */
         $stats['goals_for'] =
             $stats['home_goals_for']
             +
             $stats['away_goals_for'];
 
+
         $stats['goals_against'] =
             $stats['home_goals_against']
             +
             $stats['away_goals_against'];
+
 
         $stats['goal_difference'] =
             $stats['goals_for']
@@ -205,11 +326,50 @@ class TeamPerformance
 
         /*
          * Ensure recent form is chronological.
+         *
+         * Unscheduled/null-gameweek fixtures are placed last,
+         * although completed fixtures would normally have a
+         * gameweek assigned.
          */
         usort(
             $stats['recent_form'],
-            fn($a, $b) =>
-                $a['gameweek'] <=> $b['gameweek']
+            function (
+                array $a,
+                array $b
+            ): int {
+
+                $gameweekA =
+                    $a['gameweek'];
+
+                $gameweekB =
+                    $b['gameweek'];
+
+
+                if (
+                    $gameweekA === null
+                    &&
+                    $gameweekB === null
+                ) {
+
+                    return 0;
+                }
+
+
+                if ($gameweekA === null) {
+                    return 1;
+                }
+
+
+                if ($gameweekB === null) {
+                    return -1;
+                }
+
+
+                return
+                    $gameweekA
+                    <=>
+                    $gameweekB;
+            }
         );
 
 
@@ -225,9 +385,21 @@ class TeamPerformance
         int $matches = 5
     ): array {
 
-        if (empty($performance['recent_form'])) {
+        if (
+            $matches <= 0
+            ||
+            empty(
+                $performance['recent_form']
+            )
+            ||
+            !is_array(
+                $performance['recent_form']
+            )
+        ) {
+
             return [];
         }
+
 
         return array_slice(
             $performance['recent_form'],
@@ -243,13 +415,27 @@ class TeamPerformance
         array $performance
     ): ?float {
 
-        if ($performance['played'] === 0) {
+        $played =
+            (int) (
+                $performance['played']
+                ?? 0
+            );
+
+
+        if ($played <= 0) {
             return null;
         }
 
+
         return round(
-            $performance['points']
-            / $performance['played'],
+            (
+                (float) (
+                    $performance['points']
+                    ?? 0
+                )
+            )
+            /
+            $played,
             2
         );
     }
@@ -262,13 +448,27 @@ class TeamPerformance
         array $performance
     ): ?float {
 
-        if ($performance['played'] === 0) {
+        $played =
+            (int) (
+                $performance['played']
+                ?? 0
+            );
+
+
+        if ($played <= 0) {
             return null;
         }
 
+
         return round(
-            $performance['goals_for']
-            / $performance['played'],
+            (
+                (float) (
+                    $performance['goals_for']
+                    ?? 0
+                )
+            )
+            /
+            $played,
             2
         );
     }
@@ -281,17 +481,32 @@ class TeamPerformance
         array $performance
     ): ?float {
 
-        if ($performance['played'] === 0) {
+        $played =
+            (int) (
+                $performance['played']
+                ?? 0
+            );
+
+
+        if ($played <= 0) {
             return null;
         }
 
+
         return round(
-            $performance['goals_against']
-            / $performance['played'],
+            (
+                (float) (
+                    $performance['goals_against']
+                    ?? 0
+                )
+            )
+            /
+            $played,
             2
         );
     }
-    
+
+
     /**
      * Calculate points performance as a 0-100 percentage.
      */
@@ -299,18 +514,42 @@ class TeamPerformance
         array $performance
     ): ?float {
 
-        if ($performance['played'] === 0) {
+        $played =
+            (int) (
+                $performance['played']
+                ?? 0
+            );
+
+
+        if ($played <= 0) {
             return null;
         }
 
+
         $maximumPoints =
-            $performance['played'] * 3;
+            $played * 3;
+
+
+        $points =
+            (float) (
+                $performance['points']
+                ?? 0
+            );
+
+
+        $rating =
+            ($points / $maximumPoints)
+            * 100;
+
 
         return round(
-            (
-                $performance['points']
-                / $maximumPoints
-            ) * 100,
+            max(
+                0,
+                min(
+                    100,
+                    $rating
+                )
+            ),
             2
         );
     }
@@ -318,9 +557,6 @@ class TeamPerformance
 
     /**
      * Calculate goal difference rating.
-     *
-     * Uses goal difference per game and converts
-     * it into a 0-100 score.
      *
      * +2 GD/game = 100
      *  0 GD/game = 50
@@ -330,23 +566,48 @@ class TeamPerformance
         array $performance
     ): ?float {
 
-        if ($performance['played'] === 0) {
+        $played =
+            (int) (
+                $performance['played']
+                ?? 0
+            );
+
+
+        if ($played <= 0) {
             return null;
         }
 
+
+        $goalDifference =
+            (float) (
+                $performance['goal_difference']
+                ?? 0
+            );
+
+
         $goalDifferencePerGame =
-            $performance['goal_difference']
-            / $performance['played'];
+            $goalDifference
+            /
+            $played;
+
 
         $rating =
             50
-            + (
+            +
+            (
                 $goalDifferencePerGame
                 * 25
             );
 
+
         return round(
-            max(0, min(100, $rating)),
+            max(
+                0,
+                min(
+                    100,
+                    $rating
+                )
+            ),
             2
         );
     }
@@ -363,19 +624,44 @@ class TeamPerformance
         array $performance
     ): ?float {
 
-        if ($performance['played'] === 0) {
+        $played =
+            (int) (
+                $performance['played']
+                ?? 0
+            );
+
+
+        if ($played <= 0) {
             return null;
         }
 
+
+        $goalsFor =
+            (float) (
+                $performance['goals_for']
+                ?? 0
+            );
+
+
         $goalsPerGame =
-            $performance['goals_for']
-            / $performance['played'];
+            $goalsFor
+            /
+            $played;
+
 
         $rating =
-            ($goalsPerGame / 3) * 100;
+            ($goalsPerGame / 3)
+            * 100;
+
 
         return round(
-            max(0, min(100, $rating)),
+            max(
+                0,
+                min(
+                    100,
+                    $rating
+                )
+            ),
             2
         );
     }
@@ -392,23 +678,48 @@ class TeamPerformance
         array $performance
     ): ?float {
 
-        if ($performance['played'] === 0) {
+        $played =
+            (int) (
+                $performance['played']
+                ?? 0
+            );
+
+
+        if ($played <= 0) {
             return null;
         }
 
+
+        $goalsAgainst =
+            (float) (
+                $performance['goals_against']
+                ?? 0
+            );
+
+
         $goalsAgainstPerGame =
-            $performance['goals_against']
-            / $performance['played'];
+            $goalsAgainst
+            /
+            $played;
+
 
         $rating =
             100
-            - (
+            -
+            (
                 ($goalsAgainstPerGame / 3)
                 * 100
             );
 
+
         return round(
-            max(0, min(100, $rating)),
+            max(
+                0,
+                min(
+                    100,
+                    $rating
+                )
+            ),
             2
         );
     }
@@ -421,7 +732,14 @@ class TeamPerformance
         array $performance
     ): ?float {
 
-        if ($performance['played'] === 0) {
+        $played =
+            (int) (
+                $performance['played']
+                ?? 0
+            );
+
+
+        if ($played <= 0) {
             return null;
         }
 
@@ -431,15 +749,18 @@ class TeamPerformance
                 $performance
             );
 
+
         $goalDifferenceRating =
             $this->calculateGoalDifferenceRating(
                 $performance
             );
 
+
         $attackRating =
             $this->calculateAttackRating(
                 $performance
             );
+
 
         $defenceRating =
             $this->calculateDefenceRating(
@@ -450,10 +771,10 @@ class TeamPerformance
         /*
          * Performance weighting.
          *
-         * Points = 40%
+         * Points          = 40%
          * Goal difference = 25%
-         * Attack = 15%
-         * Defence = 20%
+         * Attack          = 15%
+         * Defence         = 20%
          */
         $rating =
             ($pointsRating * 0.40)
@@ -466,7 +787,13 @@ class TeamPerformance
 
 
         return round(
-            $rating,
+            max(
+                0,
+                min(
+                    100,
+                    $rating
+                )
+            ),
             2
         );
     }
