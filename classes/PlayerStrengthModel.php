@@ -4,9 +4,6 @@ class PlayerStrengthModel
 {
     /**
      * Position-specific weighting for player performance.
-     *
-     * The weighting reflects which metrics are most relevant
-     * to each position.
      */
     private array $weights = [
 
@@ -50,10 +47,19 @@ class PlayerStrengthModel
 
     /**
      * Return the weighting configuration for a position.
+     *
+     * Unknown or missing positions continue to use
+     * MID as the legacy fallback.
      */
     public function getWeights(
         ?string $position
     ): array {
+
+        $position =
+            strtoupper(
+                (string) $position
+            );
+
 
         return $this->weights[$position]
             ?? $this->weights['MID'];
@@ -63,8 +69,9 @@ class PlayerStrengthModel
     /**
      * Calculate the combined player strength rating.
      *
-     * All component ratings are expected to be
-     * normalised to a 0-100 scale.
+     * Missing metrics are excluded and their weighting
+     * is redistributed proportionally across the metrics
+     * that are available.
      */
     public function calculateRating(
         array $model
@@ -72,7 +79,7 @@ class PlayerStrengthModel
 
         $position =
             $model['position']
-            ?? 'MID';
+            ?? null;
 
 
         $weights =
@@ -81,52 +88,85 @@ class PlayerStrengthModel
             );
 
 
-        /*
-         * Required component ratings.
-         *
-         * If a metric is unavailable we exclude it
-         * and redistribute its weighting proportionally
-         * across the metrics that are available.
-         */
         $ratings = [
 
             'goals' =>
-                $model['goals_rating'] ?? null,
+                $model['goals_rating']
+                ?? null,
 
             'assists' =>
-                $model['assists_rating'] ?? null,
+                $model['assists_rating']
+                ?? null,
 
             'expected_goals' =>
-                $model['expected_goals_rating'] ?? null,
+                $model['expected_goals_rating']
+                ?? null,
 
             'expected_assists' =>
-                $model['expected_assists_rating'] ?? null,
+                $model['expected_assists_rating']
+                ?? null,
 
             'clean_sheets' =>
-                $model['clean_sheets_rating'] ?? null,
+                $model['clean_sheets_rating']
+                ?? null,
 
             'bps' =>
-                $model['bps_rating'] ?? null
+                $model['bps_rating']
+                ?? null
         ];
 
 
-        $weightedTotal = 0.0;
-        $weightTotal = 0.0;
+        $weightedTotal =
+            0.0;
+
+        $weightTotal =
+            0.0;
 
 
-        foreach ($ratings as $metric => $rating) {
+        foreach (
+            $ratings
+            as $metric => $rating
+        ) {
 
-            if ($rating === null) {
+            if (
+                $rating === null
+                ||
+                !is_numeric($rating)
+            ) {
+
                 continue;
             }
 
 
+            /*
+             * All component ratings use the
+             * standard 0-100 scale.
+             */
+            $rating =
+                max(
+                    0,
+                    min(
+                        100,
+                        (float) $rating
+                    )
+                );
+
+
             $weight =
-                $weights[$metric];
+                $weights[$metric]
+                ?? 0;
+
+
+            if ($weight <= 0) {
+                continue;
+            }
 
 
             $weightedTotal +=
-                $rating * $weight;
+                $rating
+                *
+                $weight;
+
 
             $weightTotal +=
                 $weight;
@@ -138,8 +178,20 @@ class PlayerStrengthModel
         }
 
 
+        $rating =
+            $weightedTotal
+            /
+            $weightTotal;
+
+
         return round(
-            $weightedTotal / $weightTotal,
+            max(
+                0,
+                min(
+                    100,
+                    $rating
+                )
+            ),
             2
         );
     }
@@ -161,55 +213,92 @@ class PlayerStrengthModel
         return [
 
             'player_id' =>
-                $model['player_id'],
+                (int) (
+                    $model['player_id']
+                    ?? 0
+                ),
 
             'fpl_player_id' =>
-                $model['fpl_player_id'],
+                (int) (
+                    $model['fpl_player_id']
+                    ?? 0
+                ),
 
             'team_id' =>
-                $model['team_id'],
+                (int) (
+                    $model['team_id']
+                    ?? 0
+                ),
 
             'name' =>
-                $model['name'],
+                $model['name']
+                ?? null,
 
             'position' =>
-                $model['position'],
+                $model['position']
+                ?? null,
 
             'minutes' =>
-                $model['minutes'],
+                (int) (
+                    $model['minutes']
+                    ?? 0
+                ),
 
             'goals_per_90' =>
-                $model['goals_per_90'],
+                $model['goals_per_90']
+                ?? null,
 
             'assists_per_90' =>
-                $model['assists_per_90'],
+                $model['assists_per_90']
+                ?? null,
 
             'expected_goals_per_90' =>
-                $model['expected_goals_per_90'],
+                $model[
+                    'expected_goals_per_90'
+                ]
+                ?? null,
 
             'expected_assists_per_90' =>
-                $model['expected_assists_per_90'],
+                $model[
+                    'expected_assists_per_90'
+                ]
+                ?? null,
 
             'clean_sheets_per_90' =>
-                $model['clean_sheets_per_90'],
+                $model[
+                    'clean_sheets_per_90'
+                ]
+                ?? null,
 
             'goals_rating' =>
-                $model['goals_rating'],
+                $model['goals_rating']
+                ?? null,
 
             'assists_rating' =>
-                $model['assists_rating'],
+                $model['assists_rating']
+                ?? null,
 
             'expected_goals_rating' =>
-                $model['expected_goals_rating'],
+                $model[
+                    'expected_goals_rating'
+                ]
+                ?? null,
 
             'expected_assists_rating' =>
-                $model['expected_assists_rating'],
+                $model[
+                    'expected_assists_rating'
+                ]
+                ?? null,
 
             'clean_sheets_rating' =>
-                $model['clean_sheets_rating'],
+                $model[
+                    'clean_sheets_rating'
+                ]
+                ?? null,
 
             'bps_rating' =>
-                $model['bps_rating'],
+                $model['bps_rating']
+                ?? null,
 
             'strength_rating' =>
                 $rating

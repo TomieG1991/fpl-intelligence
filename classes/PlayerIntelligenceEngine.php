@@ -27,15 +27,20 @@ class PlayerIntelligenceEngine
         PlayerIntelligenceScore $intelligenceScore
     ) {
 
-        $this->performance = $performance;
+        $this->performance =
+            $performance;
 
-        $this->strength = $strength;
+        $this->strength =
+            $strength;
 
-        $this->value = $value;
+        $this->value =
+            $value;
 
-        $this->availability = $availability;
+        $this->availability =
+            $availability;
 
-        $this->intelligenceScore = $intelligenceScore;
+        $this->intelligenceScore =
+            $intelligenceScore;
     }
 
 
@@ -56,9 +61,10 @@ class PlayerIntelligenceEngine
          */
 
         $performance =
-            $this->performance->buildModel(
-                $player
-            );
+            $this->performance
+                ->buildModel(
+                    $player
+                );
 
 
         /*
@@ -69,9 +75,10 @@ class PlayerIntelligenceEngine
          */
 
         $strength =
-            $this->strength->buildModel(
-                $performance
-            );
+            $this->strength
+                ->buildModel(
+                    $performance
+                );
 
 
         /*
@@ -82,10 +89,11 @@ class PlayerIntelligenceEngine
          */
 
         $value =
-            $this->value->buildValueModel(
-                $strength,
-                $performance
-            );
+            $this->value
+                ->buildValueModel(
+                    $strength,
+                    $performance
+                );
 
 
         /*
@@ -96,9 +104,10 @@ class PlayerIntelligenceEngine
          */
 
         $availability =
-            $this->availability->buildAvailabilityModel(
-                $performance
-            );
+            $this->availability
+                ->buildAvailabilityModel(
+                    $performance
+                );
 
 
         /*
@@ -109,78 +118,155 @@ class PlayerIntelligenceEngine
          */
 
         $intelligence =
-            $this->intelligenceScore->buildModel(
-                $strength,
-                $value,
-                $availability,
-                $fixtureRating
-            );
+            $this->intelligenceScore
+                ->buildModel(
+                    $strength,
+                    $value,
+                    $availability,
+                    $fixtureRating
+                );
 
 
         /*
          * --------------------------------------------------------
          * STEP 6
+         * Resolve shared identity
+         * --------------------------------------------------------
+         */
+
+        $playerId =
+            (int) (
+                $performance['player_id']
+                ??
+                $strength['player_id']
+                ??
+                $value['player_id']
+                ??
+                $availability['player_id']
+                ??
+                $intelligence['player_id']
+                ??
+                0
+            );
+
+
+        $fplPlayerId =
+            (int) (
+                $performance['fpl_player_id']
+                ?? 0
+            );
+
+
+        $teamId =
+            (int) (
+                $performance['team_id']
+                ?? 0
+            );
+
+
+        $name =
+            $performance['name']
+            ??
+            $strength['name']
+            ??
+            $value['name']
+            ??
+            $availability['name']
+            ??
+            $intelligence['name']
+            ??
+            null;
+
+
+        $position =
+            $performance['position']
+            ??
+            $strength['position']
+            ??
+            $value['position']
+            ??
+            $availability['position']
+            ??
+            $intelligence['position']
+            ??
+            null;
+
+
+        /*
+         * --------------------------------------------------------
+         * STEP 7
          * Decision-friendly summary
          * --------------------------------------------------------
-         *
-         * The complete intelligence engine deliberately keeps
-         * the detailed models separated.
-         *
-         * Ranking, recommendation and transfer layers do not
-         * need all of that detail, so expose a flat summary
-         * containing the fields those models require.
-         *
-         * This allows the detailed profile to remain the source
-         * of truth while providing a stable interface for later
-         * decision layers.
          */
 
         $summary = [
 
             'player_id' =>
-                $performance['player_id'],
+                $playerId,
 
             'fpl_player_id' =>
-                $performance['fpl_player_id'],
+                $fplPlayerId,
 
             'team_id' =>
-                $performance['team_id'],
+                $teamId,
 
             'name' =>
-                $performance['name'],
+                $name,
 
             'position' =>
-                $performance['position'],
+                $position,
 
             'price' =>
-                $value['price'],
+                $value['price']
+                ?? null,
 
             'strength_rating' =>
-                $strength['strength_rating'],
+                $strength['strength_rating']
+                ?? null,
 
             'value_rating' =>
-                $value['value_rating'],
+                $value['value_rating']
+                ?? null,
 
             'value_label' =>
-                $value['value_label'],
+                $value['value_label']
+                ?? 'N/A',
 
             'availability_rating' =>
-                $availability['availability_rating'],
+                $availability[
+                    'availability_rating'
+                ]
+                ?? null,
 
             'reliability_rating' =>
-                $availability['reliability_rating'],
+                $availability[
+                    'reliability_rating'
+                ]
+                ?? null,
 
             'availability_label' =>
-                $availability['availability_label'],
+                $availability[
+                    'availability_label'
+                ]
+                ?? 'Unknown',
 
             'fixture_rating' =>
-                $intelligence['fixture_rating'],
+                $intelligence[
+                    'fixture_rating'
+                ]
+                ?? null,
 
             'intelligence_score' =>
-                $intelligence['intelligence_score'],
+                $intelligence[
+                    'intelligence_score'
+                ]
+                ?? null,
 
             'intelligence_label' =>
-                $intelligence['intelligence_label']
+                $intelligence[
+                    'intelligence_label'
+                ]
+                ?? 'Unknown'
         ];
 
 
@@ -195,19 +281,19 @@ class PlayerIntelligenceEngine
             'player' => [
 
                 'player_id' =>
-                    $performance['player_id'],
+                    $playerId,
 
                 'fpl_player_id' =>
-                    $performance['fpl_player_id'],
+                    $fplPlayerId,
 
                 'team_id' =>
-                    $performance['team_id'],
+                    $teamId,
 
                 'name' =>
-                    $performance['name'],
+                    $name,
 
                 'position' =>
-                    $performance['position']
+                    $position
             ],
 
             'performance' =>

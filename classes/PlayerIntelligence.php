@@ -12,7 +12,11 @@ class PlayerIntelligence
         FixtureIntelligence $fixtureIntelligence
     ): array {
 
-        if (!isset($player['team_id'])) {
+        if (
+            !isset($player['team_id'])
+            ||
+            !is_numeric($player['team_id'])
+        ) {
 
             throw new InvalidArgumentException(
                 'Player team_id is required'
@@ -20,11 +24,22 @@ class PlayerIntelligence
         }
 
 
+        $teamId =
+            (int) $player['team_id'];
+
+
         $fixtureRun =
-            $fixtureIntelligence->analyseFixtureRun(
-                $fixtures,
-                $teamStrengths,
-                (int) $player['team_id']
+            $fixtureIntelligence
+                ->analyseFixtureRun(
+                    $fixtures,
+                    $teamStrengths,
+                    $teamId
+                );
+
+
+        $playerName =
+            $this->resolvePlayerName(
+                $player
             );
 
 
@@ -32,20 +47,20 @@ class PlayerIntelligence
 
             'player_id' =>
                 (int) (
+                    $player['player_id']
+                    ??
                     $player['fpl_player_id']
-                    ?? $player['id']
-                    ?? 0
+                    ??
+                    $player['id']
+                    ??
+                    0
                 ),
 
             'player_name' =>
-                trim(
-                    ($player['first_name'] ?? '')
-                    . ' '
-                    . ($player['second_name'] ?? '')
-                ),
+                $playerName,
 
             'team_id' =>
-                (int) $player['team_id'],
+                $teamId,
 
             'fixtures' =>
                 $fixtureRun,
@@ -57,30 +72,30 @@ class PlayerIntelligence
                     ),
 
             'best_run' =>
-                $fixtureIntelligence->findBestRun(
-                    $fixtureRun,
-                    5
-                ),
+                $fixtureIntelligence
+                    ->findBestRun(
+                        $fixtureRun,
+                        5
+                    ),
 
             'worst_run' =>
-                $fixtureIntelligence->findWorstRun(
-                    $fixtureRun,
-                    5
-                ),
+                $fixtureIntelligence
+                    ->findWorstRun(
+                        $fixtureRun,
+                        5
+                    ),
 
             'trend' =>
-                $fixtureIntelligence->calculateTrend(
-                    $fixtureRun
-                )
+                $fixtureIntelligence
+                    ->calculateTrend(
+                        $fixtureRun
+                    )
         ];
     }
 
 
     /**
      * Calculate a player's strength rating.
-     *
-     * The rating is expected to already represent
-     * the player's calculated footballing strength.
      */
     public function calculateStrengthRating(
         ?float $strength
@@ -105,10 +120,8 @@ class PlayerIntelligence
 
 
     /**
-     * Calculate player fixture rating.
-     *
-     * Uses the next 5 fixture average as the
-     * player's immediate fixture rating.
+     * Calculate player fixture rating using
+     * the next five fixture average.
      */
     public function calculateFixtureRating(
         ?array $rollingAverages
@@ -123,7 +136,12 @@ class PlayerIntelligence
             )
             ||
             $rollingAverages['next_5'] === null
+            ||
+            !is_numeric(
+                $rollingAverages['next_5']
+            )
         ) {
+
             return null;
         }
 
@@ -133,7 +151,8 @@ class PlayerIntelligence
                 0,
                 min(
                     100,
-                    (float) $rollingAverages['next_5']
+                    (float)
+                        $rollingAverages['next_5']
                 )
             ),
             2
@@ -151,6 +170,16 @@ class PlayerIntelligence
         if ($fixtureRating === null) {
             return null;
         }
+
+
+        $fixtureRating =
+            max(
+                0,
+                min(
+                    100,
+                    $fixtureRating
+                )
+            );
 
 
         if ($fixtureRating >= 80) {
@@ -178,10 +207,14 @@ class PlayerIntelligence
 
 
     /**
-     * Calculate the player's overall intelligence score.
+     * Calculate the legacy fixture-focused
+     * player intelligence score.
      *
      * Strength = 60%
      * Fixtures = 40%
+     *
+     * Modern overall player intelligence is handled
+     * by PlayerIntelligenceScore.
      */
     public function calculateIntelligenceScore(
         ?float $strengthRating,
@@ -193,36 +226,59 @@ class PlayerIntelligence
             &&
             $fixtureRating === null
         ) {
+
             return null;
         }
 
 
-        if ($strengthRating === null) {
-            return round(
-                max(
-                    0,
-                    min(
-                        100,
-                        $fixtureRating
-                    )
-                ),
-                2
-            );
-        }
+        if ($strengthRating !== null) {
 
-
-        if ($fixtureRating === null) {
-            return round(
+            $strengthRating =
                 max(
                     0,
                     min(
                         100,
                         $strengthRating
                     )
-                ),
+                );
+        }
+
+
+        if ($fixtureRating !== null) {
+
+            $fixtureRating =
+                max(
+                    0,
+                    min(
+                        100,
+                        $fixtureRating
+                    )
+                );
+        }
+
+
+        if ($strengthRating === null) {
+
+            return round(
+                $fixtureRating,
                 2
             );
         }
+
+
+        if ($fixtureRating === null) {
+
+            return round(
+                $strengthRating,
+                2
+            );
+        }
+
+
+        $score =
+            ($strengthRating * 0.60)
+            +
+            ($fixtureRating * 0.40);
 
 
         return round(
@@ -230,9 +286,7 @@ class PlayerIntelligence
                 0,
                 min(
                     100,
-                    ($strengthRating * 0.60)
-                    +
-                    ($fixtureRating * 0.40)
+                    $score
                 )
             ),
             2
@@ -250,6 +304,16 @@ class PlayerIntelligence
         if ($intelligenceScore === null) {
             return null;
         }
+
+
+        $intelligenceScore =
+            max(
+                0,
+                min(
+                    100,
+                    $intelligenceScore
+                )
+            );
 
 
         if ($intelligenceScore >= 80) {
@@ -277,29 +341,56 @@ class PlayerIntelligence
 
 
     /**
-     * Build a complete player intelligence profile.
+     * Build a complete player fixture-intelligence profile.
      */
     public function buildProfile(
         array $player,
         array $fixtureProfile
     ): array {
 
+        $strength =
+            $this->getNullableNumericValue(
+                $player,
+                'strength_rating'
+            );
+
+
+        if ($strength === null) {
+
+            $strength =
+                $this->getNullableNumericValue(
+                    $player,
+                    'strength'
+                );
+        }
+
+
         $strengthRating =
             $this->calculateStrengthRating(
-                isset($player['strength_rating'])
-                    ? (float) $player['strength_rating']
-                    : (
-                        isset($player['strength'])
-                            ? (float) $player['strength']
-                            : null
-                    )
+                $strength
             );
+
+
+        $rollingAverages =
+            isset(
+                $fixtureProfile['rolling_averages']
+            )
+            &&
+            is_array(
+                $fixtureProfile['rolling_averages']
+            )
+                ? $fixtureProfile['rolling_averages']
+                : [
+                    'next_5' => null,
+                    'next_6' => null,
+                    'next_8' => null,
+                    'next_10' => null
+                ];
 
 
         $fixtureRating =
             $this->calculateFixtureRating(
-                $fixtureProfile['rolling_averages']
-                ?? null
+                $rollingAverages
             );
 
 
@@ -316,6 +407,18 @@ class PlayerIntelligence
             );
 
 
+        $fixtures =
+            isset(
+                $fixtureProfile['fixtures']
+            )
+            &&
+            is_array(
+                $fixtureProfile['fixtures']
+            )
+                ? $fixtureProfile['fixtures']
+                : [];
+
+
         return [
 
             'player_id' =>
@@ -330,14 +433,8 @@ class PlayerIntelligence
                 ),
 
             'player_name' =>
-                $player['name']
-                ??
-                (
-                    trim(
-                        ($player['first_name'] ?? '')
-                        . ' '
-                        . ($player['second_name'] ?? '')
-                    )
+                $this->resolvePlayerName(
+                    $player
                 ),
 
             'team_id' =>
@@ -364,14 +461,7 @@ class PlayerIntelligence
                 ),
 
             'rolling_averages' =>
-                $fixtureProfile['rolling_averages']
-                ?? [
-
-                    'next_5' => null,
-                    'next_6' => null,
-                    'next_8' => null,
-                    'next_10' => null
-                ],
+                $rollingAverages,
 
             'best_run' =>
                 $fixtureProfile['best_run']
@@ -387,13 +477,92 @@ class PlayerIntelligence
 
             'fixture_count' =>
                 count(
-                    $fixtureProfile['fixtures']
-                    ?? []
+                    $fixtures
                 ),
 
             'fixtures' =>
-                $fixtureProfile['fixtures']
-                ?? []
+                $fixtures
         ];
+    }
+
+
+    /**
+     * Resolve a player name from the modern
+     * or legacy player structures.
+     */
+    private function resolvePlayerName(
+        array $player
+    ): ?string {
+
+        if (
+            isset($player['name'])
+            &&
+            trim(
+                (string) $player['name']
+            ) !== ''
+        ) {
+
+            return trim(
+                (string) $player['name']
+            );
+        }
+
+
+        if (
+            isset($player['web_name'])
+            &&
+            trim(
+                (string) $player['web_name']
+            ) !== ''
+        ) {
+
+            return trim(
+                (string) $player['web_name']
+            );
+        }
+
+
+        $fullName =
+            trim(
+                (
+                    $player['first_name']
+                    ?? ''
+                )
+                . ' '
+                . (
+                    $player['second_name']
+                    ?? ''
+                )
+            );
+
+
+        return $fullName !== ''
+            ? $fullName
+            : null;
+    }
+
+
+    /**
+     * Safely read a nullable numeric field.
+     */
+    private function getNullableNumericValue(
+        array $data,
+        string $field
+    ): ?float {
+
+        if (
+            !isset($data[$field])
+            ||
+            !is_numeric(
+                $data[$field]
+            )
+        ) {
+
+            return null;
+        }
+
+
+        return (float)
+            $data[$field];
     }
 }

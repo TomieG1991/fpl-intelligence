@@ -6,6 +6,56 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.11.6] - Player Intelligence Model Hardening
+
+### Refactored
+
+- Hardened PlayerPerformance input handling and performance metric calculations.
+- Hardened PlayerStrengthModel position-specific weighting and rating calculations.
+- Improved PlayerStrengthModel handling of missing and malformed performance ratings.
+- Hardened PlayerValue strength-per-million and value rating calculations.
+- Improved PlayerValue handling of missing, invalid and zero price data.
+- Hardened PlayerAvailability availability and reliability calculations.
+- Improved PlayerAvailability handling of malformed chance-of-playing, status and minutes data.
+- Hardened PlayerIntelligenceScore component validation and weighted score calculations.
+- Improved handling of missing intelligence components while preserving proportional weight redistribution.
+- Hardened PlayerIntelligenceEngine integration across performance, strength, value, availability and intelligence models.
+- Improved decision-friendly player intelligence summary consistency.
+- Hardened PlayerIntelligence fixture-run and profile processing.
+- Improved player identity and name resolution across supported player data structures.
+- Added safer handling for malformed numeric strength and fixture-profile data.
+
+### Fixed
+
+- Fixed player intelligence models relying on potentially malformed numeric input.
+- Fixed inconsistent player identity fallback behaviour within PlayerIntelligence.
+- Fixed blank player names when alternative player-name fields are available.
+- Fixed malformed rolling-average and fixture-profile data potentially producing invalid intelligence output.
+- Clarified the distinction between the legacy fixture-focused PlayerIntelligence score and the modern PlayerIntelligenceScore model.
+
+### Model
+
+- PlayerPerformance remains the source of normalised player performance metrics.
+- PlayerStrengthModel continues to use position-specific performance weighting.
+- PlayerValue continues to measure player strength relative to FPL price.
+- PlayerAvailability continues to combine current FPL availability with playing involvement.
+- PlayerIntelligenceScore remains the primary overall player intelligence model.
+- Overall player intelligence continues to weight strength at 35%, value at 25%, availability at 20% and fixtures at 20%.
+- Missing intelligence components continue to redistribute available weighting proportionally.
+- PlayerIntelligence remains responsible for fixture-run analysis and legacy fixture-focused profiling.
+- PlayerIntelligenceEngine remains the primary coordinator of the complete modern player intelligence pipeline.
+- Existing player intelligence scoring behaviour and weighting have been preserved.
+
+### Testing
+
+- Complete automated regression suite passes successfully.
+- No test files fail.
+- No test files produce errors.
+- Existing player performance, strength, value, availability, fixture-intelligence and overall intelligence tests remain compatible.
+- Existing ranking, recommendation and transfer-model integration remains compatible.
+- Player fixture intelligence continues to use venue-aware team and opposition strength correctly.
+- Full classes-layer regression suite remains green following player intelligence hardening.
+
 ## [0.11.5] - Team Intelligence & Fixture Model Hardening
 
 ### Refactored

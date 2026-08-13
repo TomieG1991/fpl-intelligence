@@ -5,9 +5,6 @@ class PlayerPerformance
     /**
      * Position-specific benchmarks used to normalise
      * player performance metrics onto a 0-100 scale.
-     *
-     * These represent the benchmark level considered
-     * to be excellent performance for each position.
      */
     private array $benchmarks = [
 
@@ -51,83 +48,133 @@ class PlayerPerformance
 
     /**
      * Analyse a player's current FPL statistics.
-     *
-     * Returns a consistent structure so later
-     * intelligence calculations have a reliable
-     * data source.
      */
-    public function analyse(array $player): array
-    {
+    public function analyse(
+        array $player
+    ): array {
+
         return [
 
             'player_id' =>
-                (int) ($player['id'] ?? 0),
+                (int) (
+                    $player['id']
+                    ?? 0
+                ),
 
             'fpl_player_id' =>
-                (int) ($player['fpl_player_id'] ?? 0),
+                (int) (
+                    $player['fpl_player_id']
+                    ?? 0
+                ),
 
             'team_id' =>
-                (int) ($player['team_id'] ?? 0),
+                (int) (
+                    $player['team_id']
+                    ?? 0
+                ),
 
             'position' =>
-                $player['position'] ?? null,
+                isset($player['position'])
+                    ? strtoupper(
+                        (string)
+                            $player['position']
+                    )
+                    : null,
 
             'name' =>
-                $player['web_name'] ?? null,
+                $player['web_name']
+                ?? null,
 
             'price' =>
-                isset($player['price'])
-                    ? (float) $player['price']
-                    : null,
+                $this->getNullableFloat(
+                    $player,
+                    'price'
+                ),
 
             'minutes' =>
-                (int) ($player['minutes'] ?? 0),
+                $this->getNonNegativeInt(
+                    $player,
+                    'minutes'
+                ),
 
             'goals' =>
-                (int) ($player['goals'] ?? 0),
+                $this->getNonNegativeInt(
+                    $player,
+                    'goals'
+                ),
 
             'assists' =>
-                (int) ($player['assists'] ?? 0),
+                $this->getNonNegativeInt(
+                    $player,
+                    'assists'
+                ),
 
             'clean_sheets' =>
-                (int) ($player['clean_sheets'] ?? 0),
+                $this->getNonNegativeInt(
+                    $player,
+                    'clean_sheets'
+                ),
 
             'bonus' =>
-                (int) ($player['bonus'] ?? 0),
+                $this->getNonNegativeInt(
+                    $player,
+                    'bonus'
+                ),
 
             'bps' =>
-                (int) ($player['bps'] ?? 0),
+                $this->getNonNegativeInt(
+                    $player,
+                    'bps'
+                ),
 
             'ict_index' =>
-                isset($player['ict_index'])
-                    ? (float) $player['ict_index']
-                    : null,
+                $this->getNullableFloat(
+                    $player,
+                    'ict_index'
+                ),
 
             'expected_goals' =>
-                isset($player['expected_goals'])
-                    ? (float) $player['expected_goals']
-                    : null,
+                $this->getNullableNonNegativeFloat(
+                    $player,
+                    'expected_goals'
+                ),
 
             'expected_assists' =>
-                isset($player['expected_assists'])
-                    ? (float) $player['expected_assists']
-                    : null,
+                $this->getNullableNonNegativeFloat(
+                    $player,
+                    'expected_assists'
+                ),
 
             'expected_goal_involvements' =>
-                isset($player['expected_goal_involvements'])
-                    ? (float) $player['expected_goal_involvements']
-                    : null,
+                $this->getNullableNonNegativeFloat(
+                    $player,
+                    'expected_goal_involvements'
+                ),
 
             'chance_of_playing' =>
                 isset($player['chance_of_playing'])
-                    ? (int) $player['chance_of_playing']
+                &&
+                is_numeric(
+                    $player['chance_of_playing']
+                )
+                    ? (int) max(
+                        0,
+                        min(
+                            100,
+                            $player[
+                                'chance_of_playing'
+                            ]
+                        )
+                    )
                     : null,
 
             'status' =>
-                $player['status'] ?? null,
+                $player['status']
+                ?? null,
 
             'news' =>
-                $player['news'] ?? null
+                $player['news']
+                ?? null
         ];
     }
 
@@ -139,16 +186,11 @@ class PlayerPerformance
         array $performance
     ): ?float {
 
-        if ($performance['minutes'] <= 0) {
-            return null;
-        }
-
-        return round(
-            (
-                $performance['goals']
-                / $performance['minutes']
-            ) * 90,
-            2
+        return $this->calculatePer90(
+            $performance['goals']
+            ?? null,
+            $performance['minutes']
+            ?? null
         );
     }
 
@@ -160,16 +202,11 @@ class PlayerPerformance
         array $performance
     ): ?float {
 
-        if ($performance['minutes'] <= 0) {
-            return null;
-        }
-
-        return round(
-            (
-                $performance['assists']
-                / $performance['minutes']
-            ) * 90,
-            2
+        return $this->calculatePer90(
+            $performance['assists']
+            ?? null,
+            $performance['minutes']
+            ?? null
         );
     }
 
@@ -181,20 +218,11 @@ class PlayerPerformance
         array $performance
     ): ?float {
 
-        if (
-            $performance['minutes'] <= 0
-            ||
-            $performance['expected_goals'] === null
-        ) {
-            return null;
-        }
-
-        return round(
-            (
-                $performance['expected_goals']
-                / $performance['minutes']
-            ) * 90,
-            2
+        return $this->calculatePer90(
+            $performance['expected_goals']
+            ?? null,
+            $performance['minutes']
+            ?? null
         );
     }
 
@@ -206,20 +234,11 @@ class PlayerPerformance
         array $performance
     ): ?float {
 
-        if (
-            $performance['minutes'] <= 0
-            ||
-            $performance['expected_assists'] === null
-        ) {
-            return null;
-        }
-
-        return round(
-            (
-                $performance['expected_assists']
-                / $performance['minutes']
-            ) * 90,
-            2
+        return $this->calculatePer90(
+            $performance['expected_assists']
+            ?? null,
+            $performance['minutes']
+            ?? null
         );
     }
 
@@ -231,20 +250,13 @@ class PlayerPerformance
         array $performance
     ): ?float {
 
-        if (
-            $performance['minutes'] <= 0
-            ||
-            $performance['expected_goal_involvements'] === null
-        ) {
-            return null;
-        }
-
-        return round(
-            (
-                $performance['expected_goal_involvements']
-                / $performance['minutes']
-            ) * 90,
-            2
+        return $this->calculatePer90(
+            $performance[
+                'expected_goal_involvements'
+            ]
+            ?? null,
+            $performance['minutes']
+            ?? null
         );
     }
 
@@ -256,26 +268,30 @@ class PlayerPerformance
         array $performance
     ): ?float {
 
-        if ($performance['minutes'] <= 0) {
-            return null;
-        }
-
-        return round(
-            (
-                $performance['clean_sheets']
-                / $performance['minutes']
-            ) * 90,
-            2
+        return $this->calculatePer90(
+            $performance['clean_sheets']
+            ?? null,
+            $performance['minutes']
+            ?? null
         );
     }
 
 
     /**
-     * Get the benchmark configuration for a position.
+     * Get benchmark configuration for a position.
+     *
+     * Unknown/missing positions continue to use MID
+     * as the legacy fallback.
      */
     public function getBenchmarks(
         ?string $position
     ): array {
+
+        $position =
+            strtoupper(
+                (string) $position
+            );
+
 
         return $this->benchmarks[$position]
             ?? $this->benchmarks['MID'];
@@ -283,10 +299,7 @@ class PlayerPerformance
 
 
     /**
-     * Normalise a metric against its position-specific
-     * benchmark.
-     *
-     * The result is constrained to 0-100.
+     * Normalise a metric against a benchmark.
      */
     public function normaliseMetric(
         ?float $value,
@@ -300,15 +313,18 @@ class PlayerPerformance
             ||
             $benchmark <= 0
         ) {
+
             return null;
         }
 
+
         return round(
-            min(
-                100,
-                max(
-                    0,
-                    ($value / $benchmark) * 100
+            max(
+                0,
+                min(
+                    100,
+                    ($value / $benchmark)
+                    * 100
                 )
             ),
             2
@@ -316,165 +332,138 @@ class PlayerPerformance
     }
 
 
-    /**
-     * Calculate the normalised goals rating.
-     */
     public function calculateGoalsRating(
         array $performance
     ): ?float {
 
-        $position =
-            $performance['position']
-            ?? 'MID';
-
         $benchmarks =
             $this->getBenchmarks(
-                $position
+                $performance['position']
+                ?? null
             );
 
-        $goalsPer90 =
-            $this->calculateGoalsPer90(
-                $performance
-            );
 
         return $this->normaliseMetric(
-            $goalsPer90,
-            $benchmarks['goals_per_90']
+            $this->calculateGoalsPer90(
+                $performance
+            ),
+            $benchmarks[
+                'goals_per_90'
+            ]
         );
     }
 
 
-    /**
-     * Calculate the normalised assists rating.
-     */
     public function calculateAssistsRating(
         array $performance
     ): ?float {
 
-        $position =
-            $performance['position']
-            ?? 'MID';
-
         $benchmarks =
             $this->getBenchmarks(
-                $position
+                $performance['position']
+                ?? null
             );
 
-        $assistsPer90 =
-            $this->calculateAssistsPer90(
-                $performance
-            );
 
         return $this->normaliseMetric(
-            $assistsPer90,
-            $benchmarks['assists_per_90']
+            $this->calculateAssistsPer90(
+                $performance
+            ),
+            $benchmarks[
+                'assists_per_90'
+            ]
         );
     }
 
 
-    /**
-     * Calculate the normalised expected goals rating.
-     */
     public function calculateExpectedGoalsRating(
         array $performance
     ): ?float {
 
-        $position =
-            $performance['position']
-            ?? 'MID';
-
         $benchmarks =
             $this->getBenchmarks(
-                $position
+                $performance['position']
+                ?? null
             );
 
-        $expectedGoalsPer90 =
-            $this->calculateExpectedGoalsPer90(
-                $performance
-            );
 
         return $this->normaliseMetric(
-            $expectedGoalsPer90,
-            $benchmarks['expected_goals_per_90']
+            $this->calculateExpectedGoalsPer90(
+                $performance
+            ),
+            $benchmarks[
+                'expected_goals_per_90'
+            ]
         );
     }
 
 
-    /**
-     * Calculate the normalised expected assists rating.
-     */
     public function calculateExpectedAssistsRating(
         array $performance
     ): ?float {
 
-        $position =
-            $performance['position']
-            ?? 'MID';
-
         $benchmarks =
             $this->getBenchmarks(
-                $position
+                $performance['position']
+                ?? null
             );
 
-        $expectedAssistsPer90 =
-            $this->calculateExpectedAssistsPer90(
-                $performance
-            );
 
         return $this->normaliseMetric(
-            $expectedAssistsPer90,
-            $benchmarks['expected_assists_per_90']
+            $this->calculateExpectedAssistsPer90(
+                $performance
+            ),
+            $benchmarks[
+                'expected_assists_per_90'
+            ]
         );
     }
 
 
-    /**
-     * Calculate the normalised clean sheets rating.
-     */
     public function calculateCleanSheetsRating(
         array $performance
     ): ?float {
 
-        $position =
-            $performance['position']
-            ?? 'MID';
-
         $benchmarks =
             $this->getBenchmarks(
-                $position
+                $performance['position']
+                ?? null
             );
 
-        $cleanSheetsPer90 =
-            $this->calculateCleanSheetsPer90(
-                $performance
-            );
 
         return $this->normaliseMetric(
-            $cleanSheetsPer90,
-            $benchmarks['clean_sheets_per_90']
+            $this->calculateCleanSheetsPer90(
+                $performance
+            ),
+            $benchmarks[
+                'clean_sheets_per_90'
+            ]
         );
     }
 
 
-    /**
-     * Calculate the normalised BPS rating.
-     */
     public function calculateBpsRating(
         array $performance
     ): ?float {
 
-        $position =
-            $performance['position']
-            ?? 'MID';
-
         $benchmarks =
             $this->getBenchmarks(
-                $position
+                $performance['position']
+                ?? null
             );
+
 
         return $this->normaliseMetric(
             isset($performance['bps'])
-                ? (float) $performance['bps']
+            &&
+            is_numeric(
+                $performance['bps']
+            )
+                ? max(
+                    0,
+                    (float)
+                        $performance['bps']
+                )
                 : null,
             $benchmarks['bps']
         );
@@ -483,9 +472,6 @@ class PlayerPerformance
 
     /**
      * Build the complete player performance model.
-     *
-     * This combines raw FPL statistics, per-90 metrics
-     * and normalised performance ratings.
      */
     public function buildModel(
         array $player
@@ -497,69 +483,86 @@ class PlayerPerformance
             );
 
 
-        /*
-         * Per-90 metrics.
-         */
-
         $performance['goals_per_90'] =
             $this->calculateGoalsPer90(
                 $performance
             );
+
 
         $performance['assists_per_90'] =
             $this->calculateAssistsPer90(
                 $performance
             );
 
-        $performance['expected_goals_per_90'] =
+
+        $performance[
+            'expected_goals_per_90'
+        ] =
             $this->calculateExpectedGoalsPer90(
                 $performance
             );
 
-        $performance['expected_assists_per_90'] =
+
+        $performance[
+            'expected_assists_per_90'
+        ] =
             $this->calculateExpectedAssistsPer90(
                 $performance
             );
 
-        $performance['expected_goal_involvements_per_90'] =
-            $this->calculateExpectedGoalInvolvementsPer90(
-                $performance
-            );
 
-        $performance['clean_sheets_per_90'] =
+        $performance[
+            'expected_goal_involvements_per_90'
+        ] =
+            $this
+                ->calculateExpectedGoalInvolvementsPer90(
+                    $performance
+                );
+
+
+        $performance[
+            'clean_sheets_per_90'
+        ] =
             $this->calculateCleanSheetsPer90(
                 $performance
             );
 
-
-        /*
-         * Normalised ratings.
-         */
 
         $performance['goals_rating'] =
             $this->calculateGoalsRating(
                 $performance
             );
 
+
         $performance['assists_rating'] =
             $this->calculateAssistsRating(
                 $performance
             );
 
-        $performance['expected_goals_rating'] =
+
+        $performance[
+            'expected_goals_rating'
+        ] =
             $this->calculateExpectedGoalsRating(
                 $performance
             );
 
-        $performance['expected_assists_rating'] =
+
+        $performance[
+            'expected_assists_rating'
+        ] =
             $this->calculateExpectedAssistsRating(
                 $performance
             );
 
-        $performance['clean_sheets_rating'] =
+
+        $performance[
+            'clean_sheets_rating'
+        ] =
             $this->calculateCleanSheetsRating(
                 $performance
             );
+
 
         $performance['bps_rating'] =
             $this->calculateBpsRating(
@@ -568,5 +571,123 @@ class PlayerPerformance
 
 
         return $performance;
+    }
+
+
+    /**
+     * Calculate a per-90 value safely.
+     */
+    private function calculatePer90(
+        mixed $value,
+        mixed $minutes
+    ): ?float {
+
+        if (
+            !is_numeric($value)
+            ||
+            !is_numeric($minutes)
+            ||
+            (float) $minutes <= 0
+        ) {
+
+            return null;
+        }
+
+
+        $value =
+            max(
+                0,
+                (float) $value
+            );
+
+
+        return round(
+            (
+                $value
+                /
+                (float) $minutes
+            )
+            * 90,
+            2
+        );
+    }
+
+
+    /**
+     * Read a non-negative integer value.
+     */
+    private function getNonNegativeInt(
+        array $data,
+        string $field
+    ): int {
+
+        if (
+            !isset($data[$field])
+            ||
+            !is_numeric(
+                $data[$field]
+            )
+        ) {
+
+            return 0;
+        }
+
+
+        return max(
+            0,
+            (int) $data[$field]
+        );
+    }
+
+
+    /**
+     * Read a nullable float.
+     */
+    private function getNullableFloat(
+        array $data,
+        string $field
+    ): ?float {
+
+        if (
+            !isset($data[$field])
+            ||
+            !is_numeric(
+                $data[$field]
+            )
+        ) {
+
+            return null;
+        }
+
+
+        return (float)
+            $data[$field];
+    }
+
+
+    /**
+     * Read a nullable, non-negative float.
+     */
+    private function getNullableNonNegativeFloat(
+        array $data,
+        string $field
+    ): ?float {
+
+        $value =
+            $this->getNullableFloat(
+                $data,
+                $field
+            );
+
+
+        if ($value === null) {
+            return null;
+        }
+
+
+        return max(
+            0,
+            $value
+        );
     }
 }

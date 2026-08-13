@@ -31,9 +31,6 @@ class PlayerIntelligenceScore
     /**
      * Calculate the overall player intelligence score.
      *
-     * All component ratings are expected to use
-     * the standard 0-100 scale.
-     *
      * Missing component ratings are excluded and
      * the remaining weights are redistributed
      * proportionally.
@@ -61,34 +58,58 @@ class PlayerIntelligenceScore
         ];
 
 
-        $weightedTotal = 0.0;
+        $weightedTotal =
+            0.0;
 
-        $weightTotal = 0.0;
+
+        $weightTotal =
+            0.0;
 
 
-        foreach ($ratings as $component => $rating) {
+        foreach (
+            $ratings
+            as $component => $rating
+        ) {
 
-            if ($rating === null) {
+            if (
+                $rating === null
+                ||
+                !is_numeric($rating)
+            ) {
+
                 continue;
             }
 
 
+            /*
+             * Every intelligence component uses
+             * the standard 0-100 scale.
+             */
             $rating =
                 max(
                     0,
                     min(
                         100,
-                        $rating
+                        (float) $rating
                     )
                 );
 
 
             $weight =
-                $this->weights[$component];
+                $this->weights[$component]
+                ?? 0;
+
+
+            if ($weight <= 0) {
+                continue;
+            }
 
 
             $weightedTotal +=
-                $rating * $weight;
+                $rating
+                *
+                $weight;
+
 
             $weightTotal +=
                 $weight;
@@ -104,13 +125,13 @@ class PlayerIntelligenceScore
 
 
         /*
-         * Redistribute the available weighting
-         * proportionally when one or more components
-         * are unavailable.
+         * Redistribute available weighting
+         * proportionally when components are missing.
          */
         $score =
             $weightedTotal
-            / $weightTotal;
+            /
+            $weightTotal;
 
 
         return round(
@@ -127,8 +148,8 @@ class PlayerIntelligenceScore
 
 
     /**
-     * Convert an intelligence score into a
-     * human-readable label.
+     * Convert an intelligence score into
+     * a human-readable label.
      */
     public function getLabel(
         ?float $score
@@ -137,6 +158,16 @@ class PlayerIntelligenceScore
         if ($score === null) {
             return 'Unknown';
         }
+
+
+        $score =
+            max(
+                0,
+                min(
+                    100,
+                    $score
+                )
+            );
 
 
         if ($score >= 85) {
@@ -174,32 +205,35 @@ class PlayerIntelligenceScore
     ): array {
 
         $strengthRating =
-            isset(
-                $playerStrength['strength_rating']
-            )
-                ? (float) $playerStrength['strength_rating']
-                : null;
+            $this->getNullableRating(
+                $playerStrength,
+                'strength_rating'
+            );
 
 
         $valueRating =
-            isset(
-                $playerValue['value_rating']
-            )
-                ? (float) $playerValue['value_rating']
-                : null;
+            $this->getNullableRating(
+                $playerValue,
+                'value_rating'
+            );
 
 
         $availabilityRating =
-            isset(
-                $playerAvailability['availability_rating']
-            )
-                ? (float) $playerAvailability['availability_rating']
-                : null;
+            $this->getNullableRating(
+                $playerAvailability,
+                'availability_rating'
+            );
 
 
         $fixtureRating =
             $fixtureRating !== null
-                ? (float) $fixtureRating
+                ? max(
+                    0,
+                    min(
+                        100,
+                        $fixtureRating
+                    )
+                )
                 : null;
 
 
@@ -217,22 +251,31 @@ class PlayerIntelligenceScore
             'player_id' =>
                 (int) (
                     $playerStrength['player_id']
-                    ?? $playerValue['player_id']
-                    ?? $playerAvailability['player_id']
-                    ?? 0
+                    ??
+                    $playerValue['player_id']
+                    ??
+                    $playerAvailability['player_id']
+                    ??
+                    0
                 ),
 
             'name' =>
                 $playerStrength['name']
-                ?? $playerValue['name']
-                ?? $playerAvailability['name']
-                ?? null,
+                ??
+                $playerValue['name']
+                ??
+                $playerAvailability['name']
+                ??
+                null,
 
             'position' =>
                 $playerStrength['position']
-                ?? $playerValue['position']
-                ?? $playerAvailability['position']
-                ?? null,
+                ??
+                $playerValue['position']
+                ??
+                $playerAvailability['position']
+                ??
+                null,
 
             'strength_rating' =>
                 $strengthRating,
@@ -254,5 +297,37 @@ class PlayerIntelligenceScore
                     $score
                 )
         ];
+    }
+
+
+    /**
+     * Read a nullable 0-100 rating
+     * from an intelligence model.
+     */
+    private function getNullableRating(
+        array $model,
+        string $field
+    ): ?float {
+
+        if (
+            !isset($model[$field])
+            ||
+            !is_numeric(
+                $model[$field]
+            )
+        ) {
+
+            return null;
+        }
+
+
+        return max(
+            0,
+            min(
+                100,
+                (float)
+                    $model[$field]
+            )
+        );
     }
 }

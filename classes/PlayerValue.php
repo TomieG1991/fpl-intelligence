@@ -20,6 +20,17 @@ class PlayerValue
             return null;
         }
 
+
+        $strengthRating =
+            max(
+                0,
+                min(
+                    100,
+                    $strengthRating
+                )
+            );
+
+
         return round(
             $strengthRating / $price,
             2
@@ -46,14 +57,31 @@ class PlayerValue
             return null;
         }
 
+
+        $strengthPerMillion =
+            max(
+                0,
+                $strengthPerMillion
+            );
+
+
         $rating =
             (
                 $strengthPerMillion
-                / $benchmark
-            ) * 100;
+                /
+                $benchmark
+            )
+            * 100;
+
 
         return round(
-            min(100, max(0, $rating)),
+            max(
+                0,
+                min(
+                    100,
+                    $rating
+                )
+            ),
             2
         );
     }
@@ -70,25 +98,41 @@ class PlayerValue
             return 'N/A';
         }
 
+
+        $valueRating =
+            max(
+                0,
+                min(
+                    100,
+                    $valueRating
+                )
+            );
+
+
         if ($valueRating >= 90) {
             return 'Exceptional';
         }
+
 
         if ($valueRating >= 75) {
             return 'Excellent';
         }
 
+
         if ($valueRating >= 60) {
             return 'Good';
         }
+
 
         if ($valueRating >= 40) {
             return 'Average';
         }
 
+
         if ($valueRating >= 20) {
             return 'Poor';
         }
+
 
         return 'Very Poor';
     }
@@ -103,14 +147,47 @@ class PlayerValue
     ): array {
 
         $strengthRating =
-            isset($playerStrength['strength_rating'])
-                ? (float) $playerStrength['strength_rating']
+            isset(
+                $playerStrength['strength_rating']
+            )
+            &&
+            is_numeric(
+                $playerStrength['strength_rating']
+            )
+                ? max(
+                    0,
+                    min(
+                        100,
+                        (float)
+                            $playerStrength[
+                                'strength_rating'
+                            ]
+                    )
+                )
                 : null;
 
+
         $price =
-            isset($playerPerformance['price'])
-                ? (float) $playerPerformance['price']
+            isset(
+                $playerPerformance['price']
+            )
+            &&
+            is_numeric(
+                $playerPerformance['price']
+            )
+                ? (float)
+                    $playerPerformance['price']
                 : null;
+
+
+        if (
+            $price !== null
+            &&
+            $price <= 0
+        ) {
+            $price = null;
+        }
+
 
         $strengthPerMillion =
             $this->calculateStrengthPerMillion(
@@ -118,21 +195,28 @@ class PlayerValue
                 $price
             );
 
+
         $valueRating =
             $this->calculateValueRating(
                 $strengthPerMillion
             );
 
+
         return [
 
             'player_id' =>
-                (int) ($playerStrength['player_id'] ?? 0),
+                (int) (
+                    $playerStrength['player_id']
+                    ?? 0
+                ),
 
             'name' =>
-                $playerStrength['name'] ?? null,
+                $playerStrength['name']
+                ?? null,
 
             'position' =>
-                $playerStrength['position'] ?? null,
+                $playerStrength['position']
+                ?? null,
 
             'price' =>
                 $price,

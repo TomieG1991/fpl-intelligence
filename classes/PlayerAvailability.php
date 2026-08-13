@@ -15,8 +15,8 @@ class PlayerAvailability
     ): ?float {
 
         /*
-         * If FPL provides a specific chance of playing,
-         * use that as the primary availability indicator.
+         * Explicit chance-of-playing data takes
+         * priority over the broader FPL status.
          */
         if ($chanceOfPlaying !== null) {
 
@@ -33,39 +33,46 @@ class PlayerAvailability
         }
 
 
-        /*
-         * If no explicit chance is available,
-         * use the player's FPL status.
-         */
         if ($status === null) {
             return null;
         }
 
 
-        return match (strtolower($status)) {
+        $status =
+            strtolower(
+                trim($status)
+            );
 
-            'a' => 100.00,
 
-            'd' => 50.00,
+        return match ($status) {
 
-            'i' => 25.00,
+            'a' =>
+                100.00,
 
-            's' => 0.00,
+            'd' =>
+                50.00,
 
-            'u' => 0.00,
+            'i' =>
+                25.00,
 
-            default => null
+            's' =>
+                0.00,
+
+            'u' =>
+                0.00,
+
+            default =>
+                null
         };
     }
 
 
     /**
-     * Calculate an adjusted availability rating
-     * using both availability and playing history.
+     * Calculate an adjusted reliability rating
+     * using availability and playing history.
      *
-     * Players with no minutes retain their availability
-     * rating, because zero minutes does not automatically
-     * mean the player is unavailable.
+     * Players with no minutes retain their
+     * availability rating.
      */
     public function calculateReliabilityRating(
         ?float $availabilityRating,
@@ -77,7 +84,29 @@ class PlayerAvailability
         }
 
 
-        if ($minutes <= 0) {
+        $availabilityRating =
+            max(
+                0,
+                min(
+                    100,
+                    $availabilityRating
+                )
+            );
+
+
+        $minutes =
+            max(
+                0,
+                $minutes
+            );
+
+
+        /*
+         * Zero minutes does not automatically mean
+         * the player is unavailable.
+         */
+        if ($minutes === 0) {
+
             return round(
                 $availabilityRating,
                 2
@@ -86,12 +115,8 @@ class PlayerAvailability
 
 
         /*
-         * Playing minutes provide a small reliability
-         * confirmation rather than replacing the FPL
-         * availability rating.
-         *
          * 1,000 minutes or more represents a fully
-         * established playing sample for this model.
+         * established playing sample.
          */
         $minutesFactor =
             min(
@@ -101,16 +126,20 @@ class PlayerAvailability
 
 
         /*
-         * 80% of the rating comes from current availability.
-         * 20% comes from demonstrated playing involvement.
+         * Current availability = 80%
+         * Playing involvement = 20%
          */
         $reliability =
             (
-                $availabilityRating * 0.80
+                $availabilityRating
+                * 0.80
             )
             +
             (
-                ($availabilityRating * $minutesFactor)
+                (
+                    $availabilityRating
+                    * $minutesFactor
+                )
                 * 0.20
             );
 
@@ -129,8 +158,8 @@ class PlayerAvailability
 
 
     /**
-     * Convert availability rating into a
-     * human-readable label.
+     * Convert availability rating into
+     * a human-readable label.
      */
     public function getAvailabilityLabel(
         ?float $availabilityRating
@@ -140,17 +169,31 @@ class PlayerAvailability
             return 'Unknown';
         }
 
+
+        $availabilityRating =
+            max(
+                0,
+                min(
+                    100,
+                    $availabilityRating
+                )
+            );
+
+
         if ($availabilityRating >= 90) {
             return 'Available';
         }
+
 
         if ($availabilityRating >= 60) {
             return 'Likely Available';
         }
 
+
         if ($availabilityRating >= 30) {
             return 'Doubtful';
         }
+
 
         return 'Unavailable';
     }
@@ -164,17 +207,39 @@ class PlayerAvailability
     ): array {
 
         $chanceOfPlaying =
-            isset($player['chance_of_playing'])
-                ? (int) $player['chance_of_playing']
+            isset(
+                $player['chance_of_playing']
+            )
+            &&
+            is_numeric(
+                $player['chance_of_playing']
+            )
+                ? (int)
+                    $player[
+                        'chance_of_playing'
+                    ]
                 : null;
 
 
         $status =
-            $player['status'] ?? null;
+            isset($player['status'])
+                ? (string)
+                    $player['status']
+                : null;
 
 
         $minutes =
-            (int) ($player['minutes'] ?? 0);
+            isset($player['minutes'])
+            &&
+            is_numeric(
+                $player['minutes']
+            )
+                ? max(
+                    0,
+                    (int)
+                        $player['minutes']
+                )
+                : 0;
 
 
         $availabilityRating =
@@ -194,16 +259,24 @@ class PlayerAvailability
         return [
 
             'player_id' =>
-                (int) ($player['player_id'] ?? 0),
+                (int) (
+                    $player['player_id']
+                    ?? 0
+                ),
 
             'fpl_player_id' =>
-                (int) ($player['fpl_player_id'] ?? 0),
+                (int) (
+                    $player['fpl_player_id']
+                    ?? 0
+                ),
 
             'name' =>
-                $player['name'] ?? null,
+                $player['name']
+                ?? null,
 
             'position' =>
-                $player['position'] ?? null,
+                $player['position']
+                ?? null,
 
             'minutes' =>
                 $minutes,
