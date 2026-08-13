@@ -6,6 +6,34 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.11.1] - Automated Regression Test Runner
+
+### Added
+
+- Added a complete automated test suite runner.
+- Added automatic discovery of all `*Test.php` files in the tests directory.
+- Added isolated PHP CLI execution for each test file.
+- Added protection against duplicate test helper function and class declarations.
+- Added automatic WAMP PHP CLI discovery.
+- Added aggregate test-file pass, fail and error reporting.
+- Added aggregate assertion pass and fail reporting.
+- Added a single browser-accessible regression test entry point.
+
+### Fixed
+
+- Updated PlayerAvailability test data to use the normalised player model field structure.
+- Corrected player ID field usage from `id` to `player_id`.
+- Corrected player name field usage from `web_name` to `name`.
+
+### Testing
+
+- 28 test files passed.
+- 0 test files failed.
+- 0 test files produced errors.
+- 902 assertions passed.
+- 0 assertions failed.
+- Complete project regression suite passes successfully.
+
 ## [0.11.0] - Front-End Friendly Player Intelligence Engine
 
 ### Added

@@ -457,11 +457,11 @@ section(
 
 $player = [
 
-    'id' => 123,
+    'player_id' => 123,
 
     'fpl_player_id' => 456,
 
-    'web_name' => 'Test Forward',
+    'name' => 'Test Forward',
 
     'position' => 'FWD',
 
