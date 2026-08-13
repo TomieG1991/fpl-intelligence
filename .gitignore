@@ -21,5 +21,7 @@ Thumbs.db
 # Composer (future)
 vendor/
 
-# Environment
+# Environment / local configuration
 .env
+.env.local
+.env.*.local

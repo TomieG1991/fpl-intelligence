@@ -241,8 +241,8 @@ class FixtureRepository
                 SELECT *
                 FROM fixtures
                 WHERE (
-                    home_team_id = :team_id
-                    OR away_team_id = :team_id
+                    home_team_id = :home_team_id
+                    OR away_team_id = :away_team_id
                 )
                 AND finished = 0
                 ORDER BY
@@ -254,7 +254,14 @@ class FixtureRepository
 
 
         $stmt->bindValue(
-            ':team_id',
+            ':home_team_id',
+            $teamId,
+            PDO::PARAM_INT
+        );
+
+
+        $stmt->bindValue(
+            ':away_team_id',
             $teamId,
             PDO::PARAM_INT
         );
@@ -314,8 +321,8 @@ class FixtureRepository
                 SELECT *
                 FROM fixtures
                 WHERE (
-                    home_team_id = :team_id
-                    OR away_team_id = :team_id
+                    home_team_id = :home_team_id
+                    OR away_team_id = :away_team_id
                 )
                 AND finished = 1
                 ORDER BY
@@ -326,7 +333,14 @@ class FixtureRepository
 
 
         $stmt->bindValue(
-            ':team_id',
+            ':home_team_id',
+            $teamId,
+            PDO::PARAM_INT
+        );
+
+
+        $stmt->bindValue(
+            ':away_team_id',
             $teamId,
             PDO::PARAM_INT
         );

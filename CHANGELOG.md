@@ -6,6 +6,73 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.11.4] - Database & Schema Hardening
+
+### Added
+
+- Added dedicated Database regression tests.
+- Added validation of PDO connection behaviour.
+- Added validation that PDO exception mode is enabled.
+- Added validation that native prepared statements are enabled.
+- Added validation of associative default fetch behaviour.
+- Added validation of utf8mb4 connection encoding.
+- Added database storage-engine validation.
+- Added table collation validation.
+- Added foreign-key validation.
+- Added fixture gameweek nullability validation.
+- Added player position column contract validation.
+- Added environment-variable support for database and FPL API configuration.
+
+### Refactored
+
+- Simplified Database so it is responsible only for creating and exposing the PDO connection.
+- Removed team lookup responsibility from Database in favour of TeamRepository.
+- Updated PDO configuration to use native prepared statements.
+- Updated PDO configuration to use associative fetch mode by default.
+- Updated database connection encoding to utf8mb4.
+- Updated configuration handling to support deployment-specific environment variables while preserving local development defaults.
+- Expanded ignored environment configuration files.
+- Updated FixtureRepository queries to use distinct named placeholders when native prepared statements are enabled.
+- Updated database schema to use InnoDB instead of MyISAM.
+- Updated database and table character sets to utf8mb4.
+- Updated fixture gameweek storage to allow null values.
+- Updated player position storage to match canonical `GK`, `DEF`, `MID` and `FWD` codes.
+
+### Database
+
+- Converted `teams` table to InnoDB.
+- Converted `players` table to InnoDB.
+- Converted `fixtures` table to InnoDB.
+- Added `players.team_id -> teams.id` foreign key.
+- Added `fixtures.home_team_id -> teams.id` foreign key.
+- Added `fixtures.away_team_id -> teams.id` foreign key.
+- Added cascading updates and restricted deletes for team relationships.
+- Aligned live development database schema with the tracked `schema.sql` definition.
+
+### Fixed
+
+- Fixed transaction protection being ineffective because core tables were using MyISAM.
+- Fixed duplicate named SQL placeholders that were incompatible with native prepared statements.
+- Fixed schema encoding mismatch between the PDO connection and database tables.
+- Fixed fixture gameweek schema not supporting legitimately unscheduled FPL fixtures.
+- Removed duplicate team lookup logic from Database.
+
+### Testing
+
+- Verified Database can create a valid PDO connection.
+- Verified exception error mode is enabled.
+- Verified emulated prepares are disabled.
+- Verified associative default fetch mode.
+- Verified utf8mb4 connection encoding.
+- Verified `teams`, `players` and `fixtures` tables exist.
+- Verified all repositories accept the shared PDO connection.
+- Verified all core tables use InnoDB.
+- Verified all core tables use utf8mb4.
+- Verified all required foreign-key relationships exist.
+- Verified fixture gameweek supports null values.
+- Verified player position column supports canonical position codes.
+- Complete automated regression suite passes with no failures or errors.
+
 ## [0.11.3] - Repository, API & Data Import Hardening
 
 ### Added

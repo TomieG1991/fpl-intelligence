@@ -4,57 +4,63 @@ class Database
 {
     private PDO $connection;
 
+
+    /**
+     * Create the database connection.
+     */
     public function __construct()
     {
-        $config = require __DIR__ . '/../config/config.php';
+        $config =
+            require __DIR__ . '/../config/config.php';
 
-        try {
 
-            $this->connection = new PDO(
-                "mysql:host={$config['database']['host']};dbname={$config['database']['name']}",
+        if (
+            !isset(
+                $config['database']['host'],
+                $config['database']['name'],
                 $config['database']['username'],
                 $config['database']['password']
+            )
+        ) {
+
+            throw new RuntimeException(
+                'Database configuration is incomplete'
             );
-
-            $this->connection->setAttribute(
-                PDO::ATTR_ERRMODE,
-                PDO::ERRMODE_EXCEPTION
-            );
-
-        } catch(PDOException $e) {
-
-            die(
-                "Database connection failed: " . 
-                $e->getMessage()
-            );
-
         }
+
+
+        $dsn =
+            'mysql:host='
+            . $config['database']['host']
+            . ';dbname='
+            . $config['database']['name']
+            . ';charset=utf8mb4';
+
+
+        $this->connection =
+            new PDO(
+                $dsn,
+                $config['database']['username'],
+                $config['database']['password'],
+                [
+                    PDO::ATTR_ERRMODE =>
+                        PDO::ERRMODE_EXCEPTION,
+
+                    PDO::ATTR_DEFAULT_FETCH_MODE =>
+                        PDO::FETCH_ASSOC,
+
+                    PDO::ATTR_EMULATE_PREPARES =>
+                        false
+                ]
+            );
     }
 
 
+    /**
+     * Return the active PDO connection.
+     */
     public function getConnection(): PDO
     {
         return $this->connection;
     }
-
-    public function getTeamIdByFplId(int $fplTeamId): ?int
-    {
-
-        $stmt = $this->connection->prepare(
-            "SELECT id FROM teams WHERE fpl_team_id = :id"
-        );
-
-
-        $stmt->execute([
-            ':id' => $fplTeamId
-        ]);
-
-
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-
-
-        return $result['id'] ?? null;
-
-    }
-    
 }
