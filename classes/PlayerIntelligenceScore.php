@@ -3,19 +3,17 @@
 class PlayerIntelligenceScore
 {
     /**
-     * Weighting used for the overall player intelligence score.
+     * Core weighting used for overall player intelligence.
      *
-     * Total = 100%
+     * Player quality is the primary factor.
+     * Upcoming fixture opportunity provides the
+     * short-term FPL context.
      */
     private array $weights = [
 
-        'strength' => 0.35,
+        'strength' => 0.65,
 
-        'value' => 0.25,
-
-        'availability' => 0.20,
-
-        'fixtures' => 0.20
+        'fixtures' => 0.35
     ];
 
 
@@ -29,29 +27,96 @@ class PlayerIntelligenceScore
 
 
     /**
-     * Calculate the overall player intelligence score.
+     * Convert availability into a risk multiplier.
      *
-     * Missing component ratings are excluded and
-     * the remaining weights are redistributed
-     * proportionally.
+     * Availability should not reward a healthy player
+     * with additional intelligence points.
+     *
+     * Instead:
+     *
+     * fully available = no penalty
+     * doubtful/injured = progressively larger penalty
      */
-    public function calculateScore(
+    public function calculateAvailabilityMultiplier(
+        ?float $availabilityRating
+    ): float {
+
+        /*
+         * Missing availability information should not
+         * automatically penalise the player.
+         */
+        if ($availabilityRating === null) {
+            return 1.00;
+        }
+
+
+        $availabilityRating =
+            max(
+                0,
+                min(
+                    100,
+                    $availabilityRating
+                )
+            );
+
+
+        if ($availabilityRating >= 90) {
+            return 1.00;
+        }
+
+
+        if ($availabilityRating >= 75) {
+            return 0.95;
+        }
+
+
+        if ($availabilityRating >= 50) {
+            return 0.85;
+        }
+
+
+        if ($availabilityRating >= 25) {
+            return 0.60;
+        }
+
+
+        if ($availabilityRating > 0) {
+            return 0.35;
+        }
+
+
+        return 0.10;
+    }
+
+
+    /**
+     * Calculate the core intelligence score.
+     *
+     * Strength = 65%
+     * Fixtures = 35%
+     *
+     * Missing components redistribute the available
+     * weighting proportionally.
+     */
+    public function calculateCoreScore(
         ?float $strengthRating,
-        ?float $valueRating,
-        ?float $availabilityRating,
         ?float $fixtureRating
     ): ?float {
+        /*
+         * Player strength is the foundation of the
+         * overall intelligence score.
+         *
+         * Fixture opportunity alone is not enough to
+         * establish that a player is a viable FPL option.
+         */
+        if ($strengthRating === null) {
+            return null;
+        }
 
         $ratings = [
 
             'strength' =>
                 $strengthRating,
-
-            'value' =>
-                $valueRating,
-
-            'availability' =>
-                $availabilityRating,
 
             'fixtures' =>
                 $fixtureRating
@@ -81,10 +146,6 @@ class PlayerIntelligenceScore
             }
 
 
-            /*
-             * Every intelligence component uses
-             * the standard 0-100 scale.
-             */
             $rating =
                 max(
                     0,
@@ -96,13 +157,7 @@ class PlayerIntelligenceScore
 
 
             $weight =
-                $this->weights[$component]
-                ?? 0;
-
-
-            if ($weight <= 0) {
-                continue;
-            }
+                $this->weights[$component];
 
 
             $weightedTotal +=
@@ -116,22 +171,9 @@ class PlayerIntelligenceScore
         }
 
 
-        /*
-         * No usable intelligence components.
-         */
         if ($weightTotal <= 0) {
             return null;
         }
-
-
-        /*
-         * Redistribute available weighting
-         * proportionally when components are missing.
-         */
-        $score =
-            $weightedTotal
-            /
-            $weightTotal;
 
 
         return round(
@@ -139,7 +181,60 @@ class PlayerIntelligenceScore
                 0,
                 min(
                     100,
-                    $score
+                    $weightedTotal
+                    /
+                    $weightTotal
+                )
+            ),
+            2
+        );
+    }
+
+
+    /**
+     * Calculate the final player intelligence score.
+     *
+     * Value is deliberately NOT included here.
+     *
+     * Value remains available as a separate decision metric
+     * for value picks, transfers and squad optimisation.
+     *
+     * Availability acts as a risk modifier rather than
+     * contributing free intelligence points.
+     */
+    public function calculateScore(
+        ?float $strengthRating,
+        ?float $valueRating,
+        ?float $availabilityRating,
+        ?float $fixtureRating
+    ): ?float {
+
+        $coreScore =
+            $this->calculateCoreScore(
+                $strengthRating,
+                $fixtureRating
+            );
+
+
+        if ($coreScore === null) {
+            return null;
+        }
+
+
+        $availabilityMultiplier =
+            $this->calculateAvailabilityMultiplier(
+                $availabilityRating
+            );
+
+
+        return round(
+            max(
+                0,
+                min(
+                    100,
+                    $coreScore
+                    *
+                    $availabilityMultiplier
                 )
             ),
             2
@@ -195,7 +290,7 @@ class PlayerIntelligenceScore
 
 
     /**
-     * Build the complete player intelligence score model.
+     * Build the complete player intelligence model.
      */
     public function buildModel(
         array $playerStrength,
@@ -211,6 +306,11 @@ class PlayerIntelligenceScore
             );
 
 
+        /*
+         * Value remains in the output model even though
+         * it is no longer part of the overall intelligence
+         * score calculation.
+         */
         $valueRating =
             $this->getNullableRating(
                 $playerValue,
@@ -235,6 +335,19 @@ class PlayerIntelligenceScore
                     )
                 )
                 : null;
+
+
+        $coreScore =
+            $this->calculateCoreScore(
+                $strengthRating,
+                $fixtureRating
+            );
+
+
+        $availabilityMultiplier =
+            $this->calculateAvailabilityMultiplier(
+                $availabilityRating
+            );
 
 
         $score =
@@ -289,6 +402,12 @@ class PlayerIntelligenceScore
             'fixture_rating' =>
                 $fixtureRating,
 
+            'core_score' =>
+                $coreScore,
+
+            'availability_multiplier' =>
+                $availabilityMultiplier,
+
             'intelligence_score' =>
                 $score,
 
@@ -301,8 +420,7 @@ class PlayerIntelligenceScore
 
 
     /**
-     * Read a nullable 0-100 rating
-     * from an intelligence model.
+     * Read a nullable 0-100 rating.
      */
     private function getNullableRating(
         array $model,

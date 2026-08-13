@@ -23,16 +23,27 @@ function testPass(
 
     if ($condition) {
 
-        echo "PASS: {$description}<br>\n";
+        echo "PASS: {$description}<br>";
 
         $passed++;
 
     } else {
 
-        echo "FAIL: {$description}<br>\n";
+        echo "FAIL: {$description}<br>";
 
         $failed++;
     }
+}
+
+
+function section(
+    string $title
+): void {
+
+    echo "<br>";
+    echo "============================================<br>";
+    echo "{$title}<br>";
+    echo "============================================<br>";
 }
 
 
@@ -42,112 +53,29 @@ function testPass(
  * ============================================================
  */
 
-$intelligenceScore =
+$model =
     new PlayerIntelligenceScore();
 
 
 /*
  * ============================================================
- * TEST DATA
- * ============================================================
- */
-
-$playerStrength = [
-
-    'player_id' => 1,
-
-    'fpl_player_id' => 1001,
-
-    'team_id' => 1,
-
-    'name' => 'Test Forward',
-
-    'position' => 'FWD',
-
-    'strength_rating' => 90.00
-];
-
-
-$playerValue = [
-
-    'player_id' => 1,
-
-    'name' => 'Test Forward',
-
-    'position' => 'FWD',
-
-    'price' => 6.0,
-
-    'strength_rating' => 90.00,
-
-    'strength_per_million' => 15.00,
-
-    'value_rating' => 100.00,
-
-    'value_label' => 'Exceptional'
-];
-
-
-$playerAvailability = [
-
-    'player_id' => 1,
-
-    'fpl_player_id' => 1001,
-
-    'name' => 'Test Forward',
-
-    'position' => 'FWD',
-
-    'minutes' => 750,
-
-    'chance_of_playing' => 100,
-
-    'availability_rating' => 100.00,
-
-    'reliability_rating' => 95.00,
-
-    'availability_label' => 'Available'
-];
-
-
-$fixtureRating = 90.00;
-
-
-/*
- * ============================================================
  * SCENARIO A
- * Weight Configuration
+ * Core Intelligence Weights
  * ============================================================
  */
 
-echo "<br>============================================<br>";
-echo "Scenario A: Intelligence Score Weights<br>";
-echo "============================================<br>";
+section(
+    'Scenario A: Core Intelligence Weights'
+);
 
 
 $weights =
-    $intelligenceScore->getWeights();
+    $model->getWeights();
 
 
 echo "Strength Weight: "
     . number_format(
         $weights['strength'],
-        2
-    )
-    . "<br>";
-
-
-echo "Value Weight: "
-    . number_format(
-        $weights['value'],
-        2
-    )
-    . "<br>";
-
-
-echo "Availability Weight: "
-    . number_format(
-        $weights['availability'],
         2
     )
     . "<br>";
@@ -161,7 +89,7 @@ echo "Fixture Weight: "
     . "<br>";
 
 
-$weightTotal =
+$totalWeight =
     array_sum(
         $weights
     );
@@ -169,403 +97,500 @@ $weightTotal =
 
 echo "Total Weight: "
     . number_format(
-        $weightTotal,
+        $totalWeight,
         2
     )
     . "<br>";
 
 
 testPass(
-    'Strength weight is 35%',
-    $weights['strength'] === 0.35
+    'Strength weight is 65%',
+    $weights['strength'] === 0.65
 );
 
 
 testPass(
-    'Value weight is 25%',
-    $weights['value'] === 0.25
+    'Fixture weight is 35%',
+    $weights['fixtures'] === 0.35
 );
 
 
 testPass(
-    'Availability weight is 20%',
-    $weights['availability'] === 0.20
-);
-
-
-testPass(
-    'Fixture weight is 20%',
-    $weights['fixtures'] === 0.20
-);
-
-
-testPass(
-    'All intelligence weights total 1.00',
-    abs($weightTotal - 1.00) < 0.0001
+    'Core intelligence weights total 1.00',
+    abs(
+        $totalWeight - 1.00
+    ) < 0.0001
 );
 
 
 /*
  * ============================================================
  * SCENARIO B
- * Standard Intelligence Score
+ * Standard Core Intelligence Score
  * ============================================================
  */
 
-echo "<br>============================================<br>";
-echo "Scenario B: Standard Intelligence Score<br>";
-echo "============================================<br>";
+section(
+    'Scenario B: Standard Core Intelligence Score'
+);
 
 
-$standardScore =
-    $intelligenceScore->calculateScore(
+$coreScore =
+    $model->calculateCoreScore(
         90.00,
-        100.00,
-        100.00,
-        90.00
+        80.00
     );
 
 
-echo "Intelligence Score: "
+$expectedCoreScore =
+    round(
+        (90.00 * 0.65)
+        +
+        (80.00 * 0.35),
+        2
+    );
+
+
+echo "Core Intelligence Score: "
     . number_format(
-        $standardScore,
+        $coreScore,
         2
     )
     . "<br>";
 
 
-$expectedScore =
-    (
-        90.00 * 0.35
-    )
-    +
-    (
-        100.00 * 0.25
-    )
-    +
-    (
-        100.00 * 0.20
-    )
-    +
-    (
-        90.00 * 0.20
-    );
-
-
-$expectedScore =
-    round(
-        $expectedScore,
-        2
-    );
-
-
-echo "Expected Score: "
+echo "Expected Core Score: "
     . number_format(
-        $expectedScore,
+        $expectedCoreScore,
         2
     )
     . "<br>";
 
 
 testPass(
-    'Standard intelligence score is calculated correctly',
-    $standardScore === $expectedScore
+    'Core intelligence score is calculated correctly',
+    $coreScore === $expectedCoreScore
 );
 
 
 testPass(
-    'Standard intelligence score remains between 0 and 100',
-    $standardScore >= 0
+    'Core intelligence score remains between 0 and 100',
+    $coreScore >= 0
     &&
-    $standardScore <= 100
+    $coreScore <= 100
 );
 
 
 /*
  * ============================================================
  * SCENARIO C
- * Perfect Player
+ * Fully Available Player
  * ============================================================
  */
 
-echo "<br>============================================<br>";
-echo "Scenario C: Perfect Player<br>";
-echo "============================================<br>";
+section(
+    'Scenario C: Fully Available Player'
+);
 
 
-$perfectScore =
-    $intelligenceScore->calculateScore(
+$score =
+    $model->calculateScore(
+        90.00,
         100.00,
         100.00,
-        100.00,
-        100.00
+        80.00
     );
 
 
-echo "Perfect Player Score: "
+echo "Final Intelligence Score: "
     . number_format(
-        $perfectScore,
+        $score,
         2
     )
     . "<br>";
 
 
 testPass(
-    'Perfect player produces 100 intelligence score',
-    $perfectScore === 100.00
+    'Fully available player receives no availability penalty',
+    $score === $expectedCoreScore
 );
 
 
 /*
  * ============================================================
  * SCENARIO D
- * Poor Player
+ * Availability Multipliers
  * ============================================================
  */
 
-echo "<br>============================================<br>";
-echo "Scenario D: Poor Player<br>";
-echo "============================================<br>";
+section(
+    'Scenario D: Availability Multipliers'
+);
 
 
-$poorScore =
-    $intelligenceScore->calculateScore(
-        0.00,
-        0.00,
-        0.00,
+$availability100 =
+    $model->calculateAvailabilityMultiplier(
+        100.00
+    );
+
+
+$availability80 =
+    $model->calculateAvailabilityMultiplier(
+        80.00
+    );
+
+
+$availability60 =
+    $model->calculateAvailabilityMultiplier(
+        60.00
+    );
+
+
+$availability30 =
+    $model->calculateAvailabilityMultiplier(
+        30.00
+    );
+
+
+$availability10 =
+    $model->calculateAvailabilityMultiplier(
+        10.00
+    );
+
+
+$availability0 =
+    $model->calculateAvailabilityMultiplier(
         0.00
     );
 
 
-echo "Poor Player Score: "
+$availabilityUnknown =
+    $model->calculateAvailabilityMultiplier(
+        null
+    );
+
+
+echo "100 Availability: "
     . number_format(
-        $poorScore,
+        $availability100,
+        2
+    )
+    . "<br>";
+
+
+echo "80 Availability: "
+    . number_format(
+        $availability80,
+        2
+    )
+    . "<br>";
+
+
+echo "60 Availability: "
+    . number_format(
+        $availability60,
+        2
+    )
+    . "<br>";
+
+
+echo "30 Availability: "
+    . number_format(
+        $availability30,
+        2
+    )
+    . "<br>";
+
+
+echo "10 Availability: "
+    . number_format(
+        $availability10,
+        2
+    )
+    . "<br>";
+
+
+echo "0 Availability: "
+    . number_format(
+        $availability0,
+        2
+    )
+    . "<br>";
+
+
+echo "Unknown Availability: "
+    . number_format(
+        $availabilityUnknown,
         2
     )
     . "<br>";
 
 
 testPass(
-    'Poor player produces 0 intelligence score',
-    $poorScore === 0.00
+    '100 availability produces multiplier 1.00',
+    $availability100 === 1.00
+);
+
+
+testPass(
+    '80 availability produces multiplier 0.95',
+    $availability80 === 0.95
+);
+
+
+testPass(
+    '60 availability produces multiplier 0.85',
+    $availability60 === 0.85
+);
+
+
+testPass(
+    '30 availability produces multiplier 0.60',
+    $availability30 === 0.60
+);
+
+
+testPass(
+    '10 availability produces multiplier 0.35',
+    $availability10 === 0.35
+);
+
+
+testPass(
+    '0 availability produces multiplier 0.10',
+    $availability0 === 0.10
+);
+
+
+testPass(
+    'Unknown availability produces no penalty',
+    $availabilityUnknown === 1.00
 );
 
 
 /*
  * ============================================================
  * SCENARIO E
- * Score Ordering
+ * Availability Penalty
  * ============================================================
  */
 
-echo "<br>============================================<br>";
-echo "Scenario E: Intelligence Score Ordering<br>";
-echo "============================================<br>";
+section(
+    'Scenario E: Availability Penalty'
+);
 
 
-$eliteScore =
-    $intelligenceScore->calculateScore(
+$fullyAvailable =
+    $model->calculateScore(
         90.00,
         100.00,
         100.00,
-        90.00
+        80.00
     );
 
 
-$averageScore =
-    $intelligenceScore->calculateScore(
-        70.00,
-        66.67,
-        75.00,
-        60.00
+$doubtful =
+    $model->calculateScore(
+        90.00,
+        100.00,
+        50.00,
+        80.00
     );
 
 
-$weakScore =
-    $intelligenceScore->calculateScore(
-        30.00,
-        33.33,
-        25.00,
-        30.00
+$unavailable =
+    $model->calculateScore(
+        90.00,
+        100.00,
+        0.00,
+        80.00
     );
 
 
-echo "Elite: "
+echo "Fully Available Score: "
     . number_format(
-        $eliteScore,
+        $fullyAvailable,
         2
     )
     . "<br>";
 
 
-echo "Average: "
+echo "Doubtful Score: "
     . number_format(
-        $averageScore,
+        $doubtful,
         2
     )
     . "<br>";
 
 
-echo "Weak: "
+echo "Unavailable Score: "
     . number_format(
-        $weakScore,
+        $unavailable,
         2
     )
     . "<br>";
 
 
 testPass(
-    'Elite player scores higher than average player',
-    $eliteScore > $averageScore
+    'Availability risk reduces intelligence score',
+    $fullyAvailable
+    >
+    $doubtful
 );
 
 
 testPass(
-    'Average player scores higher than weak player',
-    $averageScore > $weakScore
+    'Unavailable player scores lower than doubtful player',
+    $doubtful
+    >
+    $unavailable
 );
 
 
 /*
  * ============================================================
  * SCENARIO F
- * Component Influence
+ * Value Does Not Change Overall Intelligence
  * ============================================================
  */
 
-echo "<br>============================================<br>";
-echo "Scenario F: Component Influence<br>";
-echo "============================================<br>";
+section(
+    'Scenario F: Value Separation'
+);
 
 
-$strongStrengthScore =
-    $intelligenceScore->calculateScore(
+$highValue =
+    $model->calculateScore(
+        80.00,
         100.00,
-        70.00,
-        70.00,
+        100.00,
         70.00
     );
 
 
-$weakStrengthScore =
-    $intelligenceScore->calculateScore(
-        0.00,
-        70.00,
-        70.00,
+$lowValue =
+    $model->calculateScore(
+        80.00,
+        10.00,
+        100.00,
         70.00
     );
 
 
-echo "Strong Strength Component: "
+echo "High Value Score: "
     . number_format(
-        $strongStrengthScore,
+        $highValue,
         2
     )
     . "<br>";
 
 
-echo "Weak Strength Component: "
+echo "Low Value Score: "
     . number_format(
-        $weakStrengthScore,
+        $lowValue,
         2
     )
     . "<br>";
 
 
 testPass(
-    'Higher strength rating improves intelligence score',
-    $strongStrengthScore > $weakStrengthScore
-);
-
-
-$strongValueScore =
-    $intelligenceScore->calculateScore(
-        70.00,
-        100.00,
-        70.00,
-        70.00
-    );
-
-
-$weakValueScore =
-    $intelligenceScore->calculateScore(
-        70.00,
-        0.00,
-        70.00,
-        70.00
-    );
-
-
-testPass(
-    'Higher value rating improves intelligence score',
-    $strongValueScore > $weakValueScore
-);
-
-
-$strongAvailabilityScore =
-    $intelligenceScore->calculateScore(
-        70.00,
-        70.00,
-        100.00,
-        70.00
-    );
-
-
-$weakAvailabilityScore =
-    $intelligenceScore->calculateScore(
-        70.00,
-        70.00,
-        0.00,
-        70.00
-    );
-
-
-testPass(
-    'Higher availability rating improves intelligence score',
-    $strongAvailabilityScore > $weakAvailabilityScore
-);
-
-
-$easyFixtureScore =
-    $intelligenceScore->calculateScore(
-        70.00,
-        70.00,
-        70.00,
-        100.00
-    );
-
-
-$hardFixtureScore =
-    $intelligenceScore->calculateScore(
-        70.00,
-        70.00,
-        70.00,
-        0.00
-    );
-
-
-testPass(
-    'Higher fixture rating improves intelligence score',
-    $easyFixtureScore > $hardFixtureScore
+    'Value rating does not directly change overall intelligence score',
+    $highValue === $lowValue
 );
 
 
 /*
  * ============================================================
  * SCENARIO G
- * Missing Component Redistribution
+ * Strength Influence
  * ============================================================
  */
 
-echo "<br>============================================<br>";
-echo "Scenario G: Missing Component Handling<br>";
-echo "============================================<br>";
+section(
+    'Scenario G: Strength Influence'
+);
 
 
-$missingFixtureScore =
-    $intelligenceScore->calculateScore(
+$strongPlayer =
+    $model->calculateScore(
         90.00,
+        50.00,
         100.00,
+        70.00
+    );
+
+
+$weakPlayer =
+    $model->calculateScore(
+        40.00,
+        100.00,
+        100.00,
+        70.00
+    );
+
+
+testPass(
+    'Higher strength rating produces higher intelligence score',
+    $strongPlayer
+    >
+    $weakPlayer
+);
+
+
+/*
+ * ============================================================
+ * SCENARIO H
+ * Fixture Influence
+ * ============================================================
+ */
+
+section(
+    'Scenario H: Fixture Influence'
+);
+
+
+$goodFixtures =
+    $model->calculateScore(
+        70.00,
+        50.00,
+        100.00,
+        90.00
+    );
+
+
+$poorFixtures =
+    $model->calculateScore(
+        70.00,
+        50.00,
+        100.00,
+        30.00
+    );
+
+
+testPass(
+    'Better fixture opportunity produces higher intelligence score',
+    $goodFixtures
+    >
+    $poorFixtures
+);
+
+
+/*
+ * ============================================================
+ * SCENARIO I
+ * Missing Fixture Handling
+ * ============================================================
+ */
+
+section(
+    'Scenario I: Missing Fixture Handling'
+);
+
+
+$missingFixture =
+    $model->calculateScore(
+        82.00,
+        90.00,
         100.00,
         null
     );
@@ -573,126 +598,125 @@ $missingFixtureScore =
 
 echo "Score Without Fixture Rating: "
     . number_format(
-        $missingFixtureScore,
+        $missingFixture,
         2
     )
     . "<br>";
 
 
-$expectedWithoutFixture =
-    (
-        (90.00 * 0.35)
-        +
-        (100.00 * 0.25)
-        +
-        (100.00 * 0.20)
-    )
-    /
-    (
-        0.35
-        +
-        0.25
-        +
-        0.20
-    );
-
-
-$expectedWithoutFixture =
-    round(
-        $expectedWithoutFixture,
-        2
-    );
-
-
 testPass(
-    'Missing fixture rating is redistributed correctly',
-    $missingFixtureScore === $expectedWithoutFixture
-);
-
-
-testPass(
-    'Missing fixture rating does not produce null',
-    $missingFixtureScore !== null
+    'Missing fixture rating redistributes fully to strength',
+    $missingFixture === 82.00
 );
 
 
 /*
  * ============================================================
- * SCENARIO H
- * Completely Missing Data
+ * SCENARIO J
+ * Missing Strength Handling
  * ============================================================
  */
 
-echo "<br>============================================<br>";
-echo "Scenario H: Completely Missing Data<br>";
-echo "============================================<br>";
+section(
+    'Scenario J: Missing Strength Handling'
+);
 
 
-$missingScore =
-    $intelligenceScore->calculateScore(
+$missingStrength =
+    $model->calculateScore(
         null,
+        90.00,
+        100.00,
+        74.00
+    );
+
+
+echo "Score Without Strength Rating: "
+    . (
+        $missingStrength !== null
+            ? number_format(
+                $missingStrength,
+                2
+            )
+            : 'NULL'
+    )
+    . "<br>";
+
+
+testPass(
+    'Missing strength rating prevents an overall intelligence score',
+    $missingStrength === null
+);
+
+
+/*
+ * ============================================================
+ * SCENARIO K
+ * Completely Missing Core Data
+ * ============================================================
+ */
+
+section(
+    'Scenario K: Completely Missing Core Data'
+);
+
+
+$missingData =
+    $model->calculateScore(
         null,
-        null,
+        100.00,
+        100.00,
         null
     );
 
 
-echo "Missing Data Score: ";
-
-
-if ($missingScore === null) {
-
-    echo "NULL<br>";
-
-} else {
-
-    echo number_format(
-        $missingScore,
-        2
+echo "Missing Data Score: "
+    . (
+        $missingData
+        ?? 'NULL'
     )
     . "<br>";
-}
 
 
 testPass(
-    'Completely missing ratings return null',
-    $missingScore === null
+    'Completely missing core ratings return null',
+    $missingData === null
 );
 
 
 /*
  * ============================================================
- * SCENARIO I
+ * SCENARIO L
  * Rating Bounds
  * ============================================================
  */
 
-echo "<br>============================================<br>";
-echo "Scenario I: Rating Bounds<br>";
-echo "============================================<br>";
+section(
+    'Scenario L: Rating Bounds'
+);
 
 
-$overMaximum =
-    $intelligenceScore->calculateScore(
+$over100 =
+    $model->calculateScore(
         150.00,
-        150.00,
-        150.00,
+        100.00,
+        100.00,
         150.00
     );
 
 
-$belowMinimum =
-    $intelligenceScore->calculateScore(
+$below0 =
+    $model->calculateScore(
         -50.00,
-        -50.00,
-        -50.00,
+        100.00,
+        100.00,
         -50.00
     );
 
 
 echo "Over 100 Input: "
     . number_format(
-        $overMaximum,
+        $over100,
         2
     )
     . "<br>";
@@ -700,7 +724,7 @@ echo "Over 100 Input: "
 
 echo "Below 0 Input: "
     . number_format(
-        $belowMinimum,
+        $below0,
         2
     )
     . "<br>";
@@ -708,132 +732,150 @@ echo "Below 0 Input: "
 
 testPass(
     'Ratings above 100 are capped',
-    $overMaximum === 100.00
+    $over100 === 100.00
 );
 
 
 testPass(
     'Ratings below 0 are capped',
-    $belowMinimum === 0.00
+    $below0 === 0.00
 );
 
 
 /*
  * ============================================================
- * SCENARIO J
+ * SCENARIO M
  * Intelligence Labels
  * ============================================================
  */
 
-echo "<br>============================================<br>";
-echo "Scenario J: Intelligence Labels<br>";
-echo "============================================<br>";
-
-
-$eliteLabel =
-    $intelligenceScore->getLabel(
-        90.00
-    );
-
-
-$strongLabel =
-    $intelligenceScore->getLabel(
-        75.00
-    );
-
-
-$averageLabel =
-    $intelligenceScore->getLabel(
-        60.00
-    );
-
-
-$belowAverageLabel =
-    $intelligenceScore->getLabel(
-        45.00
-    );
-
-
-$weakLabel =
-    $intelligenceScore->getLabel(
-        20.00
-    );
-
-
-$unknownLabel =
-    $intelligenceScore->getLabel(
-        null
-    );
-
-
-echo "90 Rating: {$eliteLabel}<br>";
-echo "75 Rating: {$strongLabel}<br>";
-echo "60 Rating: {$averageLabel}<br>";
-echo "45 Rating: {$belowAverageLabel}<br>";
-echo "20 Rating: {$weakLabel}<br>";
-echo "NULL Rating: {$unknownLabel}<br>";
+section(
+    'Scenario M: Intelligence Labels'
+);
 
 
 testPass(
     '90 rating produces Elite label',
-    $eliteLabel === 'Elite'
+    $model->getLabel(
+        90.00
+    ) === 'Elite'
 );
 
 
 testPass(
     '75 rating produces Strong label',
-    $strongLabel === 'Strong'
+    $model->getLabel(
+        75.00
+    ) === 'Strong'
 );
 
 
 testPass(
     '60 rating produces Average label',
-    $averageLabel === 'Average'
+    $model->getLabel(
+        60.00
+    ) === 'Average'
 );
 
 
 testPass(
     '45 rating produces Below Average label',
-    $belowAverageLabel === 'Below Average'
+    $model->getLabel(
+        45.00
+    ) === 'Below Average'
 );
 
 
 testPass(
     '20 rating produces Weak label',
-    $weakLabel === 'Weak'
+    $model->getLabel(
+        20.00
+    ) === 'Weak'
 );
 
 
 testPass(
     'Missing rating produces Unknown label',
-    $unknownLabel === 'Unknown'
+    $model->getLabel(
+        null
+    ) === 'Unknown'
 );
 
 
 /*
  * ============================================================
- * SCENARIO K
+ * SCENARIO N
  * Complete Intelligence Model
  * ============================================================
  */
 
-echo "<br>============================================<br>";
-echo "Scenario K: Complete Intelligence Model<br>";
-echo "============================================<br>";
+section(
+    'Scenario N: Complete Intelligence Model'
+);
+
+
+$playerStrength = [
+
+    'player_id' =>
+        1,
+
+    'name' =>
+        'Test Forward',
+
+    'position' =>
+        'FWD',
+
+    'strength_rating' =>
+        90.00
+];
+
+
+$playerValue = [
+
+    'player_id' =>
+        1,
+
+    'name' =>
+        'Test Forward',
+
+    'position' =>
+        'FWD',
+
+    'value_rating' =>
+        100.00
+];
+
+
+$playerAvailability = [
+
+    'player_id' =>
+        1,
+
+    'name' =>
+        'Test Forward',
+
+    'position' =>
+        'FWD',
+
+    'availability_rating' =>
+        100.00
+];
 
 
 $completeModel =
-    $intelligenceScore->buildModel(
+    $model->buildModel(
         $playerStrength,
         $playerValue,
         $playerAvailability,
-        $fixtureRating
+        80.00
     );
 
 
 testPass(
     'Complete intelligence model returns an array',
-    is_array($completeModel)
+    is_array(
+        $completeModel
+    )
 );
 
 
@@ -862,7 +904,7 @@ testPass(
 
 
 testPass(
-    'Value rating is connected',
+    'Value rating remains available separately',
     $completeModel['value_rating'] === 100.00
 );
 
@@ -875,29 +917,63 @@ testPass(
 
 testPass(
     'Fixture rating is connected',
-    $completeModel['fixture_rating'] === 90.00
+    $completeModel['fixture_rating'] === 80.00
+);
+
+
+testPass(
+    'Core score exists',
+    isset(
+        $completeModel['core_score']
+    )
+);
+
+
+testPass(
+    'Availability multiplier exists',
+    isset(
+        $completeModel[
+            'availability_multiplier'
+        ]
+    )
+);
+
+
+testPass(
+    'Fully available player has multiplier 1.00',
+    $completeModel[
+        'availability_multiplier'
+    ] === 1.00
 );
 
 
 testPass(
     'Intelligence score exists',
-    $completeModel['intelligence_score'] !== null
+    isset(
+        $completeModel[
+            'intelligence_score'
+        ]
+    )
 );
 
 
 testPass(
-    'Intelligence score is within 0-100',
-    $completeModel['intelligence_score'] >= 0
-    &&
-    $completeModel['intelligence_score'] <= 100
+    'Intelligence score equals core score when fully available',
+    $completeModel[
+        'intelligence_score'
+    ]
+    ===
+    $completeModel[
+        'core_score'
+    ]
 );
 
 
 testPass(
     'Intelligence label exists',
-    !empty(
-        $completeModel['intelligence_label']
-    )
+    $completeModel[
+        'intelligence_label'
+    ] !== ''
 );
 
 
@@ -907,9 +983,9 @@ testPass(
  * ============================================================
  */
 
-echo "<br>============================================<br>";
-echo "Front-End Friendly Player Intelligence<br>";
-echo "============================================<br>";
+section(
+    'Front-End Friendly Player Intelligence'
+);
 
 
 echo "Player: "
@@ -940,13 +1016,15 @@ echo "Value: "
 
 echo "Availability: "
     . number_format(
-        $completeModel['availability_rating'],
+        $completeModel[
+            'availability_rating'
+        ],
         2
     )
     . " / 100<br>";
 
 
-echo "Fixture Rating: "
+echo "Fixture Opportunity: "
     . number_format(
         $completeModel['fixture_rating'],
         2
@@ -954,16 +1032,38 @@ echo "Fixture Rating: "
     . " / 100<br>";
 
 
+echo "Core Score: "
+    . number_format(
+        $completeModel['core_score'],
+        2
+    )
+    . " / 100<br>";
+
+
+echo "Availability Multiplier: "
+    . number_format(
+        $completeModel[
+            'availability_multiplier'
+        ],
+        2
+    )
+    . "<br>";
+
+
 echo "Intelligence Score: "
     . number_format(
-        $completeModel['intelligence_score'],
+        $completeModel[
+            'intelligence_score'
+        ],
         2
     )
     . " / 100<br>";
 
 
 echo "Intelligence Label: "
-    . $completeModel['intelligence_label']
+    . $completeModel[
+        'intelligence_label'
+    ]
     . "<br>";
 
 
@@ -973,9 +1073,9 @@ echo "Intelligence Label: "
  * ============================================================
  */
 
-echo "<br>============================================<br>";
-echo "Player Intelligence Score Test Summary<br>";
-echo "============================================<br>";
+section(
+    'Player Intelligence Score Test Summary'
+);
 
 
 echo "Passed: {$passed}<br>";

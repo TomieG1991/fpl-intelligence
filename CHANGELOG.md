@@ -6,6 +6,85 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.11.8] - Player Intelligence & Strength Calibration
+
+### Added
+
+- Added player-facing fixture opportunity scoring based purely on opposition strength.
+- Added rolling fixture opportunity averages for upcoming 5, 6, 8 and 10 fixture runs.
+- Added player performance sample-confidence calculation based on minutes played.
+- Added confidence-adjusted player performance ratings.
+- Added BPS per 90 calculation and normalisation.
+- Added core player intelligence score output.
+- Added availability multiplier output to the complete player intelligence model.
+- Added live Top 10 player intelligence rankings to the dashboard.
+
+### Refactored
+
+- Refactored overall PlayerIntelligenceScore weighting to use player strength at 65% and fixture opportunity at 35%.
+- Removed player value as a direct contributor to overall player intelligence.
+- Changed player availability from a weighted score component into a risk modifier.
+- Updated fixture opportunity scoring so a team's own strength is not counted twice within player intelligence.
+- Updated PlayerStrengthModel to consume confidence-adjusted performance ratings where available.
+- Updated BPS performance rating from cumulative BPS to BPS per 90.
+- Updated forward strength weighting so clean sheets no longer contribute to FWD strength.
+- Reallocated the previous forward clean-sheet weighting to BPS.
+- Updated player intelligence ranking so player strength is required before an overall intelligence score can be generated.
+- Preserved value rating as a separate metric for future value-pick, transfer and squad optimisation features.
+- Preserved the existing team matchup fixture score separately from player-facing fixture opportunity.
+
+### Model
+
+- Overall player intelligence now represents player quality combined with short-term fixture opportunity.
+- Player strength contributes 65% of the core intelligence score.
+- Fixture opportunity contributes 35% of the core intelligence score.
+- Availability no longer rewards fully fit players with additional intelligence points.
+- Fully available players receive no availability penalty.
+- Availability concerns progressively reduce the core intelligence score through a multiplier.
+- Missing availability information does not automatically penalise a player.
+- Player value remains visible but does not directly influence overall player quality ranking.
+- Player strength is mandatory for an overall intelligence score.
+- Fixture opportunity alone cannot create a player intelligence score when no performance evidence exists.
+- Missing fixture data remains supported by redistributing the core score fully to player strength.
+- Small performance samples are pulled towards a neutral 50 rating rather than being treated with the same confidence as established samples.
+- 900 minutes represents full performance-sample confidence.
+- BPS is now evaluated on a per-90 basis for consistency with other performance metrics.
+- Forwards no longer receive strength credit from clean sheets.
+
+### Fixed
+
+- Fixed value indirectly double-counting player strength within the overall intelligence score.
+- Fixed fully available players receiving an automatic 20-point intelligence contribution.
+- Fixed player fixture ratings double-counting the strength of the player's own team.
+- Fixed zero-minute players being ranked highly solely because their team had favourable fixtures.
+- Fixed very small per-90 samples being treated with the same confidence as established player performance.
+- Fixed cumulative BPS being compared alongside per-90 attacking performance metrics.
+- Fixed forwards receiving strength credit for clean sheets despite not receiving FPL clean-sheet points.
+- Reduced small-sample inflation that previously caused low-minute players to rank disproportionately highly.
+
+### Dashboard
+
+- Replaced the placeholder Top Players card with live PlayerIntelligenceEngine rankings.
+- Added live position, price, availability, strength, value, fixture opportunity and intelligence score information.
+- Expanded the live player ranking from Top 5 to Top 10.
+- Used the live dashboard output to validate player intelligence against real FPL data.
+- Removed temporary deep performance-component and positional-strength diagnostic output after calibration was completed.
+
+### Testing
+
+- Updated PlayerIntelligenceScore regression tests for the calibrated 65/35 core weighting model.
+- Added availability multiplier testing.
+- Added validation that value does not directly alter overall intelligence.
+- Added validation that player strength is required for an overall intelligence score.
+- Added BPS per 90 integration testing.
+- Updated PlayerIntelligenceEngine tests for the new BPS rating model.
+- Verified missing fixture data remains supported.
+- Verified zero-minute players cannot rank solely from fixture opportunity.
+- Verified low-minute performance samples receive reduced confidence.
+- Complete automated regression suite passes successfully.
+- No test files fail.
+- No test files produce errors.
+
 ## [0.11.7] - Repository & Runtime Structure Hardening
 
 ### Refactored

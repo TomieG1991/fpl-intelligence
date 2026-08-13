@@ -305,8 +305,14 @@ testPass(
 
 
 testPass(
+    'BPS per 90 is calculated correctly',
+    $model['performance']['bps_per_90'] === 80.00
+);
+
+
+testPass(
     'BPS rating is calculated correctly',
-    $model['performance']['bps_rating'] === 80.00
+    $model['performance']['bps_rating'] === 100.00
 );
 
 

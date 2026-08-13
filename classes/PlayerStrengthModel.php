@@ -39,8 +39,8 @@ class PlayerStrengthModel
             'assists' => 0.15,
             'expected_goals' => 0.25,
             'expected_assists' => 0.10,
-            'clean_sheets' => 0.05,
-            'bps' => 0.15
+            'clean_sheets' => 0.00,
+            'bps' => 0.20
         ]
     ];
 
@@ -91,28 +91,46 @@ class PlayerStrengthModel
         $ratings = [
 
             'goals' =>
+                $model['adjusted_goals_rating']
+                ??
                 $model['goals_rating']
-                ?? null,
+                ??
+                null,
 
             'assists' =>
+                $model['adjusted_assists_rating']
+                ??
                 $model['assists_rating']
-                ?? null,
+                ??
+                null,
 
             'expected_goals' =>
+                $model['adjusted_expected_goals_rating']
+                ??
                 $model['expected_goals_rating']
-                ?? null,
+                ??
+                null,
 
             'expected_assists' =>
+                $model['adjusted_expected_assists_rating']
+                ??
                 $model['expected_assists_rating']
-                ?? null,
+                ??
+                null,
 
             'clean_sheets' =>
+                $model['adjusted_clean_sheets_rating']
+                ??
                 $model['clean_sheets_rating']
-                ?? null,
+                ??
+                null,
 
             'bps' =>
+                $model['adjusted_bps_rating']
+                ??
                 $model['bps_rating']
-                ?? null
+                ??
+                null
         ];
 
 
@@ -301,7 +319,35 @@ class PlayerStrengthModel
                 ?? null,
 
             'strength_rating' =>
-                $rating
+                $rating,
+                
+            'sample_confidence' =>
+                $model['sample_confidence']
+                ?? null,
+
+            'adjusted_goals_rating' =>
+                $model['adjusted_goals_rating']
+                ?? null,
+
+            'adjusted_assists_rating' =>
+                $model['adjusted_assists_rating']
+                ?? null,
+
+            'adjusted_expected_goals_rating' =>
+                $model['adjusted_expected_goals_rating']
+                ?? null,
+
+            'adjusted_expected_assists_rating' =>
+                $model['adjusted_expected_assists_rating']
+                ?? null,
+
+            'adjusted_clean_sheets_rating' =>
+                $model['adjusted_clean_sheets_rating']
+                ?? null,
+
+            'adjusted_bps_rating' =>
+                $model['adjusted_bps_rating']
+                ?? null,
         ];
     }
 }

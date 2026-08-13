@@ -14,7 +14,7 @@ class PlayerPerformance
             'expected_goals_per_90' => 0.10,
             'expected_assists_per_90' => 0.10,
             'clean_sheets_per_90' => 0.50,
-            'bps' => 1000
+            'bps_per_90' => 30.0
         ],
 
         'DEF' => [
@@ -23,7 +23,7 @@ class PlayerPerformance
             'expected_goals_per_90' => 0.40,
             'expected_assists_per_90' => 0.30,
             'clean_sheets_per_90' => 0.50,
-            'bps' => 1000
+            'bps_per_90' => 30.0
         ],
 
         'MID' => [
@@ -32,7 +32,7 @@ class PlayerPerformance
             'expected_goals_per_90' => 0.70,
             'expected_assists_per_90' => 0.60,
             'clean_sheets_per_90' => 0.40,
-            'bps' => 1000
+            'bps_per_90' => 30.0
         ],
 
         'FWD' => [
@@ -41,7 +41,7 @@ class PlayerPerformance
             'expected_goals_per_90' => 1.00,
             'expected_assists_per_90' => 0.50,
             'clean_sheets_per_90' => 0.30,
-            'bps' => 1000
+            'bps_per_90' => 30.0
         ]
     ];
 
@@ -275,6 +275,21 @@ class PlayerPerformance
             ?? null
         );
     }
+    
+    /**
+     * Calculate BPS per 90 minutes.
+     */
+    public function calculateBpsPer90(
+        array $performance
+    ): ?float {
+
+        return $this->calculatePer90(
+            $performance['bps']
+            ?? null,
+            $performance['minutes']
+            ?? null
+        );
+    }
 
 
     /**
@@ -454,18 +469,102 @@ class PlayerPerformance
 
 
         return $this->normaliseMetric(
-            isset($performance['bps'])
-            &&
-            is_numeric(
-                $performance['bps']
-            )
-                ? max(
-                    0,
-                    (float)
-                        $performance['bps']
+            $this->calculateBpsPer90(
+                $performance
+            ),
+            $benchmarks[
+                'bps_per_90'
+            ]
+        );
+    }
+    
+    /**
+     * Calculate confidence in performance data
+     * based on the player's minutes sample.
+     *
+     * 900 minutes represents full confidence.
+     */
+    public function calculateSampleConfidence(
+        int $minutes,
+        int $fullConfidenceMinutes = 900
+    ): float {
+
+        $minutes =
+            max(
+                0,
+                $minutes
+            );
+
+
+        if ($fullConfidenceMinutes <= 0) {
+            return 1.00;
+        }
+
+
+        return round(
+            min(
+                1,
+                $minutes
+                /
+                $fullConfidenceMinutes
+            ),
+            4
+        );
+    }
+
+
+    /**
+     * Adjust a performance rating according to
+     * the size of the player's minutes sample.
+     *
+     * Small samples are pulled towards the
+     * neutral rating of 50 rather than zero.
+     */
+    public function applySampleConfidence(
+        ?float $rating,
+        int $minutes
+    ): ?float {
+
+        if ($rating === null) {
+            return null;
+        }
+
+
+        $rating =
+            max(
+                0,
+                min(
+                    100,
+                    $rating
                 )
-                : null,
-            $benchmarks['bps']
+            );
+
+
+        $confidence =
+            $this->calculateSampleConfidence(
+                $minutes
+            );
+
+
+        $adjustedRating =
+            50
+            +
+            (
+                ($rating - 50)
+                *
+                $confidence
+            );
+
+
+        return round(
+            max(
+                0,
+                min(
+                    100,
+                    $adjustedRating
+                )
+            ),
+            2
         );
     }
 
@@ -562,11 +661,70 @@ class PlayerPerformance
             $this->calculateCleanSheetsRating(
                 $performance
             );
+            
+        $performance['bps_per_90'] =
+            $this->calculateBpsPer90(
+                $performance
+            );
 
 
         $performance['bps_rating'] =
             $this->calculateBpsRating(
                 $performance
+            );
+            
+        $minutes =
+            (int) (
+                $performance['minutes']
+                ?? 0
+            );
+
+
+        $performance['sample_confidence'] =
+            $this->calculateSampleConfidence(
+                $minutes
+            );
+
+
+        $performance['adjusted_goals_rating'] =
+            $this->applySampleConfidence(
+                $performance['goals_rating'],
+                $minutes
+            );
+
+
+        $performance['adjusted_assists_rating'] =
+            $this->applySampleConfidence(
+                $performance['assists_rating'],
+                $minutes
+            );
+
+
+        $performance['adjusted_expected_goals_rating'] =
+            $this->applySampleConfidence(
+                $performance['expected_goals_rating'],
+                $minutes
+            );
+
+
+        $performance['adjusted_expected_assists_rating'] =
+            $this->applySampleConfidence(
+                $performance['expected_assists_rating'],
+                $minutes
+            );
+
+
+        $performance['adjusted_clean_sheets_rating'] =
+            $this->applySampleConfidence(
+                $performance['clean_sheets_rating'],
+                $minutes
+            );
+
+
+        $performance['adjusted_bps_rating'] =
+            $this->applySampleConfidence(
+                $performance['bps_rating'],
+                $minutes
             );
 
 

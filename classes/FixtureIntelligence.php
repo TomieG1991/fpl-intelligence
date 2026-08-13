@@ -84,6 +84,41 @@ class FixtureIntelligence
             2
         );
     }
+    
+    /**
+     * Calculate fixture opportunity based purely
+     * on opposition strength.
+     *
+     * This deliberately excludes the selected team's
+     * own strength so that player/team strength is not
+     * counted twice in overall intelligence.
+     *
+     * Weak opposition = high opportunity.
+     * Strong opposition = low opportunity.
+     */
+    public function calculateOpportunityScore(
+        float $opponentStrength
+    ): float {
+
+        $opponentStrength =
+            $this->normaliseStrength(
+                $opponentStrength
+            );
+
+
+        return round(
+            max(
+                0,
+                min(
+                    100,
+                    100
+                    -
+                    $opponentStrength
+                )
+            ),
+            2
+        );
+    }
 
 
     /**
@@ -322,6 +357,11 @@ class FixtureIntelligence
                     $teamStrength,
                     $opponentStrength
                 );
+                
+            $opportunityScore =
+                $this->calculateOpportunityScore(
+                    $opponentStrength
+                );
 
 
             $difficulty =
@@ -385,6 +425,9 @@ class FixtureIntelligence
 
                 'fixture_score' =>
                     $fixtureScore,
+                    
+                'opportunity_score' =>
+                    $opportunityScore,
 
                 'difficulty' =>
                     $difficulty,
@@ -523,6 +566,118 @@ class FixtureIntelligence
             count($scores),
             2
         );
+    }
+    
+    /**
+     * Calculate the average opposition opportunity
+     * over the next X fixtures.
+     */
+    public function calculateOpportunityAverage(
+        array $fixtures,
+        int $fixtureCount
+    ): ?float {
+
+        if (
+            empty($fixtures)
+            ||
+            $fixtureCount <= 0
+            ||
+            count($fixtures) < $fixtureCount
+        ) {
+
+            return null;
+        }
+
+
+        $selectedFixtures =
+            array_slice(
+                $fixtures,
+                0,
+                $fixtureCount
+            );
+
+
+        $scores =
+            [];
+
+
+        foreach (
+            $selectedFixtures
+            as $fixture
+        ) {
+
+            if (
+                !isset(
+                    $fixture['opportunity_score']
+                )
+                ||
+                !is_numeric(
+                    $fixture[
+                        'opportunity_score'
+                    ]
+                )
+            ) {
+
+                return null;
+            }
+
+
+            $scores[] =
+                max(
+                    0,
+                    min(
+                        100,
+                        (float)
+                            $fixture[
+                                'opportunity_score'
+                            ]
+                    )
+                );
+        }
+
+
+        return round(
+            array_sum($scores)
+            /
+            count($scores),
+            2
+        );
+    }
+
+    /**
+     * Calculate standard player-facing
+     * fixture opportunity averages.
+     */
+    public function calculateOpportunityAverages(
+        array $fixtures
+    ): array {
+
+        return [
+
+            'next_5' =>
+                $this->calculateOpportunityAverage(
+                    $fixtures,
+                    5
+                ),
+
+            'next_6' =>
+                $this->calculateOpportunityAverage(
+                    $fixtures,
+                    6
+                ),
+
+            'next_8' =>
+                $this->calculateOpportunityAverage(
+                    $fixtures,
+                    8
+                ),
+
+            'next_10' =>
+                $this->calculateOpportunityAverage(
+                    $fixtures,
+                    10
+                )
+        ];
     }
 
 
