@@ -4,65 +4,140 @@ class FPLApi
 {
     private string $baseUrl;
 
+    private int $timeout = 15;
+
 
     public function __construct()
     {
-        $config = require __DIR__ . '/../config/config.php';
+        $config =
+            require __DIR__ . '/../config/config.php';
 
-        $this->baseUrl = $config['fpl_api']['base_url'];
+
+        if (
+            !isset($config['fpl_api']['base_url'])
+            ||
+            !is_string($config['fpl_api']['base_url'])
+            ||
+            trim($config['fpl_api']['base_url']) === ''
+        ) {
+
+            throw new RuntimeException(
+                'FPL API base URL is not configured'
+            );
+        }
+
+
+        $this->baseUrl =
+            rtrim(
+                $config['fpl_api']['base_url'],
+                '/'
+            )
+            . '/';
     }
 
 
+    /**
+     * Return the main FPL bootstrap dataset.
+     */
     public function getBootstrapData(): array
     {
-        $url = $this->baseUrl . 'bootstrap-static/';
-
-
-        $response = file_get_contents($url);
-
-
-        if ($response === false) {
-
-            throw new Exception(
-                "Unable to connect to FPL API"
-            );
-
-        }
-
-
-        return json_decode(
-            $response,
-            true
+        return $this->request(
+            'bootstrap-static/'
         );
-
     }
-    
+
+
+    /**
+     * Return the complete FPL fixture dataset.
+     */
     public function getFixtures(): array
     {
-        $url = $this->baseUrl . 'fixtures/';
+        return $this->request(
+            'fixtures/'
+        );
+    }
 
-        $response = file_get_contents($url);
+
+    /**
+     * Perform a request against the FPL API
+     * and return the decoded JSON response.
+     */
+    private function request(
+        string $endpoint
+    ): array {
+
+        $url =
+            $this->baseUrl
+            . ltrim(
+                $endpoint,
+                '/'
+            );
+
+
+        $context =
+            stream_context_create([
+
+                'http' => [
+
+                    'method' =>
+                        'GET',
+
+                    'timeout' =>
+                        $this->timeout,
+
+                    'header' =>
+                        "Accept: application/json\r\n"
+                        . "User-Agent: FPL-Intelligence/1.0\r\n"
+                ]
+            ]);
+
+
+        $response =
+            @file_get_contents(
+                $url,
+                false,
+                $context
+            );
+
 
         if ($response === false) {
 
-            throw new Exception(
-                "Unable to connect to FPL fixtures API"
+            throw new RuntimeException(
+                'Unable to retrieve data from FPL API endpoint: '
+                . $endpoint
             );
-
         }
 
-        $data = json_decode(
-            $response,
-            true
-        );
+
+        try {
+
+            $data =
+                json_decode(
+                    $response,
+                    true,
+                    512,
+                    JSON_THROW_ON_ERROR
+                );
+
+        } catch (JsonException $exception) {
+
+            throw new RuntimeException(
+                'Invalid JSON received from FPL API endpoint: '
+                . $endpoint,
+                0,
+                $exception
+            );
+        }
+
 
         if (!is_array($data)) {
 
-            throw new Exception(
-                "Invalid response from FPL fixtures API"
+            throw new RuntimeException(
+                'Unexpected response received from FPL API endpoint: '
+                . $endpoint
             );
-
         }
+
 
         return $data;
     }

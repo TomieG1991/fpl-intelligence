@@ -6,6 +6,67 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.11.3] - Repository, API & Data Import Hardening
+
+### Added
+
+- Added comprehensive PlayerRepository regression tests.
+- Added comprehensive TeamRepository regression tests.
+- Added comprehensive FixtureRepository regression tests.
+- Added FPL API integration tests.
+- Added FPL data import validation tests.
+- Added repository lookup methods for local and FPL identifiers.
+- Added finished-fixture lookup support for individual teams.
+- Added defensive limit handling for repository queries.
+- Added post-import player position contract validation.
+- Added live database compatibility testing between PlayerRepository and PlayerPerformance.
+- Added live database compatibility testing through the complete PlayerIntelligenceEngine.
+- Added validation that imported player positions use the canonical `GK`, `DEF`, `MID` and `FWD` values.
+- Added validation that real imported player data can produce a complete intelligence profile and decision-friendly summary.
+
+### Refactored
+
+- Hardened PlayerRepository so player queries return complete player records suitable for downstream intelligence models.
+- Hardened TeamRepository with consistent local-ID and FPL-ID lookup behaviour.
+- Hardened FixtureRepository with local-ID, FPL-ID and team-specific fixture retrieval.
+- Improved FixtureRepository handling of invalid and zero query limits.
+- Improved FPLApi response validation and error handling.
+- Refactored FPL data importing to use the canonical player position contract.
+- Improved player and team import/update behaviour.
+- Improved import failure handling to protect database consistency.
+- Aligned repository output with the normalised data structures expected by the intelligence layer.
+
+### Fixed
+
+- Fixed imported player positions being stored as raw FPL element-type identifiers instead of `GK`, `DEF`, `MID` and `FWD`.
+- Fixed repository methods returning incomplete records that could not safely feed downstream intelligence models.
+- Fixed fixture repository edge cases around invalid limits.
+- Fixed data import behaviour that could leave inconsistent data when an import failed.
+- Fixed compatibility between live imported database records and the PlayerIntelligenceEngine.
+
+### Data Validation
+
+- Successfully executed a live FPL data update.
+- Imported 20 Premier League teams.
+- Imported 581 FPL players.
+- 0 players were skipped.
+- Verified all imported players use valid intelligence-compatible positions.
+- Verified the database contains goalkeepers, defenders, midfielders and forwards.
+- Verified a real imported player can pass through PlayerPerformance.
+- Verified a real imported player can pass through the complete PlayerIntelligenceEngine.
+- Verified player, FPL player and team identity are preserved through the intelligence pipeline.
+- Verified intelligence scores generated from live database data remain within the 0-100 range.
+
+### Testing
+
+- Added PlayerRepositoryTest coverage for retrieval, lookup, ordering, limits and intelligence compatibility.
+- Added TeamRepositoryTest coverage for retrieval, lookup, ordering and team-strength compatibility.
+- Added FixtureRepositoryTest coverage for retrieval, fixture relationships, upcoming fixtures, completed fixtures, limits and intelligence compatibility.
+- Added FPLApiTest coverage for live bootstrap and fixture API responses.
+- Added FPLDataImportTest coverage for imported database integrity and FPL data compatibility.
+- Added post-import regression tests against the live database.
+- Complete automated regression suite passes successfully with no failures or errors.
+
 ## [0.11.2] - Player Intelligence Data Structure Refactor
 
 ### Refactored
