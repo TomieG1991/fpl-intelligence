@@ -6,6 +6,57 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.11.7] - Repository & Runtime Structure Hardening
+
+### Refactored
+
+- Simplified `public/index.php` into a clean application entry point.
+- Removed development-only team strength and fixture intelligence calculations from the public homepage.
+- Removed unnecessary live FPL API calls from normal homepage requests.
+- Updated the homepage to use the local database as the primary application data source.
+- Updated `public/index.php` to use location-safe `__DIR__` autoload paths.
+- Improved public application database error handling.
+- Refactored `cron/updateFixtures.php` for command-line and scheduled execution.
+- Changed fixture update output from HTML to cron-friendly plain text.
+- Added transaction handling to fixture imports.
+- Added malformed fixture validation and skipped-fixture reporting.
+- Improved cron failure handling with `Throwable` support and non-zero failure exit codes.
+
+### Removed
+
+- Removed the unused empty `cron/updateBootstrap.php` script.
+- Removed the unused empty `intelligence` directory.
+- Removed the obsolete `database/version.txt` file.
+- Removed the obsolete `database` directory after confirming schema versioning is already represented by the project changelog.
+
+### Runtime
+
+- Confirmed `cache/` is retained as a runtime cache directory.
+- Confirmed `logs/` is retained as a runtime logging directory.
+- Preserved `.gitkeep` files so runtime directories remain available in fresh repository clones.
+- Confirmed generated cache and log contents are excluded from Git.
+- Confirmed environment and local configuration files remain excluded from Git.
+- Preserved the `assets/css`, `assets/images` and `assets/js` structure for future frontend development.
+
+### Application
+
+- Established `public/index.php` as the clean foundation for the future FPL Intelligence homepage/dashboard.
+- Added database connectivity status to the application entry point.
+- Added current team, player and fixture database counts to the application status page.
+- Separated external FPL data synchronisation from normal public application requests.
+- Established cron imports as the boundary between the FPL API and locally stored application data.
+
+### Testing
+
+- Complete automated regression suite passes successfully.
+- No test files fail.
+- No test files produce errors.
+- Fixture update script executes successfully.
+- FPL data update completes successfully.
+- Public application entry point loads successfully.
+- Database connection succeeds from the public application.
+- Current team, player and fixture data are available through the application entry point.
+
 ## [0.11.6] - Player Intelligence Model Hardening
 
 ### Refactored

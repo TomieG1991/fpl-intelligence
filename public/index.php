@@ -1,197 +1,198 @@
 <?php
 
-require_once '../classes/autoload.php';
+require_once __DIR__ . '/../classes/autoload.php';
 
 
 /*
  * ============================================================
- * APPLICATION HEADER
+ * FPL INTELLIGENCE
+ * APPLICATION ENTRY POINT
  * ============================================================
  */
 
-echo "<h1>FPL Intelligence v1.0</h1>";
+$databaseConnected =
+    false;
+
+$databaseError =
+    null;
+
+$teamCount =
+    0;
+
+$playerCount =
+    0;
+
+$fixtureCount =
+    0;
 
 
 /*
  * ============================================================
- * DATABASE HEALTH CHECK
- * ============================================================
- */
-
-try {
-
-    $database = new Database();
-
-    $db = $database->getConnection();
-
-    echo "<p>Database: CONNECTED ✅</p>";
-
-} catch (Exception $e) {
-
-    echo "<p>Database: FAILED ❌</p>";
-
-    echo $e->getMessage();
-
-    exit;
-}
-
-
-/*
- * ============================================================
- * FPL API HEALTH CHECK
+ * DATABASE HEALTH
  * ============================================================
  */
 
 try {
 
-    $fpl = new FPLApi();
-
-    $data = $fpl->getBootstrapData();
-
-    echo "<p>FPL API: CONNECTED ✅</p>";
-
-    echo "<p>Players Found: "
-        . count($data['elements'])
-        . "</p>";
-
-    echo "<p>Teams Found: "
-        . count($data['teams'])
-        . "</p>";
-
-} catch (Exception $e) {
-
-    echo "<p>FPL API: FAILED ❌</p>";
-
-}
+    $database =
+        new Database();
 
 
-/*
- * ============================================================
- * REPOSITORIES
- * ============================================================
- */
-
-$fixtureRepository =
-    new FixtureRepository($db);
-
-$teamRepository =
-    new TeamRepository($db);
+    $db =
+        $database->getConnection();
 
 
-/*
- * ============================================================
- * LOAD DATABASE DATA
- * ============================================================
- */
-
-$fixtures =
-    $fixtureRepository->getAll();
-
-$teams =
-    $teamRepository->getAll();
+    $databaseConnected =
+        true;
 
 
-/*
- * ============================================================
- * TEAM BASELINE STRENGTH
- * ============================================================
- */
+    /*
+     * --------------------------------------------------------
+     * REPOSITORIES
+     * --------------------------------------------------------
+     */
 
-$teamStrength =
-    new TeamStrength();
-
-$teamStrengths =
-    $teamStrength->calculateTeamStrengths(
-        $teams
-    );
-
-
-/*
- * ============================================================
- * TEAM PERFORMANCE
- * ============================================================
- */
-
-$teamPerformance =
-    new TeamPerformance();
-
-
-/*
- * ============================================================
- * TEAM STRENGTH MODEL
- * ============================================================
- */
-
-$teamStrengthModel =
-    new TeamStrengthModel();
-
-
-/*
- * ============================================================
- * BUILD COMPLETE TEAM MODELS
- * ============================================================
- */
-
-$completeTeamModels = [];
-
-
-foreach (
-    $teamStrengths
-    as $teamId => $baseline
-) {
-
-    $performance =
-        $teamPerformance->analyse(
-            $fixtures,
-            (int) $teamId
+    $teamRepository =
+        new TeamRepository(
+            $db
         );
 
 
-    $completeTeamModels[$teamId] =
-        $teamStrengthModel->buildTeamModel(
-            $baseline,
-            $performance,
-            $teamPerformance
+    $playerRepository =
+        new PlayerRepository(
+            $db
         );
+
+
+    $fixtureRepository =
+        new FixtureRepository(
+            $db
+        );
+
+
+    /*
+     * --------------------------------------------------------
+     * APPLICATION DATA COUNTS
+     * --------------------------------------------------------
+     */
+
+    $teamCount =
+        count(
+            $teamRepository->getAll()
+        );
+
+
+    $playerCount =
+        count(
+            $playerRepository->getAll()
+        );
+
+
+    $fixtureCount =
+        count(
+            $fixtureRepository->getAll()
+        );
+
+} catch (Throwable $exception) {
+
+    $databaseError =
+        $exception->getMessage();
 }
 
-/*
- * ============================================================
- * MODEL-BASED FIXTURE INTELLIGENCE
- * ============================================================
- *
- * Convert the complete team models into the structure
- * expected by FixtureIntelligence.
- */
 
-$fixtureIntelligence =
-    new FixtureIntelligence();
+?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>FPL Intelligence</title>
+
+</head>
+
+<body>
+
+    <main>
+
+        <h1>FPL Intelligence</h1>
 
 
-$modelStrengths = [];
+        <section>
+
+            <h2>Application Status</h2>
 
 
-foreach (
-    $completeTeamModels
-    as $teamId => $teamModel
-) {
+            <?php if ($databaseConnected): ?>
 
-    $modelStrengths[$teamId] = [
+                <p>
+                    Database:
+                    <strong>CONNECTED ✅</strong>
+                </p>
 
-        'id' =>
-            $teamModel['id'],
+            <?php else: ?>
 
-        'name' =>
-            $teamModel['name'],
+                <p>
+                    Database:
+                    <strong>FAILED ❌</strong>
+                </p>
 
-        'home' =>
-            $teamModel['home'],
+                <?php if ($databaseError !== null): ?>
 
-        'away' =>
-            $teamModel['away'],
+                    <p>
+                        <?= htmlspecialchars(
+                            $databaseError,
+                            ENT_QUOTES,
+                            'UTF-8'
+                        ); ?>
+                    </p>
 
-        'overall' =>
-            $teamModel['overall']
-    ];
-}
+                <?php endif; ?>
 
+            <?php endif; ?>
+
+        </section>
+
+
+        <?php if ($databaseConnected): ?>
+
+            <section>
+
+                <h2>FPL Data</h2>
+
+                <p>
+                    Teams:
+                    <strong>
+                        <?= $teamCount; ?>
+                    </strong>
+                </p>
+
+                <p>
+                    Players:
+                    <strong>
+                        <?= $playerCount; ?>
+                    </strong>
+                </p>
+
+                <p>
+                    Fixtures:
+                    <strong>
+                        <?= $fixtureCount; ?>
+                    </strong>
+                </p>
+
+            </section>
+
+        <?php endif; ?>
+
+    </main>
+
+</body>
+
+</html>

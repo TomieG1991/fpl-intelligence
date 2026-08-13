@@ -3,89 +3,214 @@
 require_once __DIR__ . '/../classes/autoload.php';
 
 
-echo "<h1>FPL Intelligence - Fixture Update</h1>";
+/*
+ * ============================================================
+ * FPL FIXTURE UPDATE
+ * ============================================================
+ */
+
+echo "Starting FPL Fixture Update...\n\n";
+
+
+$database = null;
+$db = null;
 
 
 try {
 
-    // Create core objects
+    /*
+     * --------------------------------------------------------
+     * DATABASE
+     * --------------------------------------------------------
+     */
 
-    $database = new Database();
-
-    $fpl = new FPLApi();
-
-    $teamRepository = new TeamRepository(
-        $database->getConnection()
-    );
-
-    $fixtureRepository = new FixtureRepository(
-        $database->getConnection()
-    );
+    $database =
+        new Database();
 
 
-    // Get fixtures from FPL API
+    $db =
+        $database->getConnection();
 
-    $fixtures = $fpl->getFixtures();
 
-    echo "<p>Fixtures received from FPL API: "
+    echo "Database connection successful\n";
+
+
+    /*
+     * --------------------------------------------------------
+     * SERVICES
+     * --------------------------------------------------------
+     */
+
+    $fpl =
+        new FPLApi();
+
+
+    $teamRepository =
+        new TeamRepository(
+            $db
+        );
+
+
+    $fixtureRepository =
+        new FixtureRepository(
+            $db
+        );
+
+
+    /*
+     * --------------------------------------------------------
+     * FETCH FIXTURES
+     * --------------------------------------------------------
+     */
+
+    $fixtures =
+        $fpl->getFixtures();
+
+
+    echo "FPL API connection successful\n";
+
+
+    echo "Fixtures received: "
         . count($fixtures)
-        . "</p>";
+        . "\n\n";
 
 
-    $updated = 0;
+    if (empty($fixtures)) {
 
-
-    // Process each fixture
-
-    foreach ($fixtures as $fixture) {
-
-        $homeTeamId = $teamRepository->getTeamIdByFplId(
-            (int) $fixture['team_h']
+        throw new RuntimeException(
+            'No fixtures were returned by the FPL API'
         );
-
-        $awayTeamId = $teamRepository->getTeamIdByFplId(
-            (int) $fixture['team_a']
-        );
-
-
-        if ($homeTeamId === null || $awayTeamId === null) {
-
-            echo "<p>⚠️ Skipping fixture "
-                . $fixture['id']
-                . " because a team could not be found.</p>";
-
-            continue;
-
-        }
-
-
-        $fixtureRepository->upsert(
-            $fixture,
-            $homeTeamId,
-            $awayTeamId
-        );
-
-
-        $updated++;
-
     }
 
 
-    echo "<p>Fixtures inserted/updated: "
+    /*
+     * --------------------------------------------------------
+     * IMPORT FIXTURES
+     * --------------------------------------------------------
+     */
+
+    $updated =
+        0;
+
+
+    $skipped =
+        0;
+
+
+    $db->beginTransaction();
+
+
+    foreach ($fixtures as $fixture) {
+
+        /*
+         * A valid FPL fixture requires identity
+         * and both participating teams.
+         */
+        if (
+            !isset(
+                $fixture['id'],
+                $fixture['team_h'],
+                $fixture['team_a']
+            )
+        ) {
+
+            $skipped++;
+
+            echo "Skipping malformed fixture\n";
+
+            continue;
+        }
+
+
+        $fixtureId =
+            (int) $fixture['id'];
+
+
+        $homeTeamId =
+            $teamRepository
+                ->getTeamIdByFplId(
+                    (int) $fixture['team_h']
+                );
+
+
+        $awayTeamId =
+            $teamRepository
+                ->getTeamIdByFplId(
+                    (int) $fixture['team_a']
+                );
+
+
+        if (
+            $homeTeamId === null
+            ||
+            $awayTeamId === null
+        ) {
+
+            $skipped++;
+
+
+            echo "Skipping fixture "
+                . $fixtureId
+                . " - team not found\n";
+
+
+            continue;
+        }
+
+
+        $fixtureRepository
+            ->upsert(
+                $fixture,
+                $homeTeamId,
+                $awayTeamId
+            );
+
+
+        $updated++;
+    }
+
+
+    $db->commit();
+
+
+    /*
+     * --------------------------------------------------------
+     * SUMMARY
+     * --------------------------------------------------------
+     */
+
+    echo "\nFixtures inserted/updated: "
         . $updated
-        . "</p>";
+        . "\n";
 
 
-    echo "<p><strong>Fixture update complete ✅</strong></p>";
+    echo "Fixtures skipped: "
+        . $skipped
+        . "\n";
 
 
-}
-catch (Exception $e) {
+    echo "\nFixture update complete\n";
 
-    echo "<p><strong>Fixture update failed ❌</strong></p>";
+} catch (Throwable $exception) {
 
-    echo "<p>"
-        . htmlspecialchars($e->getMessage())
-        . "</p>";
+    /*
+     * Roll back the entire fixture update if a genuine
+     * import failure occurs.
+     */
+    if (
+        $db instanceof PDO
+        &&
+        $db->inTransaction()
+    ) {
 
+        $db->rollBack();
+    }
+
+
+    echo "\nERROR: "
+        . $exception->getMessage()
+        . "\n";
+
+
+    exit(1);
 }
