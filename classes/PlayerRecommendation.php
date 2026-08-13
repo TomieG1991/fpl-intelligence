@@ -18,6 +18,44 @@ class PlayerRecommendation
 
 
     /**
+     * Convert a player intelligence model into the flat
+     * decision-friendly structure expected by this class.
+     *
+     * Supports:
+     *
+     * 1. New PlayerIntelligenceEngine profiles:
+     *
+     *    [
+     *        'summary' => [
+     *            'player_id' => ...,
+     *            'intelligence_score' => ...,
+     *            ...
+     *        ]
+     *    ]
+     *
+     * 2. Existing flat player intelligence arrays.
+     */
+    private function normalisePlayerIntelligence(
+        array $playerIntelligence
+    ): array {
+
+        if (
+            isset($playerIntelligence['summary'])
+            &&
+            is_array($playerIntelligence['summary'])
+        ) {
+
+            return
+                $playerIntelligence['summary'];
+        }
+
+
+        return
+            $playerIntelligence;
+    }
+
+
+    /**
      * Calculate a recommendation from the
      * player's intelligence profile.
      *
@@ -56,10 +94,6 @@ class PlayerRecommendation
 
         /*
          * Critical availability issue.
-         *
-         * A player with a very low chance of
-         * playing should not receive BUY,
-         * regardless of their other ratings.
          */
         if (
             $availabilityRating !== null
@@ -89,11 +123,6 @@ class PlayerRecommendation
             $score >= $this->thresholds['BUY']
         ) {
 
-            /*
-             * A very strong player with poor
-             * availability should be watched
-             * rather than bought.
-             */
             if (
                 $availabilityRating !== null
                 &&
@@ -104,10 +133,6 @@ class PlayerRecommendation
             }
 
 
-            /*
-             * Strong score but poor fixture
-             * situation means we should be cautious.
-             */
             if (
                 $fixtureRating !== null
                 &&
@@ -129,10 +154,6 @@ class PlayerRecommendation
             $score >= $this->thresholds['HOLD']
         ) {
 
-            /*
-             * Strong value can upgrade a borderline
-             * HOLD into a BUY.
-             */
             if (
                 $valueRating !== null
                 &&
@@ -147,9 +168,6 @@ class PlayerRecommendation
             }
 
 
-            /*
-             * Poor availability prevents a HOLD.
-             */
             if (
                 $availabilityRating !== null
                 &&
@@ -171,10 +189,6 @@ class PlayerRecommendation
             $score >= $this->thresholds['WATCH']
         ) {
 
-            /*
-             * Strong underlying player but currently
-             * held back by another factor.
-             */
             if (
                 $strengthRating !== null
                 &&
@@ -189,9 +203,6 @@ class PlayerRecommendation
         }
 
 
-        /*
-         * Low intelligence score.
-         */
         return 'AVOID';
     }
 
@@ -302,10 +313,21 @@ class PlayerRecommendation
 
     /**
      * Build the complete recommendation model.
+     *
+     * Supports both:
+     *
+     * - PlayerIntelligenceEngine profiles
+     * - Existing flat intelligence arrays
      */
     public function buildRecommendationModel(
         array $playerIntelligence
     ): array {
+
+        $playerIntelligence =
+            $this->normalisePlayerIntelligence(
+                $playerIntelligence
+            );
+
 
         $intelligenceScore =
             isset(

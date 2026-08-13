@@ -3,6 +3,45 @@
 class TransferTargetFinder
 {
     /**
+     * Convert a player model into the flat
+     * decision-friendly structure expected by
+     * the transfer target finder.
+     *
+     * Supports:
+     *
+     * 1. New PlayerIntelligenceEngine profiles:
+     *
+     *    [
+     *        'summary' => [
+     *            'player_id' => ...,
+     *            'position' => ...,
+     *            'price' => ...,
+     *            'intelligence_score' => ...,
+     *            ...
+     *        ]
+     *    ]
+     *
+     * 2. Existing flat player intelligence arrays.
+     */
+    private function normalisePlayer(
+        array $player
+    ): array {
+
+        if (
+            isset($player['summary'])
+            &&
+            is_array($player['summary'])
+        ) {
+
+            return $player['summary'];
+        }
+
+
+        return $player;
+    }
+
+
+    /**
      * Find suitable transfer targets for a current player.
      *
      * Candidates must:
@@ -15,6 +54,9 @@ class TransferTargetFinder
      *
      * Each candidate is passed through the existing
      * TransferRecommendation model.
+     *
+     * Supports both PlayerIntelligenceEngine profiles
+     * and existing flat player intelligence arrays.
      */
     public function findTargets(
         array $currentPlayer,
@@ -26,6 +68,18 @@ class TransferTargetFinder
 
 
         /*
+         * ----------------------------------------------------
+         * Normalise current player.
+         * ----------------------------------------------------
+         */
+
+        $currentPlayer =
+            $this->normalisePlayer(
+                $currentPlayer
+            );
+
+
+        /*
          * Use the current player's price as the default
          * maximum budget when no budget is supplied.
          */
@@ -33,8 +87,8 @@ class TransferTargetFinder
 
             $maximumPrice =
                 isset($currentPlayer['price'])
-                    ? (float) $currentPlayer['price']
-                    : null;
+                ? (float) $currentPlayer['price']
+                : null;
         }
 
 
@@ -43,6 +97,18 @@ class TransferTargetFinder
 
 
         foreach ($players as $player) {
+
+            /*
+             * ------------------------------------------------
+             * Normalise candidate player.
+             * ------------------------------------------------
+             */
+
+            $player =
+                $this->normalisePlayer(
+                    $player
+                );
+
 
             /*
              * ------------------------------------------------
@@ -91,7 +157,10 @@ class TransferTargetFinder
              */
 
             if (
-                !isset($player['intelligence_score'])
+                !array_key_exists(
+                    'intelligence_score',
+                    $player
+                )
                 ||
                 $player['intelligence_score'] === null
             ) {
@@ -158,11 +227,11 @@ class TransferTargetFinder
 
             /*
              * ------------------------------------------------
-             * Merge original player information with
-             * transfer recommendation information.
+             * Merge candidate information with transfer
+             * recommendation information.
              *
-             * The recommendation fields are added rather
-             * than replacing the original player data.
+             * Existing player fields are preserved and
+             * transfer-specific information is added.
              * ------------------------------------------------
              */
 
@@ -240,6 +309,7 @@ class TransferTargetFinder
                         ? (float) $a['transfer_score']
                         : -INF;
 
+
                 $scoreB =
                     isset($b['transfer_score'])
                         ? (float) $b['transfer_score']
@@ -249,7 +319,9 @@ class TransferTargetFinder
                 if ($scoreA !== $scoreB) {
 
                     return
-                        $scoreB <=> $scoreA;
+                        $scoreB
+                        <=>
+                        $scoreA;
                 }
 
 
@@ -257,6 +329,7 @@ class TransferTargetFinder
                     isset($a['intelligence_score'])
                         ? (float) $a['intelligence_score']
                         : -INF;
+
 
                 $intelligenceB =
                     isset($b['intelligence_score'])

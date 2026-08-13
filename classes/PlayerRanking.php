@@ -3,6 +3,42 @@
 class PlayerRanking
 {
     /**
+     * Convert a player model into the flat structure
+     * expected by the ranking layer.
+     *
+     * Supports:
+     *
+     * 1. New PlayerIntelligenceEngine profiles:
+     *
+     *    [
+     *        'summary' => [
+     *            'player_id' => ...,
+     *            'intelligence_score' => ...,
+     *            ...
+     *        ]
+     *    ]
+     *
+     * 2. Existing flat player intelligence arrays.
+     */
+    private function normalisePlayer(
+        array $player
+    ): array {
+
+        if (
+            isset($player['summary'])
+            &&
+            is_array($player['summary'])
+        ) {
+
+            return $player['summary'];
+        }
+
+
+        return $player;
+    }
+
+
+    /**
      * Rank a collection of player intelligence models.
      *
      * Players are ranked by intelligence score,
@@ -13,20 +49,38 @@ class PlayerRanking
     ): array {
 
         /*
+         * Convert every incoming player into the
+         * decision-friendly flat structure.
+         */
+        $normalisedPlayers =
+            array_map(
+                fn(array $player) =>
+                    $this->normalisePlayer(
+                        $player
+                    ),
+                $players
+            );
+
+
+        /*
          * Remove players that do not have
          * a usable intelligence score.
          */
-        $rankablePlayers = array_filter(
-            $players,
-            function ($player) {
+        $rankablePlayers =
+            array_filter(
+                $normalisedPlayers,
+                function ($player) {
 
-                return isset(
-                    $player['intelligence_score']
-                )
-                &&
-                $player['intelligence_score'] !== null;
-            }
-        );
+                    return
+                        array_key_exists(
+                            'intelligence_score',
+                            $player
+                        )
+                        &&
+                        $player['intelligence_score']
+                            !== null;
+                }
+            );
 
 
         /*
@@ -55,6 +109,7 @@ class PlayerRanking
                     $a['strength_rating']
                     ?? 0;
 
+
                 $strengthB =
                     $b['strength_rating']
                     ?? 0;
@@ -79,18 +134,22 @@ class PlayerRanking
             as &$player
         ) {
 
-            $player['rank'] = $rank;
+            $player['rank'] =
+                $rank;
 
             $rank++;
         }
 
 
-        unset($player);
-
-
-        return array_values(
-            $rankablePlayers
+        unset(
+            $player
         );
+
+
+        return
+            array_values(
+                $rankablePlayers
+            );
     }
 
 
@@ -113,11 +172,12 @@ class PlayerRanking
             );
 
 
-        return array_slice(
-            $rankedPlayers,
-            0,
-            $limit
-        );
+        return
+            array_slice(
+                $rankedPlayers,
+                0,
+                $limit
+            );
     }
 
 
@@ -145,7 +205,8 @@ class PlayerRanking
                     $player['player_id']
                     ?? 0
                 )
-                === $playerId
+                ===
+                $playerId
             ) {
 
                 return
@@ -165,10 +226,11 @@ class PlayerRanking
         array $players
     ): int {
 
-        return count(
-            $this->rankPlayers(
-                $players
-            )
-        );
+        return
+            count(
+                $this->rankPlayers(
+                    $players
+                )
+            );
     }
 }

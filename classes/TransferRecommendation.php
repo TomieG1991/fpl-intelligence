@@ -23,6 +23,42 @@ class TransferRecommendation
 
 
     /**
+     * Convert a player intelligence model into the flat
+     * decision-friendly structure expected by this class.
+     *
+     * Supports:
+     *
+     * 1. New PlayerIntelligenceEngine profiles:
+     *
+     *    [
+     *        'summary' => [
+     *            'player_id' => ...,
+     *            'intelligence_score' => ...,
+     *            ...
+     *        ]
+     *    ]
+     *
+     * 2. Existing flat player intelligence arrays.
+     */
+    private function normalisePlayer(
+        array $player
+    ): array {
+
+        if (
+            isset($player['summary'])
+            &&
+            is_array($player['summary'])
+        ) {
+
+            return $player['summary'];
+        }
+
+
+        return $player;
+    }
+
+
+    /**
      * Return the transfer comparison weights.
      */
     public function getWeights(): array
@@ -223,7 +259,6 @@ class TransferRecommendation
 
             return
                 'Replacement player provides a major overall improvement';
-
         }
 
 
@@ -231,7 +266,6 @@ class TransferRecommendation
 
             return
                 'Replacement player provides a strong overall improvement';
-
         }
 
 
@@ -239,7 +273,6 @@ class TransferRecommendation
 
             return
                 'Replacement player provides a modest overall improvement';
-
         }
 
 
@@ -247,7 +280,6 @@ class TransferRecommendation
 
             return
                 'Replacement player offers no significant overall improvement';
-
         }
 
 
@@ -255,7 +287,6 @@ class TransferRecommendation
 
             return
                 'Replacement player provides a weaker overall profile';
-
         }
 
 
@@ -266,11 +297,27 @@ class TransferRecommendation
 
     /**
      * Build a complete transfer recommendation model.
+     *
+     * Supports both:
+     *
+     * - PlayerIntelligenceEngine profiles
+     * - Existing flat intelligence arrays
      */
     public function buildRecommendation(
         array $currentPlayer,
         array $replacementPlayer
     ): array {
+
+        $currentPlayer =
+            $this->normalisePlayer(
+                $currentPlayer
+            );
+
+        $replacementPlayer =
+            $this->normalisePlayer(
+                $replacementPlayer
+            );
+
 
         $currentIntelligence =
             isset($currentPlayer['intelligence_score'])

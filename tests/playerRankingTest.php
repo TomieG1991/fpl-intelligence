@@ -656,6 +656,226 @@ testPass(
     $count === 5
 );
 
+/*
+ * ============================================================
+ * SCENARIO K
+ * PlayerIntelligenceEngine Summary Integration
+ * ============================================================
+ */
+
+echo "<br>";
+echo "============================================<br>";
+echo "Scenario K: Player Intelligence Engine Summary Integration<br>";
+echo "============================================<br>";
+
+
+$enginePlayers = [
+
+    [
+        'player' => [
+            'player_id' => 101,
+            'fpl_player_id' => 1001,
+            'team_id' => 1,
+            'name' => 'Engine Player Alpha',
+            'position' => 'FWD'
+        ],
+
+        'summary' => [
+            'player_id' => 101,
+            'fpl_player_id' => 1001,
+            'team_id' => 1,
+            'name' => 'Engine Player Alpha',
+            'position' => 'FWD',
+            'price' => 12.0,
+            'strength_rating' => 92.00,
+            'value_rating' => 88.00,
+            'value_label' => 'Excellent',
+            'availability_rating' => 100.00,
+            'reliability_rating' => 98.00,
+            'availability_label' => 'Available',
+            'fixture_rating' => 90.00,
+            'intelligence_score' => 94.00,
+            'intelligence_label' => 'Elite'
+        ]
+    ],
+
+    [
+        'player' => [
+            'player_id' => 102,
+            'fpl_player_id' => 1002,
+            'team_id' => 2,
+            'name' => 'Engine Player Bravo',
+            'position' => 'MID'
+        ],
+
+        'summary' => [
+            'player_id' => 102,
+            'fpl_player_id' => 1002,
+            'team_id' => 2,
+            'name' => 'Engine Player Bravo',
+            'position' => 'MID',
+            'price' => 8.0,
+            'strength_rating' => 85.00,
+            'value_rating' => 82.00,
+            'value_label' => 'Excellent',
+            'availability_rating' => 95.00,
+            'reliability_rating' => 92.00,
+            'availability_label' => 'Available',
+            'fixture_rating' => 75.00,
+            'intelligence_score' => 84.00,
+            'intelligence_label' => 'Strong'
+        ]
+    ],
+
+    [
+        'player' => [
+            'player_id' => 103,
+            'fpl_player_id' => 1003,
+            'team_id' => 3,
+            'name' => 'Engine Player Charlie',
+            'position' => 'DEF'
+        ],
+
+        'summary' => [
+            'player_id' => 103,
+            'fpl_player_id' => 1003,
+            'team_id' => 3,
+            'name' => 'Engine Player Charlie',
+            'position' => 'DEF',
+            'price' => 5.5,
+            'strength_rating' => 78.00,
+            'value_rating' => 80.00,
+            'value_label' => 'Excellent',
+            'availability_rating' => 90.00,
+            'reliability_rating' => 88.00,
+            'availability_label' => 'Available',
+            'fixture_rating' => 65.00,
+            'intelligence_score' => 76.00,
+            'intelligence_label' => 'Strong'
+        ]
+    ]
+];
+
+
+$engineRankings =
+    $ranking->rankPlayers(
+        $enginePlayers
+    );
+
+
+echo "Engine Rank 1: "
+    . $engineRankings[0]['name']
+    . "<br>";
+
+echo "Engine Rank 2: "
+    . $engineRankings[1]['name']
+    . "<br>";
+
+echo "Engine Rank 3: "
+    . $engineRankings[2]['name']
+    . "<br>";
+
+
+testPass(
+    'Engine profiles can be ranked',
+    count($engineRankings) === 3
+);
+
+
+testPass(
+    'Engine summary is extracted automatically',
+    $engineRankings[0]['player_id'] === 101
+);
+
+
+testPass(
+    'Highest engine intelligence score ranks first',
+    $engineRankings[0]['name']
+        === 'Engine Player Alpha'
+);
+
+
+testPass(
+    'Second engine intelligence score ranks second',
+    $engineRankings[1]['name']
+        === 'Engine Player Bravo'
+);
+
+
+testPass(
+    'Third engine intelligence score ranks third',
+    $engineRankings[2]['name']
+        === 'Engine Player Charlie'
+);
+
+
+testPass(
+    'Engine summary rank is added correctly',
+    $engineRankings[0]['rank'] === 1
+);
+
+
+testPass(
+    'Engine summary intelligence score is preserved',
+    $engineRankings[0]['intelligence_score'] === 94.00
+);
+
+
+testPass(
+    'Engine summary strength rating is preserved',
+    $engineRankings[0]['strength_rating'] === 92.00
+);
+
+
+testPass(
+    'Engine summary value rating is preserved',
+    $engineRankings[0]['value_rating'] === 88.00
+);
+
+
+testPass(
+    'Engine summary availability rating is preserved',
+    $engineRankings[0]['availability_rating'] === 100.00
+);
+
+
+testPass(
+    'Engine summary fixture rating is preserved',
+    $engineRankings[0]['fixture_rating'] === 90.00
+);
+
+
+$enginePlayerRank =
+    $ranking->getPlayerRank(
+        $enginePlayers,
+        102
+    );
+
+
+testPass(
+    'Engine profile player rank lookup works',
+    $enginePlayerRank === 2
+);
+
+
+$engineTopTwo =
+    $ranking->getTopPlayers(
+        $enginePlayers,
+        2
+    );
+
+
+testPass(
+    'Top-player selection works with engine profiles',
+    count($engineTopTwo) === 2
+);
+
+
+testPass(
+    'Top-player selection returns correct engine player',
+    $engineTopTwo[0]['player_id'] === 101
+);
+
 
 /*
  * ============================================================

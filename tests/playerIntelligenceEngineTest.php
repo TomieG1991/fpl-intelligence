@@ -715,6 +715,147 @@ testPass(
     isset($model['intelligence'])
 );
 
+/*
+ * ============================================================
+ * SCENARIO K
+ * Decision-Friendly Summary
+ * ============================================================
+ */
+
+echo "<br>============================================<br>";
+echo "Scenario K: Decision-Friendly Summary<br>";
+echo "============================================<br>";
+
+
+testPass(
+    'Summary section exists',
+    isset($model['summary'])
+);
+
+
+testPass(
+    'Summary player ID matches',
+    $model['summary']['player_id']
+        === $model['player']['player_id']
+);
+
+
+testPass(
+    'Summary FPL player ID matches',
+    $model['summary']['fpl_player_id']
+        === $model['player']['fpl_player_id']
+);
+
+
+testPass(
+    'Summary team ID matches',
+    $model['summary']['team_id']
+        === $model['player']['team_id']
+);
+
+
+testPass(
+    'Summary player name matches',
+    $model['summary']['name']
+        === $model['player']['name']
+);
+
+
+testPass(
+    'Summary position matches',
+    $model['summary']['position']
+        === $model['player']['position']
+);
+
+
+testPass(
+    'Summary price matches value model',
+    $model['summary']['price']
+        === $model['value']['price']
+);
+
+
+testPass(
+    'Summary strength rating matches',
+    $model['summary']['strength_rating']
+        === $model['strength']['strength_rating']
+);
+
+
+testPass(
+    'Summary value rating matches',
+    $model['summary']['value_rating']
+        === $model['value']['value_rating']
+);
+
+
+testPass(
+    'Summary value label matches',
+    $model['summary']['value_label']
+        === $model['value']['value_label']
+);
+
+
+testPass(
+    'Summary availability rating matches',
+    $model['summary']['availability_rating']
+        === $model['availability']['availability_rating']
+);
+
+
+testPass(
+    'Summary reliability rating matches',
+    $model['summary']['reliability_rating']
+        === $model['availability']['reliability_rating']
+);
+
+
+testPass(
+    'Summary availability label matches',
+    $model['summary']['availability_label']
+        === $model['availability']['availability_label']
+);
+
+
+testPass(
+    'Summary fixture rating matches',
+    $model['summary']['fixture_rating']
+        === $model['intelligence']['fixture_rating']
+);
+
+
+testPass(
+    'Summary intelligence score matches',
+    $model['summary']['intelligence_score']
+        === $model['intelligence']['intelligence_score']
+);
+
+
+testPass(
+    'Summary intelligence label matches',
+    $model['summary']['intelligence_label']
+        === $model['intelligence']['intelligence_label']
+);
+
+
+/*
+ * Verify missing fixture behaviour also flows
+ * through to the decision-friendly summary.
+ */
+
+testPass(
+    'Summary fixture rating is null when unavailable',
+    $modelWithoutFixture['summary']['fixture_rating']
+        === null
+);
+
+
+testPass(
+    'Summary intelligence score still exists without fixture rating',
+    $modelWithoutFixture['summary']['intelligence_score']
+        !== null
+);
+
 
 /*
  * ============================================================

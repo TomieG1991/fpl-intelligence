@@ -730,6 +730,187 @@ testPass(
     $completeModel['reason'] !== ''
 );
 
+/*
+ * ============================================================
+ * SCENARIO O
+ * PlayerIntelligenceEngine Summary Integration
+ * ============================================================
+ */
+
+displaySection(
+    'Scenario O: Player Intelligence Engine Summary Integration'
+);
+
+
+$engineProfile = [
+
+    'player' => [
+
+        'player_id' =>
+            101,
+
+        'fpl_player_id' =>
+            1001,
+
+        'team_id' =>
+            1,
+
+        'name' =>
+            'Engine Test Forward',
+
+        'position' =>
+            'FWD'
+    ],
+
+    'summary' => [
+
+        'player_id' =>
+            101,
+
+        'fpl_player_id' =>
+            1001,
+
+        'team_id' =>
+            1,
+
+        'name' =>
+            'Engine Test Forward',
+
+        'position' =>
+            'FWD',
+
+        'price' =>
+            7.5,
+
+        'strength_rating' =>
+            90.00,
+
+        'value_rating' =>
+            100.00,
+
+        'value_label' =>
+            'Exceptional',
+
+        'availability_rating' =>
+            100.00,
+
+        'reliability_rating' =>
+            98.00,
+
+        'availability_label' =>
+            'Available',
+
+        'fixture_rating' =>
+            90.00,
+
+        'intelligence_score' =>
+            94.50,
+
+        'intelligence_label' =>
+            'Elite'
+    ]
+];
+
+
+$engineRecommendation =
+    $recommendationModel
+        ->buildRecommendationModel(
+            $engineProfile
+        );
+
+
+echo "Player: "
+    . $engineRecommendation['name']
+    . "<br>";
+
+echo "Intelligence Score: "
+    . number_format(
+        $engineRecommendation['intelligence_score'],
+        2
+    )
+    . "<br>";
+
+echo "Recommendation: "
+    . $engineRecommendation['recommendation']
+    . "<br>";
+
+echo "Reason: "
+    . $engineRecommendation['reason']
+    . "<br>";
+
+
+testPass(
+    'Engine profile recommendation returns an array',
+    is_array($engineRecommendation)
+);
+
+
+testPass(
+    'Engine summary player ID is preserved',
+    $engineRecommendation['player_id'] === 101
+);
+
+
+testPass(
+    'Engine summary player name is preserved',
+    $engineRecommendation['name']
+        === 'Engine Test Forward'
+);
+
+
+testPass(
+    'Engine summary position is preserved',
+    $engineRecommendation['position'] === 'FWD'
+);
+
+
+testPass(
+    'Engine summary intelligence score is preserved',
+    $engineRecommendation['intelligence_score']
+        === 94.50
+);
+
+
+testPass(
+    'Engine summary strength rating is preserved',
+    $engineRecommendation['strength_rating']
+        === 90.00
+);
+
+
+testPass(
+    'Engine summary value rating is preserved',
+    $engineRecommendation['value_rating']
+        === 100.00
+);
+
+
+testPass(
+    'Engine summary availability rating is preserved',
+    $engineRecommendation['availability_rating']
+        === 100.00
+);
+
+
+testPass(
+    'Engine summary fixture rating is preserved',
+    $engineRecommendation['fixture_rating']
+        === 90.00
+);
+
+
+testPass(
+    'Engine profile produces BUY recommendation',
+    $engineRecommendation['recommendation']
+        === 'BUY'
+);
+
+
+testPass(
+    'Engine profile produces recommendation reason',
+    $engineRecommendation['reason'] !== ''
+);
+
 
 /*
  * ============================================================

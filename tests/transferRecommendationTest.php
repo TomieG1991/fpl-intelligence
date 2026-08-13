@@ -993,6 +993,267 @@ testPass(
         === 'AVOID'
 );
 
+/*
+ * ============================================================
+ * SCENARIO M
+ * PlayerIntelligenceEngine Summary Integration
+ * ============================================================
+ */
+
+echo "<br>============================================<br>";
+echo "Scenario M: Player Intelligence Engine Summary Integration<br>";
+echo "============================================<br>";
+
+
+$currentEngineProfile = [
+
+    'player' => [
+
+        'player_id' =>
+            201,
+
+        'fpl_player_id' =>
+            2001,
+
+        'team_id' =>
+            1,
+
+        'name' =>
+            'Engine Current Player',
+
+        'position' =>
+            'MID'
+    ],
+
+    'summary' => [
+
+        'player_id' =>
+            201,
+
+        'fpl_player_id' =>
+            2001,
+
+        'team_id' =>
+            1,
+
+        'name' =>
+            'Engine Current Player',
+
+        'position' =>
+            'MID',
+
+        'price' =>
+            7.0,
+
+        'strength_rating' =>
+            70.00,
+
+        'value_rating' =>
+            60.00,
+
+        'value_label' =>
+            'Good',
+
+        'availability_rating' =>
+            90.00,
+
+        'reliability_rating' =>
+            88.00,
+
+        'availability_label' =>
+            'Available',
+
+        'fixture_rating' =>
+            60.00,
+
+        'intelligence_score' =>
+            70.00,
+
+        'intelligence_label' =>
+            'Strong'
+    ]
+];
+
+
+$replacementEngineProfile = [
+
+    'player' => [
+
+        'player_id' =>
+            202,
+
+        'fpl_player_id' =>
+            2002,
+
+        'team_id' =>
+            2,
+
+        'name' =>
+            'Engine Replacement Player',
+
+        'position' =>
+            'MID'
+    ],
+
+    'summary' => [
+
+        'player_id' =>
+            202,
+
+        'fpl_player_id' =>
+            2002,
+
+        'team_id' =>
+            2,
+
+        'name' =>
+            'Engine Replacement Player',
+
+        'position' =>
+            'MID',
+
+        'price' =>
+            7.5,
+
+        'strength_rating' =>
+            90.00,
+
+        'value_rating' =>
+            90.00,
+
+        'value_label' =>
+            'Exceptional',
+
+        'availability_rating' =>
+            95.00,
+
+        'reliability_rating' =>
+            93.00,
+
+        'availability_label' =>
+            'Available',
+
+        'fixture_rating' =>
+            85.00,
+
+        'intelligence_score' =>
+            90.00,
+
+        'intelligence_label' =>
+            'Elite'
+    ]
+];
+
+
+$engineTransferRecommendation =
+    $transferModel->buildRecommendation(
+        $currentEngineProfile,
+        $replacementEngineProfile
+    );
+
+
+echo "Current Player: "
+    . $engineTransferRecommendation['current_player_name']
+    . "<br>";
+
+echo "Replacement Player: "
+    . $engineTransferRecommendation['replacement_player_name']
+    . "<br>";
+
+echo "Transfer Score: "
+    . number_format(
+        $engineTransferRecommendation['transfer_score'],
+        2
+    )
+    . "<br>";
+
+echo "Recommendation: "
+    . $engineTransferRecommendation['recommendation']
+    . "<br>";
+
+
+testPass(
+    'Engine profile transfer recommendation returns an array',
+    is_array($engineTransferRecommendation)
+);
+
+
+testPass(
+    'Engine current player ID is preserved',
+    $engineTransferRecommendation['current_player_id'] === 201
+);
+
+
+testPass(
+    'Engine current player name is preserved',
+    $engineTransferRecommendation['current_player_name']
+        === 'Engine Current Player'
+);
+
+
+testPass(
+    'Engine replacement player ID is preserved',
+    $engineTransferRecommendation['replacement_player_id'] === 202
+);
+
+
+testPass(
+    'Engine replacement player name is preserved',
+    $engineTransferRecommendation['replacement_player_name']
+        === 'Engine Replacement Player'
+);
+
+
+testPass(
+    'Engine intelligence difference is calculated',
+    $engineTransferRecommendation['intelligence_difference'] === 20.00
+);
+
+
+testPass(
+    'Engine strength difference is calculated',
+    $engineTransferRecommendation['strength_difference'] === 20.00
+);
+
+
+testPass(
+    'Engine value difference is calculated',
+    $engineTransferRecommendation['value_difference'] === 30.00
+);
+
+
+testPass(
+    'Engine availability difference is calculated',
+    $engineTransferRecommendation['availability_difference'] === 5.00
+);
+
+
+testPass(
+    'Engine fixture difference is calculated',
+    $engineTransferRecommendation['fixture_difference'] === 25.00
+);
+
+
+testPass(
+    'Engine transfer score is calculated',
+    $engineTransferRecommendation['transfer_score'] === 20.00
+);
+
+
+testPass(
+    'Engine profiles produce STRONG TRANSFER',
+    $engineTransferRecommendation['recommendation']
+        === 'STRONG TRANSFER'
+);
+
+
+testPass(
+    'Engine transfer recommendation produces a reason',
+    !empty(
+        $engineTransferRecommendation['reason']
+    )
+);
+
 
 /*
  * ============================================================

@@ -724,6 +724,334 @@ testPass(
     )
 );
 
+/*
+ * ============================================================
+ * SCENARIO L
+ * PlayerIntelligenceEngine Summary Integration
+ * ============================================================
+ */
+
+section(
+    'Scenario L: Player Intelligence Engine Summary Integration'
+);
+
+
+$currentEngineProfile = [
+
+    'player' => [
+        'player_id' => 201,
+        'fpl_player_id' => 2001,
+        'team_id' => 1,
+        'name' => 'Engine Current Forward',
+        'position' => 'FWD'
+    ],
+
+    'summary' => [
+        'player_id' => 201,
+        'fpl_player_id' => 2001,
+        'team_id' => 1,
+        'name' => 'Engine Current Forward',
+        'position' => 'FWD',
+        'price' => 6.0,
+        'strength_rating' => 70.00,
+        'value_rating' => 70.00,
+        'value_label' => 'Good',
+        'availability_rating' => 100.00,
+        'reliability_rating' => 95.00,
+        'availability_label' => 'Available',
+        'fixture_rating' => 70.00,
+        'intelligence_score' => 70.00,
+        'intelligence_label' => 'Strong'
+    ]
+];
+
+
+$engineStrongReplacement = [
+
+    'player' => [
+        'player_id' => 202,
+        'fpl_player_id' => 2002,
+        'team_id' => 2,
+        'name' => 'Engine Strong Replacement',
+        'position' => 'FWD'
+    ],
+
+    'summary' => [
+        'player_id' => 202,
+        'fpl_player_id' => 2002,
+        'team_id' => 2,
+        'name' => 'Engine Strong Replacement',
+        'position' => 'FWD',
+        'price' => 6.0,
+        'strength_rating' => 90.00,
+        'value_rating' => 100.00,
+        'value_label' => 'Exceptional',
+        'availability_rating' => 100.00,
+        'reliability_rating' => 98.00,
+        'availability_label' => 'Available',
+        'fixture_rating' => 95.00,
+        'intelligence_score' => 90.00,
+        'intelligence_label' => 'Elite'
+    ]
+];
+
+
+$engineGoodReplacement = [
+
+    'player' => [
+        'player_id' => 203,
+        'fpl_player_id' => 2003,
+        'team_id' => 3,
+        'name' => 'Engine Good Replacement',
+        'position' => 'FWD'
+    ],
+
+    'summary' => [
+        'player_id' => 203,
+        'fpl_player_id' => 2003,
+        'team_id' => 3,
+        'name' => 'Engine Good Replacement',
+        'position' => 'FWD',
+        'price' => 5.5,
+        'strength_rating' => 82.00,
+        'value_rating' => 85.00,
+        'value_label' => 'Excellent',
+        'availability_rating' => 100.00,
+        'reliability_rating' => 96.00,
+        'availability_label' => 'Available',
+        'fixture_rating' => 85.00,
+        'intelligence_score' => 82.00,
+        'intelligence_label' => 'Strong'
+    ]
+];
+
+
+$engineDefender = [
+
+    'player' => [
+        'player_id' => 204,
+        'fpl_player_id' => 2004,
+        'team_id' => 4,
+        'name' => 'Engine Defender',
+        'position' => 'DEF'
+    ],
+
+    'summary' => [
+        'player_id' => 204,
+        'fpl_player_id' => 2004,
+        'team_id' => 4,
+        'name' => 'Engine Defender',
+        'position' => 'DEF',
+        'price' => 5.0,
+        'strength_rating' => 95.00,
+        'value_rating' => 95.00,
+        'value_label' => 'Exceptional',
+        'availability_rating' => 100.00,
+        'reliability_rating' => 98.00,
+        'availability_label' => 'Available',
+        'fixture_rating' => 95.00,
+        'intelligence_score' => 95.00,
+        'intelligence_label' => 'Elite'
+    ]
+];
+
+
+$engineExpensiveReplacement = [
+
+    'player' => [
+        'player_id' => 205,
+        'fpl_player_id' => 2005,
+        'team_id' => 5,
+        'name' => 'Engine Expensive Replacement',
+        'position' => 'FWD'
+    ],
+
+    'summary' => [
+        'player_id' => 205,
+        'fpl_player_id' => 2005,
+        'team_id' => 5,
+        'name' => 'Engine Expensive Replacement',
+        'position' => 'FWD',
+        'price' => 7.5,
+        'strength_rating' => 99.00,
+        'value_rating' => 99.00,
+        'value_label' => 'Exceptional',
+        'availability_rating' => 100.00,
+        'reliability_rating' => 99.00,
+        'availability_label' => 'Available',
+        'fixture_rating' => 99.00,
+        'intelligence_score' => 99.00,
+        'intelligence_label' => 'Elite'
+    ]
+];
+
+
+$enginePlayers = [
+
+    $currentEngineProfile,
+    $engineStrongReplacement,
+    $engineGoodReplacement,
+    $engineDefender,
+    $engineExpensiveReplacement
+];
+
+
+$engineTargets =
+    $finder->findTargets(
+        $currentEngineProfile,
+        $enginePlayers
+    );
+
+
+$engineTargetIds =
+    array_column(
+        $engineTargets,
+        'player_id'
+    );
+
+
+echo "Engine Targets Found: "
+    . count($engineTargets)
+    . "<br>";
+
+
+testPass(
+    'Engine profiles produce transfer targets',
+    is_array($engineTargets)
+    &&
+    count($engineTargets) > 0
+);
+
+
+testPass(
+    'Engine current player is excluded',
+    !in_array(
+        201,
+        $engineTargetIds,
+        true
+    )
+);
+
+
+testPass(
+    'Engine same-position replacement is included',
+    in_array(
+        202,
+        $engineTargetIds,
+        true
+    )
+);
+
+
+testPass(
+    'Engine different-position player is excluded',
+    !in_array(
+        204,
+        $engineTargetIds,
+        true
+    )
+);
+
+
+testPass(
+    'Engine default budget excludes expensive replacement',
+    !in_array(
+        205,
+        $engineTargetIds,
+        true
+    )
+);
+
+
+$topEngineTarget =
+    $engineTargets[0] ?? [];
+
+
+testPass(
+    'Engine top target identity is preserved',
+    ($topEngineTarget['player_id'] ?? null) === 202
+);
+
+
+testPass(
+    'Engine top target name is preserved',
+    ($topEngineTarget['name'] ?? null)
+        === 'Engine Strong Replacement'
+);
+
+
+testPass(
+    'Engine top target contains intelligence score',
+    array_key_exists(
+        'intelligence_score',
+        $topEngineTarget
+    )
+);
+
+
+testPass(
+    'Engine top target contains transfer score',
+    array_key_exists(
+        'transfer_score',
+        $topEngineTarget
+    )
+);
+
+
+testPass(
+    'Engine top target contains recommendation',
+    array_key_exists(
+        'recommendation',
+        $topEngineTarget
+    )
+);
+
+
+testPass(
+    'Engine top target contains reason',
+    array_key_exists(
+        'reason',
+        $topEngineTarget
+    )
+);
+
+
+testPass(
+    'Engine top target receives positive transfer score',
+    isset($topEngineTarget['transfer_score'])
+    &&
+    $topEngineTarget['transfer_score'] > 0
+);
+
+
+testPass(
+    'Engine targets are ordered by transfer score',
+    count($engineTargets) < 2
+    ||
+    $engineTargets[0]['transfer_score']
+        >=
+       $engineTargets[1]['transfer_score']
+);
+
+
+$engineTopOne =
+    $finder->getTopTargets(
+        $engineTargets,
+        1
+    );
+
+
+testPass(
+    'Top target selection works with engine profiles',
+    count($engineTopOne) === 1
+);
+
+
+testPass(
+    'Top target selection returns correct engine player',
+    $engineTopOne[0]['player_id'] === 202
+);
+
 
 /*
  * ============================================================

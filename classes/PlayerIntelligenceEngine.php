@@ -53,16 +53,6 @@ class PlayerIntelligenceEngine
          * STEP 1
          * Complete player performance model
          * --------------------------------------------------------
-         *
-         * PlayerPerformance::buildModel() is responsible for:
-         *
-         * - Raw player statistics
-         * - Per-90 calculations
-         * - Normalised performance ratings
-         *
-         * The intelligence engine should use the complete model
-         * rather than calling analyse() and then attempting to
-         * reconstruct the ratings itself.
          */
 
         $performance =
@@ -76,9 +66,6 @@ class PlayerIntelligenceEngine
          * STEP 2
          * Player strength
          * --------------------------------------------------------
-         *
-         * PlayerStrengthModel applies the position-specific
-         * weighting to the performance ratings.
          */
 
         $strength =
@@ -92,8 +79,6 @@ class PlayerIntelligenceEngine
          * STEP 3
          * Player value
          * --------------------------------------------------------
-         *
-         * Value is calculated from player strength and price.
          */
 
         $value =
@@ -121,16 +106,6 @@ class PlayerIntelligenceEngine
          * STEP 5
          * Overall intelligence score
          * --------------------------------------------------------
-         *
-         * The intelligence score combines:
-         *
-         * - Strength
-         * - Value
-         * - Availability
-         * - Fixture rating
-         *
-         * Missing components are handled by
-         * PlayerIntelligenceScore.
          */
 
         $intelligence =
@@ -140,6 +115,73 @@ class PlayerIntelligenceEngine
                 $availability,
                 $fixtureRating
             );
+
+
+        /*
+         * --------------------------------------------------------
+         * STEP 6
+         * Decision-friendly summary
+         * --------------------------------------------------------
+         *
+         * The complete intelligence engine deliberately keeps
+         * the detailed models separated.
+         *
+         * Ranking, recommendation and transfer layers do not
+         * need all of that detail, so expose a flat summary
+         * containing the fields those models require.
+         *
+         * This allows the detailed profile to remain the source
+         * of truth while providing a stable interface for later
+         * decision layers.
+         */
+
+        $summary = [
+
+            'player_id' =>
+                $performance['player_id'],
+
+            'fpl_player_id' =>
+                $performance['fpl_player_id'],
+
+            'team_id' =>
+                $performance['team_id'],
+
+            'name' =>
+                $performance['name'],
+
+            'position' =>
+                $performance['position'],
+
+            'price' =>
+                $value['price'],
+
+            'strength_rating' =>
+                $strength['strength_rating'],
+
+            'value_rating' =>
+                $value['value_rating'],
+
+            'value_label' =>
+                $value['value_label'],
+
+            'availability_rating' =>
+                $availability['availability_rating'],
+
+            'reliability_rating' =>
+                $availability['reliability_rating'],
+
+            'availability_label' =>
+                $availability['availability_label'],
+
+            'fixture_rating' =>
+                $intelligence['fixture_rating'],
+
+            'intelligence_score' =>
+                $intelligence['intelligence_score'],
+
+            'intelligence_label' =>
+                $intelligence['intelligence_label']
+        ];
 
 
         /*
@@ -181,7 +223,10 @@ class PlayerIntelligenceEngine
                 $availability,
 
             'intelligence' =>
-                $intelligence
+                $intelligence,
+
+            'summary' =>
+                $summary
         ];
     }
 }
