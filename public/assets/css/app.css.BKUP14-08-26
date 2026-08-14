@@ -36,10 +36,10 @@ body {
         sans-serif;
 
     background:
-        #121827;
+        #0c111d;
 
     color:
-        #f1f4fa;
+        #e6eaf2;
 }
 
 
@@ -83,10 +83,10 @@ a {
     padding: 28px 20px;
 
     background:
-        #181f30;
+        #121827;
 
     border-right:
-        1px solid #34405a;
+        1px solid #263044;
 }
 
 
@@ -123,8 +123,6 @@ a {
 
 
 .brand-name {
-    color: #ffffff;
-
     font-size: 15px;
     font-weight: 700;
 }
@@ -136,7 +134,7 @@ a {
     font-size: 11px;
 
     color:
-        #aab5c8;
+        #7f8ba3;
 }
 
 
@@ -161,7 +159,7 @@ a {
     border-radius: 8px;
 
     color:
-        #b7c1d2;
+        #8f9bb2;
 
     font-size: 14px;
     font-weight: 500;
@@ -174,7 +172,7 @@ a {
 
 .nav-link:hover {
     background:
-        #232c40;
+        #1a2233;
 
     color:
         #ffffff;
@@ -183,10 +181,10 @@ a {
 
 .nav-link.active {
     background:
-        #302b55;
+        #222c42;
 
     color:
-        #c7c0ff;
+        #ffffff;
 }
 
 
@@ -196,7 +194,7 @@ a {
     text-align: center;
 
     color:
-        #9da9bc;
+        #8f7cff;
 }
 
 
@@ -217,7 +215,7 @@ a {
     font-size: 12px;
 
     color:
-        #9eabc0;
+        #8490a7;
 }
 
 
@@ -229,8 +227,6 @@ a {
 
 .app-content {
     width: calc(100% - 250px);
-
-    background: #121827;
 
     margin-left: 250px;
 
@@ -257,17 +253,15 @@ a {
         36px;
 
     background:
-        #181f30;
+        #0f1522;
 
     border-bottom:
-        1px solid #34405a;
+        1px solid #202a3c;
 }
 
 
 .topbar h1 {
     margin: 2px 0 0;
-
-    color: #ffffff;
 
     font-size: 28px;
     font-weight: 700;
@@ -278,7 +272,7 @@ a {
     margin: 0;
 
     color:
-        #a99fff;
+        #777fff;
 
     font-size: 11px;
 
@@ -317,7 +311,7 @@ a {
         999px;
 
     color:
-        #b4bfd1;
+        #99a5ba;
 
     font-size:
         12px;
@@ -363,8 +357,6 @@ a {
         34px
         36px
         50px;
-
-    background: #121827;
 }
 
 
@@ -390,22 +382,19 @@ a {
     padding: 22px;
 
     background:
-        #1b2335;
+        #141b2a;
 
     border:
-        1px solid #34405a;
+        1px solid #253047;
 
     border-radius:
         12px;
-
-    box-shadow:
-        0 4px 16px rgba(0, 0, 0, 0.16);
 }
 
 
 .stat-label {
     color:
-        #9eabc0;
+        #8490a7;
 
     font-size:
         12px;
@@ -470,16 +459,13 @@ a {
         22px;
 
     background:
-        #1b2335;
+        #141b2a;
 
     border:
-        1px solid #34405a;
+        1px solid #253047;
 
     border-radius:
         12px;
-
-    box-shadow:
-        0 4px 16px rgba(0, 0, 0, 0.16);
 }
 
 
@@ -503,8 +489,6 @@ a {
         0
         0;
 
-    color: #f6f8fc;
-
     font-size:
         18px;
 }
@@ -514,7 +498,7 @@ a {
     margin: 0;
 
     color:
-        #a99fff;
+        #777fff;
 
     font-size:
         10px;
@@ -543,13 +527,10 @@ a {
         999px;
 
     background:
-        #2b3450;
-
-    border:
-        1px solid #465370;
+        #202944;
 
     color:
-        #c8d0df;
+        #9f9cff;
 
     font-size:
         10px;
@@ -756,7 +737,7 @@ a {
         1px solid #202a3c;
 
     color:
-        #929fb3;
+        #56637a;
 
     font-size:
         11px;
@@ -1110,10 +1091,141 @@ a {
 
 .player-components strong {
     color:
-        #b7c1d2;
+        #8f9bb2;
 
     font-weight:
         700;
+}
+
+.player-strength-components {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+
+    margin-top: 5px;
+
+    color: #4f5d75;
+
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.player-strength-components span {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.player-strength-components strong {
+    color: #7d899f;
+    font-weight: 700;
+}
+
+/*
+ * ============================================================
+ * POSITION STRENGTH DIAGNOSTIC
+ * ============================================================
+ */
+
+.strength-diagnostic {
+    margin-top: 20px;
+}
+
+
+.position-strength-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 16px;
+}
+
+
+.position-strength-group {
+    padding: 16px;
+
+    background: #111725;
+
+    border-radius: 9px;
+}
+
+
+.position-strength-group h3 {
+    margin: 0 0 12px;
+
+    color: #9a8dff;
+
+    font-size: 12px;
+
+    letter-spacing: 0.08em;
+}
+
+
+.position-strength-row {
+    display: grid;
+
+    grid-template-columns:
+        24px
+        minmax(0, 1fr)
+        auto;
+
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 8px 0;
+
+    border-bottom:
+        1px solid #222c3f;
+
+    font-size: 11px;
+}
+
+
+.position-strength-row:last-child {
+    border-bottom: 0;
+}
+
+
+.position-strength-rank {
+    color: #59667d;
+}
+
+
+.position-strength-name {
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+
+.position-strength-row strong {
+    color: #9a8dff;
+}
+
+
+@media (
+    max-width: 1100px
+) {
+
+    .position-strength-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+}
+
+
+@media (
+    max-width: 560px
+) {
+
+    .position-strength-grid {
+        grid-template-columns:
+            1fr;
+    }
 }
 
 /*
@@ -1126,7 +1238,7 @@ a {
     max-width: 680px;
     margin: 8px 0 0;
 
-    color: #b1bdd0;
+    color: #7f8ba3;
 
     font-size: 13px;
     line-height: 1.6;
@@ -1154,7 +1266,7 @@ a {
 
 
 .explorer-stat span {
-    color: #b1bdd0;
+    color: #7f8ba3;
 
     font-size: 10px;
     font-weight: 700;
@@ -1166,8 +1278,6 @@ a {
 
 
 .explorer-stat strong {
-    color: #ffffff;
-
     font-size: 22px;
 }
 
@@ -1196,10 +1306,10 @@ a {
 .player-table th {
     padding: 11px 10px;
 
-    color: #aeb9cb;
+    color: #66738a;
 
     border-bottom:
-        1px solid #3c4963;
+        1px solid #263044;
 
     font-size: 9px;
     font-weight: 800;
@@ -1217,7 +1327,7 @@ a {
     padding: 12px 10px;
 
     border-bottom:
-        1px solid #303b51;
+        1px solid #1c2535;
 
     vertical-align: middle;
 }
@@ -1228,26 +1338,21 @@ a {
 }
 
 
-.player-table tbody tr:nth-child(even) {
-    background:
-        rgba(255, 255, 255, 0.018);
-}
-
-
 .player-table tbody tr:hover {
-    background: #263148;
-}
-
-
-.player-name-cell strong {
-    color: #ffffff;
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.02
+        );
 }
 
 
 .rank-column {
     width: 38px;
 
-    color: #8b98ad;
+    color: #59667d;
 }
 
 
@@ -1265,50 +1370,47 @@ a {
 
     padding: 4px 7px;
 
-    background: #293349;
+    background: #171e2c;
 
     border:
-        1px solid #46536d;
+        1px solid #283349;
 
     border-radius: 5px;
 
     font-size: 9px;
     font-weight: 800;
-
-    color: #dce2ec;
 }
 
 
 .rating-high {
-    color: #72e49a;
+    color: #8ed7a4;
 }
 
 
 .rating-medium {
-    color: #f0d36e;
+    color: #e4c978;
 }
 
 
 .rating-low {
-    color: #ef9b9b;
+    color: #d98f8f;
 }
 
 
 .rating-none {
-    color: #8b98ad;
+    color: #59667d;
 }
 
 
 .intelligence-score {
     font-size: 13px;
-    font-weight: 800;
 }
 
 
 .empty-table {
     padding: 30px !important;
 
-    color: #aeb9cb;
+    color: #66738a;
 
     text-align: center;
 }
@@ -1371,7 +1473,7 @@ a {
 
 
 .filter-group label {
-    color: #aeb9cb;
+    color: #68758c;
 
     font-size: 9px;
 
@@ -1394,38 +1496,24 @@ a {
         11px;
 
     border:
-        1px solid #46536d;
+        1px solid #2a354a;
 
     border-radius: 7px;
 
     outline: none;
 
-    background: #151d2d;
+    background: #151d2c;
 
-    color: #f3f5fa;
+    color: #e7ebf4;
 
     font: inherit;
     font-size: 12px;
 }
 
 
-.filter-group input::placeholder {
-    color: #7f8ba0;
-}
-
-
-.filter-group input:hover,
-.filter-group select:hover {
-    border-color: #63708d;
-}
-
-
 .filter-group input:focus,
 .filter-group select:focus {
-    border-color: #9287ff;
-
-    box-shadow:
-        0 0 0 2px rgba(146, 135, 255, 0.15);
+    border-color: #7066d9;
 }
 
 
@@ -1444,13 +1532,13 @@ a {
         10px;
 
     border:
-        1px solid #46536d;
+        1px solid #2a354a;
 
     border-radius: 7px;
 
-    background: #151d2d;
+    background: #151d2c;
 
-    color: #b8c2d3;
+    color: #7d899f;
 
     cursor: pointer;
 
@@ -1460,20 +1548,18 @@ a {
 
 
 .position-filter:hover {
-    background: #263148;
-
     color: #ffffff;
 
-    border-color: #697792;
+    border-color: #46516a;
 }
 
 
 .position-filter.active {
-    background: #41396f;
+    background: #29244a;
 
-    border-color: #9287ff;
+    border-color: #7066d9;
 
-    color: #ffffff;
+    color: #aaa0ff;
 }
 
 
@@ -1492,13 +1578,13 @@ a {
         14px;
 
     border:
-        1px solid #46536d;
+        1px solid #2a354a;
 
     border-radius: 7px;
 
     background: transparent;
 
-    color: #b4bfd0;
+    color: #77849a;
 
     cursor: pointer;
 
@@ -1509,72 +1595,23 @@ a {
 
 
 .filter-clear:hover {
-    background: #263148;
-
     color: #ffffff;
 
-    border-color: #697792;
+    border-color: #46516a;
 }
 
 
 .player-filter-summary {
     margin-bottom: 10px;
 
-    color: #aeb9cb;
+    color: #68758c;
 
     font-size: 10px;
 }
 
 
 .player-filter-summary strong {
-    color: #e2e7ef;
-}
-
-
-.player-pool-filters {
-    display: flex;
-
-    gap: 5px;
-}
-
-
-.player-pool-filter {
-    height: 38px;
-
-    padding:
-        0
-        12px;
-
-    border:
-        1px solid #46536d;
-
-    border-radius: 7px;
-
-    background: #182133;
-
-    color: #b8c2d3;
-
-    cursor: pointer;
-
-    font-size: 10px;
-
-    font-weight: 800;
-}
-
-
-.player-pool-filter:hover {
-    background: #263148;
-
-    color: #ffffff;
-}
-
-
-.player-pool-filter.active {
-    background: #41396f;
-
-    border-color: #9287ff;
-
-    color: #ffffff;
+    color: #a0aac0;
 }
 
 
@@ -1594,19 +1631,14 @@ a {
 .sortable-column::after {
     margin-left: 5px;
 
-    color: #69758b;
+    color: #404b60;
 
     content: "↕";
 }
 
 
-.sortable-column:hover {
-    color: #ffffff;
-}
-
-
 .sortable-column.active-sort::after {
-    color: #b3aaff;
+    color: #9588ff;
 
     content: "↓";
 }
@@ -1658,4 +1690,460 @@ a {
     .position-filters {
         flex-wrap: wrap;
     }
+}
+
+/* New Colour Scheme */
+/*
+ * ============================================================
+ * FPL INTELLIGENCE - ACCESSIBILITY / CONTRAST PASS
+ * ============================================================
+ *
+ * Brighter version of the existing dark interface.
+ * These overrides intentionally sit at the bottom of app.css.
+ */
+
+
+/*
+ * ------------------------------------------------------------
+ * APPLICATION BACKGROUND
+ * ------------------------------------------------------------
+ */
+
+body {
+    background: #121827;
+
+    color: #f1f4fa;
+}
+
+
+.app-content {
+    background: #121827;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * SIDEBAR
+ * ------------------------------------------------------------
+ */
+
+.sidebar {
+    background: #181f30;
+
+    border-right:
+        1px solid #34405a;
+}
+
+
+.brand-name {
+    color: #ffffff;
+}
+
+
+.brand-version {
+    color: #aab5c8;
+}
+
+
+.nav-link {
+    color: #b7c1d2;
+}
+
+
+.nav-link:hover {
+    background: #232c40;
+
+    color: #ffffff;
+}
+
+
+.nav-link.active {
+    background: #302b55;
+
+    color: #c7c0ff;
+}
+
+
+.nav-icon {
+    color: #9da9bc;
+}
+
+
+.sidebar-footer {
+    color: #9eabc0;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * TOP BAR
+ * ------------------------------------------------------------
+ */
+
+.topbar {
+    background: #181f30;
+
+    border-bottom:
+        1px solid #34405a;
+}
+
+
+.topbar h1 {
+    color: #ffffff;
+}
+
+
+.eyebrow {
+    color: #a99fff;
+}
+
+
+.data-status {
+    color: #b4bfd1;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * DASHBOARD
+ * ------------------------------------------------------------
+ */
+
+.dashboard {
+    background: #121827;
+}
+
+
+.page-description {
+    color: #b1bdd0;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * CARDS
+ * ------------------------------------------------------------
+ */
+
+.dashboard-card {
+    background: #1b2335;
+
+    border:
+        1px solid #34405a;
+
+    box-shadow:
+        0 4px 16px
+        rgba(0, 0, 0, 0.16);
+}
+
+
+.card-header {
+    border-bottom-color: #34405a;
+}
+
+
+.card-header h2 {
+    color: #f6f8fc;
+}
+
+
+.card-kicker {
+    color: #a99fff;
+}
+
+
+.card-badge {
+    background: #2b3450;
+
+    border:
+        1px solid #465370;
+
+    color: #c8d0df;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * EXPLORER SUMMARY
+ * ------------------------------------------------------------
+ */
+
+.explorer-stat span {
+    color: #a9b5c8;
+}
+
+
+.explorer-stat strong {
+    color: #ffffff;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * PLAYER FILTERS
+ * ------------------------------------------------------------
+ */
+
+.player-filters {
+    background: #20293d;
+
+    border:
+        1px solid #3b4862;
+}
+
+
+.filter-group label {
+    color: #aeb9cb;
+}
+
+
+.filter-group input,
+.filter-group select {
+    background: #151d2d;
+
+    border:
+        1px solid #46536d;
+
+    color: #f3f5fa;
+}
+
+
+.filter-group input::placeholder {
+    color: #7f8ba0;
+}
+
+
+.filter-group input:hover,
+.filter-group select:hover {
+    border-color: #63708d;
+}
+
+
+.filter-group input:focus,
+.filter-group select:focus {
+    border-color: #9287ff;
+
+    box-shadow:
+        0 0 0 2px
+        rgba(146, 135, 255, 0.15);
+}
+
+
+.position-filter {
+    background: #182133;
+
+    border:
+        1px solid #46536d;
+
+    color: #b8c2d3;
+}
+
+
+.position-filter:hover {
+    background: #263148;
+
+    border-color: #697792;
+
+    color: #ffffff;
+}
+
+
+.position-filter.active {
+    background: #41396f;
+
+    border-color: #9287ff;
+
+    color: #ffffff;
+}
+
+
+.filter-clear {
+    border-color: #46536d;
+
+    color: #b4bfd0;
+}
+
+
+.filter-clear:hover {
+    background: #263148;
+
+    border-color: #697792;
+
+    color: #ffffff;
+}
+
+
+.player-filter-summary {
+    color: #9facbf;
+}
+
+
+.player-filter-summary strong {
+    color: #e2e7ef;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * PLAYER TABLE
+ * ------------------------------------------------------------
+ */
+
+.player-table th {
+    background: #20293d;
+
+    border-bottom:
+        1px solid #3c4963;
+
+    color: #aeb9cb;
+}
+
+
+.player-table td {
+    border-bottom:
+        1px solid #303b51;
+
+    color: #d5dce8;
+}
+
+
+.player-table tbody tr:nth-child(even) {
+    background:
+        rgba(255, 255, 255, 0.018);
+}
+
+
+.player-table tbody tr:hover {
+    background: #263148;
+}
+
+
+.player-name-cell strong {
+    color: #ffffff;
+}
+
+
+.rank-column {
+    color: #9aa7bb;
+}
+
+
+.position-badge {
+    background: #293349;
+
+    border:
+        1px solid #46536d;
+
+    color: #dce2ec;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * RATINGS
+ * ------------------------------------------------------------
+ */
+
+.rating-high {
+    color: #72e49a;
+}
+
+
+.rating-medium {
+    color: #f0d36e;
+}
+
+
+.rating-low {
+    color: #ef9b9b;
+}
+
+
+.rating-none {
+    color: #8b98ad;
+}
+
+
+.intelligence-score {
+    font-weight: 800;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * SORTING
+ * ------------------------------------------------------------
+ */
+
+.sortable-column::after {
+    color: #69758b;
+}
+
+
+.sortable-column:hover {
+    color: #ffffff;
+}
+
+
+.sortable-column.active-sort::after {
+    color: #b3aaff;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * FOOTER
+ * ------------------------------------------------------------
+ */
+
+.footer {
+    color: #929fb3;
+
+    border-top-color: #34405a;
+}
+
+.player-pool-filters {
+    display: flex;
+
+    gap: 5px;
+}
+
+
+.player-pool-filter {
+    height: 38px;
+
+    padding:
+        0
+        12px;
+
+    border:
+        1px solid #46536d;
+
+    border-radius: 7px;
+
+    background: #182133;
+
+    color: #b8c2d3;
+
+    cursor: pointer;
+
+    font-size: 10px;
+
+    font-weight: 800;
+}
+
+
+.player-pool-filter:hover {
+    background: #263148;
+
+    color: #ffffff;
+}
+
+
+.player-pool-filter.active {
+    background: #41396f;
+
+    border-color: #9287ff;
+
+    color: #ffffff;
 }

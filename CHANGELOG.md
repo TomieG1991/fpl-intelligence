@@ -6,6 +6,136 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.12.0] - Player Explorer
+
+### Added
+
+- Added `PlayerIntelligenceService` as the application-level player intelligence orchestration layer.
+- Added reusable generation of complete player intelligence summaries from live repository data.
+- Added reusable ranked-player retrieval through the existing `PlayerRanking` model.
+- Added team fixture opportunity calculation for application-level player intelligence.
+- Added Player Explorer page at `public/players.php`.
+- Added complete FPL player browsing alongside intelligence-ranked player browsing.
+- Added Ranked and All Players modes.
+- Added live player search.
+- Added Premier League team filtering.
+- Added position filtering for GK, DEF, MID and FWD.
+- Added maximum player price filtering.
+- Added player availability filtering.
+- Added minimum intelligence-score filtering.
+- Added minimum value-rating filtering.
+- Added combinable Player Explorer filters.
+- Added clear-filter functionality.
+- Added live visible-player result count.
+- Added sortable Player Explorer columns.
+- Added sorting by overall intelligence rank, player, team, position, price, strength, value, fixtures and intelligence score.
+- Added persistent overall Player Intelligence rank to Player Explorer rows.
+- Added Player Explorer summary cards for ranked-player count, top-rated player and top intelligence score.
+- Added complete team names and short names to reusable player intelligence summaries.
+- Added player minutes, sample-confidence and BPS-per-90 information to application-level player summaries for future player-detail functionality.
+
+### Refactored
+
+- Moved reusable player-intelligence orchestration out of individual public pages and into `PlayerIntelligenceService`.
+- Reduced the need for dashboard and future application pages to understand the complete intelligence calculation pipeline.
+- Standardised Player Explorer layout around the same application shell used by the main dashboard.
+- Standardised the fixed sidebar, application content area, top bar and footer across dashboard-style pages.
+- Updated Player Explorer to retain all players while separately identifying players with usable intelligence scores.
+- Kept `PlayerRanking` as the single source of truth for overall player ranking order.
+- Updated Player Explorer ranking so the `#` column represents true overall Intelligence rank rather than current table order.
+- Refactored frontend styling into a consolidated high-contrast dark application theme.
+- Integrated the previously tested accessibility/contrast colour improvements directly into the core stylesheet.
+- Removed duplicated colour-scheme overrides.
+- Removed obsolete player-strength calibration and positional-diagnostic CSS.
+- Cleaned and reorganised Player Explorer, table, filter, navigation and responsive styles.
+
+### Player Explorer
+
+- Default Explorer view shows intelligence-ranked players.
+- All Players mode allows new and zero-minute players to remain discoverable without forcing them into intelligence rankings.
+- Players without sufficient performance evidence display missing intelligence data safely rather than receiving artificial rankings.
+- Search, team, position, price, availability, intelligence and value filters can be combined.
+- Maximum-price filtering operates directly against each player's live FPL price.
+- Minimum intelligence filtering excludes players without a qualifying intelligence score.
+- Minimum value filtering supports identification of strong value options.
+- Player Explorer initially sorts by overall intelligence score.
+- Numeric and text columns support ascending and descending sorting.
+- Unavailable numeric ratings are safely handled during sorting.
+- Player Explorer Top Rated and Top Score use the official `PlayerRanking` output and therefore remain consistent with the dashboard.
+
+### Frontend
+
+- Added full Player Explorer user interface.
+- Added responsive Player Explorer filter controls.
+- Added responsive player ranking table.
+- Added position badges and rating colour indicators.
+- Added brighter text, border, card and control contrast throughout the application.
+- Improved readability of sidebar navigation, dashboard cards, tables and filter controls.
+- Added hover and focus states for Explorer controls.
+- Added active states for player-pool and position filters.
+- Added table row hover states and alternating row separation.
+- Preserved responsive sidebar/navigation behaviour.
+- Consolidated application CSS to remove temporary override layers and development-only styles.
+
+### Fixed
+
+- Fixed Player Explorer content overlapping the fixed application sidebar.
+- Fixed Player Explorer Top Rated player using the first unranked repository record rather than the highest intelligence-ranked player.
+- Fixed initial Explorer table order not matching the active Intelligence sort indicator.
+- Fixed maximum-price filtering not working because player rows were missing the required `data-price` value.
+- Fixed Player Explorer rank numbers being derived from the unranked complete player list.
+- Fixed Ranked Players summary displaying the total player count instead of the ranked-player count.
+- Fixed Player Explorer heading and player-count wording to support both Ranked and All Players modes.
+- Removed a duplicate PHP closing tag from `players.php`.
+- Removed obsolete calibration styling remaining from Player Strength development.
+- Removed duplicated legacy colour declarations superseded by the higher-contrast application palette.
+
+### Architecture
+
+- Public pages can now retrieve player intelligence through a dedicated service rather than reconstructing the intelligence pipeline themselves.
+- `PlayerIntelligenceService` coordinates:
+  - `PlayerRepository`
+  - `TeamRepository`
+  - `FixtureRepository`
+  - `PlayerIntelligenceEngine`
+  - `PlayerRanking`
+  - `FixtureIntelligence`
+  - `TeamStrength`
+  - `TeamPerformance`
+  - `TeamStrengthModel`
+- The service architecture provides a reusable foundation for future:
+  - player detail pages
+  - transfer analysis
+  - hidden-gem discovery
+  - squad optimisation
+  - wildcard optimisation
+  - captain analysis
+
+### Testing
+
+- Verified the complete existing automated regression suite after introducing `PlayerIntelligenceService`.
+- Verified existing Player Intelligence calculations remain unchanged.
+- Verified existing Player Strength calibration remains unchanged.
+- Verified dashboard player rankings remain valid.
+- Verified Player Explorer uses the same official ranking model as the dashboard.
+- Verified Ranked and All Players modes.
+- Verified player search.
+- Verified team filtering.
+- Verified position filtering.
+- Verified maximum-price filtering.
+- Verified availability filtering.
+- Verified minimum intelligence filtering.
+- Verified minimum value filtering.
+- Verified combined filters.
+- Verified filter reset behaviour.
+- Verified sortable Player Explorer columns.
+- Verified missing player intelligence is handled safely.
+- Verified responsive Dashboard and Player Explorer layouts.
+- Verified consolidated CSS preserves the intended application appearance.
+- Complete automated regression suite passes successfully.
+- No test files fail.
+- No test files produce errors.
+
 ## [0.11.8] - Player Intelligence & Strength Calibration
 
 ### Added
