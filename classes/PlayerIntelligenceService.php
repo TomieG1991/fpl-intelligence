@@ -462,4 +462,273 @@ class PlayerIntelligenceService
 
         return $ratings;
     }
+    
+    /**
+     * Return a complete intelligence profile for one player.
+     */
+    public function getPlayerProfile(
+        int $playerId
+    ): ?array {
+
+        if ($playerId <= 0) {
+            return null;
+        }
+
+
+        /*
+         * --------------------------------------------------------
+         * LOAD PLAYER
+         * --------------------------------------------------------
+         */
+
+        $player =
+            $this->playerRepository
+                ->getById(
+                    $playerId
+                );
+
+
+        if ($player === null) {
+            return null;
+        }
+
+
+        /*
+         * --------------------------------------------------------
+         * LOAD TEAM
+         * --------------------------------------------------------
+         */
+
+        $teamId =
+            (int) (
+                $player['team_id']
+                ?? 0
+            );
+
+
+        $team =
+            $teamId > 0
+                ? $this->teamRepository
+                    ->getById(
+                        $teamId
+                    )
+                : null;
+
+
+        /*
+         * --------------------------------------------------------
+         * FIXTURE OPPORTUNITY
+         * --------------------------------------------------------
+         */
+
+        $teams =
+            $this->teamRepository
+                ->getAll();
+
+
+        $fixtures =
+            $this->fixtureRepository
+                ->getAll();
+
+
+        $teamFixtureRatings =
+            $this->buildTeamFixtureRatings(
+                $teams,
+                $fixtures
+            );
+
+
+        $fixtureRating =
+            $teamFixtureRatings[$teamId]
+            ?? null;
+
+
+        /*
+         * --------------------------------------------------------
+         * COMPLETE PLAYER INTELLIGENCE
+         * --------------------------------------------------------
+         */
+
+        $profile =
+            $this->playerEngine
+                ->analysePlayer(
+                    $player,
+                    $fixtureRating
+                );
+
+
+        /*
+         * --------------------------------------------------------
+         * UPCOMING FIXTURE RUN
+         * --------------------------------------------------------
+         */
+
+        $fixtureRun =
+            [];
+
+
+        if ($teamId > 0) {
+
+            $upcomingFixtures =
+                $this->fixtureRepository
+                    ->getUpcomingForTeam(
+                        $teamId,
+                        10
+                    );
+
+
+            /*
+             * We need the complete team strength models
+             * for venue-aware fixture intelligence.
+             */
+
+            $teamBaselines =
+                $this->teamStrength
+                    ->calculateTeamStrengths(
+                        $teams
+                    );
+
+
+            $completeTeamModels =
+                [];
+
+
+            foreach (
+                $teamBaselines
+                as $id => $baseline
+            ) {
+
+                $performance =
+                    $this->teamPerformance
+                        ->analyse(
+                            $fixtures,
+                            (int) $id
+                        );
+
+
+                $completeTeamModels[$id] =
+                    $this->teamStrengthModel
+                        ->buildTeamModel(
+                            $baseline,
+                            $performance,
+                            $this->teamPerformance
+                        );
+            }
+
+
+            $fixtureRun =
+                $this->fixtureIntelligence
+                    ->analyseFixtureRun(
+                        $upcomingFixtures,
+                        $completeTeamModels,
+                        $teamId
+                    );
+        }
+
+
+        /*
+         * --------------------------------------------------------
+         * FIXTURE ROLLING AVERAGES
+         * --------------------------------------------------------
+         */
+
+        $rollingAverages =
+            $this->fixtureIntelligence
+                ->calculateOpportunityAverages(
+                    $fixtureRun
+                );
+                
+        $bestOpportunityRun =
+            $this->fixtureIntelligence
+                ->findBestOpportunityRun(
+                    $fixtureRun,
+                    5
+                );
+
+
+        $worstOpportunityRun =
+            $this->fixtureIntelligence
+                ->findWorstOpportunityRun(
+                    $fixtureRun,
+                    5
+                );
+
+
+        $opportunityTrend =
+            $this->fixtureIntelligence
+                ->calculateOpportunityTrend(
+                    $fixtureRun
+                );
+
+
+        /*
+         * --------------------------------------------------------
+         * COMPLETE FRONT-END PROFILE
+         * --------------------------------------------------------
+         */
+
+        return [
+
+            'player' =>
+                $profile['player'],
+
+            'team' => [
+
+                'team_id' =>
+                    $teamId,
+
+                'name' =>
+                    $team['name']
+                    ?? null,
+
+                'short_name' =>
+                    $team['short_name']
+                    ?? null
+            ],
+
+            'performance' =>
+                $profile['performance'],
+
+            'strength' =>
+                $profile['strength'],
+
+            'value' =>
+                $profile['value'],
+
+            'availability' =>
+                $profile['availability'],
+
+            'intelligence' =>
+                $profile['intelligence'],
+
+            'summary' =>
+                $profile['summary'],
+
+            'fixtures' => [
+
+                'rating' =>
+                    $fixtureRating,
+
+                'rolling_averages' =>
+                    $rollingAverages,
+
+                'best_run' =>
+                    $bestOpportunityRun,
+
+                'worst_run' =>
+                    $worstOpportunityRun,
+
+                'trend' =>
+                    $opportunityTrend,
+
+                'fixture_count' =>
+                    count(
+                        $fixtureRun
+                    ),
+
+                'upcoming' =>
+                    $fixtureRun
+            ]
+        ];
+    }
 }

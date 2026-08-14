@@ -532,10 +532,17 @@ foreach ($testFiles as $testFile) {
      */
 
     $passed =
-        strpos(
-            $stdout,
-            'RESULT: ALL TESTS PASSED'
-        ) !== false;
+        (
+            strpos(
+                $stdout,
+                'RESULT: ALL TESTS PASSED'
+            ) !== false
+            ||
+            strpos(
+                $stdout,
+                'RESULT: TESTS PASSED'
+            ) !== false
+        );
 
 
     $failed =

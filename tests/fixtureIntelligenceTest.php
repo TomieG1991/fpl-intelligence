@@ -1120,6 +1120,616 @@ testPass(
     ) === 0
 );
 
+/*
+ * ============================================================
+ * SCENARIO P - PLAYER OPPORTUNITY RUNS
+ * ============================================================
+ */
+
+echo "<br>============================================<br>";
+echo "Scenario P: Player Opportunity Best / Worst Runs<br>";
+echo "============================================<br>";
+
+
+$opportunityFixtures = [
+
+    [
+        'gameweek' => 1,
+        'fixture_score' => 50.00,
+        'opportunity_score' => 100.00
+    ],
+
+    [
+        'gameweek' => 2,
+        'fixture_score' => 50.00,
+        'opportunity_score' => 90.00
+    ],
+
+    [
+        'gameweek' => 3,
+        'fixture_score' => 50.00,
+        'opportunity_score' => 80.00
+    ],
+
+    [
+        'gameweek' => 4,
+        'fixture_score' => 50.00,
+        'opportunity_score' => 70.00
+    ],
+
+    [
+        'gameweek' => 5,
+        'fixture_score' => 50.00,
+        'opportunity_score' => 60.00
+    ],
+
+    [
+        'gameweek' => 6,
+        'fixture_score' => 50.00,
+        'opportunity_score' => 50.00
+    ],
+
+    [
+        'gameweek' => 7,
+        'fixture_score' => 50.00,
+        'opportunity_score' => 40.00
+    ],
+
+    [
+        'gameweek' => 8,
+        'fixture_score' => 50.00,
+        'opportunity_score' => 30.00
+    ],
+
+    [
+        'gameweek' => 9,
+        'fixture_score' => 50.00,
+        'opportunity_score' => 20.00
+    ],
+
+    [
+        'gameweek' => 10,
+        'fixture_score' => 50.00,
+        'opportunity_score' => 10.00
+    ]
+];
+
+
+$bestOpportunityRun =
+    $fixtureIntelligence
+        ->findBestOpportunityRun(
+            $opportunityFixtures,
+            5
+        );
+
+
+$worstOpportunityRun =
+    $fixtureIntelligence
+        ->findWorstOpportunityRun(
+            $opportunityFixtures,
+            5
+        );
+
+
+echo "Best Run: "
+    . (
+        $bestOpportunityRun !== null
+            ? 'GW'
+                . $bestOpportunityRun['start_gameweek']
+                . '-GW'
+                . $bestOpportunityRun['end_gameweek']
+            : 'NULL'
+    )
+    . "<br>";
+
+
+echo "Best Average: "
+    . (
+        $bestOpportunityRun !== null
+            ? number_format(
+                $bestOpportunityRun['average_score'],
+                2
+            )
+            : 'NULL'
+    )
+    . "<br>";
+
+
+echo "Worst Run: "
+    . (
+        $worstOpportunityRun !== null
+            ? 'GW'
+                . $worstOpportunityRun['start_gameweek']
+                . '-GW'
+                . $worstOpportunityRun['end_gameweek']
+            : 'NULL'
+    )
+    . "<br>";
+
+
+echo "Worst Average: "
+    . (
+        $worstOpportunityRun !== null
+            ? number_format(
+                $worstOpportunityRun['average_score'],
+                2
+            )
+            : 'NULL'
+    )
+    . "<br>";
+
+
+testPass(
+    'Best opportunity run is calculated',
+    $bestOpportunityRun !== null
+);
+
+
+testPass(
+    'Worst opportunity run is calculated',
+    $worstOpportunityRun !== null
+);
+
+
+testPass(
+    'Best opportunity run contains five fixtures',
+    isset(
+        $bestOpportunityRun['fixtures']
+    )
+    &&
+    count(
+        $bestOpportunityRun['fixtures']
+    ) === 5
+);
+
+
+testPass(
+    'Worst opportunity run contains five fixtures',
+    isset(
+        $worstOpportunityRun['fixtures']
+    )
+    &&
+    count(
+        $worstOpportunityRun['fixtures']
+    ) === 5
+);
+
+
+testPass(
+    'Best opportunity run starts at GW1',
+    (
+        $bestOpportunityRun[
+            'start_gameweek'
+        ]
+        ?? null
+    ) === 1
+);
+
+
+testPass(
+    'Best opportunity run ends at GW5',
+    (
+        $bestOpportunityRun[
+            'end_gameweek'
+        ]
+        ?? null
+    ) === 5
+);
+
+
+testPass(
+    'Worst opportunity run starts at GW6',
+    (
+        $worstOpportunityRun[
+            'start_gameweek'
+        ]
+        ?? null
+    ) === 6
+);
+
+
+testPass(
+    'Worst opportunity run ends at GW10',
+    (
+        $worstOpportunityRun[
+            'end_gameweek'
+        ]
+        ?? null
+    ) === 10
+);
+
+
+testPass(
+    'Best opportunity average is 80',
+    (
+        $bestOpportunityRun[
+            'average_score'
+        ]
+        ?? null
+    ) === 80.00
+);
+
+
+testPass(
+    'Worst opportunity average is 30',
+    (
+        $worstOpportunityRun[
+            'average_score'
+        ]
+        ?? null
+    ) === 30.00
+);
+
+
+testPass(
+    'Best opportunity run scores higher than worst run',
+    (
+        $bestOpportunityRun[
+            'average_score'
+        ]
+        ?? 0
+    )
+    >
+    (
+        $worstOpportunityRun[
+            'average_score'
+        ]
+        ?? 0
+    )
+);
+
+
+/*
+ * ============================================================
+ * SCENARIO Q - PLAYER OPPORTUNITY TREND
+ * ============================================================
+ */
+
+echo "<br>============================================<br>";
+echo "Scenario Q: Player Opportunity Trend<br>";
+echo "============================================<br>";
+
+
+$decliningOpportunityTrend =
+    $fixtureIntelligence
+        ->calculateOpportunityTrend(
+            $opportunityFixtures
+        );
+
+
+echo "Declining Trend: "
+    . $decliningOpportunityTrend
+    . "<br>";
+
+
+testPass(
+    'Declining opportunity run is identified',
+    $decliningOpportunityTrend
+    === 'Declining'
+);
+
+
+/*
+ * Improving fixture opportunity.
+ */
+
+$improvingOpportunityFixtures =
+    array_reverse(
+        $opportunityFixtures
+    );
+
+
+/*
+ * array_reverse() also reverses the gameweek numbers,
+ * but trend calculation depends on fixture order rather
+ * than the actual gameweek values.
+ */
+
+$improvingOpportunityTrend =
+    $fixtureIntelligence
+        ->calculateOpportunityTrend(
+            $improvingOpportunityFixtures
+        );
+
+
+echo "Improving Trend: "
+    . $improvingOpportunityTrend
+    . "<br>";
+
+
+testPass(
+    'Improving opportunity run is identified',
+    $improvingOpportunityTrend
+    === 'Improving'
+);
+
+
+/*
+ * Stable fixture opportunity.
+ */
+
+$stableOpportunityFixtures = [
+
+    [
+        'gameweek' => 1,
+        'opportunity_score' => 60.00
+    ],
+
+    [
+        'gameweek' => 2,
+        'opportunity_score' => 62.00
+    ],
+
+    [
+        'gameweek' => 3,
+        'opportunity_score' => 58.00
+    ],
+
+    [
+        'gameweek' => 4,
+        'opportunity_score' => 61.00
+    ],
+
+    [
+        'gameweek' => 5,
+        'opportunity_score' => 59.00
+    ],
+
+    [
+        'gameweek' => 6,
+        'opportunity_score' => 60.00
+    ]
+];
+
+
+$stableOpportunityTrend =
+    $fixtureIntelligence
+        ->calculateOpportunityTrend(
+            $stableOpportunityFixtures
+        );
+
+
+echo "Stable Trend: "
+    . $stableOpportunityTrend
+    . "<br>";
+
+
+testPass(
+    'Stable opportunity run is identified',
+    $stableOpportunityTrend
+    === 'Stable'
+);
+
+
+/*
+ * Insufficient data.
+ */
+
+$insufficientOpportunityTrend =
+    $fixtureIntelligence
+        ->calculateOpportunityTrend(
+            [
+                [
+                    'gameweek' => 1,
+                    'opportunity_score' => 70.00
+                ],
+                [
+                    'gameweek' => 2,
+                    'opportunity_score' => 60.00
+                ],
+                [
+                    'gameweek' => 3,
+                    'opportunity_score' => 50.00
+                ]
+            ]
+        );
+
+
+testPass(
+    'Opportunity trend requires at least four fixtures',
+    $insufficientOpportunityTrend
+    === 'Insufficient Data'
+);
+
+
+/*
+ * ============================================================
+ * SCENARIO R - OPPORTUNITY / FIXTURE SCORE SEPARATION
+ * ============================================================
+ */
+
+echo "<br>============================================<br>";
+echo "Scenario R: Opportunity Score Separation<br>";
+echo "============================================<br>";
+
+
+/*
+ * Every fixture_score below is deliberately identical.
+ *
+ * Only opportunity_score changes.
+ *
+ * This proves the player-facing methods are using
+ * opportunity_score rather than fixture_score.
+ */
+
+$separationFixtures = [
+
+    [
+        'gameweek' => 1,
+        'fixture_score' => 50.00,
+        'opportunity_score' => 100.00
+    ],
+
+    [
+        'gameweek' => 2,
+        'fixture_score' => 50.00,
+        'opportunity_score' => 90.00
+    ],
+
+    [
+        'gameweek' => 3,
+        'fixture_score' => 50.00,
+        'opportunity_score' => 80.00
+    ],
+
+    [
+        'gameweek' => 4,
+        'fixture_score' => 50.00,
+        'opportunity_score' => 70.00
+    ],
+
+    [
+        'gameweek' => 5,
+        'fixture_score' => 50.00,
+        'opportunity_score' => 60.00
+    ],
+
+    [
+        'gameweek' => 6,
+        'fixture_score' => 50.00,
+        'opportunity_score' => 10.00
+    ],
+
+    [
+        'gameweek' => 7,
+        'fixture_score' => 50.00,
+        'opportunity_score' => 20.00
+    ],
+
+    [
+        'gameweek' => 8,
+        'fixture_score' => 50.00,
+        'opportunity_score' => 30.00
+    ],
+
+    [
+        'gameweek' => 9,
+        'fixture_score' => 50.00,
+        'opportunity_score' => 40.00
+    ],
+
+    [
+        'gameweek' => 10,
+        'fixture_score' => 50.00,
+        'opportunity_score' => 50.00
+    ]
+];
+
+
+$separationBest =
+    $fixtureIntelligence
+        ->findBestOpportunityRun(
+            $separationFixtures,
+            5
+        );
+
+
+$separationWorst =
+    $fixtureIntelligence
+        ->findWorstOpportunityRun(
+            $separationFixtures,
+            5
+        );
+
+
+$separationTrend =
+    $fixtureIntelligence
+        ->calculateOpportunityTrend(
+            $separationFixtures
+        );
+
+
+testPass(
+    'Opportunity best run does not use fixture_score',
+    (
+        $separationBest[
+            'average_score'
+        ]
+        ?? null
+    ) === 80.00
+);
+
+
+testPass(
+    'Opportunity worst run does not use fixture_score',
+    (
+        $separationWorst[
+            'average_score'
+        ]
+        ?? null
+    ) === 30.00
+);
+
+
+testPass(
+    'Opportunity trend does not use fixture_score',
+    $separationTrend
+    === 'Declining'
+);
+
+
+/*
+ * ============================================================
+ * SCENARIO S - INVALID OPPORTUNITY RUNS
+ * ============================================================
+ */
+
+echo "<br>============================================<br>";
+echo "Scenario S: Opportunity Run Edge Cases<br>";
+echo "============================================<br>";
+
+
+testPass(
+    'Best opportunity run returns null with too few fixtures',
+    $fixtureIntelligence
+        ->findBestOpportunityRun(
+            array_slice(
+                $opportunityFixtures,
+                0,
+                4
+            ),
+            5
+        )
+    === null
+);
+
+
+testPass(
+    'Worst opportunity run returns null with too few fixtures',
+    $fixtureIntelligence
+        ->findWorstOpportunityRun(
+            array_slice(
+                $opportunityFixtures,
+                0,
+                4
+            ),
+            5
+        )
+    === null
+);
+
+
+testPass(
+    'Best opportunity run rejects zero run length',
+    $fixtureIntelligence
+        ->findBestOpportunityRun(
+            $opportunityFixtures,
+            0
+        )
+    === null
+);
+
+
+testPass(
+    'Worst opportunity run rejects zero run length',
+    $fixtureIntelligence
+        ->findWorstOpportunityRun(
+            $opportunityFixtures,
+            0
+        )
+    === null
+);
+
 
 /*
  * ============================================================

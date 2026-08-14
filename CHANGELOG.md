@@ -6,6 +6,29 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.13.0] - In Progress
+
+### Added
+- Added individual player intelligence profile page.
+- Added player profile navigation from Player Explorer.
+- Added complete player profile retrieval through PlayerIntelligenceService.
+- Added player performance intelligence including totals and per-90 metrics.
+- Added expected goals, assists and goal involvement metrics.
+- Added confidence-adjusted performance component ratings.
+- Added player availability rating and status display.
+- Added fixture outlook with upcoming 10-fixture run.
+- Added Next 5, Next 6, Next 8 and Next 10 opportunity averages.
+- Added player-facing fixture opportunity trend analysis.
+- Added best and toughest five-fixture opportunity runs.
+- Added opportunity-specific fixture intelligence tests.
+- Added PlayerIntelligenceService profile tests.
+
+### Changed
+- Improved Player Explorer availability visibility.
+- Extended FixtureIntelligence with player-facing opportunity analysis.
+- Extended PlayerIntelligenceService with complete player profile data.
+- Updated test runner to recognise both supported test success messages.
+
 ## [0.12.0] - Player Explorer
 
 ### Added

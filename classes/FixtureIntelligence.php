@@ -978,6 +978,270 @@ class FixtureIntelligence
 
         return 'Stable';
     }
+    
+    /**
+ * Find the strongest consecutive opportunity run.
+ *
+ * This is the player-facing equivalent of findBestRun()
+ * and uses opportunity_score rather than fixture_score.
+ */
+public function findBestOpportunityRun(
+    array $fixtures,
+    int $runLength = 5
+): ?array {
+
+    if (
+        $runLength <= 0
+        ||
+        count($fixtures) < $runLength
+    ) {
+        return null;
+    }
+
+
+    $bestRun =
+        null;
+
+
+    $bestAverage =
+        -INF;
+
+
+    $maximumStart =
+        count($fixtures)
+        -
+        $runLength;
+
+
+    for (
+        $i = 0;
+        $i <= $maximumStart;
+        $i++
+    ) {
+
+        $run =
+            array_slice(
+                $fixtures,
+                $i,
+                $runLength
+            );
+
+
+        $average =
+            $this->calculateOpportunityAverage(
+                $run,
+                $runLength
+            );
+
+
+        if ($average === null) {
+            continue;
+        }
+
+
+        if ($average > $bestAverage) {
+
+            $bestAverage =
+                $average;
+
+
+            $bestRun = [
+
+                'start_gameweek' =>
+                    $run[0]['gameweek']
+                    ?? null,
+
+                'end_gameweek' =>
+                    $run[
+                        count($run) - 1
+                    ]['gameweek']
+                    ?? null,
+
+                'average_score' =>
+                    $average,
+
+                'fixtures' =>
+                    $run
+            ];
+        }
+    }
+
+
+    return $bestRun;
+}
+
+
+/**
+ * Find the weakest consecutive opportunity run.
+ *
+ * This is the player-facing equivalent of findWorstRun()
+ * and uses opportunity_score rather than fixture_score.
+ */
+public function findWorstOpportunityRun(
+    array $fixtures,
+    int $runLength = 5
+): ?array {
+
+    if (
+        $runLength <= 0
+        ||
+        count($fixtures) < $runLength
+    ) {
+        return null;
+    }
+
+
+    $worstRun =
+        null;
+
+
+    $worstAverage =
+        INF;
+
+
+    $maximumStart =
+        count($fixtures)
+        -
+        $runLength;
+
+
+    for (
+        $i = 0;
+        $i <= $maximumStart;
+        $i++
+    ) {
+
+        $run =
+            array_slice(
+                $fixtures,
+                $i,
+                $runLength
+            );
+
+
+        $average =
+            $this->calculateOpportunityAverage(
+                $run,
+                $runLength
+            );
+
+
+        if ($average === null) {
+            continue;
+        }
+
+
+        if ($average < $worstAverage) {
+
+            $worstAverage =
+                $average;
+
+
+            $worstRun = [
+
+                'start_gameweek' =>
+                    $run[0]['gameweek']
+                    ?? null,
+
+                'end_gameweek' =>
+                    $run[
+                        count($run) - 1
+                    ]['gameweek']
+                    ?? null,
+
+                'average_score' =>
+                    $average,
+
+                'fixtures' =>
+                    $run
+            ];
+        }
+    }
+
+
+    return $worstRun;
+}
+
+
+/**
+ * Determine whether the player's fixture opportunity
+ * is improving, declining or stable.
+ *
+ * Uses opportunity_score rather than fixture_score.
+ */
+public function calculateOpportunityTrend(
+    array $fixtures
+): string {
+
+    if (count($fixtures) < 4) {
+        return 'Insufficient Data';
+    }
+
+
+    $midpoint =
+        (int) floor(
+            count($fixtures)
+            /
+            2
+        );
+
+
+    $firstHalf =
+        array_slice(
+            $fixtures,
+            0,
+            $midpoint
+        );
+
+
+    $secondHalf =
+        array_slice(
+            $fixtures,
+            $midpoint
+        );
+
+
+    $firstAverage =
+        $this->calculateOpportunityAverage(
+            $firstHalf,
+            count($firstHalf)
+        );
+
+
+    $secondAverage =
+        $this->calculateOpportunityAverage(
+            $secondHalf,
+            count($secondHalf)
+        );
+
+
+    if (
+        $firstAverage === null
+        ||
+        $secondAverage === null
+    ) {
+        return 'Insufficient Data';
+    }
+
+
+    $difference =
+        $secondAverage
+        -
+        $firstAverage;
+
+
+    if ($difference >= 10) {
+        return 'Improving';
+    }
+
+
+    if ($difference <= -10) {
+        return 'Declining';
+    }
+
+
+    return 'Stable';
+}
 
 
     /**

@@ -913,6 +913,9 @@ function initialisePlayerExplorer()
 
             price:
                 'price',
+                
+            availability:
+                'availability',
 
             strength:
                 'strength',

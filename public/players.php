@@ -930,6 +930,13 @@ function ratingClass(
                                     >
                                         Price
                                     </th>
+                                    
+                                    <th
+                                        class="sortable-column"
+                                        data-sort="availability"
+                                    >
+                                        Availability
+                                    </th>
 
                                     <th
                                         class="sortable-column"
@@ -978,7 +985,7 @@ function ratingClass(
                                 <tr>
 
                                     <td
-                                        colspan="10"
+                                        colspan="11"
                                         class="empty-table"
                                     >
                                         No players available.
@@ -1135,18 +1142,48 @@ function ratingClass(
 
                                         <td class="player-name-cell">
 
-                                            <strong>
+                                            <?php if (
+                                                isset($player['player_id'])
+                                                &&
+                                                (int) $player['player_id'] > 0
+                                            ): ?>
 
-                                                <?= htmlspecialchars(
-                                                    (string) (
-                                                        $player['name']
-                                                        ?? 'Unknown'
-                                                    ),
-                                                    ENT_QUOTES,
-                                                    'UTF-8'
-                                                ); ?>
+                                                <a
+                                                    href="player.php?id=<?= (int) $player['player_id']; ?>"
+                                                    class="player-profile-link"
+                                                >
 
-                                            </strong>
+                                                    <strong>
+
+                                                        <?= htmlspecialchars(
+                                                            (string) (
+                                                                $player['name']
+                                                                ?? 'Unknown'
+                                                            ),
+                                                            ENT_QUOTES,
+                                                            'UTF-8'
+                                                        ); ?>
+
+                                                    </strong>
+
+                                                </a>
+
+                                            <?php else: ?>
+
+                                                <strong>
+
+                                                    <?= htmlspecialchars(
+                                                        (string) (
+                                                            $player['name']
+                                                            ?? 'Unknown'
+                                                        ),
+                                                        ENT_QUOTES,
+                                                        'UTF-8'
+                                                    ); ?>
+
+                                                </strong>
+
+                                            <?php endif; ?>
 
                                         </td>
 
@@ -1197,6 +1234,21 @@ function ratingClass(
                                             <?= displayPrice(
                                                 $player['price']
                                                 ?? null
+                                            ); ?>
+
+                                        </td>
+                                        
+                                        <td>
+
+                                            <?= htmlspecialchars(
+                                                (string) (
+                                                    $player[
+                                                        'availability_label'
+                                                    ]
+                                                    ?? 'Unknown'
+                                                ),
+                                                ENT_QUOTES,
+                                                'UTF-8'
                                             ); ?>
 
                                         </td>

@@ -1659,3 +1659,1164 @@ a {
         flex-wrap: wrap;
     }
 }
+
+/*
+ * ============================================================
+ * PLAYER PROFILE
+ * ============================================================
+ */
+
+.profile-back-link {
+    display: inline-flex;
+
+    align-items: center;
+
+    min-height: 38px;
+
+    padding:
+        0
+        13px;
+
+    background: #20293d;
+
+    border:
+        1px solid #46536d;
+
+    border-radius: 7px;
+
+    color: #c7d0df;
+
+    font-size: 11px;
+
+    font-weight: 700;
+}
+
+
+.profile-back-link:hover {
+    background: #29344b;
+
+    color: #ffffff;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * HERO
+ * ------------------------------------------------------------
+ */
+
+.player-profile-hero {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 30px;
+
+    margin-bottom: 20px;
+}
+
+
+.player-profile-identity {
+    display: flex;
+
+    align-items: center;
+
+    gap: 18px;
+
+    min-width: 0;
+}
+
+
+.player-profile-position {
+    width: 58px;
+    height: 58px;
+
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background: #302b55;
+
+    border:
+        1px solid #5b518d;
+
+    border-radius: 13px;
+
+    color: #c7c0ff;
+
+    font-size: 13px;
+
+    font-weight: 800;
+}
+
+
+.player-profile-name {
+    margin:
+        3px
+        0
+        0;
+
+    color: #ffffff;
+
+    font-size: 28px;
+
+    line-height: 1.2;
+}
+
+
+.player-profile-meta {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    margin-top: 9px;
+
+    color: #aab5c8;
+
+    font-size: 11px;
+}
+
+
+.player-profile-meta span:not(:last-child)::after {
+    margin-left: 8px;
+
+    color: #58657d;
+
+    content: "•";
+}
+
+
+.player-profile-overall {
+    flex-shrink: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: flex-end;
+}
+
+
+.profile-score-caption {
+    color: #aab5c8;
+
+    font-size: 9px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.08em;
+
+    text-transform: uppercase;
+}
+
+
+.profile-overall-score {
+    margin-top: 4px;
+
+    font-size: 38px;
+
+    font-weight: 800;
+
+    line-height: 1;
+}
+
+
+.profile-overall-label {
+    margin-top: 6px;
+
+    color: #c1c9d7;
+
+    font-size: 11px;
+
+    font-weight: 700;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * CORE RATINGS
+ * ------------------------------------------------------------
+ */
+
+.player-profile-ratings {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 16px;
+
+    margin-bottom: 20px;
+}
+
+
+.profile-rating-card {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+
+.profile-rating-label {
+    color: #a9b5c8;
+
+    font-size: 9px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.08em;
+
+    text-transform: uppercase;
+}
+
+
+.profile-rating-card strong {
+    font-size: 25px;
+
+    line-height: 1;
+}
+
+
+.profile-rating-bar {
+    height: 5px;
+
+    overflow: hidden;
+
+    margin-top: 2px;
+
+    background: #121827;
+
+    border-radius: 999px;
+}
+
+
+.profile-rating-bar span {
+    height: 100%;
+
+    display: block;
+
+    background: #9287ff;
+
+    border-radius: inherit;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * LINKS
+ * ------------------------------------------------------------
+ */
+
+.player-profile-link {
+    color: #ffffff;
+}
+
+
+.player-profile-link:hover {
+    color: #b3aaff;
+}
+
+
+.profile-primary-link {
+    display: inline-flex;
+
+    margin-top: 18px;
+
+    padding:
+        10px
+        14px;
+
+    background: #41396f;
+
+    border:
+        1px solid #9287ff;
+
+    border-radius: 7px;
+
+    color: #ffffff;
+
+    font-size: 11px;
+
+    font-weight: 700;
+}
+
+
+.profile-primary-link:hover {
+    background: #504785;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * NOT FOUND
+ * ------------------------------------------------------------
+ */
+
+.profile-not-found {
+    min-height: 300px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+}
+
+
+.profile-not-found h2 {
+    margin:
+        0
+        0
+        8px;
+}
+
+
+.profile-not-found p {
+    max-width: 460px;
+
+    margin:
+        0;
+
+    color: #aab5c8;
+
+    font-size: 12px;
+
+    line-height: 1.6;
+}
+
+
+.profile-error-detail {
+    margin-top: 8px !important;
+
+    color: #ef9b9b !important;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * RESPONSIVE PROFILE
+ * ------------------------------------------------------------
+ */
+
+@media (
+    max-width: 900px
+) {
+
+    .player-profile-ratings {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+
+@media (
+    max-width: 650px
+) {
+
+    .player-profile-hero {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+
+    .player-profile-overall {
+        align-items: flex-start;
+    }
+
+
+    .player-profile-ratings {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .player-profile-name {
+        font-size: 23px;
+    }
+
+}
+
+.profile-rating-status {
+    margin-top: -3px;
+
+    color: #aab5c8;
+
+    font-size: 10px;
+
+    font-weight: 700;
+}
+
+/*
+ * ============================================================
+ * PLAYER PERFORMANCE
+ * ============================================================
+ */
+
+.player-performance-card {
+    margin-bottom: 20px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * PERFORMANCE TOTALS
+ * ------------------------------------------------------------
+ */
+
+.performance-summary-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(6, minmax(0, 1fr));
+
+    gap: 12px;
+}
+
+
+.performance-stat {
+    padding: 15px;
+
+    background: #20293d;
+
+    border:
+        1px solid #34405a;
+
+    border-radius: 8px;
+}
+
+
+.performance-stat span {
+    display: block;
+
+    color: #a9b5c8;
+
+    font-size: 9px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.07em;
+
+    text-transform: uppercase;
+}
+
+
+.performance-stat strong {
+    display: block;
+
+    margin-top: 7px;
+
+    color: #ffffff;
+
+    font-size: 21px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * SECTION HEADINGS
+ * ------------------------------------------------------------
+ */
+
+.performance-section-heading {
+    margin:
+        28px
+        0
+        13px;
+
+    padding-top: 20px;
+
+    border-top:
+        1px solid #34405a;
+}
+
+
+.performance-section-heading h3 {
+    margin:
+        2px
+        0
+        0;
+
+    color: #ffffff;
+
+    font-size: 14px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * PERFORMANCE METRICS
+ * ------------------------------------------------------------
+ */
+
+.performance-metric-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(7, minmax(0, 1fr));
+
+    gap: 10px;
+}
+
+
+.performance-metric-grid-small {
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+}
+
+
+.performance-metric {
+    padding: 13px;
+
+    background: #182133;
+
+    border:
+        1px solid #303b51;
+
+    border-radius: 7px;
+}
+
+
+.performance-metric span {
+    display: block;
+
+    color: #9facbf;
+
+    font-size: 9px;
+
+    font-weight: 700;
+}
+
+
+.performance-metric strong {
+    display: block;
+
+    margin-top: 6px;
+
+    color: #ffffff;
+
+    font-size: 17px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * PERFORMANCE RATINGS
+ * ------------------------------------------------------------
+ */
+
+.performance-explanation {
+    max-width: 760px;
+
+    margin:
+        -7px
+        0
+        20px;
+
+    color: #aab5c8;
+
+    font-size: 11px;
+
+    line-height: 1.6;
+}
+
+
+.performance-rating-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 14px;
+}
+
+
+.performance-rating-item {
+    padding: 14px;
+
+    background: #20293d;
+
+    border:
+        1px solid #34405a;
+
+    border-radius: 8px;
+}
+
+
+.performance-rating-header {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    margin-bottom: 9px;
+}
+
+
+.performance-rating-header span {
+    color: #aab5c8;
+
+    font-size: 10px;
+
+    font-weight: 700;
+}
+
+
+.performance-rating-header strong {
+    font-size: 14px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * RESPONSIVE PERFORMANCE
+ * ------------------------------------------------------------
+ */
+
+@media (
+    max-width: 1200px
+) {
+
+    .performance-summary-grid {
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+    }
+
+
+    .performance-metric-grid {
+        grid-template-columns:
+            repeat(4, minmax(0, 1fr));
+    }
+
+}
+
+
+@media (
+    max-width: 800px
+) {
+
+    .performance-rating-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+
+    .performance-metric-grid-small {
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+    }
+
+}
+
+
+@media (
+    max-width: 600px
+) {
+
+    .performance-summary-grid,
+    .performance-rating-grid,
+    .performance-metric-grid,
+    .performance-metric-grid-small {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+
+@media (
+    max-width: 420px
+) {
+
+    .performance-summary-grid,
+    .performance-rating-grid,
+    .performance-metric-grid,
+    .performance-metric-grid-small {
+        grid-template-columns:
+            1fr;
+    }
+
+}
+
+/*
+ * ============================================================
+ * FIXTURE OUTLOOK
+ * ============================================================
+ */
+
+.player-fixture-card {
+    margin-bottom: 20px;
+}
+
+
+.fixture-explanation {
+    max-width: 760px;
+
+    margin:
+        -7px
+        0
+        20px;
+
+    color: #aab5c8;
+
+    font-size: 11px;
+
+    line-height: 1.6;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * AVERAGES
+ * ------------------------------------------------------------
+ */
+
+.fixture-average-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 14px;
+}
+
+
+.fixture-average-card {
+    padding: 15px;
+
+    background: #20293d;
+
+    border:
+        1px solid #34405a;
+
+    border-radius: 8px;
+}
+
+
+.fixture-average-card > span {
+    display: block;
+
+    color: #aab5c8;
+
+    font-size: 9px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.07em;
+
+    text-transform: uppercase;
+}
+
+
+.fixture-average-card > strong {
+    display: block;
+
+    margin-top: 7px;
+
+    font-size: 22px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * FIXTURE COLOURS
+ * ------------------------------------------------------------
+ */
+
+.fixture-good {
+    color: #72e49a;
+}
+
+
+.fixture-average {
+    color: #f0d36e;
+}
+
+
+.fixture-difficult {
+    color: #efa76e;
+}
+
+
+.fixture-very-difficult {
+    color: #ef9b9b;
+}
+
+
+.fixture-neutral {
+    color: #8b98ad;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * SECTION HEADING
+ * ------------------------------------------------------------
+ */
+
+.fixture-section-heading {
+    margin:
+        28px
+        0
+        13px;
+
+    padding-top: 20px;
+
+    border-top:
+        1px solid #34405a;
+}
+
+
+.fixture-section-heading h3 {
+    margin:
+        2px
+        0
+        0;
+
+    color: #ffffff;
+
+    font-size: 14px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * TABLE
+ * ------------------------------------------------------------
+ */
+
+.fixture-table-wrapper {
+    overflow-x: auto;
+}
+
+
+.fixture-outlook-table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    font-size: 12px;
+}
+
+
+.fixture-outlook-table th {
+    padding:
+        10px
+        12px;
+
+    background: #20293d;
+
+    border-bottom:
+        1px solid #3c4963;
+
+    color: #aeb9cb;
+
+    font-size: 9px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.08em;
+
+    text-align: left;
+
+    text-transform: uppercase;
+}
+
+
+.fixture-outlook-table td {
+    padding:
+        12px;
+
+    border-bottom:
+        1px solid #303b51;
+
+    color: #d5dce8;
+}
+
+
+.fixture-outlook-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+
+.fixture-outlook-table tbody tr:hover {
+    background: #263148;
+}
+
+
+.fixture-gameweek {
+    color: #9aa7bb;
+
+    font-weight: 700;
+}
+
+
+.fixture-opponent strong {
+    color: #ffffff;
+}
+
+
+.fixture-venue {
+    display: inline-flex;
+
+    padding:
+        4px
+        7px;
+
+    background: #293349;
+
+    border:
+        1px solid #46536d;
+
+    border-radius: 5px;
+
+    color: #dce2ec;
+
+    font-size: 9px;
+
+    font-weight: 800;
+}
+
+
+.fixture-difficulty {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    color: #b8c2d3;
+
+    font-size: 10px;
+}
+
+
+.fixture-difficulty strong {
+    width: 22px;
+    height: 22px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background: #293349;
+
+    border-radius: 5px;
+
+    color: #ffffff;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * FIXTURE STRIP
+ * ------------------------------------------------------------
+ */
+
+.fixture-run-strip {
+    display: grid;
+
+    grid-template-columns:
+        repeat(10, minmax(90px, 1fr));
+
+    gap: 8px;
+
+    overflow-x: auto;
+
+    padding-bottom: 4px;
+}
+
+
+.fixture-run-item {
+    min-width: 90px;
+
+    padding:
+        11px
+        9px;
+
+    background: #182133;
+
+    border:
+        1px solid #303b51;
+
+    border-radius: 7px;
+
+    text-align: center;
+}
+
+
+.fixture-run-gw {
+    display: block;
+
+    color: #8f9bb0;
+
+    font-size: 8px;
+
+    font-weight: 800;
+
+    text-transform: uppercase;
+}
+
+
+.fixture-run-item strong {
+    display: block;
+
+    overflow: hidden;
+
+    margin-top: 5px;
+
+    color: #ffffff;
+
+    font-size: 10px;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+
+.fixture-run-venue {
+    display: block;
+
+    margin-top: 4px;
+
+    color: #8f9bb0;
+
+    font-size: 9px;
+
+    font-weight: 800;
+}
+
+
+.fixture-run-score {
+    display: block;
+
+    margin-top: 7px;
+
+    font-size: 13px;
+
+    font-weight: 800;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * RESPONSIVE FIXTURES
+ * ------------------------------------------------------------
+ */
+
+@media (
+    max-width: 900px
+) {
+
+    .fixture-average-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+
+@media (
+    max-width: 520px
+) {
+
+    .fixture-average-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+}
+
+/*
+ * ============================================================
+ * FIXTURE INSIGHTS
+ * ============================================================
+ */
+
+.fixture-insight-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 14px;
+
+    margin-top: 16px;
+}
+
+
+.fixture-insight-card {
+    padding: 15px;
+
+    background: #182133;
+
+    border:
+        1px solid #303b51;
+
+    border-radius: 8px;
+}
+
+
+.fixture-insight-label {
+    display: block;
+
+    color: #aab5c8;
+
+    font-size: 9px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.07em;
+
+    text-transform: uppercase;
+}
+
+
+.fixture-insight-card strong {
+    display: block;
+
+    margin-top: 7px;
+
+    color: #ffffff;
+
+    font-size: 18px;
+}
+
+
+.fixture-insight-card small {
+    display: block;
+
+    margin-top: 5px;
+
+    color: #9facbf;
+
+    font-size: 10px;
+}
+
+
+@media (
+    max-width: 800px
+) {
+
+    .fixture-insight-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+}
