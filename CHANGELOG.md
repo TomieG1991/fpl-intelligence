@@ -28,6 +28,32 @@ The project follows a sprint-based development process.
 - Added Player Profile Summary / FPL Decision Snapshot for quick player evaluation.
 - Added snapshot metrics for intelligence score, price, strength, value, next-five fixture opportunity, availability, fixture trend, and performance sample confidence.
 - Added responsive styling and verdict-specific presentation for player assessment and summary components.
+- Added `PlayerComparison` service for direct player-to-player intelligence comparisons.
+- Added reusable metric comparison logic covering:
+  - Intelligence Score
+  - Player Strength
+  - Value
+  - Fixture Rating
+  - Availability
+  - Sample Confidence
+- Added metric winner, difference and win-count calculations.
+- Overall comparison winner is determined by Player Intelligence Score rather than raw metric-win count.
+- Removed duplicate Next 5 fixture comparison because Fixture Rating already represents the current five-fixture opportunity window.
+- Added support for player assessment verdicts within comparison results.
+- Added validation for missing players, invalid IDs and self-comparisons.
+- Integrated player comparison into `PlayerIntelligenceService` through `comparePlayers()`.
+- Added `PlayerComparisonTest.php` automated test coverage.
+- Added `PlayerComparisonRealDataTest.php` diagnostic coverage using live imported FPL data.
+- Validated comparison behaviour across premium, value and low-sample player scenarios.
+- Added `/compare.php` player comparison interface.
+- Added player selectors with preselected player support via query parameters.
+- Added side-by-side player identity, price, position, team, assessment and Intelligence Score display.
+- Added visual metric comparison with winning values highlighted.
+- Added overall comparison result and Intelligence Score difference.
+- Added supporting metric-win summary.
+- Added Compare entry points from Player Explorer and individual player profiles.
+- Added Compare to primary application navigation.
+- Added responsive styling for the player comparison interface.
 
 ### Changed
 - Improved Player Explorer availability visibility.

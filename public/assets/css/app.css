@@ -3381,3 +3381,760 @@ a {
     }
 
 }
+
+/*
+ * ============================================================
+ * PLAYER COMPARISON
+ * ============================================================
+ */
+
+.comparison-selector-card,
+.comparison-result-card,
+.comparison-metrics-card,
+.comparison-win-card {
+    margin-bottom: 20px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * SELECTORS
+ * ------------------------------------------------------------
+ */
+
+.comparison-form {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        60px
+        minmax(0, 1fr)
+        auto;
+
+    gap: 14px;
+
+    align-items: end;
+}
+
+
+.comparison-selector {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 6px;
+}
+
+
+.comparison-selector label {
+    color: #aab5c8;
+
+    font-size: 9px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.07em;
+
+    text-transform: uppercase;
+}
+
+
+.comparison-selector select {
+    width: 100%;
+
+    min-height: 42px;
+
+    padding:
+        0
+        11px;
+
+    background: #182133;
+
+    border:
+        1px solid #46536d;
+
+    border-radius: 7px;
+
+    color: #ffffff;
+
+    font-size: 11px;
+}
+
+
+.comparison-selector select:focus {
+    border-color: #9287ff;
+
+    outline: none;
+}
+
+
+.comparison-versus {
+    min-height: 42px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    color: #8996aa;
+
+    font-size: 11px;
+
+    font-weight: 900;
+}
+
+
+.comparison-submit {
+    min-height: 42px;
+
+    padding:
+        0
+        16px;
+
+    background: #504785;
+
+    border:
+        1px solid #9287ff;
+
+    border-radius: 7px;
+
+    color: #ffffff;
+
+    cursor: pointer;
+
+    font-size: 10px;
+
+    font-weight: 800;
+}
+
+
+.comparison-submit:hover {
+    background: #61569e;
+}
+
+
+.comparison-error {
+    margin-top: 14px;
+
+    padding:
+        10px
+        12px;
+
+    background: rgba(239, 155, 155, 0.1);
+
+    border:
+        1px solid rgba(239, 155, 155, 0.35);
+
+    border-radius: 7px;
+
+    color: #ef9b9b;
+
+    font-size: 11px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * PLAYER CARDS
+ * ------------------------------------------------------------
+ */
+
+.comparison-player-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 16px;
+
+    margin-bottom: 20px;
+}
+
+
+.comparison-player-card {
+    position: relative;
+}
+
+
+.comparison-player-number {
+    color: #8996aa;
+
+    font-size: 8px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.08em;
+
+    text-transform: uppercase;
+}
+
+
+.comparison-player-card h2 {
+    margin:
+        5px
+        0
+        0;
+}
+
+
+.comparison-player-card h2 a {
+    color: #ffffff;
+}
+
+
+.comparison-player-card h2 a:hover {
+    color: #b7afff;
+}
+
+
+.comparison-player-meta {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    margin-top: 8px;
+
+    color: #9facbf;
+
+    font-size: 10px;
+}
+
+
+.comparison-player-meta span:not(:last-child)::after {
+    margin-left: 8px;
+
+    color: #58657d;
+
+    content: "•";
+}
+
+
+.comparison-verdict {
+    display: inline-flex;
+
+    margin-top: 14px;
+
+    padding:
+        5px
+        8px;
+
+    border-radius: 999px;
+
+    font-size: 9px;
+
+    font-weight: 800;
+}
+
+
+.comparison-verdict-excellent {
+    background: rgba(114, 228, 154, 0.12);
+
+    color: #72e49a;
+}
+
+
+.comparison-verdict-strong {
+    background: rgba(146, 135, 255, 0.14);
+
+    color: #c0b8ff;
+}
+
+
+.comparison-verdict-consider {
+    background: rgba(240, 211, 110, 0.12);
+
+    color: #f0d36e;
+}
+
+
+.comparison-verdict-watchlist {
+    background: rgba(239, 167, 110, 0.12);
+
+    color: #efa76e;
+}
+
+
+.comparison-verdict-avoid {
+    background: rgba(239, 155, 155, 0.12);
+
+    color: #ef9b9b;
+}
+
+
+.comparison-verdict-neutral {
+    background: #293349;
+
+    color: #aab5c8;
+}
+
+
+.comparison-player-intelligence {
+    display: block;
+
+    margin-top: 17px;
+
+    color: #ffffff;
+
+    font-size: 30px;
+
+    line-height: 1;
+}
+
+
+.comparison-player-intelligence small {
+    margin-left: 4px;
+
+    color: #8996aa;
+
+    font-size: 8px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.07em;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * OVERALL RESULT
+ * ------------------------------------------------------------
+ */
+
+.comparison-result-card {
+    text-align: center;
+}
+
+
+.comparison-result-card h2 {
+    margin:
+        3px
+        0
+        8px;
+
+    color: #ffffff;
+
+    font-size: 22px;
+}
+
+
+.comparison-result-card p:last-child {
+    margin: 0;
+
+    color: #aab5c8;
+
+    font-size: 11px;
+
+    line-height: 1.6;
+}
+
+
+.comparison-result-card p strong {
+    color: #ffffff;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * METRIC TABLE
+ * ------------------------------------------------------------
+ */
+
+.comparison-metric-table {
+    overflow: hidden;
+
+    border:
+        1px solid #34405a;
+
+    border-radius: 8px;
+}
+
+
+.comparison-metric-row {
+    display: grid;
+
+    grid-template-columns:
+        minmax(140px, 1.4fr)
+        repeat(3, minmax(90px, 1fr));
+
+    min-height: 48px;
+
+    border-bottom:
+        1px solid #303b51;
+}
+
+
+.comparison-metric-row:last-child {
+    border-bottom: 0;
+}
+
+
+.comparison-metric-row > div {
+    display: flex;
+
+    align-items: center;
+
+    padding:
+        10px
+        12px;
+
+    border-right:
+        1px solid #303b51;
+
+    color: #d2d9e5;
+
+    font-size: 11px;
+}
+
+
+.comparison-metric-row > div:last-child {
+    border-right: 0;
+}
+
+
+.comparison-metric-header {
+    min-height: 40px;
+
+    background: #20293d;
+}
+
+
+.comparison-metric-header > div {
+    color: #9facbf;
+
+    font-size: 8px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.07em;
+
+    text-transform: uppercase;
+}
+
+
+.comparison-metric-label {
+    color: #ffffff !important;
+
+    font-weight: 700;
+}
+
+
+.comparison-metric-winner {
+    background: rgba(114, 228, 154, 0.08);
+
+    color: #72e49a !important;
+
+    font-weight: 800;
+}
+
+
+.comparison-metric-tie {
+    color: #f0d36e !important;
+}
+
+
+.comparison-metric-difference {
+    color: #8996aa !important;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * METRIC WINS
+ * ------------------------------------------------------------
+ */
+
+.comparison-win-explanation {
+    margin:
+        -7px
+        0
+        18px;
+
+    color: #9facbf;
+
+    font-size: 10px;
+
+    line-height: 1.6;
+}
+
+
+.comparison-win-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 12px;
+}
+
+
+.comparison-win-item {
+    padding: 16px;
+
+    background: #20293d;
+
+    border:
+        1px solid #34405a;
+
+    border-radius: 8px;
+
+    text-align: center;
+}
+
+
+.comparison-win-item span {
+    display: block;
+
+    color: #9facbf;
+
+    font-size: 9px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.06em;
+
+    text-transform: uppercase;
+}
+
+
+.comparison-win-item strong {
+    display: block;
+
+    margin-top: 7px;
+
+    color: #ffffff;
+
+    font-size: 24px;
+}
+
+
+.comparison-win-ties strong {
+    color: #f0d36e;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * RESPONSIVE COMPARISON
+ * ------------------------------------------------------------
+ */
+
+@media (
+    max-width: 950px
+) {
+
+    .comparison-form {
+        grid-template-columns:
+            1fr
+            50px
+            1fr;
+    }
+
+
+    .comparison-submit {
+        grid-column:
+            1
+            /
+            -1;
+    }
+
+}
+
+
+@media (
+    max-width: 700px
+) {
+
+    .comparison-player-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .comparison-form {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .comparison-versus {
+        min-height: auto;
+    }
+
+
+    .comparison-metric-row {
+        grid-template-columns:
+            minmax(110px, 1.3fr)
+            repeat(3, minmax(75px, 1fr));
+    }
+
+
+    .comparison-metric-row > div {
+        padding:
+            9px
+            8px;
+
+        font-size: 10px;
+    }
+
+}
+
+
+@media (
+    max-width: 500px
+) {
+
+    .comparison-metric-table {
+        overflow-x: auto;
+    }
+
+
+    .comparison-metric-row {
+        min-width: 500px;
+    }
+
+
+    .comparison-win-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+}
+
+/*
+ * ============================================================
+ * COMPARISON ENTRY POINTS
+ * ============================================================
+ */
+
+/*
+ * ------------------------------------------------------------
+ * PLAYER PROFILE
+ * ------------------------------------------------------------
+ */
+
+.profile-compare-link {
+    display: inline-flex;
+
+    align-items: center;
+
+    min-height: 38px;
+
+    padding:
+        0
+        13px;
+
+    background: #504785;
+
+    border:
+        1px solid #9287ff;
+
+    border-radius: 7px;
+
+    color: #ffffff;
+
+    font-size: 11px;
+
+    font-weight: 700;
+}
+
+
+.profile-compare-link:hover {
+    background: #61569e;
+
+    color: #ffffff;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * PLAYER EXPLORER
+ * ------------------------------------------------------------
+ */
+
+.player-name-actions {
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+}
+
+
+.player-name-actions .player-profile-link {
+    min-width: 0;
+}
+
+
+.player-compare-link {
+    flex-shrink: 0;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    padding:
+        3px
+        6px;
+
+    background: #293349;
+
+    border:
+        1px solid #46536d;
+
+    border-radius: 5px;
+
+    color: #aeb9cb;
+
+    font-size: 8px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.04em;
+
+    text-transform: uppercase;
+}
+
+
+.player-compare-link:hover {
+    background: #504785;
+
+    border-color: #9287ff;
+
+    color: #ffffff;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * TOP BAR ACTIONS
+ * ------------------------------------------------------------
+ */
+
+.topbar-actions {
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+}
+
+
+@media (
+    max-width: 600px
+) {
+
+    .topbar-actions {
+        align-items: stretch;
+
+        flex-direction: column;
+    }
+
+
+    .profile-compare-link,
+    .profile-back-link {
+        justify-content: center;
+    }
+
+}

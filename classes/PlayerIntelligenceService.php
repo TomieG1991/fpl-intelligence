@@ -21,6 +21,8 @@ class PlayerIntelligenceService
     private TeamStrengthModel $teamStrengthModel;
     
     private PlayerAssessment $playerAssessment;
+    
+    private PlayerComparison $playerComparison;
 
 
     /**
@@ -81,9 +83,13 @@ class PlayerIntelligenceService
 
         $this->playerRanking =
             new PlayerRanking();
-            
+        
+        
         $this->playerAssessment =
             new PlayerAssessment();
+            
+        $this->playerComparison =
+            new PlayerComparison();
 
 
         /*
@@ -746,4 +752,74 @@ class PlayerIntelligenceService
 
         return $completeProfile;
     }
+    
+    /**
+ * Compare two complete player intelligence profiles.
+ */
+public function comparePlayers(
+    int $playerIdA,
+    int $playerIdB
+): ?array {
+
+    if (
+        $playerIdA <= 0
+        ||
+        $playerIdB <= 0
+    ) {
+
+        return null;
+    }
+
+
+    /*
+     * --------------------------------------------------------
+     * PREVENT SELF-COMPARISON
+     * --------------------------------------------------------
+     */
+
+    if ($playerIdA === $playerIdB) {
+        return null;
+    }
+
+
+    /*
+     * --------------------------------------------------------
+     * LOAD COMPLETE PLAYER PROFILES
+     * --------------------------------------------------------
+     */
+
+    $profileA =
+        $this->getPlayerProfile(
+            $playerIdA
+        );
+
+
+    $profileB =
+        $this->getPlayerProfile(
+            $playerIdB
+        );
+
+
+    if (
+        $profileA === null
+        ||
+        $profileB === null
+    ) {
+
+        return null;
+    }
+
+
+    /*
+     * --------------------------------------------------------
+     * PLAYER COMPARISON
+     * --------------------------------------------------------
+     */
+
+    return $this->playerComparison
+        ->compare(
+            $profileA,
+            $profileB
+        );
+}
 }

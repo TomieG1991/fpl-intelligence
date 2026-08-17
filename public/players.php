@@ -262,6 +262,17 @@ function ratingClass(
 
                     Players
                 </a>
+                
+                <a
+                    href="compare.php"
+                    class="nav-link"
+                >
+                    <span class="nav-icon">
+                        ⇄
+                    </span>
+
+                    Compare
+                </a>
 
 
                 <a
@@ -1142,16 +1153,51 @@ function ratingClass(
 
                                         <td class="player-name-cell">
 
-                                            <?php if (
-                                                isset($player['player_id'])
-                                                &&
-                                                (int) $player['player_id'] > 0
-                                            ): ?>
+                                            <div class="player-name-actions">
 
-                                                <a
-                                                    href="player.php?id=<?= (int) $player['player_id']; ?>"
-                                                    class="player-profile-link"
-                                                >
+                                                <?php if (
+                                                    isset($player['player_id'])
+                                                    &&
+                                                    (int) $player['player_id'] > 0
+                                                ): ?>
+
+                                                    <a
+                                                        href="player.php?id=<?= (int) $player['player_id']; ?>"
+                                                        class="player-profile-link"
+                                                    >
+
+                                                        <strong>
+
+                                                            <?= htmlspecialchars(
+                                                                (string) (
+                                                                    $player['name']
+                                                                    ?? 'Unknown'
+                                                                ),
+                                                                ENT_QUOTES,
+                                                                'UTF-8'
+                                                            ); ?>
+
+                                                        </strong>
+
+                                                    </a>
+
+
+                                                    <a
+                                                        href="compare.php?player1=<?= (int) $player['player_id']; ?>"
+                                                        class="player-compare-link"
+                                                        aria-label="Compare <?= htmlspecialchars(
+                                                            (string) (
+                                                                $player['name']
+                                                                ?? 'player'
+                                                            ),
+                                                            ENT_QUOTES,
+                                                            'UTF-8'
+                                                        ); ?>"
+                                                    >
+                                                        Compare
+                                                    </a>
+
+                                                <?php else: ?>
 
                                                     <strong>
 
@@ -1166,24 +1212,9 @@ function ratingClass(
 
                                                     </strong>
 
-                                                </a>
+                                                <?php endif; ?>
 
-                                            <?php else: ?>
-
-                                                <strong>
-
-                                                    <?= htmlspecialchars(
-                                                        (string) (
-                                                            $player['name']
-                                                            ?? 'Unknown'
-                                                        ),
-                                                        ENT_QUOTES,
-                                                        'UTF-8'
-                                                    ); ?>
-
-                                                </strong>
-
-                                            <?php endif; ?>
+                                            </div>
 
                                         </td>
 

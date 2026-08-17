@@ -568,6 +568,17 @@ try {
 
                     Players
                 </a>
+                
+                <a
+                    href="compare.php"
+                    class="nav-link"
+                >
+                    <span class="nav-icon">
+                        ⇄
+                    </span>
+
+                    Compare
+                </a>
 
 
                 <a

@@ -562,6 +562,17 @@ $summaryNextFive =
 
                     Players
                 </a>
+                
+                <a
+                    href="compare.php"
+                    class="nav-link"
+                >
+                    <span class="nav-icon">
+                        ⇄
+                    </span>
+
+                    Compare
+                </a>
 
 
                 <a
@@ -652,6 +663,26 @@ $summaryNextFive =
 
 
                 <div class="topbar-actions">
+
+                    <?php if (
+                        $profile !== null
+                        &&
+                        $playerId !== false
+                        &&
+                        $playerId !== null
+                        &&
+                        $playerId > 0
+                    ): ?>
+
+                        <a
+                            href="compare.php?player1=<?= (int) $playerId; ?>"
+                            class="profile-compare-link"
+                        >
+                            ⇄ Compare Player
+                        </a>
+
+                    <?php endif; ?>
+
 
                     <a
                         href="players.php"

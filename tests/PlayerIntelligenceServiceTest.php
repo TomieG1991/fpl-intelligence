@@ -541,16 +541,239 @@ testPass(
     )
 );
 
-
 /*
  * ============================================================
  * SCENARIO H
+ * PLAYER COMPARISON
+ * ============================================================
+ */
+
+echo "<br>============================================<br>";
+echo "Scenario H: Player Comparison<br>";
+echo "============================================<br>";
+
+
+$comparisonPlayers =
+    $service
+        ->getRankedPlayers(
+            2
+        );
+
+
+testPass(
+    'At least two ranked players are available for comparison',
+    count(
+        $comparisonPlayers
+    )
+    >= 2
+);
+
+
+if (
+    count(
+        $comparisonPlayers
+    )
+    >= 2
+) {
+
+    $comparisonPlayerIdA =
+        (int) (
+            $comparisonPlayers[
+                0
+            ]['player_id']
+            ?? 0
+        );
+
+
+    $comparisonPlayerIdB =
+        (int) (
+            $comparisonPlayers[
+                1
+            ]['player_id']
+            ?? 0
+        );
+
+
+    $playerComparison =
+        $service
+            ->comparePlayers(
+                $comparisonPlayerIdA,
+                $comparisonPlayerIdB
+            );
+
+
+    testPass(
+        'Player comparison returns an array',
+        is_array(
+            $playerComparison
+        )
+    );
+
+
+    testPass(
+        'Comparison player A exists',
+        isset(
+            $playerComparison[
+                'player_a'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Comparison player B exists',
+        isset(
+            $playerComparison[
+                'player_b'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Comparison metrics exist',
+        isset(
+            $playerComparison[
+                'metrics'
+            ]
+        )
+        &&
+        is_array(
+            $playerComparison[
+                'metrics'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Comparison intelligence metric exists',
+        isset(
+            $playerComparison[
+                'metrics'
+            ]['intelligence']
+        )
+    );
+
+
+    testPass(
+        'Comparison strength metric exists',
+        isset(
+            $playerComparison[
+                'metrics'
+            ]['strength']
+        )
+    );
+
+
+    testPass(
+        'Comparison value metric exists',
+        isset(
+            $playerComparison[
+                'metrics'
+            ]['value']
+        )
+    );
+
+
+    testPass(
+        'Comparison fixture metric exists',
+        isset(
+            $playerComparison[
+                'metrics'
+            ]['fixtures']
+        )
+    );
+
+
+    testPass(
+        'Comparison availability metric exists',
+        isset(
+            $playerComparison[
+                'metrics'
+            ]['availability']
+        )
+    );
+
+
+    testPass(
+        'Comparison sample confidence metric exists',
+        isset(
+            $playerComparison[
+                'metrics'
+            ]['sample_confidence']
+        )
+    );
+
+
+    testPass(
+        'Comparison metric win counts exist',
+        isset(
+            $playerComparison[
+                'metric_wins'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Comparison overall winner exists',
+        array_key_exists(
+            'overall_winner',
+            $playerComparison
+        )
+    );
+
+
+    testPass(
+        'Comparison overall difference exists',
+        array_key_exists(
+            'overall_difference',
+            $playerComparison
+        )
+    );
+
+
+    testPass(
+        'Comparison preserves player A ID',
+        (
+            (int) (
+                $playerComparison[
+                    'player_a'
+                ]['player_id']
+                ?? 0
+            )
+        )
+        ===
+        $comparisonPlayerIdA
+    );
+
+
+    testPass(
+        'Comparison preserves player B ID',
+        (
+            (int) (
+                $playerComparison[
+                    'player_b'
+                ]['player_id']
+                ?? 0
+            )
+        )
+        ===
+        $comparisonPlayerIdB
+    );
+}
+
+
+/*
+ * ============================================================
+ * SCENARIO I
  * INVALID PLAYER
  * ============================================================
  */
 
 echo "<br>============================================<br>";
-echo "Scenario H: Invalid Player Handling<br>";
+echo "Scenario I: Invalid Player Handling<br>";
 echo "============================================<br>";
 
 
@@ -575,6 +798,65 @@ testPass(
 testPass(
     'Unknown player ID returns null',
     $service->getPlayerProfile(
+        999999999
+    )
+    === null
+);
+
+testPass(
+    'Comparison rejects zero first player ID',
+    $service->comparePlayers(
+        0,
+        1
+    )
+    === null
+);
+
+
+testPass(
+    'Comparison rejects zero second player ID',
+    $service->comparePlayers(
+        1,
+        0
+    )
+    === null
+);
+
+
+testPass(
+    'Comparison rejects negative player IDs',
+    $service->comparePlayers(
+        -1,
+        -2
+    )
+    === null
+);
+
+
+testPass(
+    'Comparison rejects identical player IDs',
+    $service->comparePlayers(
+        $playerId,
+        $playerId
+    )
+    === null
+);
+
+
+testPass(
+    'Comparison returns null when first player is unknown',
+    $service->comparePlayers(
+        999999999,
+        $playerId
+    )
+    === null
+);
+
+
+testPass(
+    'Comparison returns null when second player is unknown',
+    $service->comparePlayers(
+        $playerId,
         999999999
     )
     === null
