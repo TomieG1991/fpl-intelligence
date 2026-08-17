@@ -385,7 +385,87 @@ $fixtureWorstRun =
 
 $fixtureTrend =
     $fixtureProfile['trend']
-    ?? 'Insufficient Data';    
+    ?? 'Insufficient Data'; 
+
+$assessment =
+    $profile['assessment']
+    ?? [];
+
+
+$assessmentVerdict =
+    $assessment['verdict']
+    ?? 'Insufficient Data';
+
+
+$assessmentVerdictKey =
+    $assessment['verdict_key']
+    ?? 'insufficient_data';
+
+
+$assessmentSummary =
+    $assessment['summary']
+    ?? '';
+
+
+$assessmentStrengths =
+    $assessment['strengths']
+    ?? [];
+
+
+$assessmentConcerns =
+    $assessment['concerns']
+    ?? [];
+
+
+$assessmentComponents =
+    $assessment['components']
+    ?? []; 
+
+$profileSummary =
+    $profile['summary']
+    ?? [];
+
+
+$summaryPrice =
+    $profileSummary['price']
+    ?? null;
+
+
+$summaryIntelligence =
+    $profileSummary['intelligence_score']
+    ?? null;
+
+
+$summaryStrength =
+    $profileSummary['strength_rating']
+    ?? null;
+
+
+$summaryValue =
+    $profileSummary['value_rating']
+    ?? null;
+
+
+$summaryAvailability =
+    $assessmentComponents['availability']
+    ?? 'Unknown';
+
+
+$summarySampleConfidence =
+    $assessmentComponents['sample_confidence']
+    ?? 'Unknown';
+
+
+$summaryFixtureTrend =
+    $assessmentComponents['fixture_trend']
+    ?? 'Unknown';
+
+
+$summaryNextFive =
+    $fixtureProfile[
+        'rolling_averages'
+    ]['next_5']
+    ?? null;    
 
 ?>
 <!DOCTYPE html>
@@ -770,7 +850,210 @@ $fixtureTrend =
                         </div>
 
                     </section>
+                    
+                    <!-- ======================================
+                         PLAYER PROFILE SUMMARY
+                         ====================================== -->
 
+                    <section class="dashboard-card player-summary-card">
+
+                        <div class="player-summary-heading">
+
+                            <div>
+
+                                <p class="card-kicker">
+                                    Player Summary
+                                </p>
+
+                                <h2>
+                                    FPL Decision Snapshot
+                                </h2>
+
+                            </div>
+
+
+                            <span class="assessment-verdict assessment-verdict-<?= htmlspecialchars(
+                                $assessmentVerdictKey,
+                                ENT_QUOTES,
+                                'UTF-8'
+                            ); ?>">
+
+                                <?= htmlspecialchars(
+                                    $assessmentVerdict,
+                                    ENT_QUOTES,
+                                    'UTF-8'
+                                ); ?>
+
+                            </span>
+
+                        </div>
+
+
+                        <div class="player-summary-primary">
+
+                            <div class="player-summary-score">
+
+                                <span class="player-summary-score-label">
+                                    Intelligence
+                                </span>
+
+                                <strong>
+                                    <?= profileDisplayRating(
+                                        $summaryIntelligence
+                                    ); ?>
+                                </strong>
+
+                                <small>
+                                    / 100
+                                </small>
+
+                            </div>
+
+
+                            <div class="player-summary-metrics">
+
+                                <div class="player-summary-metric">
+
+                                    <span>
+                                        Price
+                                    </span>
+
+                                    <strong>
+
+                                        <?php if (
+                                            $summaryPrice !== null
+                                            &&
+                                            is_numeric(
+                                                $summaryPrice
+                                            )
+                                        ): ?>
+
+                                            £<?= number_format(
+                                                (float) $summaryPrice,
+                                                1
+                                            ); ?>m
+
+                                        <?php else: ?>
+
+                                            —
+
+                                        <?php endif; ?>
+
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="player-summary-metric">
+
+                                    <span>
+                                        Strength
+                                    </span>
+
+                                    <strong>
+                                        <?= profileDisplayRating(
+                                            $summaryStrength
+                                        ); ?>
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="player-summary-metric">
+
+                                    <span>
+                                        Value
+                                    </span>
+
+                                    <strong>
+                                        <?= profileDisplayRating(
+                                            $summaryValue
+                                        ); ?>
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="player-summary-metric">
+
+                                    <span>
+                                        Next 5
+                                    </span>
+
+                                    <strong>
+                                        <?= profileDisplayRating(
+                                            $summaryNextFive
+                                        ); ?>
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="player-summary-metric">
+
+                                    <span>
+                                        Availability
+                                    </span>
+
+                                    <strong>
+
+                                        <?= htmlspecialchars(
+                                            $summaryAvailability,
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ); ?>
+
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="player-summary-metric">
+
+                                    <span>
+                                        Fixture Trend
+                                    </span>
+
+                                    <strong>
+
+                                        <?= htmlspecialchars(
+                                            $summaryFixtureTrend,
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ); ?>
+
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="player-summary-footer">
+
+                            <span>
+                                Performance Sample
+                            </span>
+
+                            <strong>
+
+                                <?= htmlspecialchars(
+                                    $summarySampleConfidence,
+                                    ENT_QUOTES,
+                                    'UTF-8'
+                                ); ?>
+
+                            </strong>
+
+                            <span>
+                                confidence
+                            </span>
+
+                        </div>
+
+                    </section>
 
                     <!-- ======================================
                          CORE RATINGS
@@ -944,6 +1227,246 @@ $fixtureTrend =
 
                         </article>
 
+
+                    </section>
+                    
+                    
+                    <!-- ======================================
+                         FPL ASSESSMENT
+                         ====================================== -->
+
+                    <section class="dashboard-card player-assessment-card">
+
+                        <div class="card-header">
+
+                            <div>
+
+                                <p class="card-kicker">
+                                    Decision Support
+                                </p>
+
+                                <h2>
+                                    FPL Assessment
+                                </h2>
+
+                            </div>
+
+
+                            <span class="assessment-verdict assessment-verdict-<?= htmlspecialchars(
+                                $assessmentVerdictKey,
+                                ENT_QUOTES,
+                                'UTF-8'
+                            ); ?>">
+
+                                <?= htmlspecialchars(
+                                    $assessmentVerdict,
+                                    ENT_QUOTES,
+                                    'UTF-8'
+                                ); ?>
+
+                            </span>
+
+                        </div>
+
+
+                        <?php if (
+                            $assessmentSummary !== ''
+                        ): ?>
+
+                            <p class="assessment-summary">
+
+                                <?= htmlspecialchars(
+                                    $assessmentSummary,
+                                    ENT_QUOTES,
+                                    'UTF-8'
+                                ); ?>
+
+                            </p>
+
+                        <?php endif; ?>
+
+
+                        <!-- ==================================
+                             COMPONENT INTERPRETATION
+                             ================================== -->
+
+                        <div class="assessment-component-grid">
+
+                            <?php
+
+                            $componentLabels = [
+
+                                'strength' =>
+                                    'Strength',
+
+                                'value' =>
+                                    'Value',
+
+                                'fixtures' =>
+                                    'Fixtures',
+
+                                'availability' =>
+                                    'Availability',
+
+                                'sample_confidence' =>
+                                    'Sample Confidence',
+
+                                'fixture_trend' =>
+                                    'Fixture Trend'
+                            ];
+
+                            ?>
+
+
+                            <?php foreach (
+                                $componentLabels
+                                as $componentKey => $componentLabel
+                            ): ?>
+
+                                <div class="assessment-component">
+
+                                    <span>
+
+                                        <?= htmlspecialchars(
+                                            $componentLabel,
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ); ?>
+
+                                    </span>
+
+
+                                    <strong>
+
+                                        <?= htmlspecialchars(
+                                            (string) (
+                                                $assessmentComponents[
+                                                    $componentKey
+                                                ]
+                                                ?? 'Unknown'
+                                            ),
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ); ?>
+
+                                    </strong>
+
+                                </div>
+
+                            <?php endforeach; ?>
+
+                        </div>
+
+
+                        <!-- ==================================
+                             STRENGTHS / CONCERNS
+                             ================================== -->
+
+                        <div class="assessment-insight-grid">
+
+
+                            <div class="assessment-insight-column">
+
+                                <div class="assessment-insight-heading">
+
+                                    <span class="assessment-indicator assessment-indicator-positive"></span>
+
+                                    <h3>
+                                        Strengths
+                                    </h3>
+
+                                </div>
+
+
+                                <?php if (
+                                    empty(
+                                        $assessmentStrengths
+                                    )
+                                ): ?>
+
+                                    <p class="assessment-empty">
+                                        No standout strengths identified.
+                                    </p>
+
+                                <?php else: ?>
+
+                                    <ul class="assessment-list">
+
+                                        <?php foreach (
+                                            $assessmentStrengths
+                                            as $strength
+                                        ): ?>
+
+                                            <li>
+
+                                                <?= htmlspecialchars(
+                                                    (string) $strength,
+                                                    ENT_QUOTES,
+                                                    'UTF-8'
+                                                ); ?>
+
+                                            </li>
+
+                                        <?php endforeach; ?>
+
+                                    </ul>
+
+                                <?php endif; ?>
+
+                            </div>
+
+
+                            <div class="assessment-insight-column">
+
+                                <div class="assessment-insight-heading">
+
+                                    <span class="assessment-indicator assessment-indicator-warning"></span>
+
+                                    <h3>
+                                        Watchpoints
+                                    </h3>
+
+                                </div>
+
+
+                                <?php if (
+                                    empty(
+                                        $assessmentConcerns
+                                    )
+                                ): ?>
+
+                                    <p class="assessment-empty">
+                                        No major concerns identified.
+                                    </p>
+
+                                <?php else: ?>
+
+                                    <ul class="assessment-list">
+
+                                        <?php foreach (
+                                            $assessmentConcerns
+                                            as $concern
+                                        ): ?>
+
+                                            <li>
+
+                                                <?= htmlspecialchars(
+                                                    (string) $concern,
+                                                    ENT_QUOTES,
+                                                    'UTF-8'
+                                                ); ?>
+
+                                            </li>
+
+                                        <?php endforeach; ?>
+
+                                    </ul>
+
+                                <?php endif; ?>
+
+                            </div>
+
+                        </div>
 
                     </section>
 

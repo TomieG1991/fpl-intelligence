@@ -19,6 +19,8 @@ class PlayerIntelligenceService
     private TeamPerformance $teamPerformance;
 
     private TeamStrengthModel $teamStrengthModel;
+    
+    private PlayerAssessment $playerAssessment;
 
 
     /**
@@ -79,6 +81,9 @@ class PlayerIntelligenceService
 
         $this->playerRanking =
             new PlayerRanking();
+            
+        $this->playerAssessment =
+            new PlayerAssessment();
 
 
         /*
@@ -667,7 +672,7 @@ class PlayerIntelligenceService
          * --------------------------------------------------------
          */
 
-        return [
+        $completeProfile = [
 
             'player' =>
                 $profile['player'],
@@ -730,5 +735,15 @@ class PlayerIntelligenceService
                     $fixtureRun
             ]
         ];
+
+
+        $completeProfile['assessment'] =
+            $this->playerAssessment
+                ->buildAssessment(
+                    $completeProfile
+                );
+
+
+        return $completeProfile;
     }
 }

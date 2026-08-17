@@ -248,6 +248,13 @@ testPass(
     )
 );
 
+testPass(
+    'Assessment section exists',
+    isset(
+        $profile['assessment']
+    )
+);
+
 
 /*
  * ============================================================
@@ -448,16 +455,102 @@ testPass(
     )
 );
 
-
 /*
  * ============================================================
  * SCENARIO G
+ * PLAYER ASSESSMENT
+ * ============================================================
+ */
+
+echo "<br>============================================<br>";
+echo "Scenario G: Player Assessment<br>";
+echo "============================================<br>";
+
+
+testPass(
+    'Assessment verdict exists',
+    array_key_exists(
+        'verdict',
+        $profile['assessment']
+    )
+);
+
+
+testPass(
+    'Assessment verdict key exists',
+    array_key_exists(
+        'verdict_key',
+        $profile['assessment']
+    )
+);
+
+
+testPass(
+    'Assessment summary exists',
+    array_key_exists(
+        'summary',
+        $profile['assessment']
+    )
+);
+
+
+testPass(
+    'Assessment strengths exist',
+    isset(
+        $profile[
+            'assessment'
+        ]['strengths']
+    )
+    &&
+    is_array(
+        $profile[
+            'assessment'
+        ]['strengths']
+    )
+);
+
+
+testPass(
+    'Assessment concerns exist',
+    isset(
+        $profile[
+            'assessment'
+        ]['concerns']
+    )
+    &&
+    is_array(
+        $profile[
+            'assessment'
+        ]['concerns']
+    )
+);
+
+
+testPass(
+    'Assessment components exist',
+    isset(
+        $profile[
+            'assessment'
+        ]['components']
+    )
+    &&
+    is_array(
+        $profile[
+            'assessment'
+        ]['components']
+    )
+);
+
+
+/*
+ * ============================================================
+ * SCENARIO H
  * INVALID PLAYER
  * ============================================================
  */
 
 echo "<br>============================================<br>";
-echo "Scenario G: Invalid Player Handling<br>";
+echo "Scenario H: Invalid Player Handling<br>";
 echo "============================================<br>";
 
 
@@ -486,6 +579,8 @@ testPass(
     )
     === null
 );
+
+
 
 
 /*

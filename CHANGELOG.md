@@ -22,12 +22,21 @@ The project follows a sprint-based development process.
 - Added best and toughest five-fixture opportunity runs.
 - Added opportunity-specific fixture intelligence tests.
 - Added PlayerIntelligenceService profile tests.
+- Integrated PlayerAssessment into PlayerIntelligenceService player profiles.
+- Added FPL Assessment decision-support section to individual player profiles.
+- Added assessment verdicts, component labels, strengths, concerns, and generated player summaries.
+- Added Player Profile Summary / FPL Decision Snapshot for quick player evaluation.
+- Added snapshot metrics for intelligence score, price, strength, value, next-five fixture opportunity, availability, fixture trend, and performance sample confidence.
+- Added responsive styling and verdict-specific presentation for player assessment and summary components.
 
 ### Changed
 - Improved Player Explorer availability visibility.
 - Extended FixtureIntelligence with player-facing opportunity analysis.
 - Extended PlayerIntelligenceService with complete player profile data.
 - Updated test runner to recognise both supported test success messages.
+- Extended PlayerIntelligenceServiceTest coverage to validate PlayerAssessment data within complete player profiles.
+- Reorganised the player profile layout into a clearer decision-making hierarchy:
+  Player Hero → FPL Decision Snapshot → Core Ratings → FPL Assessment → Performance Intelligence → Fixture Intelligence.
 
 ## [0.12.0] - Player Explorer
 
