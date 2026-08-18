@@ -307,6 +307,17 @@ pre {
     font-weight: bold;
 }
 
+.test-duration {
+
+    margin-left: 10px;
+
+    color: #666;
+
+    font-size: 12px;
+
+    font-weight: normal;
+}
+
 </style>';
 
 
@@ -362,6 +373,19 @@ $totalAssertionsPassed = 0;
 
 $totalAssertionsFailed = 0;
 
+/*
+ * ============================================================
+ * TIMING
+ * ============================================================
+ */
+
+$suiteStartedAt =
+    microtime(true);
+
+
+$testTimings =
+    [];
+
 
 /*
  * ============================================================
@@ -373,6 +397,9 @@ foreach ($testFiles as $testFile) {
 
     $testName =
         basename($testFile);
+        
+    $testStartedAt =
+    microtime(true);
 
 
     /*
@@ -491,6 +518,28 @@ foreach ($testFiles as $testFile) {
         proc_close(
             $process
         );
+        
+    $testFinishedAt =
+        microtime(true);
+
+
+    $testDuration =
+        round(
+            $testFinishedAt
+            -
+            $testStartedAt,
+            3
+        );
+
+
+    $testTimings[] = [
+
+        'name' =>
+            $testName,
+
+        'duration' =>
+            $testDuration
+    ];
 
 
     /*
@@ -567,6 +616,19 @@ foreach ($testFiles as $testFile) {
 
         echo '<strong>PASS ✅</strong>';
 
+        echo ' ';
+
+        echo '<span class="test-duration">';
+
+        echo 'Completed in '
+            . number_format(
+                $testDuration,
+                3
+            )
+            . ' seconds';
+
+        echo '</span>';
+
         echo '<pre>';
 
         echo htmlspecialchars(
@@ -593,6 +655,19 @@ foreach ($testFiles as $testFile) {
         echo '<div class="output fail">';
 
         echo '<strong>FAIL ❌</strong>';
+
+        echo ' ';
+
+        echo '<span class="test-duration">';
+
+        echo 'Completed in '
+            . number_format(
+                $testDuration,
+                3
+            )
+            . ' seconds';
+
+        echo '</span>';
 
         echo '<pre>';
 
@@ -638,6 +713,18 @@ foreach ($testFiles as $testFile) {
 
         echo '<strong>ERROR ⚠️</strong>';
 
+        echo ' ';
+
+        echo '<span class="test-duration">';
+
+        echo 'Completed in '
+            . number_format(
+                $testDuration,
+                3
+            )
+            . ' seconds';
+
+        echo '</span>';
 
         if (
             trim($stdout) !== ''
@@ -692,6 +779,38 @@ foreach ($testFiles as $testFile) {
     echo '</div>';
 }
 
+/*
+ * ============================================================
+ * TIMING SUMMARY
+ * ============================================================
+ */
+
+$suiteFinishedAt =
+    microtime(true);
+
+
+$suiteDuration =
+    round(
+        $suiteFinishedAt
+        -
+        $suiteStartedAt,
+        3
+    );
+
+
+usort(
+    $testTimings,
+    static function (
+        array $a,
+        array $b
+    ): int {
+
+        return $b['duration']
+            <=>
+            $a['duration'];
+    }
+);
+
 
 /*
  * ============================================================
@@ -702,6 +821,55 @@ foreach ($testFiles as $testFile) {
 echo '<div class="summary">';
 
 echo '<h2>Complete Test Suite Summary</h2>';
+
+echo '<strong>Total runtime:</strong> ';
+
+echo number_format(
+    $suiteDuration,
+    3
+);
+
+echo ' seconds';
+
+echo '<br><br>';
+
+
+echo '<strong>Slowest tests:</strong>';
+
+echo '<ol>';
+
+
+foreach (
+    array_slice(
+        $testTimings,
+        0,
+        10
+    )
+    as $timing
+) {
+
+    echo '<li>';
+
+    echo htmlspecialchars(
+        $timing['name'],
+        ENT_QUOTES,
+        'UTF-8'
+    );
+
+    echo ' — ';
+
+    echo number_format(
+        $timing['duration'],
+        3
+    );
+
+    echo ' seconds';
+
+    echo '</li>';
+}
+
+
+echo '</ol>';
 
 
 echo '<strong>Test files:</strong> ';

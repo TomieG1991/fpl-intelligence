@@ -6180,3 +6180,828 @@ a {
     }
 
 }
+
+/*
+ * ============================================================
+ * TRANSFER OPTIMIZER
+ * ============================================================
+ */
+
+.transfer-optimizer-form-card,
+.transfer-optimizer-summary-card {
+    margin-bottom: 20px;
+}
+
+
+.transfer-optimizer-explanation {
+    max-width: 900px;
+
+    margin:
+        -6px
+        0
+        18px;
+
+    color: #9facbf;
+
+    font-size: 11px;
+
+    line-height: 1.65;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * FORM
+ * ------------------------------------------------------------
+ */
+
+.transfer-optimizer-form {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 14px;
+}
+
+
+.transfer-optimizer-player-grid,
+.transfer-optimizer-settings-grid {
+    display: grid;
+
+    gap: 12px;
+}
+
+
+.transfer-optimizer-player-grid {
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+}
+
+
+.transfer-optimizer-settings-grid {
+    grid-template-columns:
+        minmax(0, 220px)
+        minmax(0, 220px);
+}
+
+
+.transfer-optimizer-field {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 6px;
+}
+
+
+.transfer-optimizer-field label {
+    color: #aab5c8;
+
+    font-size: 9px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.07em;
+
+    text-transform: uppercase;
+}
+
+
+.transfer-optimizer-field select,
+.transfer-optimizer-field input {
+    width: 100%;
+
+    min-height: 42px;
+
+    padding:
+        0
+        11px;
+
+    background: #20293d;
+
+    border:
+        1px solid #46536d;
+
+    border-radius: 7px;
+
+    color: #ffffff;
+
+    font-size: 11px;
+}
+
+
+.transfer-optimizer-field select:focus,
+.transfer-optimizer-field input:focus {
+    border-color: #9287ff;
+
+    outline: none;
+}
+
+
+.transfer-optimizer-input-wrap {
+    display: grid;
+
+    grid-template-columns:
+        28px
+        minmax(0, 1fr)
+        28px;
+
+    align-items: center;
+
+    background: #20293d;
+
+    border:
+        1px solid #46536d;
+
+    border-radius: 7px;
+
+    overflow: hidden;
+}
+
+
+.transfer-optimizer-input-wrap span,
+.transfer-optimizer-input-wrap small {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    color: #9facbf;
+
+    font-size: 10px;
+
+    font-weight: 800;
+}
+
+
+.transfer-optimizer-input-wrap input {
+    border: 0;
+
+    border-radius: 0;
+
+    text-align: center;
+}
+
+
+.transfer-optimizer-submit {
+    align-self: flex-start;
+
+    min-height: 42px;
+
+    padding:
+        0
+        18px;
+
+    background: #504785;
+
+    border:
+        1px solid #9287ff;
+
+    border-radius: 7px;
+
+    color: #ffffff;
+
+    cursor: pointer;
+
+    font-size: 10px;
+
+    font-weight: 800;
+}
+
+
+.transfer-optimizer-submit:hover {
+    background: #61569e;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * SEARCH SUMMARY
+ * ------------------------------------------------------------
+ */
+
+.transfer-optimizer-summary-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(5, minmax(0, 1fr));
+
+    gap: 10px;
+}
+
+
+.transfer-optimizer-summary-grid > div {
+    padding: 12px;
+
+    background: #20293d;
+
+    border:
+        1px solid #34405a;
+
+    border-radius: 8px;
+}
+
+
+.transfer-optimizer-summary-grid span {
+    display: block;
+
+    color: #9facbf;
+
+    font-size: 8px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.06em;
+
+    text-transform: uppercase;
+}
+
+
+.transfer-optimizer-summary-grid strong {
+    display: block;
+
+    margin-top: 6px;
+
+    color: #ffffff;
+
+    font-size: 13px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * RESULT CARDS
+ * ------------------------------------------------------------
+ */
+
+.transfer-optimizer-results {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 16px;
+}
+
+
+.transfer-optimizer-result-card {
+    margin-bottom: 0;
+}
+
+
+.transfer-optimizer-result-header {
+    display: grid;
+
+    grid-template-columns:
+        52px
+        minmax(0, 1fr)
+        auto;
+
+    gap: 12px;
+
+    align-items: center;
+}
+
+
+.transfer-optimizer-rank {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 44px;
+    height: 44px;
+
+    background: #20293d;
+
+    border:
+        1px solid #46536d;
+
+    border-radius: 9px;
+
+    color: #ffffff;
+
+    font-size: 14px;
+
+    font-weight: 900;
+}
+
+
+.transfer-optimizer-result-title h2 {
+    margin:
+        2px
+        0
+        0;
+
+    color: #ffffff;
+
+    font-size: 18px;
+}
+
+
+.transfer-optimizer-result-badges {
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+}
+
+
+.transfer-optimizer-classification,
+.transfer-optimizer-score {
+    display: inline-flex;
+
+    align-items: center;
+
+    padding:
+        5px
+        9px;
+
+    border-radius: 999px;
+
+    font-size: 8px;
+
+    font-weight: 800;
+}
+
+
+.transfer-optimizer-score {
+    gap: 5px;
+
+    background: #293349;
+
+    border:
+        1px solid #46536d;
+
+    color: #c5cede;
+}
+
+
+.transfer-optimizer-score strong {
+    padding-left: 5px;
+
+    border-left:
+        1px solid #66738b;
+
+    color: #ffffff;
+}
+
+
+.optimizer-classification-strong {
+    background: rgba(114, 228, 154, 0.14);
+
+    border:
+        1px solid rgba(114, 228, 154, 0.40);
+
+    color: #72e49a;
+}
+
+
+.optimizer-classification-improvement {
+    background: rgba(114, 228, 154, 0.10);
+
+    border:
+        1px solid rgba(114, 228, 154, 0.30);
+
+    color: #9be8b4;
+}
+
+
+.optimizer-classification-balanced {
+    background: rgba(146, 135, 255, 0.14);
+
+    border:
+        1px solid rgba(146, 135, 255, 0.40);
+
+    color: #c0b8ff;
+}
+
+
+.optimizer-classification-neutral {
+    background: rgba(240, 211, 110, 0.10);
+
+    border:
+        1px solid rgba(240, 211, 110, 0.30);
+
+    color: #f0d36e;
+}
+
+
+.optimizer-classification-risky {
+    background: rgba(239, 167, 110, 0.14);
+
+    border:
+        1px solid rgba(239, 167, 110, 0.40);
+
+    color: #efa76e;
+}
+
+
+.optimizer-classification-downgrade {
+    background: rgba(239, 155, 155, 0.12);
+
+    border:
+        1px solid rgba(239, 155, 155, 0.40);
+
+    color: #ef9b9b;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * INDIVIDUAL TRANSFERS
+ * ------------------------------------------------------------
+ */
+
+.transfer-optimizer-transfer-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 12px;
+
+    margin-top: 16px;
+}
+
+
+.transfer-optimizer-transfer {
+    padding: 13px;
+
+    background: #182133;
+
+    border:
+        1px solid #303b51;
+
+    border-radius: 9px;
+}
+
+
+.transfer-optimizer-transfer-top {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+}
+
+
+.transfer-optimizer-transfer-top > span:first-child {
+    color: #9facbf;
+
+    font-size: 8px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.06em;
+
+    text-transform: uppercase;
+}
+
+
+.transfer-optimizer-decision {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    padding:
+        4px
+        7px;
+
+    border-radius: 999px;
+
+    font-size: 8px;
+
+    font-weight: 800;
+}
+
+
+.transfer-optimizer-decision strong {
+    padding-left: 6px;
+
+    border-left:
+        1px solid currentColor;
+
+    font-size: 8px;
+}
+
+
+.optimizer-decision-upgrade {
+    background: rgba(114, 228, 154, 0.14);
+
+    border:
+        1px solid rgba(114, 228, 154, 0.40);
+
+    color: #72e49a;
+}
+
+
+.optimizer-decision-budget {
+    background: rgba(146, 135, 255, 0.16);
+
+    border:
+        1px solid rgba(146, 135, 255, 0.40);
+
+    color: #c0b8ff;
+}
+
+
+.optimizer-decision-strategic {
+    background: rgba(105, 191, 255, 0.14);
+
+    border:
+        1px solid rgba(105, 191, 255, 0.40);
+
+    color: #9ed5ff;
+}
+
+
+.optimizer-decision-sidegrade {
+    background: rgba(240, 211, 110, 0.12);
+
+    border:
+        1px solid rgba(240, 211, 110, 0.35);
+
+    color: #f0d36e;
+}
+
+
+.optimizer-decision-risky {
+    background: rgba(239, 167, 110, 0.14);
+
+    border:
+        1px solid rgba(239, 167, 110, 0.40);
+
+    color: #efa76e;
+}
+
+
+.optimizer-decision-downgrade {
+    background: rgba(239, 155, 155, 0.12);
+
+    border:
+        1px solid rgba(239, 155, 155, 0.40);
+
+    color: #ef9b9b;
+}
+
+
+.optimizer-decision-neutral {
+    background: #293349;
+
+    border:
+        1px solid #46536d;
+
+    color: #aab5c8;
+}
+
+
+.transfer-optimizer-player-change {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        38px
+        minmax(0, 1fr);
+
+    gap: 8px;
+
+    align-items: center;
+
+    margin-top: 12px;
+}
+
+
+.transfer-optimizer-player-change small {
+    display: block;
+
+    color: #8996aa;
+
+    font-size: 8px;
+
+    font-weight: 800;
+
+    text-transform: uppercase;
+}
+
+
+.transfer-optimizer-player-change strong {
+    display: block;
+
+    margin-top: 5px;
+
+    color: #ffffff;
+
+    font-size: 12px;
+}
+
+
+.transfer-optimizer-player-change strong a {
+    color: #ffffff;
+}
+
+
+.transfer-optimizer-player-change strong a:hover {
+    color: #b7afff;
+}
+
+
+.transfer-optimizer-player-change span {
+    display: block;
+
+    margin-top: 4px;
+
+    color: #9facbf;
+
+    font-size: 9px;
+}
+
+
+.transfer-optimizer-arrow {
+    text-align: center;
+
+    color: #8996aa;
+
+    font-size: 17px;
+
+    font-weight: 900;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * COMBINED MOVEMENTS
+ * ------------------------------------------------------------
+ */
+
+.transfer-optimizer-movement-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(6, minmax(0, 1fr));
+
+    gap: 8px;
+
+    margin-top: 12px;
+}
+
+
+.transfer-optimizer-movement-grid > div {
+    padding: 10px;
+
+    background: #20293d;
+
+    border:
+        1px solid #34405a;
+
+    border-radius: 7px;
+}
+
+
+.transfer-optimizer-movement-grid span {
+    display: block;
+
+    color: #9facbf;
+
+    font-size: 8px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.05em;
+
+    text-transform: uppercase;
+}
+
+
+.transfer-optimizer-movement-grid strong {
+    display: block;
+
+    margin-top: 5px;
+
+    color: #ffffff;
+
+    font-size: 11px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * ACTIONS
+ * ------------------------------------------------------------
+ */
+
+.transfer-optimizer-actions {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    margin-top: 13px;
+}
+
+
+.transfer-optimizer-empty {
+    margin: 0;
+
+    color: #aab5c8;
+
+    font-size: 11px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * RESPONSIVE
+ * ------------------------------------------------------------
+ */
+
+@media (
+    max-width: 1100px
+) {
+
+    .transfer-optimizer-summary-grid {
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+    }
+
+
+    .transfer-optimizer-movement-grid {
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+    }
+
+}
+
+
+@media (
+    max-width: 850px
+) {
+
+    .transfer-optimizer-transfer-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .transfer-optimizer-result-header {
+        grid-template-columns:
+            48px
+            minmax(0, 1fr);
+    }
+
+
+    .transfer-optimizer-result-badges {
+        grid-column:
+            1
+            /
+            -1;
+    }
+
+}
+
+
+@media (
+    max-width: 700px
+) {
+
+    .transfer-optimizer-player-grid,
+    .transfer-optimizer-settings-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .transfer-optimizer-submit {
+        width: 100%;
+    }
+
+}
+
+
+@media (
+    max-width: 520px
+) {
+
+    .transfer-optimizer-summary-grid,
+    .transfer-optimizer-movement-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .transfer-optimizer-player-change {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .transfer-optimizer-arrow {
+        transform:
+            rotate(90deg);
+    }
+
+}

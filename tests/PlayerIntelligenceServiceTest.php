@@ -1840,13 +1840,143 @@ if (
 
 /*
  * ============================================================
- * SCENARIO L
+ * TRANSFER OPTIMIZER
+ * ============================================================
+ */
+
+echo "<br>============================================<br>";
+echo "Scenario L: Transfer Optimizer<br>";
+echo "============================================<br>";
+
+
+$optimizerResult =
+    $service
+        ->optimizeTransferCombination(
+            $transferPairA[
+                'current'
+            ],
+            $transferPairB[
+                'current'
+            ],
+            0.0,
+            5
+        );
+
+
+testPass(
+    'Transfer optimizer returns an array',
+    is_array(
+        $optimizerResult
+    )
+);
+
+
+testPass(
+    'Transfer optimizer combinations exist',
+    isset(
+        $optimizerResult[
+            'combinations'
+        ]
+    )
+    &&
+    is_array(
+        $optimizerResult[
+            'combinations'
+        ]
+    )
+);
+
+
+testPass(
+    'Transfer optimizer count exists',
+    array_key_exists(
+        'count',
+        $optimizerResult
+    )
+);
+
+
+testPass(
+    'Transfer optimizer total found exists',
+    array_key_exists(
+        'total_found',
+        $optimizerResult
+    )
+);
+
+
+testPass(
+    'Transfer optimizer respects result limit',
+    (
+        $optimizerResult[
+            'count'
+        ]
+        ?? 0
+    )
+    <= 5
+);
+
+
+foreach (
+    $optimizerResult[
+        'combinations'
+    ]
+    as $optimizerCombination
+) {
+
+    testPass(
+        'Optimized combination has rank',
+        isset(
+            $optimizerCombination[
+                'optimizer'
+            ]['rank']
+        )
+    );
+
+
+    testPass(
+        'Optimized combination has budget after',
+        array_key_exists(
+            'budget_after',
+            $optimizerCombination[
+                'optimizer'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Optimized combination is affordable',
+        (
+            $optimizerCombination[
+                'optimizer'
+            ]['budget_after']
+            ?? -1
+        )
+        >= 0
+    );
+
+
+    testPass(
+        'Optimized combination classification exists',
+        !empty(
+            $optimizerCombination[
+                'classification'
+            ]
+            ?? null
+        )
+    );
+}
+
+/*
+ * ============================================================
+ * SCENARIO M
  * INVALID PLAYER
  * ============================================================
  */
 
 echo "<br>============================================<br>";
-echo "Scenario L: Invalid Player Handling<br>";
+echo "Scenario M: Invalid Player Handling<br>";
 echo "============================================<br>";
 
 
@@ -2132,6 +2262,65 @@ testPass(
             $playerId,
             1,
             2
+        )
+    === null
+);
+
+testPass(
+    'Transfer optimizer rejects zero player ID',
+    $service
+        ->optimizeTransferCombination(
+            0,
+            $playerId,
+            0.0,
+            5
+        )
+    === null
+);
+
+
+testPass(
+    'Transfer optimizer rejects duplicate outgoing players',
+    $service
+        ->optimizeTransferCombination(
+            $playerId,
+            $playerId,
+            0.0,
+            5
+        )
+    === null
+);
+
+
+testPass(
+    'Transfer optimizer rejects negative bank',
+    $service
+        ->optimizeTransferCombination(
+            $transferPairA[
+                'current'
+            ],
+            $transferPairB[
+                'current'
+            ],
+            -1.0,
+            5
+        )
+    === null
+);
+
+
+testPass(
+    'Transfer optimizer rejects zero limit',
+    $service
+        ->optimizeTransferCombination(
+            $transferPairA[
+                'current'
+            ],
+            $transferPairB[
+                'current'
+            ],
+            0.0,
+            0
         )
     === null
 );

@@ -6,7 +6,27 @@ The project follows a sprint-based development process.
 
 ---
 
-## [0.13.0] - In Progress
+## [0.14.0] - transfer Optipmizer
+
+### Added
+- Added Transfer Optimizer intelligence for automatically finding the strongest affordable two-transfer combinations.
+- Added automatic same-position replacement pairing and affordability filtering.
+- Added optimizer ranking based on combination classification, combination score, Intelligence movement and remaining budget.
+- Added support for available bank when evaluating transfer combinations.
+- Added Transfer Optimizer unit and real-data diagnostic coverage.
+- Added `optimizeTransferCombination()` to `PlayerIntelligenceService`.
+- Added lightweight optimizer candidate generation from player summaries to reduce full-profile loading.
+- Added Transfer Optimizer frontend with outgoing-player selection, bank input and configurable recommendation limits.
+- Added ranked optimizer result cards with individual transfer decisions and combined movement breakdowns.
+- Added direct handoff from Transfer Optimizer results into the Transfer Planner.
+- Added Transfer Optimizer navigation to the shared sidebar.
+
+### Changed
+- Improved Transfer Optimizer real-data performance by using the production service path and lightweight player summaries.
+- Added per-test runtime reporting and slow-test summaries to `runAllTests.php`.
+- Reduced complete test-suite runtime from roughly 100 seconds to roughly 36 seconds.
+
+## [0.13.0] - Player Intelligence
 
 ### Added
 - Added individual player intelligence profile page.

@@ -130,6 +130,19 @@ $activeNav =
 
             Transfer Planner
         </a>
+        
+        <a
+            href="transfer-optimizer.php"
+            class="nav-link <?= $activeNav === 'transfer-optimizer'
+                ? 'active'
+                : ''; ?>"
+        >
+            <span class="nav-icon">
+                ✦
+            </span>
+
+            Transfer Optimizer
+        </a>
 
 
         <a

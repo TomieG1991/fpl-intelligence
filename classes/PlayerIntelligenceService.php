@@ -31,6 +31,8 @@ class PlayerIntelligenceService
     private TransferDecision $transferDecision;
     
     private TransferCombination $transferCombination;
+    
+    private TransferOptimizer $transferOptimizer;
 
 
     /**
@@ -109,6 +111,9 @@ class PlayerIntelligenceService
             
         $this->transferCombination =
             new TransferCombination();
+            
+        $this->transferOptimizer =
+            new TransferOptimizer();
 
 
         /*
@@ -1615,5 +1620,405 @@ class PlayerIntelligenceService
                 ]['verdict']
                 ?? null
         ];
+    }
+    
+    /**
+     * Build the lightweight player data required by
+     * TransferOptimizer from a player summary.
+     */
+    private function buildTransferOptimizerPlayer(
+        array $summary
+    ): ?array {
+
+        $playerId =
+            (int) (
+                $summary[
+                    'player_id'
+                ]
+                ?? 0
+            );
+
+
+        $position =
+            $summary[
+                'position'
+            ]
+            ?? null;
+
+
+        if (
+            $playerId <= 0
+            ||
+            !is_string(
+                $position
+            )
+            ||
+            trim(
+                $position
+            )
+            === ''
+        ) {
+
+            return null;
+        }
+
+
+        $intelligence =
+            $summary[
+                'intelligence_score'
+            ]
+            ?? null;
+
+
+        if (
+            $intelligence === null
+            ||
+            !is_numeric(
+                $intelligence
+            )
+        ) {
+
+            return null;
+        }
+
+
+        return [
+
+            'player_id' =>
+                $playerId,
+
+            'name' =>
+                $summary[
+                    'name'
+                ]
+                ?? null,
+
+            'position' =>
+                strtoupper(
+                    trim(
+                        $position
+                    )
+                ),
+
+            'team_name' =>
+                $summary[
+                    'team_name'
+                ]
+                ?? null,
+
+            'price' =>
+                $summary[
+                    'price'
+                ]
+                ?? null,
+
+            'intelligence_score' =>
+                $intelligence,
+
+            'strength_rating' =>
+                $summary[
+                    'strength_rating'
+                ]
+                ?? null,
+
+            'value_rating' =>
+                $summary[
+                    'value_rating'
+                ]
+                ?? null,
+
+            'fixture_rating' =>
+                $summary[
+                    'fixture_rating'
+                ]
+                ?? null,
+
+            'availability_rating' =>
+                $summary[
+                    'availability_rating'
+                ]
+                ?? null,
+
+            'sample_confidence' =>
+                $summary[
+                    'sample_confidence'
+                ]
+                ?? null,
+
+            'verdict' =>
+                $summary[
+                    'assessment_verdict'
+                ]
+                ?? null
+        ];
+    }
+    
+    /**
+     * Build an optimizer candidate pool for one position.
+     */
+    private function buildTransferOptimizerPool(
+        array $summaries,
+        string $requiredPosition,
+        array $excludedPlayerIds = []
+    ): array {
+
+        $pool =
+            [];
+
+
+        $requiredPosition =
+            strtoupper(
+                trim(
+                    $requiredPosition
+                )
+            );
+
+
+        foreach (
+            $summaries
+            as $summary
+        ) {
+
+            $playerId =
+                (int) (
+                    $summary[
+                        'player_id'
+                    ]
+                    ?? 0
+                );
+
+
+            if (
+                $playerId <= 0
+                ||
+                in_array(
+                    $playerId,
+                    $excludedPlayerIds,
+                    true
+                )
+            ) {
+
+                continue;
+            }
+
+
+            $position =
+                strtoupper(
+                    trim(
+                        (string) (
+                            $summary[
+                                'position'
+                            ]
+                            ?? ''
+                        )
+                    )
+                );
+
+
+            if (
+                $position
+                !==
+                $requiredPosition
+            ) {
+
+                continue;
+            }
+
+
+            /*
+             * Ignore unavailable players at candidate-pool level.
+             */
+            $availability =
+                $summary[
+                    'availability_rating'
+                ]
+                ?? null;
+
+
+            if (
+                $availability !== null
+                &&
+                is_numeric(
+                    $availability
+                )
+                &&
+                (float) $availability < 60
+            ) {
+
+                continue;
+            }
+
+
+            $candidate =
+                $this->buildTransferOptimizerPlayer(
+                    $summary
+                );
+
+
+            if ($candidate === null) {
+                continue;
+            }
+
+
+            $pool[] =
+                $candidate;
+        }
+
+
+        return $pool;
+    }
+    
+    /**
+     * Automatically find the strongest affordable two-transfer
+     * combinations for two outgoing players.
+     */
+    public function optimizeTransferCombination(
+        int $currentPlayerIdA,
+        int $currentPlayerIdB,
+        float $bank = 0.0,
+        int $limit = 10
+    ): ?array {
+
+        /*
+         * ========================================================
+         * VALIDATION
+         * ========================================================
+         */
+
+        if (
+            $currentPlayerIdA <= 0
+            ||
+            $currentPlayerIdB <= 0
+            ||
+            $currentPlayerIdA === $currentPlayerIdB
+            ||
+            $bank < 0
+            ||
+            $limit <= 0
+        ) {
+
+            return null;
+        }
+
+
+        /*
+         * ========================================================
+         * LOAD OUTGOING PLAYER PROFILES
+         * ========================================================
+         *
+         * Full profiles are only loaded for the two players being
+         * sold. Candidate players use lightweight summaries.
+         */
+
+        $currentProfileA =
+            $this->getPlayerProfile(
+                $currentPlayerIdA
+            );
+
+
+        $currentProfileB =
+            $this->getPlayerProfile(
+                $currentPlayerIdB
+            );
+
+
+        if (
+            $currentProfileA === null
+            ||
+            $currentProfileB === null
+        ) {
+
+            return null;
+        }
+
+
+        $currentPlayerA =
+            $this->buildTransferDecisionPlayer(
+                $currentProfileA
+            );
+
+
+        $currentPlayerB =
+            $this->buildTransferDecisionPlayer(
+                $currentProfileB
+            );
+
+
+        $positionA =
+            $currentPlayerA[
+                'position'
+            ]
+            ?? null;
+
+
+        $positionB =
+            $currentPlayerB[
+                'position'
+            ]
+            ?? null;
+
+
+        if (
+            !is_string(
+                $positionA
+            )
+            ||
+            !is_string(
+                $positionB
+            )
+        ) {
+
+            return null;
+        }
+
+
+        /*
+         * ========================================================
+         * LIGHTWEIGHT CANDIDATE POOLS
+         * ========================================================
+         */
+
+        $summaries =
+            $this->getAllPlayerSummaries();
+
+
+        $excludedIds = [
+
+            $currentPlayerIdA,
+            $currentPlayerIdB
+        ];
+
+
+        $candidatePoolA =
+            $this->buildTransferOptimizerPool(
+                $summaries,
+                $positionA,
+                $excludedIds
+            );
+
+
+        $candidatePoolB =
+            $this->buildTransferOptimizerPool(
+                $summaries,
+                $positionB,
+                $excludedIds
+            );
+
+
+        /*
+         * ========================================================
+         * OPTIMIZE
+         * ========================================================
+         */
+
+        return $this->transferOptimizer
+            ->optimize(
+                $currentPlayerA,
+                $currentPlayerB,
+                $candidatePoolA,
+                $candidatePoolB,
+                $bank,
+                $limit
+            );
     }
 }
