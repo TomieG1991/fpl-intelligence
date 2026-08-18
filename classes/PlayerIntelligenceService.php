@@ -27,6 +27,8 @@ class PlayerIntelligenceService
     private PlayerReplacement $playerReplacement;
     
     private ReplacementRecommendation $replacementRecommendation;
+    
+    private TransferDecision $transferDecision;
 
 
     /**
@@ -99,6 +101,9 @@ class PlayerIntelligenceService
             
         $this->replacementRecommendation =
             new ReplacementRecommendation();
+            
+        $this->transferDecision =
+            new TransferDecision();
 
 
         /*
@@ -1149,6 +1154,15 @@ class PlayerIntelligenceService
                     ->buildReplacementSummary(
                         $replacement
                     );
+                    
+            $replacement[
+                'transfer_decision'
+            ] =
+                $this->transferDecision
+                    ->evaluateTransfer(
+                        $currentPlayer,
+                        $replacement
+                    );
         }
 
 
@@ -1193,6 +1207,178 @@ class PlayerIntelligenceService
             'replacements' =>
                 $replacements                
             
+        ];
+    }
+    
+    /**
+     * Evaluate a direct transfer from one player to another.
+     */
+    public function evaluatePlayerTransfer(
+        int $currentPlayerId,
+        int $replacementPlayerId
+    ): ?array {
+
+        if (
+            $currentPlayerId <= 0
+            ||
+            $replacementPlayerId <= 0
+        ) {
+
+            return null;
+        }
+
+
+        if (
+            $currentPlayerId
+            ===
+            $replacementPlayerId
+        ) {
+
+            return null;
+        }
+
+
+        /*
+         * ========================================================
+         * CURRENT PLAYER
+         * ========================================================
+         */
+
+        $currentProfile =
+            $this->getPlayerProfile(
+                $currentPlayerId
+            );
+
+
+        if ($currentProfile === null) {
+            return null;
+        }
+
+
+        /*
+         * ========================================================
+         * REPLACEMENT PLAYER
+         * ========================================================
+         */
+
+        $replacementProfile =
+            $this->getPlayerProfile(
+                $replacementPlayerId
+            );
+
+
+        if ($replacementProfile === null) {
+            return null;
+        }
+
+
+        /*
+         * ========================================================
+         * BUILD TRANSFER PLAYER DATA
+         * ========================================================
+         */
+
+        $currentPlayer =
+            $this->buildTransferDecisionPlayer(
+                $currentProfile
+            );
+
+
+        $replacementPlayer =
+            $this->buildTransferDecisionPlayer(
+                $replacementProfile
+            );
+
+
+        /*
+         * ========================================================
+         * TRANSFER DECISION
+         * ========================================================
+         */
+
+        return $this->transferDecision
+            ->evaluateTransfer(
+                $currentPlayer,
+                $replacementPlayer
+            );
+    }
+    
+    /**
+     * Build the player data required by TransferDecision.
+     */
+    private function buildTransferDecisionPlayer(
+        array $profile
+    ): array {
+
+        return [
+
+            'player_id' =>
+                (int) (
+                    $profile[
+                        'player'
+                    ]['player_id']
+                    ?? 0
+                ),
+
+            'name' =>
+                $profile[
+                    'player'
+                ]['name']
+                ?? null,
+
+            'position' =>
+                $profile[
+                    'player'
+                ]['position']
+                ?? null,
+
+            'team_name' =>
+                $profile[
+                    'team'
+                ]['name']
+                ?? null,
+
+            'price' =>
+                $profile[
+                    'summary'
+                ]['price']
+                ?? null,
+
+            'intelligence_score' =>
+                $profile[
+                    'summary'
+                ]['intelligence_score']
+                ?? null,
+
+            'strength_rating' =>
+                $profile[
+                    'summary'
+                ]['strength_rating']
+                ?? null,
+
+            'value_rating' =>
+                $profile[
+                    'summary'
+                ]['value_rating']
+                ?? null,
+
+            'fixture_rating' =>
+                $profile[
+                    'summary'
+                ]['fixture_rating']
+                ?? null,
+
+            'sample_confidence' =>
+                $profile[
+                    'performance'
+                ]['sample_confidence']
+                ?? null,
+
+            'verdict' =>
+                $profile[
+                    'assessment'
+                ]['verdict']
+                ?? null
         ];
     }
 }

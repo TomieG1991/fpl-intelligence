@@ -347,6 +347,39 @@ function transferTypeClass(
     };
 }
 
+function transferDecisionClass(
+    ?string $decisionType
+): string {
+
+    return match (
+        strtolower(
+            (string) $decisionType
+        )
+    ) {
+
+        'upgrade' =>
+            'transfer-decision-upgrade',
+
+        'budget enabler' =>
+            'transfer-decision-budget',
+
+        'strategic sidegrade' =>
+            'transfer-decision-strategic',
+
+        'sidegrade' =>
+            'transfer-decision-sidegrade',
+
+        'risky punt' =>
+            'transfer-decision-risky',
+
+        'downgrade' =>
+            'transfer-decision-downgrade',
+
+        default =>
+            'transfer-decision-neutral'
+    };
+}
+
 
 function transferVerdictClass(
     ?string $verdict
@@ -1548,24 +1581,54 @@ function transferConfidenceLabel(
 
                                     <?php
 
-                                    $replacementType =
-                                        (string) (
+                                        $replacementType =
+                                            (string) (
+                                                $replacement[
+                                                    'replacement_type'
+                                                ]
+                                                ?? 'Unknown'
+                                            );
+
+
+                                        $replacementId =
+                                            (int) (
+                                                $replacement[
+                                                    'player_id'
+                                                ]
+                                                ?? 0
+                                            );
+
+
+                                        $transferDecision =
                                             $replacement[
-                                                'replacement_type'
+                                                'transfer_decision'
                                             ]
-                                            ?? 'Unknown'
-                                        );
+                                            ?? [];
 
 
-                                    $replacementId =
-                                        (int) (
-                                            $replacement[
-                                                'player_id'
+                                        $decisionType =
+                                            (string) (
+                                                $transferDecision[
+                                                    'decision_type'
+                                                ]
+                                                ?? 'Unknown'
+                                            );
+
+
+                                        $decisionScore =
+                                            $transferDecision[
+                                                'decision_score'
                                             ]
-                                            ?? 0
-                                        );
+                                            ?? null;
 
-                                    ?>
+
+                                        $decisionMovements =
+                                            $transferDecision[
+                                                'movements'
+                                            ]
+                                            ?? [];
+
+                                        ?>
 
                                     <article class="transfer-result-card">
 
@@ -1675,18 +1738,34 @@ function transferConfidenceLabel(
 
                                                 <div class="transfer-result-badges">
 
-                                                    <span class="transfer-type-badge <?= transferTypeClass(
-                                                        $replacementType
+                                                    <span class="transfer-decision-badge <?= transferDecisionClass(
+                                                        $decisionType
                                                     ); ?>">
 
                                                         <?= htmlspecialchars(
-                                                            $replacementType,
+                                                            $decisionType,
                                                             ENT_QUOTES,
                                                             'UTF-8'
                                                         ); ?>
 
-                                                    </span>
+                                                        <?php if (
+                                                            $decisionScore !== null
+                                                            &&
+                                                            is_numeric(
+                                                                $decisionScore
+                                                            )
+                                                        ): ?>
 
+                                                            <strong>
+                                                                Score <?= number_format(
+                                                                    (float) $decisionScore,
+                                                                    1
+                                                                ); ?>
+                                                            </strong>
+
+                                                        <?php endif; ?>
+
+                                                    </span>
 
                                                     <span class="transfer-verdict-badge <?= transferVerdictClass(
                                                         $replacement[
@@ -1744,10 +1823,15 @@ function transferConfidenceLabel(
                                                     <strong>
 
                                                         <?= transferDisplaySigned(
+                                                            $decisionMovements[
+                                                                'intelligence'
+                                                            ]
+                                                            ??
                                                             $replacement[
                                                                 'intelligence_gain'
                                                             ]
-                                                            ?? null
+                                                            ??
+                                                            null
                                                         ); ?>
 
                                                     </strong>
@@ -1758,18 +1842,60 @@ function transferConfidenceLabel(
                                                 <div>
 
                                                     <span>
-                                                        Price Movement
+                                                        Budget Released
                                                     </span>
 
                                                     <strong>
 
-                                                        <?= transferDisplaySigned(
-                                                            $replacement[
-                                                                'price_difference'
+                                                        <?php
+
+                                                        $budgetMovement =
+                                                            $decisionMovements[
+                                                                'budget'
                                                             ]
-                                                            ?? null,
-                                                            'm'
-                                                        ); ?>
+                                                            ?? null;
+
+                                                        ?>
+
+                                                        <?php if (
+                                                            $budgetMovement !== null
+                                                            &&
+                                                            is_numeric(
+                                                                $budgetMovement
+                                                            )
+                                                        ): ?>
+
+                                                            <?php if (
+                                                                (float) $budgetMovement > 0
+                                                            ): ?>
+
+                                                                +£<?= number_format(
+                                                                    (float) $budgetMovement,
+                                                                    1
+                                                                ); ?>m
+
+                                                            <?php elseif (
+                                                                (float) $budgetMovement < 0
+                                                            ): ?>
+
+                                                                -£<?= number_format(
+                                                                    abs(
+                                                                        (float) $budgetMovement
+                                                                    ),
+                                                                    1
+                                                                ); ?>m
+
+                                                            <?php else: ?>
+
+                                                                £0.0m
+
+                                                            <?php endif; ?>
+
+                                                        <?php else: ?>
+
+                                                            —
+
+                                                        <?php endif; ?>
 
                                                     </strong>
 
@@ -1890,10 +2016,15 @@ function transferConfidenceLabel(
 
                                                 <?= htmlspecialchars(
                                                     (string) (
+                                                        $transferDecision[
+                                                            'summary'
+                                                        ]
+                                                        ??
                                                         $replacement[
                                                             'replacement_summary'
                                                         ]
-                                                        ?? ''
+                                                        ??
+                                                        ''
                                                     ),
                                                     ENT_QUOTES,
                                                     'UTF-8'

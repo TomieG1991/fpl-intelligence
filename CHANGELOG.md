@@ -128,6 +128,29 @@ The project follows a sprint-based development process.
 - Added player profile and direct comparison actions from recommendation cards.
 - Added graceful handling when no suitable recommendation exists for a category.
 - Added responsive styling for Replacement Recommendation Intelligence.
+- Added `TransferDecision` engine for evaluating direct FPL player transfers.
+- Added weighted transfer decision scoring using Intelligence, strength, value, fixtures, sample confidence, and budget movement.
+- Added transfer classifications:
+  - Upgrade
+  - Budget Enabler
+  - Strategic Sidegrade
+  - Sidegrade
+  - Risky Punt
+  - Downgrade
+  - Insufficient Data
+- Added safeguards preventing large Intelligence losses from being disguised by budget savings or value improvements.
+- Added low-sample confidence handling for risky incoming players.
+- Added human-readable transfer decision summaries.
+- Added `evaluatePlayerTransfer()` to `PlayerIntelligenceService`.
+- Integrated Transfer Decision Intelligence into replacement candidate results.
+- Added Transfer Decision information to the Transfer Intelligence interface.
+- Added decision score, Intelligence movement, and budget released information to replacement cards.
+- Retained player assessment verdicts alongside transfer-specific recommendations.
+- Added `TransferDecisionTest.php` covering classification, movement calculations, summaries, and missing-data handling.
+- Added `TransferDecisionRealDataTest.php` for real-player calibration.
+- Extended `PlayerIntelligenceServiceTest.php` to cover Transfer Decision integration and invalid player handling.
+- Calibrated decision logic against real transfers including B.Fernandes → Saka, Gabriel → Frimpong, Haaland → Osula, and Dowman → Chiesa.
+- All automated tests passing.
 
 ### Changed
 - Improved Player Explorer availability visibility.

@@ -5274,3 +5274,107 @@ a {
     }
 
 }
+
+/*
+ * ============================================================
+ * TRANSFER DECISION INTELLIGENCE
+ * ============================================================
+ */
+
+.transfer-decision-badge {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 5px;
+
+    padding:
+        4px
+        8px;
+
+    border-radius: 999px;
+
+    font-size: 8px;
+
+    font-weight: 800;
+}
+
+
+.transfer-decision-badge strong {
+    padding-left: 5px;
+
+    border-left:
+        1px solid currentColor;
+
+    font-size: 8px;
+}
+
+
+.transfer-decision-upgrade {
+    background: rgba(114, 228, 154, 0.14);
+
+    border:
+        1px solid rgba(114, 228, 154, 0.4);
+
+    color: #72e49a;
+}
+
+
+.transfer-decision-budget {
+    background: rgba(146, 135, 255, 0.16);
+
+    border:
+        1px solid rgba(146, 135, 255, 0.4);
+
+    color: #c0b8ff;
+}
+
+
+.transfer-decision-strategic {
+    background: rgba(105, 191, 255, 0.14);
+
+    border:
+        1px solid rgba(105, 191, 255, 0.4);
+
+    color: #9ed5ff;
+}
+
+
+.transfer-decision-sidegrade {
+    background: rgba(240, 211, 110, 0.12);
+
+    border:
+        1px solid rgba(240, 211, 110, 0.35);
+
+    color: #f0d36e;
+}
+
+
+.transfer-decision-risky {
+    background: rgba(239, 167, 110, 0.14);
+
+    border:
+        1px solid rgba(239, 167, 110, 0.4);
+
+    color: #efa76e;
+}
+
+
+.transfer-decision-downgrade {
+    background: rgba(239, 155, 155, 0.12);
+
+    border:
+        1px solid rgba(239, 155, 155, 0.4);
+
+    color: #ef9b9b;
+}
+
+
+.transfer-decision-neutral {
+    background: #293349;
+
+    border:
+        1px solid #46536d;
+
+    color: #aab5c8;
+}

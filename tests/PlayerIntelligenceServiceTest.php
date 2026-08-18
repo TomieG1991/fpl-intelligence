@@ -1097,6 +1097,59 @@ foreach (
             $replacementCandidate
         )
     );
+    
+    testPass(
+        'Replacement transfer decision exists',
+        isset(
+            $replacementCandidate[
+                'transfer_decision'
+            ]
+        )
+        &&
+        is_array(
+            $replacementCandidate[
+                'transfer_decision'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Replacement transfer decision type exists',
+        array_key_exists(
+            'decision_type',
+            $replacementCandidate[
+                'transfer_decision'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Replacement transfer decision score exists',
+        array_key_exists(
+            'decision_score',
+            $replacementCandidate[
+                'transfer_decision'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Replacement transfer decision movements exist',
+        isset(
+            $replacementCandidate[
+                'transfer_decision'
+            ]['movements']
+        )
+        &&
+        is_array(
+            $replacementCandidate[
+                'transfer_decision'
+            ]['movements']
+        )
+    );
 }
 
 if (
@@ -1128,12 +1181,251 @@ if (
 /*
  * ============================================================
  * SCENARIO J
+ * TRANSFER DECISION
+ * ============================================================
+ */
+
+echo "<br>============================================<br>";
+echo "Scenario J: Transfer Decision<br>";
+echo "============================================<br>";
+
+
+$transferCandidates =
+    $service
+        ->getRankedPlayers(
+            2
+        );
+
+
+testPass(
+    'At least two ranked players are available for transfer evaluation',
+    count(
+        $transferCandidates
+    )
+    >= 2
+);
+
+
+if (
+    count(
+        $transferCandidates
+    )
+    >= 2
+) {
+
+    $transferPlayerIdA =
+        (int) (
+            $transferCandidates[
+                0
+            ]['player_id']
+            ?? 0
+        );
+
+
+    $transferPlayerIdB =
+        (int) (
+            $transferCandidates[
+                1
+            ]['player_id']
+            ?? 0
+        );
+
+
+    $transferDecisionResult =
+        $service
+            ->evaluatePlayerTransfer(
+                $transferPlayerIdA,
+                $transferPlayerIdB
+            );
+
+
+    testPass(
+        'Transfer decision returns an array',
+        is_array(
+            $transferDecisionResult
+        )
+    );
+
+
+    testPass(
+        'Transfer decision current player exists',
+        isset(
+            $transferDecisionResult[
+                'current_player'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Transfer decision replacement exists',
+        isset(
+            $transferDecisionResult[
+                'replacement'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Transfer decision movements exist',
+        isset(
+            $transferDecisionResult[
+                'movements'
+            ]
+        )
+        &&
+        is_array(
+            $transferDecisionResult[
+                'movements'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Transfer intelligence movement exists',
+        array_key_exists(
+            'intelligence',
+            $transferDecisionResult[
+                'movements'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Transfer strength movement exists',
+        array_key_exists(
+            'strength',
+            $transferDecisionResult[
+                'movements'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Transfer value movement exists',
+        array_key_exists(
+            'value',
+            $transferDecisionResult[
+                'movements'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Transfer fixture movement exists',
+        array_key_exists(
+            'fixtures',
+            $transferDecisionResult[
+                'movements'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Transfer confidence movement exists',
+        array_key_exists(
+            'sample_confidence',
+            $transferDecisionResult[
+                'movements'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Transfer budget movement exists',
+        array_key_exists(
+            'budget',
+            $transferDecisionResult[
+                'movements'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Transfer decision score exists',
+        array_key_exists(
+            'decision_score',
+            $transferDecisionResult
+        )
+    );
+
+
+    testPass(
+        'Transfer decision type exists',
+        array_key_exists(
+            'decision_type',
+            $transferDecisionResult
+        )
+    );
+
+
+    testPass(
+        'Transfer decision summary exists',
+        array_key_exists(
+            'summary',
+            $transferDecisionResult
+        )
+    );
+
+
+    testPass(
+        'Transfer decision preserves current player ID',
+        (
+            (int) (
+                $transferDecisionResult[
+                    'current_player'
+                ]['player_id']
+                ?? 0
+            )
+        )
+        ===
+        $transferPlayerIdA
+    );
+
+
+    testPass(
+        'Transfer decision preserves replacement player ID',
+        (
+            (int) (
+                $transferDecisionResult[
+                    'replacement'
+                ]['player_id']
+                ?? 0
+            )
+        )
+        ===
+        $transferPlayerIdB
+    );
+
+
+    testPass(
+        'Transfer decision type is not empty',
+        !empty(
+            $transferDecisionResult[
+                'decision_type'
+            ]
+            ?? null
+        )
+    );
+}
+
+/*
+ * ============================================================
+ * SCENARIO K
  * INVALID PLAYER
  * ============================================================
  */
 
 echo "<br>============================================<br>";
-echo "Scenario J: Invalid Player Handling<br>";
+echo "Scenario K: Invalid Player Handling<br>";
 echo "============================================<br>";
 
 
@@ -1277,6 +1569,71 @@ testPass(
             $playerId,
             10.0,
             0
+        )
+    === null
+);
+
+testPass(
+    'Transfer decision rejects zero current player ID',
+    $service
+        ->evaluatePlayerTransfer(
+            0,
+            $playerId
+        )
+    === null
+);
+
+
+testPass(
+    'Transfer decision rejects zero replacement player ID',
+    $service
+        ->evaluatePlayerTransfer(
+            $playerId,
+            0
+        )
+    === null
+);
+
+
+testPass(
+    'Transfer decision rejects negative player IDs',
+    $service
+        ->evaluatePlayerTransfer(
+            -1,
+            -2
+        )
+    === null
+);
+
+
+testPass(
+    'Transfer decision rejects identical players',
+    $service
+        ->evaluatePlayerTransfer(
+            $playerId,
+            $playerId
+        )
+    === null
+);
+
+
+testPass(
+    'Transfer decision rejects unknown current player',
+    $service
+        ->evaluatePlayerTransfer(
+            999999999,
+            $playerId
+        )
+    === null
+);
+
+
+testPass(
+    'Transfer decision rejects unknown replacement player',
+    $service
+        ->evaluatePlayerTransfer(
+            $playerId,
+            999999999
         )
     === null
 );
