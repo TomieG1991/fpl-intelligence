@@ -25,6 +25,8 @@ class PlayerIntelligenceService
     private PlayerComparison $playerComparison;
     
     private PlayerReplacement $playerReplacement;
+    
+    private ReplacementRecommendation $replacementRecommendation;
 
 
     /**
@@ -84,8 +86,7 @@ class PlayerIntelligenceService
 
 
         $this->playerRanking =
-            new PlayerRanking();
-        
+            new PlayerRanking();        
         
         $this->playerAssessment =
             new PlayerAssessment();
@@ -95,6 +96,9 @@ class PlayerIntelligenceService
             
         $this->playerReplacement =
             new PlayerReplacement();
+            
+        $this->replacementRecommendation =
+            new ReplacementRecommendation();
 
 
         /*
@@ -1152,6 +1156,17 @@ class PlayerIntelligenceService
             $replacement
         );
 
+        /*
+         * ========================================================
+         * REPLACEMENT RECOMMENDATION INTELLIGENCE
+         * ========================================================
+         */
+
+        $recommendations =
+            $this->replacementRecommendation
+                ->buildRecommendations(
+                    $replacements
+                );
 
         return [
 
@@ -1171,9 +1186,13 @@ class PlayerIntelligenceService
                 count(
                     $replacements
                 ),
+                
+            'recommendations' =>
+                $recommendations,
 
             'replacements' =>
-                $replacements
+                $replacements                
+            
         ];
     }
 }

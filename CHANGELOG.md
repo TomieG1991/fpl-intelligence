@@ -98,6 +98,36 @@ The project follows a sprint-based development process.
 - Added direct links from replacement candidates to Player Profile and Player Comparison.
 - Added Transfer Intelligence to the primary application navigation.
 - Added responsive Transfer Intelligence styling.
+- Added `ReplacementRecommendation` intelligence layer for interpreting ranked replacement candidates.
+- Added five replacement recommendation categories:
+  - Best Overall
+  - Best Value
+  - Best Fixtures
+  - Safest Pick
+  - High Upside
+- Added deterministic Intelligence-based tiebreakers for recommendation categories.
+- Added confidence-aware Best Value selection with a minimum 25% performance sample.
+- Added Safest Pick scoring using:
+  - 40% sample confidence
+  - 30% availability
+  - 30% Player Intelligence
+- Added High Upside scoring using:
+  - 60% Player Intelligence
+  - 25% Value
+  - 15% Fixtures
+- Added a 10% to below 75% sample-confidence window for High Upside candidates.
+- Added support for returning no High Upside recommendation when no suitable candidate exists.
+- Added `ReplacementRecommendationTest.php` automated test coverage.
+- Added `ReplacementRecommendationRealDataTest.php` diagnostic coverage.
+- Validated recommendation behaviour using real replacement searches for B.Fernandes, Haaland, Dowman and Gabriel.
+- Integrated Replacement Recommendation Intelligence into `PlayerIntelligenceService::findPlayerReplacements()`.
+- Extended replacement service results with Best Overall, Best Value, Best Fixtures, Safest Pick and High Upside recommendations.
+- Extended `PlayerIntelligenceServiceTest.php` with recommendation contract and consistency checks.
+- Added Recommendation Intelligence panel to Transfer Intelligence.
+- Added recommendation cards displaying Intelligence, Value, Fixtures, Sample Confidence and assessment verdict.
+- Added player profile and direct comparison actions from recommendation cards.
+- Added graceful handling when no suitable recommendation exists for a category.
+- Added responsive styling for Replacement Recommendation Intelligence.
 
 ### Changed
 - Improved Player Explorer availability visibility.

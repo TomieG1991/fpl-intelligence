@@ -4947,3 +4947,330 @@ a {
     }
 
 }
+
+/*
+ * ============================================================
+ * TRANSFER RECOMMENDATION INTELLIGENCE
+ * ============================================================
+ */
+
+.transfer-recommendation-card {
+    margin-bottom: 20px;
+}
+
+
+.transfer-recommendation-explanation {
+    max-width: 900px;
+
+    margin:
+        -6px
+        0
+        18px;
+
+    color: #9facbf;
+
+    font-size: 11px;
+
+    line-height: 1.65;
+}
+
+
+.transfer-recommendation-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(5, minmax(0, 1fr));
+
+    gap: 12px;
+}
+
+
+.transfer-recommendation-item {
+    display: flex;
+
+    flex-direction: column;
+
+    min-width: 0;
+
+    padding: 14px;
+
+    background: #182133;
+
+    border:
+        1px solid #303b51;
+
+    border-radius: 9px;
+}
+
+
+.transfer-recommendation-heading {
+    margin-bottom: 8px;
+}
+
+
+.transfer-recommendation-label {
+    display: inline-flex;
+
+    align-items: center;
+
+    padding:
+        4px
+        7px;
+
+    background: #293349;
+
+    border:
+        1px solid #46536d;
+
+    border-radius: 999px;
+
+    color: #c0b8ff;
+
+    font-size: 8px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.05em;
+
+    text-transform: uppercase;
+}
+
+
+.transfer-recommendation-item h3 {
+    margin:
+        2px
+        0
+        0;
+
+    font-size: 15px;
+}
+
+
+.transfer-recommendation-item h3 a {
+    color: #ffffff;
+}
+
+
+.transfer-recommendation-item h3 a:hover {
+    color: #b7afff;
+}
+
+
+.transfer-recommendation-meta {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    margin-top: 6px;
+
+    color: #9facbf;
+
+    font-size: 9px;
+}
+
+
+.transfer-recommendation-meta span:not(:last-child)::after {
+    margin-left: 8px;
+
+    color: #58657d;
+
+    content: "•";
+}
+
+
+.transfer-recommendation-intelligence {
+    margin-top: 13px;
+
+    padding: 11px;
+
+    background: #20293d;
+
+    border:
+        1px solid #34405a;
+
+    border-radius: 7px;
+}
+
+
+.transfer-recommendation-intelligence span,
+.transfer-recommendation-details span {
+    display: block;
+
+    color: #9facbf;
+
+    font-size: 8px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.06em;
+
+    text-transform: uppercase;
+}
+
+
+.transfer-recommendation-intelligence strong {
+    display: block;
+
+    margin-top: 5px;
+
+    color: #ffffff;
+
+    font-size: 20px;
+}
+
+
+.transfer-recommendation-details {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 7px;
+
+    margin-top: 8px;
+}
+
+
+.transfer-recommendation-details > div {
+    padding: 8px;
+
+    background: #20293d;
+
+    border:
+        1px solid #34405a;
+
+    border-radius: 7px;
+}
+
+
+.transfer-recommendation-details strong {
+    display: block;
+
+    margin-top: 4px;
+
+    color: #ffffff;
+
+    font-size: 10px;
+}
+
+
+.transfer-recommendation-item
+.transfer-verdict-badge {
+    align-self: flex-start;
+
+    margin-top: 10px;
+}
+
+
+.transfer-recommendation-description {
+    margin:
+        10px
+        0
+        0;
+
+    color: #9facbf;
+
+    font-size: 9px;
+
+    line-height: 1.55;
+}
+
+
+.transfer-recommendation-actions {
+    display: flex;
+
+    gap: 6px;
+
+    margin-top: auto;
+
+    padding-top: 12px;
+}
+
+
+.transfer-recommendation-empty {
+    display: flex;
+
+    flex: 1;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    min-height: 150px;
+
+    padding: 12px;
+
+    background: #20293d;
+
+    border:
+        1px dashed #46536d;
+
+    border-radius: 7px;
+
+    text-align: center;
+}
+
+
+.transfer-recommendation-empty strong {
+    color: #ffffff;
+
+    font-size: 11px;
+}
+
+
+.transfer-recommendation-empty p {
+    margin:
+        7px
+        0
+        0;
+
+    color: #8996aa;
+
+    font-size: 9px;
+
+    line-height: 1.5;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * RESPONSIVE RECOMMENDATIONS
+ * ------------------------------------------------------------
+ */
+
+@media (
+    max-width: 1250px
+) {
+
+    .transfer-recommendation-grid {
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+    }
+
+}
+
+
+@media (
+    max-width: 850px
+) {
+
+    .transfer-recommendation-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+
+@media (
+    max-width: 520px
+) {
+
+    .transfer-recommendation-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+}

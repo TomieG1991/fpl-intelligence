@@ -930,6 +930,76 @@ testPass(
     )
 );
 
+testPass(
+    'Replacement recommendations exist',
+    isset(
+        $replacementResult[
+            'recommendations'
+        ]
+    )
+    &&
+    is_array(
+        $replacementResult[
+            'recommendations'
+        ]
+    )
+);
+
+
+testPass(
+    'Best overall recommendation exists',
+    array_key_exists(
+        'best_overall',
+        $replacementResult[
+            'recommendations'
+        ]
+    )
+);
+
+
+testPass(
+    'Best value recommendation exists',
+    array_key_exists(
+        'best_value',
+        $replacementResult[
+            'recommendations'
+        ]
+    )
+);
+
+
+testPass(
+    'Best fixtures recommendation exists',
+    array_key_exists(
+        'best_fixtures',
+        $replacementResult[
+            'recommendations'
+        ]
+    )
+);
+
+
+testPass(
+    'Safest pick recommendation exists',
+    array_key_exists(
+        'safest_pick',
+        $replacementResult[
+            'recommendations'
+        ]
+    )
+);
+
+
+testPass(
+    'High-upside recommendation exists',
+    array_key_exists(
+        'high_upside',
+        $replacementResult[
+            'recommendations'
+        ]
+    )
+);
+
 
 testPass(
     'Replacement result respects requested limit',
@@ -1029,16 +1099,41 @@ foreach (
     );
 }
 
+if (
+    !empty(
+        $replacementResult[
+            'replacements'
+        ]
+    )
+) {
+
+    testPass(
+        'Best overall recommendation matches top ranked replacement',
+        (
+            $replacementResult[
+                'recommendations'
+            ]['best_overall']['player_id']
+            ?? null
+        )
+        ===
+        (
+            $replacementResult[
+                'replacements'
+            ][0]['player_id']
+            ?? null
+        )
+    );
+}
 
 /*
  * ============================================================
- * SCENARIO I
+ * SCENARIO J
  * INVALID PLAYER
  * ============================================================
  */
 
 echo "<br>============================================<br>";
-echo "Scenario I: Invalid Player Handling<br>";
+echo "Scenario J: Invalid Player Handling<br>";
 echo "============================================<br>";
 
 

@@ -1107,6 +1107,383 @@ function transferConfidenceLabel(
                         </div>
 
                     </section>
+                    
+                    <?php
+
+                    $recommendations =
+                        $replacementResult[
+                            'recommendations'
+                        ]
+                        ?? [];
+
+
+                    $recommendationCategories = [
+
+                        'best_overall' => [
+                            'label' => 'Best Overall',
+                            'description' => 'Highest overall Player Intelligence.'
+                        ],
+
+                        'best_value' => [
+                            'label' => 'Best Value',
+                            'description' => 'Best value among sufficiently proven candidates.'
+                        ],
+
+                        'best_fixtures' => [
+                            'label' => 'Best Fixtures',
+                            'description' => 'Strongest upcoming fixture opportunity.'
+                        ],
+
+                        'safest_pick' => [
+                            'label' => 'Safest Pick',
+                            'description' => 'Best balance of sample confidence, availability and Intelligence.'
+                        ],
+
+                        'high_upside' => [
+                            'label' => 'High Upside',
+                            'description' => 'Promising candidate with upside and a less-established sample.'
+                        ]
+                    ];
+
+                    ?>
+
+
+                    <!-- ======================================
+                         RECOMMENDATION INTELLIGENCE
+                         ====================================== -->
+
+                    <section class="dashboard-card transfer-recommendation-card">
+
+                        <div class="card-header">
+
+                            <div>
+
+                                <p class="card-kicker">
+                                    Recommendation Intelligence
+                                </p>
+
+                                <h2>
+                                    Best Replacement Profiles
+                                </h2>
+
+                            </div>
+
+                        </div>
+
+
+                        <p class="transfer-recommendation-explanation">
+
+                            These recommendations interpret the ranked replacement
+                            list in different ways. Best Overall follows Player
+                            Intelligence, while the other categories highlight
+                            value, fixtures, safety and upside.
+
+                        </p>
+
+
+                        <div class="transfer-recommendation-grid">
+
+                            <?php foreach (
+                                $recommendationCategories
+                                as $recommendationKey => $category
+                            ): ?>
+
+                                <?php
+
+                                $recommendation =
+                                    $recommendations[
+                                        $recommendationKey
+                                    ]
+                                    ?? null;
+
+                                ?>
+
+
+                                <article class="transfer-recommendation-item">
+
+                                    <div class="transfer-recommendation-heading">
+
+                                        <span class="transfer-recommendation-label">
+
+                                            <?= htmlspecialchars(
+                                                $category['label'],
+                                                ENT_QUOTES,
+                                                'UTF-8'
+                                            ); ?>
+
+                                        </span>
+
+                                    </div>
+
+
+                                    <?php if (
+                                        $recommendation === null
+                                    ): ?>
+
+                                        <div class="transfer-recommendation-empty">
+
+                                            <strong>
+                                                No suitable candidate
+                                            </strong>
+
+                                            <p>
+
+                                                <?= htmlspecialchars(
+                                                    $category['description'],
+                                                    ENT_QUOTES,
+                                                    'UTF-8'
+                                                ); ?>
+
+                                            </p>
+
+                                        </div>
+
+                                    <?php else: ?>
+
+                                        <?php
+
+                                        $recommendationId =
+                                            (int) (
+                                                $recommendation[
+                                                    'player_id'
+                                                ]
+                                                ?? 0
+                                            );
+
+                                        ?>
+
+                                        <h3>
+
+                                            <?php if (
+                                                $recommendationId > 0
+                                            ): ?>
+
+                                                <a
+                                                    href="player.php?id=<?= $recommendationId; ?>"
+                                                >
+
+                                                    <?= htmlspecialchars(
+                                                        (string) (
+                                                            $recommendation[
+                                                                'name'
+                                                            ]
+                                                            ?? 'Unknown'
+                                                        ),
+                                                        ENT_QUOTES,
+                                                        'UTF-8'
+                                                    ); ?>
+
+                                                </a>
+
+                                            <?php else: ?>
+
+                                                <?= htmlspecialchars(
+                                                    (string) (
+                                                        $recommendation[
+                                                            'name'
+                                                        ]
+                                                        ?? 'Unknown'
+                                                    ),
+                                                    ENT_QUOTES,
+                                                    'UTF-8'
+                                                ); ?>
+
+                                            <?php endif; ?>
+
+                                        </h3>
+
+
+                                        <div class="transfer-recommendation-meta">
+
+                                            <span>
+
+                                                <?= htmlspecialchars(
+                                                    (string) (
+                                                        $recommendation[
+                                                            'team_name'
+                                                        ]
+                                                        ?? 'Unknown'
+                                                    ),
+                                                    ENT_QUOTES,
+                                                    'UTF-8'
+                                                ); ?>
+
+                                            </span>
+
+
+                                            <span>
+
+                                                <?= transferDisplayPrice(
+                                                    $recommendation[
+                                                        'price'
+                                                    ]
+                                                    ?? null
+                                                ); ?>
+
+                                            </span>
+
+                                        </div>
+
+
+                                        <div class="transfer-recommendation-intelligence">
+
+                                            <span>
+                                                Intelligence
+                                            </span>
+
+                                            <strong>
+
+                                                <?= transferDisplayRating(
+                                                    $recommendation[
+                                                        'intelligence_score'
+                                                    ]
+                                                    ?? null
+                                                ); ?>
+
+                                            </strong>
+
+                                        </div>
+
+
+                                        <div class="transfer-recommendation-details">
+
+                                            <div>
+
+                                                <span>
+                                                    Value
+                                                </span>
+
+                                                <strong>
+
+                                                    <?= transferDisplayRating(
+                                                        $recommendation[
+                                                            'value_rating'
+                                                        ]
+                                                        ?? null
+                                                    ); ?>
+
+                                                </strong>
+
+                                            </div>
+
+
+                                            <div>
+
+                                                <span>
+                                                    Fixtures
+                                                </span>
+
+                                                <strong>
+
+                                                    <?= transferDisplayRating(
+                                                        $recommendation[
+                                                            'fixture_rating'
+                                                        ]
+                                                        ?? null
+                                                    ); ?>
+
+                                                </strong>
+
+                                            </div>
+
+
+                                            <div>
+
+                                                <span>
+                                                    Sample
+                                                </span>
+
+                                                <strong>
+
+                                                    <?= htmlspecialchars(
+                                                        transferConfidenceLabel(
+                                                            $recommendation[
+                                                                'sample_confidence'
+                                                            ]
+                                                            ?? null
+                                                        ),
+                                                        ENT_QUOTES,
+                                                        'UTF-8'
+                                                    ); ?>
+
+                                                </strong>
+
+                                            </div>
+
+                                        </div>
+
+
+                                        <span class="transfer-verdict-badge <?= transferVerdictClass(
+                                            $recommendation[
+                                                'verdict'
+                                            ]
+                                            ?? null
+                                        ); ?>">
+
+                                            <?= htmlspecialchars(
+                                                (string) (
+                                                    $recommendation[
+                                                        'verdict'
+                                                    ]
+                                                    ?? 'Unknown'
+                                                ),
+                                                ENT_QUOTES,
+                                                'UTF-8'
+                                            ); ?>
+
+                                        </span>
+
+
+                                        <p class="transfer-recommendation-description">
+
+                                            <?= htmlspecialchars(
+                                                $category['description'],
+                                                ENT_QUOTES,
+                                                'UTF-8'
+                                            ); ?>
+
+                                        </p>
+
+
+                                        <?php if (
+                                            $recommendationId > 0
+                                        ): ?>
+
+                                            <div class="transfer-recommendation-actions">
+
+                                                <a
+                                                    href="player.php?id=<?= $recommendationId; ?>"
+                                                    class="transfer-secondary-action"
+                                                >
+                                                    View Profile
+                                                </a>
+
+
+                                                <a
+                                                    href="compare.php?player1=<?= (int) (
+                                                        $currentPlayer[
+                                                            'player_id'
+                                                        ]
+                                                        ?? 0
+                                                    ); ?>&player2=<?= $recommendationId; ?>"
+                                                    class="transfer-primary-action"
+                                                >
+                                                    Compare
+                                                </a>
+
+                                            </div>
+
+                                        <?php endif; ?>
+
+                                    <?php endif; ?>
+
+                                </article>
+
+                            <?php endforeach; ?>
+
+                        </div>
+
+                    </section>
 
 
                     <!-- ======================================
