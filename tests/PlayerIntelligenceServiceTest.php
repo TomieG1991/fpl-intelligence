@@ -80,7 +80,7 @@ try {
 /*
  * ============================================================
  * SCENARIO A
- * PLAYER LIST
+ * PLAYER SUMMARIES
  * ============================================================
  */
 
@@ -89,10 +89,15 @@ echo "Scenario A: Player Summaries<br>";
 echo "============================================<br>";
 
 
+$summaries =
+    $service
+        ->getAllPlayerSummaries();
+
+
 testPass(
     'Player summaries return an array',
     is_array(
-        $players
+        $summaries
     )
 );
 
@@ -100,33 +105,31 @@ testPass(
 testPass(
     'Player summaries are not empty',
     !empty(
-        $players
+        $summaries
     )
 );
 
 
 /*
- * ============================================================
- * FIND A VALID PLAYER
- * ============================================================
+ * Find a valid player for the remaining tests.
  */
 
 $testPlayer =
     null;
 
 
-foreach ($players as $player) {
+foreach ($summaries as $summary) {
 
     if (
         isset(
-            $player['player_id']
+            $summary['player_id']
         )
         &&
-        (int) $player['player_id'] > 0
+        (int) $summary['player_id'] > 0
     ) {
 
         $testPlayer =
-            $player;
+            $summary;
 
         break;
     }
@@ -139,13 +142,37 @@ testPass(
 );
 
 
-if ($testPlayer === null) {
+/*
+ * ============================================================
+ * SUMMARY ASSESSMENT DATA
+ * ============================================================
+ */
 
-    echo "<br>Unable to continue without a valid player.<br>";
+if ($testPlayer !== null) {
 
-    exit;
+    testPass(
+        'Player summary assessment verdict exists',
+        array_key_exists(
+            'assessment_verdict',
+            $testPlayer
+        )
+    );
+
+
+    testPass(
+        'Player summary assessment verdict key exists',
+        array_key_exists(
+            'assessment_verdict_key',
+            $testPlayer
+        )
+    );
 }
 
+if ($testPlayer === null) {
+    echo "<br>Unable to continue without a valid player.<br>";
+    
+    exit;
+}
 
 $playerId =
     (int) $testPlayer['player_id'];
@@ -764,6 +791,244 @@ if (
     );
 }
 
+/*
+ * ============================================================
+ * SCENARIO I
+ * PLAYER REPLACEMENTS
+ * ============================================================
+ */
+
+echo "<br>============================================<br>";
+echo "Scenario I: Player Replacements<br>";
+echo "============================================<br>";
+
+
+$replacementBudget =
+    isset(
+        $profile[
+            'summary'
+        ]['price']
+    )
+    &&
+    is_numeric(
+        $profile[
+            'summary'
+        ]['price']
+    )
+        ? (float)
+            $profile[
+                'summary'
+            ]['price']
+        : 15.0;
+
+
+$replacementResult =
+    $service
+        ->findPlayerReplacements(
+            $playerId,
+            $replacementBudget,
+            5
+        );
+
+
+testPass(
+    'Replacement search returns an array',
+    is_array(
+        $replacementResult
+    )
+);
+
+
+testPass(
+    'Replacement current player exists',
+    isset(
+        $replacementResult[
+            'current_player'
+        ]
+    )
+);
+
+
+testPass(
+    'Replacement search preserves current player ID',
+    (
+        (int) (
+            $replacementResult[
+                'current_player'
+            ]['player_id']
+            ?? 0
+        )
+    )
+    ===
+    $playerId
+);
+
+
+testPass(
+    'Replacement max price is preserved',
+    (
+        (float) (
+            $replacementResult[
+                'max_price'
+            ]
+            ?? -1
+        )
+    )
+    ===
+    round(
+        $replacementBudget,
+        2
+    )
+);
+
+
+testPass(
+    'Replacement limit is preserved',
+    (
+        (int) (
+            $replacementResult[
+                'limit'
+            ]
+            ?? 0
+        )
+    )
+    === 5
+);
+
+
+testPass(
+    'Replacement list exists',
+    isset(
+        $replacementResult[
+            'replacements'
+        ]
+    )
+    &&
+    is_array(
+        $replacementResult[
+            'replacements'
+        ]
+    )
+);
+
+
+testPass(
+    'Replacement count matches result array',
+    (
+        (int) (
+            $replacementResult[
+                'replacement_count'
+            ]
+            ?? -1
+        )
+    )
+    ===
+    count(
+        $replacementResult[
+            'replacements'
+        ]
+    )
+);
+
+
+testPass(
+    'Replacement result respects requested limit',
+    count(
+        $replacementResult[
+            'replacements'
+        ]
+    )
+    <= 5
+);
+
+
+foreach (
+    $replacementResult[
+        'replacements'
+    ]
+    as $replacementCandidate
+) {
+
+    testPass(
+        'Replacement candidate preserves player ID',
+        (
+            (int) (
+                $replacementCandidate[
+                    'player_id'
+                ]
+                ?? 0
+            )
+        )
+        > 0
+    );
+
+
+    testPass(
+        'Replacement candidate matches current position',
+        (
+            $replacementCandidate[
+                'position'
+            ]
+            ?? null
+        )
+        ===
+        (
+            $replacementResult[
+                'current_player'
+            ]['position']
+            ?? null
+        )
+    );
+
+
+    testPass(
+        'Replacement candidate respects max price',
+        (
+            (float) (
+                $replacementCandidate[
+                    'price'
+                ]
+                ?? PHP_FLOAT_MAX
+            )
+        )
+        <=
+        $replacementBudget
+    );
+
+
+    testPass(
+        'Replacement candidate is not current player',
+        (
+            (int) (
+                $replacementCandidate[
+                    'player_id'
+                ]
+                ?? 0
+            )
+        )
+        !==
+        $playerId
+    );
+
+
+    testPass(
+        'Replacement type exists',
+        array_key_exists(
+            'replacement_type',
+            $replacementCandidate
+        )
+    );
+
+
+    testPass(
+        'Replacement summary exists',
+        array_key_exists(
+            'replacement_summary',
+            $replacementCandidate
+        )
+    );
+}
+
 
 /*
  * ============================================================
@@ -859,6 +1124,65 @@ testPass(
         $playerId,
         999999999
     )
+    === null
+);
+
+testPass(
+    'Replacement search rejects zero player ID',
+    $service
+        ->findPlayerReplacements(
+            0,
+            10.0,
+            5
+        )
+    === null
+);
+
+
+testPass(
+    'Replacement search rejects negative player ID',
+    $service
+        ->findPlayerReplacements(
+            -1,
+            10.0,
+            5
+        )
+    === null
+);
+
+
+testPass(
+    'Replacement search rejects unknown player',
+    $service
+        ->findPlayerReplacements(
+            999999999,
+            10.0,
+            5
+        )
+    === null
+);
+
+
+testPass(
+    'Replacement search rejects negative budget',
+    $service
+        ->findPlayerReplacements(
+            $playerId,
+            -1,
+            5
+        )
+    === null
+);
+
+
+testPass(
+    'Replacement search rejects zero limit',
+    $service
+        ->findPlayerReplacements(
+            $playerId,
+            10.0,
+            0
+        )
     === null
 );
 

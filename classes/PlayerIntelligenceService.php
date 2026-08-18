@@ -23,6 +23,8 @@ class PlayerIntelligenceService
     private PlayerAssessment $playerAssessment;
     
     private PlayerComparison $playerComparison;
+    
+    private PlayerReplacement $playerReplacement;
 
 
     /**
@@ -90,6 +92,9 @@ class PlayerIntelligenceService
             
         $this->playerComparison =
             new PlayerComparison();
+            
+        $this->playerReplacement =
+            new PlayerReplacement();
 
 
         /*
@@ -275,6 +280,47 @@ class PlayerIntelligenceService
                         'performance'
                     ]['bps_per_90']
                     ?? null;
+                    
+                $summaryAssessment =
+                    $this->playerAssessment
+                        ->buildAssessment(
+                            [
+                                'summary' =>
+                                    $summary,
+
+                                'performance' =>
+                                    $profile[
+                                        'performance'
+                                    ]
+                                    ?? [],
+
+                                /*
+                                 * Explorer summaries do not calculate the
+                                 * complete 10-fixture trend. That is fine:
+                                 * fixture trend affects commentary rather than
+                                 * the core assessment verdict.
+                                 */
+                                'fixtures' => [
+
+                                    'trend' =>
+                                        'Insufficient Data'
+                                ]
+                            ]
+                        );
+
+
+                $summary['assessment_verdict'] =
+                    $summaryAssessment[
+                        'verdict'
+                    ]
+                    ?? null;
+
+
+                $summary['assessment_verdict_key'] =
+                    $summaryAssessment[
+                        'verdict_key'
+                    ]
+                    ?? null;    
 
 
                 $summaries[] =
@@ -754,72 +800,380 @@ class PlayerIntelligenceService
     }
     
     /**
- * Compare two complete player intelligence profiles.
- */
-public function comparePlayers(
-    int $playerIdA,
-    int $playerIdB
-): ?array {
-
-    if (
-        $playerIdA <= 0
-        ||
-        $playerIdB <= 0
-    ) {
-
-        return null;
-    }
-
-
-    /*
-     * --------------------------------------------------------
-     * PREVENT SELF-COMPARISON
-     * --------------------------------------------------------
+     * Compare two complete player intelligence profiles.
      */
+    public function comparePlayers(
+        int $playerIdA,
+        int $playerIdB
+    ): ?array {
 
-    if ($playerIdA === $playerIdB) {
-        return null;
+        if (
+            $playerIdA <= 0
+            ||
+            $playerIdB <= 0
+        ) {
+
+            return null;
+        }
+
+
+        /*
+         * --------------------------------------------------------
+         * PREVENT SELF-COMPARISON
+         * --------------------------------------------------------
+         */
+
+        if ($playerIdA === $playerIdB) {
+            return null;
+        }
+
+
+        /*
+         * --------------------------------------------------------
+         * LOAD COMPLETE PLAYER PROFILES
+         * --------------------------------------------------------
+         */
+
+        $profileA =
+            $this->getPlayerProfile(
+                $playerIdA
+            );
+
+
+        $profileB =
+            $this->getPlayerProfile(
+                $playerIdB
+            );
+
+
+        if (
+            $profileA === null
+            ||
+            $profileB === null
+        ) {
+
+            return null;
+        }
+
+
+        /*
+         * --------------------------------------------------------
+         * PLAYER COMPARISON
+         * --------------------------------------------------------
+         */
+
+        return $this->playerComparison
+            ->compare(
+                $profileA,
+                $profileB
+            );
     }
-
-
-    /*
-     * --------------------------------------------------------
-     * LOAD COMPLETE PLAYER PROFILES
-     * --------------------------------------------------------
+    
+    /**
+     * Find suitable replacement candidates for a player.
      */
+    public function findPlayerReplacements(
+        int $playerId,
+        float $maxPrice,
+        int $limit = 10
+    ): ?array {
 
-    $profileA =
-        $this->getPlayerProfile(
-            $playerIdA
+        if (
+            $playerId <= 0
+            ||
+            $maxPrice < 0
+            ||
+            $limit <= 0
+        ) {
+
+            return null;
+        }
+
+
+        /*
+         * ========================================================
+         * CURRENT PLAYER PROFILE
+         * ========================================================
+         */
+
+        $profile =
+            $this->getPlayerProfile(
+                $playerId
+            );
+
+
+        if ($profile === null) {
+            return null;
+        }
+
+
+        $summary =
+            $profile['summary']
+            ?? [];
+
+
+        $currentPlayer = [
+
+            'player_id' =>
+                (int) (
+                    $profile[
+                        'player'
+                    ]['player_id']
+                    ?? $playerId
+                ),
+
+            'name' =>
+                $profile[
+                    'player'
+                ]['name']
+                ?? null,
+
+            'position' =>
+                $profile[
+                    'player'
+                ]['position']
+                ?? null,
+
+            'team_name' =>
+                $profile[
+                    'team'
+                ]['name']
+                ?? null,
+
+            'price' =>
+                $summary['price']
+                ?? null,
+
+            'intelligence_score' =>
+                $summary[
+                    'intelligence_score'
+                ]
+                ?? null,
+
+            'strength_rating' =>
+                $summary[
+                    'strength_rating'
+                ]
+                ?? null,
+
+            'value_rating' =>
+                $summary[
+                    'value_rating'
+                ]
+                ?? null,
+
+            'fixture_rating' =>
+                $summary[
+                    'fixture_rating'
+                ]
+                ?? null,
+
+            'availability_rating' =>
+                $summary[
+                    'availability_rating'
+                ]
+                ?? null,
+
+            'sample_confidence' =>
+                $profile[
+                    'performance'
+                ]['sample_confidence']
+                ?? null,
+
+            'verdict' =>
+                $profile[
+                    'assessment'
+                ]['verdict']
+                ?? null
+        ];
+
+
+        /*
+         * ========================================================
+         * CANDIDATE POOL
+         * ========================================================
+         */
+
+        $playerSummaries =
+            $this->getAllPlayerSummaries();
+
+
+        $candidates =
+            [];
+
+
+        foreach (
+            $playerSummaries
+            as $playerSummary
+        ) {
+
+            $candidateId =
+                (int) (
+                    $playerSummary[
+                        'player_id'
+                    ]
+                    ?? 0
+                );
+
+
+            if ($candidateId <= 0) {
+                continue;
+            }
+
+
+            $candidates[] = [
+
+                'player_id' =>
+                    $candidateId,
+
+                'name' =>
+                    $playerSummary[
+                        'name'
+                    ]
+                    ?? null,
+
+                'team_name' =>
+                    $playerSummary[
+                        'team_name'
+                    ]
+                    ?? null,
+
+                'team_short_name' =>
+                    $playerSummary[
+                        'team_short_name'
+                    ]
+                    ?? null,
+
+                'position' =>
+                    $playerSummary[
+                        'position'
+                    ]
+                    ?? null,
+
+                'price' =>
+                    $playerSummary[
+                        'price'
+                    ]
+                    ?? null,
+
+                'intelligence_score' =>
+                    $playerSummary[
+                        'intelligence_score'
+                    ]
+                    ?? null,
+
+                'strength_rating' =>
+                    $playerSummary[
+                        'strength_rating'
+                    ]
+                    ?? null,
+
+                'value_rating' =>
+                    $playerSummary[
+                        'value_rating'
+                    ]
+                    ?? null,
+
+                'fixture_rating' =>
+                    $playerSummary[
+                        'fixture_rating'
+                    ]
+                    ?? null,
+
+                'availability_rating' =>
+                    $playerSummary[
+                        'availability_rating'
+                    ]
+                    ?? null,
+
+                'sample_confidence' =>
+                    $playerSummary[
+                        'sample_confidence'
+                    ]
+                    ?? null,
+
+                'verdict' =>
+                    $playerSummary[
+                        'assessment_verdict'
+                    ]
+                    ?? null
+            ];
+        }
+
+
+        /*
+         * ========================================================
+         * REPLACEMENT SEARCH
+         * ========================================================
+         */
+
+        $replacements =
+            $this->playerReplacement
+                ->findReplacements(
+                    $currentPlayer,
+                    $candidates,
+                    $maxPrice,
+                    $limit
+                );
+
+
+        /*
+         * Add presentation-friendly replacement type and summary.
+         */
+
+        foreach (
+            $replacements
+            as &$replacement
+        ) {
+
+            $replacement[
+                'replacement_type'
+            ] =
+                $this->playerReplacement
+                    ->getReplacementType(
+                        $replacement[
+                            'intelligence_gain'
+                        ]
+                        ?? null
+                    );
+
+
+            $replacement[
+                'replacement_summary'
+            ] =
+                $this->playerReplacement
+                    ->buildReplacementSummary(
+                        $replacement
+                    );
+        }
+
+
+        unset(
+            $replacement
         );
 
 
-    $profileB =
-        $this->getPlayerProfile(
-            $playerIdB
-        );
+        return [
 
+            'current_player' =>
+                $currentPlayer,
 
-    if (
-        $profileA === null
-        ||
-        $profileB === null
-    ) {
+            'max_price' =>
+                round(
+                    $maxPrice,
+                    2
+                ),
 
-        return null;
+            'limit' =>
+                $limit,
+
+            'replacement_count' =>
+                count(
+                    $replacements
+                ),
+
+            'replacements' =>
+                $replacements
+        ];
     }
-
-
-    /*
-     * --------------------------------------------------------
-     * PLAYER COMPARISON
-     * --------------------------------------------------------
-     */
-
-    return $this->playerComparison
-        ->compare(
-            $profileA,
-            $profileB
-        );
-}
 }

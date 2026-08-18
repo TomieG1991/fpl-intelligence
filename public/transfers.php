@@ -1,0 +1,1604 @@
+<?php
+
+require_once __DIR__
+    . '/../classes/autoload.php';
+
+
+/*
+ * ============================================================
+ * SETUP
+ * ============================================================
+ */
+
+try {
+
+    $database =
+        new Database();
+
+
+    $service =
+        new PlayerIntelligenceService(
+            $database->getConnection()
+        );
+
+
+    $players =
+        $service
+            ->getAllPlayerSummaries();
+
+} catch (Throwable $exception) {
+
+    http_response_code(500);
+
+    die(
+        'Unable to initialise Transfer Intelligence.'
+    );
+}
+
+
+/*
+ * ============================================================
+ * PLAYER OPTIONS
+ * ============================================================
+ */
+
+usort(
+    $players,
+    function (
+        array $a,
+        array $b
+    ): int {
+
+        return strcasecmp(
+            (string) (
+                $a['name']
+                ?? ''
+            ),
+            (string) (
+                $b['name']
+                ?? ''
+            )
+        );
+    }
+);
+
+
+/*
+ * ============================================================
+ * REQUEST VALUES
+ * ============================================================
+ */
+
+$playerId =
+    filter_input(
+        INPUT_GET,
+        'player',
+        FILTER_VALIDATE_INT
+    );
+
+
+$maxPriceRaw =
+    filter_input(
+        INPUT_GET,
+        'max_price',
+        FILTER_VALIDATE_FLOAT
+    );
+
+
+$limitRaw =
+    filter_input(
+        INPUT_GET,
+        'limit',
+        FILTER_VALIDATE_INT
+    );
+
+
+$maxPrice =
+    (
+        $maxPriceRaw !== false
+        &&
+        $maxPriceRaw !== null
+    )
+        ? (float) $maxPriceRaw
+        : null;
+
+
+$limit =
+    (
+        $limitRaw !== false
+        &&
+        $limitRaw !== null
+    )
+        ? max(
+            1,
+            min(
+                20,
+                (int) $limitRaw
+            )
+        )
+        : 10;
+
+
+/*
+ * ============================================================
+ * DEFAULT BUDGET FROM SELECTED PLAYER
+ * ============================================================
+ */
+
+$selectedPlayerSummary =
+    null;
+
+
+if (
+    $playerId !== false
+    &&
+    $playerId !== null
+) {
+
+    foreach ($players as $player) {
+
+        if (
+            (int) (
+                $player['player_id']
+                ?? 0
+            )
+            ===
+            (int) $playerId
+        ) {
+
+            $selectedPlayerSummary =
+                $player;
+
+            break;
+        }
+    }
+
+
+    if (
+        $maxPrice === null
+        &&
+        $selectedPlayerSummary !== null
+        &&
+        isset(
+            $selectedPlayerSummary[
+                'price'
+            ]
+        )
+        &&
+        is_numeric(
+            $selectedPlayerSummary[
+                'price'
+            ]
+        )
+    ) {
+
+        $maxPrice =
+            (float) $selectedPlayerSummary[
+                'price'
+            ];
+    }
+}
+
+
+/*
+ * ============================================================
+ * RUN REPLACEMENT SEARCH
+ * ============================================================
+ */
+
+$replacementResult =
+    null;
+
+
+$transferError =
+    null;
+
+
+if (
+    $playerId !== false
+    &&
+    $playerId !== null
+    &&
+    $maxPrice !== null
+) {
+
+    if ($maxPrice < 0) {
+
+        $transferError =
+            'Maximum replacement price must be zero or higher.';
+
+    } else {
+
+        try {
+
+            $replacementResult =
+                $service
+                    ->findPlayerReplacements(
+                        (int) $playerId,
+                        (float) $maxPrice,
+                        $limit
+                    );
+
+
+            if ($replacementResult === null) {
+
+                $transferError =
+                    'Unable to find replacement candidates for the selected player.';
+            }
+
+        } catch (Throwable $exception) {
+
+            $transferError =
+                'Unable to complete the replacement search.';
+        }
+    }
+}
+
+
+/*
+ * ============================================================
+ * HELPERS
+ * ============================================================
+ */
+
+function transferDisplayRating(
+    mixed $value
+): string {
+
+    if (
+        $value === null
+        ||
+        !is_numeric(
+            $value
+        )
+    ) {
+
+        return '—';
+    }
+
+
+    return number_format(
+        (float) $value,
+        1
+    );
+}
+
+
+function transferDisplayPrice(
+    mixed $value
+): string {
+
+    if (
+        $value === null
+        ||
+        !is_numeric(
+            $value
+        )
+    ) {
+
+        return '—';
+    }
+
+
+    return '£'
+        . number_format(
+            (float) $value,
+            1
+        )
+        . 'm';
+}
+
+
+function transferDisplaySigned(
+    mixed $value,
+    string $suffix = ''
+): string {
+
+    if (
+        $value === null
+        ||
+        !is_numeric(
+            $value
+        )
+    ) {
+
+        return '—';
+    }
+
+
+    $number =
+        (float) $value;
+
+
+    return (
+        $number >= 0
+            ? '+'
+            : ''
+    )
+    . number_format(
+        $number,
+        1
+    )
+    . $suffix;
+}
+
+
+function transferTypeClass(
+    ?string $type
+): string {
+
+    return match (
+        strtolower(
+            (string) $type
+        )
+    ) {
+
+        'upgrade' =>
+            'transfer-type-upgrade',
+
+        'sidegrade' =>
+            'transfer-type-sidegrade',
+
+        'downgrade' =>
+            'transfer-type-downgrade',
+
+        default =>
+            'transfer-type-neutral'
+    };
+}
+
+
+function transferVerdictClass(
+    ?string $verdict
+): string {
+
+    $verdict =
+        strtolower(
+            (string) $verdict
+        );
+
+
+    if (
+        str_contains(
+            $verdict,
+            'excellent'
+        )
+    ) {
+        return 'transfer-verdict-excellent';
+    }
+
+
+    if (
+        str_contains(
+            $verdict,
+            'strong'
+        )
+    ) {
+        return 'transfer-verdict-strong';
+    }
+
+
+    if (
+        str_contains(
+            $verdict,
+            'consider'
+        )
+    ) {
+        return 'transfer-verdict-consider';
+    }
+
+
+    if (
+        str_contains(
+            $verdict,
+            'watchlist'
+        )
+    ) {
+        return 'transfer-verdict-watchlist';
+    }
+
+
+    if (
+        str_contains(
+            $verdict,
+            'avoid'
+        )
+    ) {
+        return 'transfer-verdict-avoid';
+    }
+
+
+    return 'transfer-verdict-neutral';
+}
+
+
+function transferConfidenceLabel(
+    mixed $confidence
+): string {
+
+    if (
+        $confidence === null
+        ||
+        !is_numeric(
+            $confidence
+        )
+    ) {
+
+        return 'Unknown';
+    }
+
+
+    $confidence =
+        (float) $confidence;
+
+
+    if ($confidence >= 1) {
+        return 'Full';
+    }
+
+
+    if ($confidence >= 0.75) {
+        return 'High';
+    }
+
+
+    if ($confidence >= 0.50) {
+        return 'Moderate';
+    }
+
+
+    if ($confidence >= 0.25) {
+        return 'Low';
+    }
+
+
+    return 'Very Low';
+}
+
+?>
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Find FPL replacement candidates using FPL Intelligence."
+    >
+
+    <title>
+        Transfer Intelligence | FPL Intelligence
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="assets/css/app.css"
+    >
+
+</head>
+
+
+<body>
+
+    <div class="app-shell">
+
+
+        <!-- ==================================================
+             SIDEBAR
+             ================================================== -->
+
+        <aside class="sidebar">
+
+            <div class="brand">
+
+                <div class="brand-mark">
+                    FI
+                </div>
+
+                <div>
+
+                    <div class="brand-name">
+                        FPL Intelligence
+                    </div>
+
+                    <div class="brand-version">
+                        v0.13.0
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <nav
+                class="main-navigation"
+                aria-label="Main navigation"
+            >
+
+                <a
+                    href="index.php"
+                    class="nav-link"
+                >
+                    <span class="nav-icon">
+                        ◫
+                    </span>
+
+                    Dashboard
+                </a>
+
+
+                <a
+                    href="players.php"
+                    class="nav-link"
+                >
+                    <span class="nav-icon">
+                        👤
+                    </span>
+
+                    Players
+                </a>
+
+
+                <a
+                    href="compare.php"
+                    class="nav-link"
+                >
+                    <span class="nav-icon">
+                        ⇄
+                    </span>
+
+                    Compare
+                </a>
+
+
+                <a
+                    href="#"
+                    class="nav-link"
+                >
+                    <span class="nav-icon">
+                        ⚽
+                    </span>
+
+                    Teams
+                </a>
+
+
+                <a
+                    href="#"
+                    class="nav-link"
+                >
+                    <span class="nav-icon">
+                        ◈
+                    </span>
+
+                    Fixtures
+                </a>
+
+
+                <a
+                    href="transfers.php"
+                    class="nav-link active"
+                >
+                    <span class="nav-icon">
+                        ⇄
+                    </span>
+
+                    Transfers
+                </a>
+
+
+                <a
+                    href="#"
+                    class="nav-link"
+                >
+                    <span class="nav-icon">
+                        ★
+                    </span>
+
+                    Squad Builder
+                </a>
+
+            </nav>
+
+
+            <div class="sidebar-footer">
+
+                <span class="status-dot online"></span>
+
+                System Online
+
+            </div>
+
+        </aside>
+
+
+        <!-- ==================================================
+             APPLICATION CONTENT
+             ================================================== -->
+
+        <div class="app-content">
+
+
+            <!-- ==============================================
+                 TOP BAR
+                 ============================================== -->
+
+            <header class="topbar">
+
+                <div>
+
+                    <p class="eyebrow">
+                        Decision Support
+                    </p>
+
+                    <h1>
+                        Transfer Intelligence
+                    </h1>
+
+                </div>
+
+            </header>
+
+
+            <!-- ==============================================
+                 MAIN
+                 ============================================== -->
+
+            <main class="dashboard">
+
+
+                <!-- ==========================================
+                     SEARCH CONTROLS
+                     ========================================== -->
+
+                <section class="dashboard-card transfer-search-card">
+
+                    <div class="card-header">
+
+                        <div>
+
+                            <p class="card-kicker">
+                                Replacement Finder
+                            </p>
+
+                            <h2>
+                                Find Player Replacements
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+
+                    <p class="transfer-search-explanation">
+
+                        Select the player you want to sell and set
+                        the maximum replacement price. Candidates
+                        are filtered to the same position and ranked
+                        by Player Intelligence.
+
+                    </p>
+
+
+                    <form
+                        method="get"
+                        action="transfers.php"
+                        class="transfer-search-form"
+                    >
+
+                        <div class="transfer-search-field">
+
+                            <label for="player">
+                                Player to Sell
+                            </label>
+
+                            <select
+                                name="player"
+                                id="player"
+                                required
+                            >
+
+                                <option value="">
+                                    Select player
+                                </option>
+
+
+                                <?php foreach (
+                                    $players
+                                    as $player
+                                ): ?>
+
+                                    <?php
+
+                                    $optionPlayerId =
+                                        (int) (
+                                            $player[
+                                                'player_id'
+                                            ]
+                                            ?? 0
+                                        );
+
+
+                                    if (
+                                        $optionPlayerId <= 0
+                                    ) {
+                                        continue;
+                                    }
+
+                                    ?>
+
+                                    <option
+                                        value="<?= $optionPlayerId; ?>"
+                                        <?= (
+                                            (int) $playerId
+                                            ===
+                                            $optionPlayerId
+                                        )
+                                            ? 'selected'
+                                            : ''; ?>
+                                    >
+
+                                        <?= htmlspecialchars(
+                                            (string) (
+                                                $player['name']
+                                                ?? 'Unknown'
+                                            ),
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ); ?>
+
+                                        —
+                                        <?= htmlspecialchars(
+                                            (string) (
+                                                $player[
+                                                    'position'
+                                                ]
+                                                ?? ''
+                                            ),
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ); ?>
+
+                                        —
+                                        <?= transferDisplayPrice(
+                                            $player[
+                                                'price'
+                                            ]
+                                            ?? null
+                                        ); ?>
+
+                                    </option>
+
+                                <?php endforeach; ?>
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="transfer-search-field">
+
+                            <label for="max_price">
+                                Max Replacement Price
+                            </label>
+
+                            <input
+                                type="number"
+                                name="max_price"
+                                id="max_price"
+                                min="0"
+                                max="20"
+                                step="0.1"
+                                value="<?= htmlspecialchars(
+                                    $maxPrice !== null
+                                        ? number_format(
+                                            $maxPrice,
+                                            1,
+                                            '.',
+                                            ''
+                                        )
+                                        : '',
+                                    ENT_QUOTES,
+                                    'UTF-8'
+                                ); ?>"
+                                placeholder="e.g. 8.5"
+                                required
+                            >
+
+                        </div>
+
+
+                        <div class="transfer-search-field">
+
+                            <label for="limit">
+                                Results
+                            </label>
+
+                            <select
+                                name="limit"
+                                id="limit"
+                            >
+
+                                <?php foreach (
+                                    [
+                                        5,
+                                        10,
+                                        15,
+                                        20
+                                    ]
+                                    as $resultLimit
+                                ): ?>
+
+                                    <option
+                                        value="<?= $resultLimit; ?>"
+                                        <?= (
+                                            $limit
+                                            ===
+                                            $resultLimit
+                                        )
+                                            ? 'selected'
+                                            : ''; ?>
+                                    >
+                                        <?= $resultLimit; ?>
+                                    </option>
+
+                                <?php endforeach; ?>
+
+                            </select>
+
+                        </div>
+
+
+                        <button
+                            type="submit"
+                            class="transfer-search-submit"
+                        >
+                            Find Replacements
+                        </button>
+
+                    </form>
+
+
+                    <?php if (
+                        $transferError !== null
+                    ): ?>
+
+                        <div class="transfer-error">
+
+                            <?= htmlspecialchars(
+                                $transferError,
+                                ENT_QUOTES,
+                                'UTF-8'
+                            ); ?>
+
+                        </div>
+
+                    <?php endif; ?>
+
+                </section>
+
+
+                <?php if (
+                    $replacementResult !== null
+                ): ?>
+
+
+                    <?php
+
+                    $currentPlayer =
+                        $replacementResult[
+                            'current_player'
+                        ]
+                        ?? [];
+
+
+                    $replacements =
+                        $replacementResult[
+                            'replacements'
+                        ]
+                        ?? [];
+
+                    ?>
+
+
+                    <!-- ======================================
+                         CURRENT PLAYER
+                         ====================================== -->
+
+                    <section class="dashboard-card transfer-current-card">
+
+                        <div class="card-header">
+
+                            <div>
+
+                                <p class="card-kicker">
+                                    Selling
+                                </p>
+
+                                <h2>
+
+                                    <?= htmlspecialchars(
+                                        (string) (
+                                            $currentPlayer[
+                                                'name'
+                                            ]
+                                            ?? 'Unknown Player'
+                                        ),
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    ); ?>
+
+                                </h2>
+
+                            </div>
+
+
+                            <span class="transfer-current-price">
+
+                                <?= transferDisplayPrice(
+                                    $currentPlayer[
+                                        'price'
+                                    ]
+                                    ?? null
+                                ); ?>
+
+                            </span>
+
+                        </div>
+
+
+                        <div class="transfer-current-grid">
+
+                            <div class="transfer-current-stat">
+
+                                <span>
+                                    Position
+                                </span>
+
+                                <strong>
+
+                                    <?= htmlspecialchars(
+                                        (string) (
+                                            $currentPlayer[
+                                                'position'
+                                            ]
+                                            ?? '—'
+                                        ),
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    ); ?>
+
+                                </strong>
+
+                            </div>
+
+
+                            <div class="transfer-current-stat">
+
+                                <span>
+                                    Intelligence
+                                </span>
+
+                                <strong>
+
+                                    <?= transferDisplayRating(
+                                        $currentPlayer[
+                                            'intelligence_score'
+                                        ]
+                                        ?? null
+                                    ); ?>
+
+                                </strong>
+
+                            </div>
+
+
+                            <div class="transfer-current-stat">
+
+                                <span>
+                                    Strength
+                                </span>
+
+                                <strong>
+
+                                    <?= transferDisplayRating(
+                                        $currentPlayer[
+                                            'strength_rating'
+                                        ]
+                                        ?? null
+                                    ); ?>
+
+                                </strong>
+
+                            </div>
+
+
+                            <div class="transfer-current-stat">
+
+                                <span>
+                                    Value
+                                </span>
+
+                                <strong>
+
+                                    <?= transferDisplayRating(
+                                        $currentPlayer[
+                                            'value_rating'
+                                        ]
+                                        ?? null
+                                    ); ?>
+
+                                </strong>
+
+                            </div>
+
+
+                            <div class="transfer-current-stat">
+
+                                <span>
+                                    Fixtures
+                                </span>
+
+                                <strong>
+
+                                    <?= transferDisplayRating(
+                                        $currentPlayer[
+                                            'fixture_rating'
+                                        ]
+                                        ?? null
+                                    ); ?>
+
+                                </strong>
+
+                            </div>
+
+
+                            <div class="transfer-current-stat">
+
+                                <span>
+                                    Max Replacement
+                                </span>
+
+                                <strong>
+
+                                    <?= transferDisplayPrice(
+                                        $replacementResult[
+                                            'max_price'
+                                        ]
+                                        ?? null
+                                    ); ?>
+
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="transfer-current-footer">
+
+                            <span>
+                                Assessment
+                            </span>
+
+                            <strong>
+
+                                <?= htmlspecialchars(
+                                    (string) (
+                                        $currentPlayer[
+                                            'verdict'
+                                        ]
+                                        ?? 'Unknown'
+                                    ),
+                                    ENT_QUOTES,
+                                    'UTF-8'
+                                ); ?>
+
+                            </strong>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- ======================================
+                         REPLACEMENT RESULTS
+                         ====================================== -->
+
+                    <section class="dashboard-card transfer-results-card">
+
+                        <div class="card-header">
+
+                            <div>
+
+                                <p class="card-kicker">
+                                    Recommended Candidates
+                                </p>
+
+                                <h2>
+                                    Replacement Rankings
+                                </h2>
+
+                            </div>
+
+
+                            <span class="card-badge">
+
+                                <?= (int) (
+                                    $replacementResult[
+                                        'replacement_count'
+                                    ]
+                                    ?? 0
+                                ); ?>
+
+                                Candidates
+
+                            </span>
+
+                        </div>
+
+
+                        <?php if (
+                            empty(
+                                $replacements
+                            )
+                        ): ?>
+
+                            <div class="transfer-empty">
+
+                                No eligible replacement candidates
+                                were found within the selected budget.
+
+                            </div>
+
+                        <?php else: ?>
+
+                            <div class="transfer-result-list">
+
+
+                                <?php foreach (
+                                    $replacements
+                                    as $index => $replacement
+                                ): ?>
+
+                                    <?php
+
+                                    $replacementType =
+                                        (string) (
+                                            $replacement[
+                                                'replacement_type'
+                                            ]
+                                            ?? 'Unknown'
+                                        );
+
+
+                                    $replacementId =
+                                        (int) (
+                                            $replacement[
+                                                'player_id'
+                                            ]
+                                            ?? 0
+                                        );
+
+                                    ?>
+
+                                    <article class="transfer-result-card">
+
+                                        <div class="transfer-result-rank">
+
+                                            <?= $index + 1; ?>
+
+                                        </div>
+
+
+                                        <div class="transfer-result-main">
+
+                                            <div class="transfer-result-heading">
+
+                                                <div>
+
+                                                    <h3>
+
+                                                        <?php if (
+                                                            $replacementId > 0
+                                                        ): ?>
+
+                                                            <a
+                                                                href="player.php?id=<?= $replacementId; ?>"
+                                                            >
+
+                                                                <?= htmlspecialchars(
+                                                                    (string) (
+                                                                        $replacement[
+                                                                            'name'
+                                                                        ]
+                                                                        ?? 'Unknown'
+                                                                    ),
+                                                                    ENT_QUOTES,
+                                                                    'UTF-8'
+                                                                ); ?>
+
+                                                            </a>
+
+                                                        <?php else: ?>
+
+                                                            <?= htmlspecialchars(
+                                                                (string) (
+                                                                    $replacement[
+                                                                        'name'
+                                                                    ]
+                                                                    ?? 'Unknown'
+                                                                ),
+                                                                ENT_QUOTES,
+                                                                'UTF-8'
+                                                            ); ?>
+
+                                                        <?php endif; ?>
+
+                                                    </h3>
+
+
+                                                    <div class="transfer-result-meta">
+
+                                                        <span>
+
+                                                            <?= htmlspecialchars(
+                                                                (string) (
+                                                                    $replacement[
+                                                                        'team_name'
+                                                                    ]
+                                                                    ?? 'Unknown'
+                                                                ),
+                                                                ENT_QUOTES,
+                                                                'UTF-8'
+                                                            ); ?>
+
+                                                        </span>
+
+
+                                                        <span>
+
+                                                            <?= htmlspecialchars(
+                                                                (string) (
+                                                                    $replacement[
+                                                                        'position'
+                                                                    ]
+                                                                    ?? '—'
+                                                                ),
+                                                                ENT_QUOTES,
+                                                                'UTF-8'
+                                                            ); ?>
+
+                                                        </span>
+
+
+                                                        <span>
+
+                                                            <?= transferDisplayPrice(
+                                                                $replacement[
+                                                                    'price'
+                                                                ]
+                                                                ?? null
+                                                            ); ?>
+
+                                                        </span>
+
+                                                    </div>
+
+                                                </div>
+
+
+                                                <div class="transfer-result-badges">
+
+                                                    <span class="transfer-type-badge <?= transferTypeClass(
+                                                        $replacementType
+                                                    ); ?>">
+
+                                                        <?= htmlspecialchars(
+                                                            $replacementType,
+                                                            ENT_QUOTES,
+                                                            'UTF-8'
+                                                        ); ?>
+
+                                                    </span>
+
+
+                                                    <span class="transfer-verdict-badge <?= transferVerdictClass(
+                                                        $replacement[
+                                                            'verdict'
+                                                        ]
+                                                        ?? null
+                                                    ); ?>">
+
+                                                        <?= htmlspecialchars(
+                                                            (string) (
+                                                                $replacement[
+                                                                    'verdict'
+                                                                ]
+                                                                ?? 'Unknown'
+                                                            ),
+                                                            ENT_QUOTES,
+                                                            'UTF-8'
+                                                        ); ?>
+
+                                                    </span>
+
+                                                </div>
+
+                                            </div>
+
+
+                                            <div class="transfer-result-intelligence">
+
+                                                <div>
+
+                                                    <span>
+                                                        Intelligence
+                                                    </span>
+
+                                                    <strong>
+
+                                                        <?= transferDisplayRating(
+                                                            $replacement[
+                                                                'intelligence_score'
+                                                            ]
+                                                            ?? null
+                                                        ); ?>
+
+                                                    </strong>
+
+                                                </div>
+
+
+                                                <div>
+
+                                                    <span>
+                                                        INT Movement
+                                                    </span>
+
+                                                    <strong>
+
+                                                        <?= transferDisplaySigned(
+                                                            $replacement[
+                                                                'intelligence_gain'
+                                                            ]
+                                                            ?? null
+                                                        ); ?>
+
+                                                    </strong>
+
+                                                </div>
+
+
+                                                <div>
+
+                                                    <span>
+                                                        Price Movement
+                                                    </span>
+
+                                                    <strong>
+
+                                                        <?= transferDisplaySigned(
+                                                            $replacement[
+                                                                'price_difference'
+                                                            ]
+                                                            ?? null,
+                                                            'm'
+                                                        ); ?>
+
+                                                    </strong>
+
+                                                </div>
+
+                                            </div>
+
+
+                                            <div class="transfer-result-metrics">
+
+                                                <div>
+
+                                                    <span>
+                                                        Strength
+                                                    </span>
+
+                                                    <strong>
+
+                                                        <?= transferDisplayRating(
+                                                            $replacement[
+                                                                'strength_rating'
+                                                            ]
+                                                            ?? null
+                                                        ); ?>
+
+                                                    </strong>
+
+                                                </div>
+
+
+                                                <div>
+
+                                                    <span>
+                                                        Value
+                                                    </span>
+
+                                                    <strong>
+
+                                                        <?= transferDisplayRating(
+                                                            $replacement[
+                                                                'value_rating'
+                                                            ]
+                                                            ?? null
+                                                        ); ?>
+
+                                                    </strong>
+
+                                                </div>
+
+
+                                                <div>
+
+                                                    <span>
+                                                        Fixtures
+                                                    </span>
+
+                                                    <strong>
+
+                                                        <?= transferDisplayRating(
+                                                            $replacement[
+                                                                'fixture_rating'
+                                                            ]
+                                                            ?? null
+                                                        ); ?>
+
+                                                    </strong>
+
+                                                </div>
+
+
+                                                <div>
+
+                                                    <span>
+                                                        Availability
+                                                    </span>
+
+                                                    <strong>
+
+                                                        <?= transferDisplayRating(
+                                                            $replacement[
+                                                                'availability_rating'
+                                                            ]
+                                                            ?? null
+                                                        ); ?>
+
+                                                    </strong>
+
+                                                </div>
+
+
+                                                <div>
+
+                                                    <span>
+                                                        Sample
+                                                    </span>
+
+                                                    <strong>
+
+                                                        <?= htmlspecialchars(
+                                                            transferConfidenceLabel(
+                                                                $replacement[
+                                                                    'sample_confidence'
+                                                                ]
+                                                                ?? null
+                                                            ),
+                                                            ENT_QUOTES,
+                                                            'UTF-8'
+                                                        ); ?>
+
+                                                    </strong>
+
+                                                </div>
+
+                                            </div>
+
+
+                                            <p class="transfer-result-summary">
+
+                                                <?= htmlspecialchars(
+                                                    (string) (
+                                                        $replacement[
+                                                            'replacement_summary'
+                                                        ]
+                                                        ?? ''
+                                                    ),
+                                                    ENT_QUOTES,
+                                                    'UTF-8'
+                                                ); ?>
+
+                                            </p>
+
+
+                                            <div class="transfer-result-actions">
+
+                                                <?php if (
+                                                    $replacementId > 0
+                                                ): ?>
+
+                                                    <a
+                                                        href="player.php?id=<?= $replacementId; ?>"
+                                                        class="transfer-secondary-action"
+                                                    >
+                                                        View Profile
+                                                    </a>
+
+
+                                                    <a
+                                                        href="compare.php?player1=<?= (int) (
+                                                            $currentPlayer[
+                                                                'player_id'
+                                                            ]
+                                                            ?? 0
+                                                        ); ?>&player2=<?= $replacementId; ?>"
+                                                        class="transfer-primary-action"
+                                                    >
+                                                        Compare
+                                                    </a>
+
+                                                <?php endif; ?>
+
+                                            </div>
+
+                                        </div>
+
+                                    </article>
+
+                                <?php endforeach; ?>
+
+
+                            </div>
+
+                        <?php endif; ?>
+
+                    </section>
+
+
+                <?php endif; ?>
+
+
+            </main>
+
+
+            <!-- ==============================================
+                 FOOTER
+                 ============================================== -->
+
+            <footer class="footer">
+
+                <span>
+                    FPL Intelligence
+                </span>
+
+                <span>
+                    Transfer Intelligence
+                </span>
+
+            </footer>
+
+
+        </div>
+
+    </div>
+
+
+    <script src="assets/js/app.js"></script>
+
+</body>
+
+</html>

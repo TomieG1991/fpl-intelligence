@@ -606,7 +606,7 @@ try {
 
 
                 <a
-                    href="#"
+                    href="transfers.php"
                     class="nav-link"
                 >
                     <span class="nav-icon">

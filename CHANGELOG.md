@@ -54,6 +54,50 @@ The project follows a sprint-based development process.
 - Added Compare entry points from Player Explorer and individual player profiles.
 - Added Compare to primary application navigation.
 - Added responsive styling for the player comparison interface.
+- Added `PlayerReplacement` service for identifying same-position replacement candidates.
+- Added replacement filtering by:
+  - player position
+  - maximum replacement price
+  - player availability
+  - valid Intelligence Score
+  - exclusion of the outgoing player
+- Added deterministic replacement ranking using:
+  - Player Intelligence Score
+  - Player Strength
+  - Value Rating
+- Added Intelligence movement between outgoing and replacement players.
+- Added price movement between outgoing and replacement players.
+- Added replacement classifications:
+  - Upgrade
+  - Sidegrade
+  - Downgrade
+- Added replacement summary generation describing Intelligence movement and budget impact.
+- Added assessment verdict support within replacement candidates.
+- Added sample confidence visibility for replacement recommendations.
+- Added `PlayerReplacementTest.php` automated test coverage.
+- Added `PlayerReplacementRealDataTest.php` diagnostic coverage using imported FPL data.
+- Validated replacement behaviour across premium, budget and low-sample player scenarios.
+- Extended `getAllPlayerSummaries()` with assessment verdict and verdict key data.
+- Added automated service tests for summary assessment data.
+- Integrated `PlayerReplacement` into `PlayerIntelligenceService` through `findPlayerReplacements()`.
+- Added service-level validation for invalid players, budgets and result limits.
+- Added `transfers.php` Transfer Intelligence interface.
+- Added player-to-sell selector, maximum replacement budget and result-limit controls.
+- Added outgoing player summary with Intelligence, Strength, Value, Fixtures and assessment.
+- Added ranked replacement candidate cards with:
+  - Intelligence Score
+  - Intelligence movement
+  - price movement
+  - Strength
+  - Value
+  - Fixtures
+  - Availability
+  - Sample Confidence
+  - assessment verdict
+  - replacement classification
+- Added direct links from replacement candidates to Player Profile and Player Comparison.
+- Added Transfer Intelligence to the primary application navigation.
+- Added responsive Transfer Intelligence styling.
 
 ### Changed
 - Improved Player Explorer availability visibility.

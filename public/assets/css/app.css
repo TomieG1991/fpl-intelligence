@@ -4138,3 +4138,812 @@ a {
     }
 
 }
+
+/*
+ * ============================================================
+ * TRANSFER INTELLIGENCE
+ * ============================================================
+ */
+
+.transfer-search-card,
+.transfer-current-card,
+.transfer-results-card {
+    margin-bottom: 20px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * SEARCH CONTROLS
+ * ------------------------------------------------------------
+ */
+
+.transfer-search-explanation {
+    max-width: 850px;
+
+    margin:
+        -6px
+        0
+        18px;
+
+    color: #9facbf;
+
+    font-size: 11px;
+
+    line-height: 1.65;
+}
+
+
+.transfer-search-form {
+    display: grid;
+
+    grid-template-columns:
+        minmax(220px, 2fr)
+        minmax(150px, 1fr)
+        minmax(100px, 0.7fr)
+        auto;
+
+    gap: 12px;
+
+    align-items: end;
+}
+
+
+.transfer-search-field {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 6px;
+}
+
+
+.transfer-search-field label {
+    color: #aab5c8;
+
+    font-size: 9px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.07em;
+
+    text-transform: uppercase;
+}
+
+
+.transfer-search-field select,
+.transfer-search-field input {
+    width: 100%;
+
+    min-height: 42px;
+
+    padding:
+        0
+        11px;
+
+    background: #182133;
+
+    border:
+        1px solid #46536d;
+
+    border-radius: 7px;
+
+    color: #ffffff;
+
+    font-size: 11px;
+}
+
+
+.transfer-search-field select:focus,
+.transfer-search-field input:focus {
+    border-color: #9287ff;
+
+    outline: none;
+}
+
+
+.transfer-search-submit {
+    min-height: 42px;
+
+    padding:
+        0
+        16px;
+
+    background: #504785;
+
+    border:
+        1px solid #9287ff;
+
+    border-radius: 7px;
+
+    color: #ffffff;
+
+    cursor: pointer;
+
+    font-size: 10px;
+
+    font-weight: 800;
+}
+
+
+.transfer-search-submit:hover {
+    background: #61569e;
+}
+
+
+.transfer-error {
+    margin-top: 14px;
+
+    padding:
+        10px
+        12px;
+
+    background: rgba(239, 155, 155, 0.1);
+
+    border:
+        1px solid rgba(239, 155, 155, 0.35);
+
+    border-radius: 7px;
+
+    color: #ef9b9b;
+
+    font-size: 11px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * CURRENT PLAYER
+ * ------------------------------------------------------------
+ */
+
+.transfer-current-price {
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    min-height: 34px;
+
+    padding:
+        0
+        10px;
+
+    background: #20293d;
+
+    border:
+        1px solid #34405a;
+
+    border-radius: 7px;
+
+    color: #ffffff;
+
+    font-size: 12px;
+
+    font-weight: 800;
+}
+
+
+.transfer-current-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(6, minmax(0, 1fr));
+
+    gap: 10px;
+}
+
+
+.transfer-current-stat {
+    padding: 13px;
+
+    background: #20293d;
+
+    border:
+        1px solid #34405a;
+
+    border-radius: 8px;
+}
+
+
+.transfer-current-stat span {
+    display: block;
+
+    color: #9facbf;
+
+    font-size: 8px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.07em;
+
+    text-transform: uppercase;
+}
+
+
+.transfer-current-stat strong {
+    display: block;
+
+    margin-top: 6px;
+
+    color: #ffffff;
+
+    font-size: 13px;
+}
+
+
+.transfer-current-footer {
+    display: flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    margin-top: 12px;
+
+    padding:
+        10px
+        12px;
+
+    background: #182133;
+
+    border:
+        1px solid #303b51;
+
+    border-radius: 8px;
+
+    color: #9facbf;
+
+    font-size: 10px;
+}
+
+
+.transfer-current-footer strong {
+    color: #ffffff;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * RESULTS
+ * ------------------------------------------------------------
+ */
+
+.transfer-result-list {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 12px;
+}
+
+
+.transfer-result-card {
+    display: grid;
+
+    grid-template-columns:
+        44px
+        minmax(0, 1fr);
+
+    gap: 12px;
+
+    padding: 14px;
+
+    background: #182133;
+
+    border:
+        1px solid #303b51;
+
+    border-radius: 9px;
+}
+
+
+.transfer-result-rank {
+    width: 36px;
+    height: 36px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background: #293349;
+
+    border:
+        1px solid #46536d;
+
+    border-radius: 8px;
+
+    color: #ffffff;
+
+    font-size: 12px;
+
+    font-weight: 900;
+}
+
+
+.transfer-result-main {
+    min-width: 0;
+}
+
+
+.transfer-result-heading {
+    display: flex;
+
+    justify-content: space-between;
+
+    gap: 15px;
+}
+
+
+.transfer-result-heading h3 {
+    margin: 0;
+}
+
+
+.transfer-result-heading h3 a {
+    color: #ffffff;
+}
+
+
+.transfer-result-heading h3 a:hover {
+    color: #b7afff;
+}
+
+
+.transfer-result-meta {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    margin-top: 6px;
+
+    color: #9facbf;
+
+    font-size: 10px;
+}
+
+
+.transfer-result-meta span:not(:last-child)::after {
+    margin-left: 8px;
+
+    color: #58657d;
+
+    content: "•";
+}
+
+
+.transfer-result-badges {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    justify-content: flex-end;
+
+    gap: 6px;
+}
+
+
+.transfer-type-badge,
+.transfer-verdict-badge {
+    display: inline-flex;
+
+    align-items: center;
+
+    padding:
+        4px
+        7px;
+
+    border-radius: 999px;
+
+    font-size: 8px;
+
+    font-weight: 800;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * REPLACEMENT TYPES
+ * ------------------------------------------------------------
+ */
+
+.transfer-type-upgrade {
+    background: rgba(114, 228, 154, 0.12);
+
+    border:
+        1px solid rgba(114, 228, 154, 0.35);
+
+    color: #72e49a;
+}
+
+
+.transfer-type-sidegrade {
+    background: rgba(240, 211, 110, 0.12);
+
+    border:
+        1px solid rgba(240, 211, 110, 0.35);
+
+    color: #f0d36e;
+}
+
+
+.transfer-type-downgrade {
+    background: rgba(239, 167, 110, 0.12);
+
+    border:
+        1px solid rgba(239, 167, 110, 0.35);
+
+    color: #efa76e;
+}
+
+
+.transfer-type-neutral {
+    background: #293349;
+
+    border:
+        1px solid #46536d;
+
+    color: #aab5c8;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * VERDICTS
+ * ------------------------------------------------------------
+ */
+
+.transfer-verdict-excellent {
+    background: rgba(114, 228, 154, 0.10);
+
+    color: #72e49a;
+}
+
+
+.transfer-verdict-strong {
+    background: rgba(146, 135, 255, 0.14);
+
+    color: #c0b8ff;
+}
+
+
+.transfer-verdict-consider {
+    background: rgba(240, 211, 110, 0.10);
+
+    color: #f0d36e;
+}
+
+
+.transfer-verdict-watchlist {
+    background: rgba(239, 167, 110, 0.10);
+
+    color: #efa76e;
+}
+
+
+.transfer-verdict-avoid {
+    background: rgba(239, 155, 155, 0.10);
+
+    color: #ef9b9b;
+}
+
+
+.transfer-verdict-neutral {
+    background: #293349;
+
+    color: #aab5c8;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * INTELLIGENCE MOVEMENT
+ * ------------------------------------------------------------
+ */
+
+.transfer-result-intelligence {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 9px;
+
+    margin-top: 14px;
+}
+
+
+.transfer-result-intelligence > div {
+    padding: 11px;
+
+    background: #20293d;
+
+    border:
+        1px solid #34405a;
+
+    border-radius: 7px;
+}
+
+
+.transfer-result-intelligence span,
+.transfer-result-metrics span {
+    display: block;
+
+    color: #9facbf;
+
+    font-size: 8px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.06em;
+
+    text-transform: uppercase;
+}
+
+
+.transfer-result-intelligence strong {
+    display: block;
+
+    margin-top: 5px;
+
+    color: #ffffff;
+
+    font-size: 15px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * SUPPORTING METRICS
+ * ------------------------------------------------------------
+ */
+
+.transfer-result-metrics {
+    display: grid;
+
+    grid-template-columns:
+        repeat(5, minmax(0, 1fr));
+
+    gap: 9px;
+
+    margin-top: 9px;
+}
+
+
+.transfer-result-metrics > div {
+    padding: 10px;
+
+    background: #20293d;
+
+    border:
+        1px solid #34405a;
+
+    border-radius: 7px;
+}
+
+
+.transfer-result-metrics strong {
+    display: block;
+
+    margin-top: 5px;
+
+    color: #ffffff;
+
+    font-size: 12px;
+}
+
+
+.transfer-result-summary {
+    margin:
+        11px
+        0
+        0;
+
+    color: #aab5c8;
+
+    font-size: 10px;
+
+    line-height: 1.6;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * ACTIONS
+ * ------------------------------------------------------------
+ */
+
+.transfer-result-actions {
+    display: flex;
+
+    gap: 8px;
+
+    margin-top: 12px;
+}
+
+
+.transfer-primary-action,
+.transfer-secondary-action {
+    display: inline-flex;
+
+    align-items: center;
+
+    min-height: 34px;
+
+    padding:
+        0
+        10px;
+
+    border-radius: 6px;
+
+    font-size: 9px;
+
+    font-weight: 800;
+}
+
+
+.transfer-primary-action {
+    background: #504785;
+
+    border:
+        1px solid #9287ff;
+
+    color: #ffffff;
+}
+
+
+.transfer-primary-action:hover {
+    background: #61569e;
+
+    color: #ffffff;
+}
+
+
+.transfer-secondary-action {
+    background: #293349;
+
+    border:
+        1px solid #46536d;
+
+    color: #c1cada;
+}
+
+
+.transfer-secondary-action:hover {
+    border-color: #687793;
+
+    color: #ffffff;
+}
+
+
+.transfer-empty {
+    padding: 18px;
+
+    background: #182133;
+
+    border:
+        1px solid #303b51;
+
+    border-radius: 8px;
+
+    color: #9facbf;
+
+    font-size: 11px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * RESPONSIVE TRANSFERS
+ * ------------------------------------------------------------
+ */
+
+@media (
+    max-width: 1100px
+) {
+
+    .transfer-current-grid {
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+    }
+
+
+    .transfer-result-metrics {
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+    }
+
+}
+
+
+@media (
+    max-width: 900px
+) {
+
+    .transfer-search-form {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+
+    .transfer-search-submit {
+        grid-column:
+            1
+            /
+            -1;
+    }
+
+}
+
+
+@media (
+    max-width: 700px
+) {
+
+    .transfer-result-heading {
+        flex-direction: column;
+    }
+
+
+    .transfer-result-badges {
+        justify-content: flex-start;
+    }
+
+
+    .transfer-result-intelligence {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .transfer-result-metrics {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+
+@media (
+    max-width: 520px
+) {
+
+    .transfer-search-form {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .transfer-current-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+
+    .transfer-result-card {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .transfer-result-rank {
+        width: 32px;
+        height: 32px;
+    }
+
+
+    .transfer-result-actions {
+        flex-direction: column;
+    }
+
+
+    .transfer-primary-action,
+    .transfer-secondary-action {
+        justify-content: center;
+    }
+
+}
