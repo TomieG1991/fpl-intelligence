@@ -5378,3 +5378,805 @@ a {
 
     color: #aab5c8;
 }
+
+/*
+ * ============================================================
+ * TRANSFER PLANNER
+ * ============================================================
+ */
+
+.transfer-planner-form-card,
+.transfer-planner-result-card,
+.transfer-planner-movement-card {
+    margin-bottom: 20px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * PLANNER FORM
+ * ------------------------------------------------------------
+ */
+
+.transfer-planner-explanation {
+    max-width: 900px;
+
+    margin:
+        -6px
+        0
+        18px;
+
+    color: #9facbf;
+
+    font-size: 11px;
+
+    line-height: 1.65;
+}
+
+
+.transfer-planner-form {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 14px;
+}
+
+
+.transfer-planner-fieldset {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        48px
+        minmax(0, 1fr);
+
+    gap: 12px;
+
+    align-items: end;
+
+    margin: 0;
+
+    padding: 14px;
+
+    background: #182133;
+
+    border:
+        1px solid #303b51;
+
+    border-radius: 9px;
+}
+
+
+.transfer-planner-fieldset legend {
+    padding:
+        0
+        7px;
+
+    color: #c0b8ff;
+
+    font-size: 9px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.07em;
+
+    text-transform: uppercase;
+}
+
+
+.transfer-planner-field {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 6px;
+}
+
+
+.transfer-planner-field label {
+    color: #aab5c8;
+
+    font-size: 9px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.07em;
+
+    text-transform: uppercase;
+}
+
+
+.transfer-planner-field select {
+    width: 100%;
+
+    min-height: 42px;
+
+    padding:
+        0
+        11px;
+
+    background: #20293d;
+
+    border:
+        1px solid #46536d;
+
+    border-radius: 7px;
+
+    color: #ffffff;
+
+    font-size: 11px;
+}
+
+
+.transfer-planner-field select:focus {
+    border-color: #9287ff;
+
+    outline: none;
+}
+
+
+.transfer-planner-arrow {
+    min-height: 42px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    color: #8996aa;
+
+    font-size: 18px;
+
+    font-weight: 900;
+}
+
+
+.transfer-planner-submit {
+    align-self: flex-start;
+
+    min-height: 42px;
+
+    padding:
+        0
+        17px;
+
+    background: #504785;
+
+    border:
+        1px solid #9287ff;
+
+    border-radius: 7px;
+
+    color: #ffffff;
+
+    cursor: pointer;
+
+    font-size: 10px;
+
+    font-weight: 800;
+}
+
+
+.transfer-planner-submit:hover {
+    background: #61569e;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * COMBINATION RESULT
+ * ------------------------------------------------------------
+ */
+
+.transfer-planner-result-heading {
+    display: flex;
+
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 15px;
+}
+
+
+.transfer-planner-result-heading h2 {
+    margin:
+        2px
+        0
+        0;
+
+    color: #ffffff;
+}
+
+
+.transfer-planner-classification {
+    display: inline-flex;
+
+    align-items: center;
+
+    padding:
+        5px
+        9px;
+
+    border-radius: 999px;
+
+    font-size: 9px;
+
+    font-weight: 800;
+}
+
+.transfer-planner-classification strong {
+    margin-left: 5px;
+
+    padding-left: 5px;
+
+    border-left:
+        1px solid currentColor;
+
+    font-size: 9px;
+}
+
+
+.planner-classification-strong {
+    background: rgba(114, 228, 154, 0.14);
+
+    border:
+        1px solid rgba(114, 228, 154, 0.40);
+
+    color: #72e49a;
+}
+
+
+.planner-classification-improvement {
+    background: rgba(114, 228, 154, 0.10);
+
+    border:
+        1px solid rgba(114, 228, 154, 0.30);
+
+    color: #9be8b4;
+}
+
+
+.planner-classification-balanced {
+    background: rgba(146, 135, 255, 0.14);
+
+    border:
+        1px solid rgba(146, 135, 255, 0.40);
+
+    color: #c0b8ff;
+}
+
+
+.planner-classification-neutral {
+    background: rgba(240, 211, 110, 0.10);
+
+    border:
+        1px solid rgba(240, 211, 110, 0.30);
+
+    color: #f0d36e;
+}
+
+
+.planner-classification-risky {
+    background: rgba(239, 167, 110, 0.14);
+
+    border:
+        1px solid rgba(239, 167, 110, 0.40);
+
+    color: #efa76e;
+}
+
+
+.planner-classification-downgrade,
+.planner-classification-unaffordable {
+    background: rgba(239, 155, 155, 0.12);
+
+    border:
+        1px solid rgba(239, 155, 155, 0.40);
+
+    color: #ef9b9b;
+}
+
+
+.transfer-planner-result-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 10px;
+
+    margin-top: 16px;
+}
+
+
+.transfer-planner-result-stat {
+    padding: 13px;
+
+    background: #20293d;
+
+    border:
+        1px solid #34405a;
+
+    border-radius: 8px;
+}
+
+
+.transfer-planner-result-stat span {
+    display: block;
+
+    color: #9facbf;
+
+    font-size: 8px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.06em;
+
+    text-transform: uppercase;
+}
+
+
+.transfer-planner-result-stat strong {
+    display: block;
+
+    margin-top: 6px;
+
+    color: #ffffff;
+
+    font-size: 17px;
+}
+
+
+.transfer-planner-summary {
+    margin:
+        13px
+        0
+        0;
+
+    color: #aab5c8;
+
+    font-size: 10px;
+
+    line-height: 1.65;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * INDIVIDUAL TRANSFER CARDS
+ * ------------------------------------------------------------
+ */
+
+.transfer-planner-transfer-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 16px;
+
+    margin-bottom: 20px;
+}
+
+
+.transfer-planner-transfer-header {
+    display: flex;
+
+    justify-content: space-between;
+
+    gap: 12px;
+}
+
+
+.transfer-planner-transfer-header h2 {
+    margin:
+        2px
+        0
+        0;
+
+    color: #ffffff;
+
+    font-size: 17px;
+}
+
+
+.transfer-planner-transfer-header h2 span {
+    margin:
+        0
+        5px;
+
+    color: #8996aa;
+}
+
+
+.transfer-planner-decision {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    align-self: flex-start;
+
+    padding:
+        5px
+        8px;
+
+    border-radius: 999px;
+
+    font-size: 8px;
+
+    font-weight: 800;
+}
+
+
+.transfer-planner-decision strong {
+    padding-left: 6px;
+
+    border-left:
+        1px solid currentColor;
+
+    font-size: 8px;
+}
+
+
+.planner-decision-upgrade {
+    background: rgba(114, 228, 154, 0.14);
+
+    border:
+        1px solid rgba(114, 228, 154, 0.40);
+
+    color: #72e49a;
+}
+
+
+.planner-decision-budget {
+    background: rgba(146, 135, 255, 0.16);
+
+    border:
+        1px solid rgba(146, 135, 255, 0.40);
+
+    color: #c0b8ff;
+}
+
+
+.planner-decision-strategic {
+    background: rgba(105, 191, 255, 0.14);
+
+    border:
+        1px solid rgba(105, 191, 255, 0.40);
+
+    color: #9ed5ff;
+}
+
+
+.planner-decision-sidegrade {
+    background: rgba(240, 211, 110, 0.12);
+
+    border:
+        1px solid rgba(240, 211, 110, 0.35);
+
+    color: #f0d36e;
+}
+
+
+.planner-decision-risky {
+    background: rgba(239, 167, 110, 0.14);
+
+    border:
+        1px solid rgba(239, 167, 110, 0.40);
+
+    color: #efa76e;
+}
+
+
+.planner-decision-downgrade {
+    background: rgba(239, 155, 155, 0.12);
+
+    border:
+        1px solid rgba(239, 155, 155, 0.40);
+
+    color: #ef9b9b;
+}
+
+
+.planner-decision-neutral {
+    background: #293349;
+
+    border:
+        1px solid #46536d;
+
+    color: #aab5c8;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * PLAYER MOVEMENT
+ * ------------------------------------------------------------
+ */
+
+.transfer-planner-player-grid {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        36px
+        minmax(0, 1fr);
+
+    gap: 8px;
+
+    align-items: center;
+
+    margin-top: 15px;
+}
+
+
+.transfer-planner-player {
+    padding: 11px;
+
+    background: #182133;
+
+    border:
+        1px solid #303b51;
+
+    border-radius: 8px;
+}
+
+
+.transfer-planner-player-label {
+    display: block;
+
+    color: #8996aa;
+
+    font-size: 8px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.06em;
+
+    text-transform: uppercase;
+}
+
+
+.transfer-planner-player strong {
+    display: block;
+
+    margin-top: 5px;
+
+    color: #ffffff;
+
+    font-size: 12px;
+}
+
+
+.transfer-planner-player strong a {
+    color: #ffffff;
+}
+
+
+.transfer-planner-player strong a:hover {
+    color: #b7afff;
+}
+
+
+.transfer-planner-player small {
+    display: block;
+
+    margin-top: 5px;
+
+    color: #9facbf;
+
+    font-size: 9px;
+}
+
+
+.transfer-planner-player-arrow {
+    text-align: center;
+
+    color: #8996aa;
+
+    font-size: 17px;
+
+    font-weight: 900;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * TRANSFER METRICS
+ * ------------------------------------------------------------
+ */
+
+.transfer-planner-transfer-metrics {
+    display: grid;
+
+    grid-template-columns:
+        repeat(5, minmax(0, 1fr));
+
+    gap: 8px;
+
+    margin-top: 10px;
+}
+
+
+.transfer-planner-transfer-metrics > div {
+    padding: 9px;
+
+    background: #20293d;
+
+    border:
+        1px solid #34405a;
+
+    border-radius: 7px;
+}
+
+
+.transfer-planner-transfer-metrics span,
+.transfer-planner-movement-grid span {
+    display: block;
+
+    color: #9facbf;
+
+    font-size: 8px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.05em;
+
+    text-transform: uppercase;
+}
+
+
+.transfer-planner-transfer-metrics strong,
+.transfer-planner-movement-grid strong {
+    display: block;
+
+    margin-top: 5px;
+
+    color: #ffffff;
+
+    font-size: 11px;
+}
+
+
+.transfer-planner-transfer-summary {
+    margin:
+        11px
+        0
+        0;
+
+    color: #aab5c8;
+
+    font-size: 10px;
+
+    line-height: 1.6;
+}
+
+
+.transfer-planner-transfer-actions {
+    margin-top: 12px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * COMBINED MOVEMENTS
+ * ------------------------------------------------------------
+ */
+
+.transfer-planner-movement-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(6, minmax(0, 1fr));
+
+    gap: 9px;
+}
+
+
+.transfer-planner-movement-grid > div {
+    padding: 11px;
+
+    background: #20293d;
+
+    border:
+        1px solid #34405a;
+
+    border-radius: 7px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * RESPONSIVE
+ * ------------------------------------------------------------
+ */
+
+@media (
+    max-width: 1100px
+) {
+
+    .transfer-planner-result-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+
+    .transfer-planner-transfer-metrics {
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+    }
+
+
+    .transfer-planner-movement-grid {
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+    }
+
+}
+
+
+@media (
+    max-width: 850px
+) {
+
+    .transfer-planner-transfer-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .transfer-planner-transfer-header {
+        flex-direction: column;
+    }
+
+}
+
+
+@media (
+    max-width: 700px
+) {
+
+    .transfer-planner-fieldset {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .transfer-planner-arrow {
+        min-height: auto;
+    }
+
+
+    .transfer-planner-submit {
+        width: 100%;
+    }
+
+}
+
+
+@media (
+    max-width: 520px
+) {
+
+    .transfer-planner-result-grid,
+    .transfer-planner-movement-grid,
+    .transfer-planner-transfer-metrics {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .transfer-planner-player-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .transfer-planner-player-arrow {
+        transform: rotate(90deg);
+    }
+
+}

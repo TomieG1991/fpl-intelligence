@@ -1420,12 +1420,433 @@ if (
 /*
  * ============================================================
  * SCENARIO K
+ * TRANSFER COMBINATION
+ * ============================================================
+ */
+
+echo "<br>============================================<br>";
+echo "Scenario K: Transfer Combination<br>";
+echo "============================================<br>";
+
+
+/*
+ * Find two valid same-position transfer pairs.
+ *
+ * We use player summaries so this test does not depend on
+ * specific real-world player names or IDs.
+ */
+
+$combinationPlayers =
+    $service
+        ->getAllPlayerSummaries();
+
+
+$transferPairA =
+    null;
+
+
+$transferPairB =
+    null;
+
+
+foreach (
+    $combinationPlayers
+    as $currentCandidate
+) {
+
+    $currentId =
+        (int) (
+            $currentCandidate[
+                'player_id'
+            ]
+            ?? 0
+        );
+
+
+    $currentPosition =
+        $currentCandidate[
+            'position'
+        ]
+        ?? null;
+
+
+    if (
+        $currentId <= 0
+        ||
+        empty(
+            $currentPosition
+        )
+    ) {
+        continue;
+    }
+
+
+    foreach (
+        $combinationPlayers
+        as $replacementCandidate
+    ) {
+
+        $replacementId =
+            (int) (
+                $replacementCandidate[
+                    'player_id'
+                ]
+                ?? 0
+            );
+
+
+        if (
+            $replacementId <= 0
+            ||
+            $replacementId === $currentId
+            ||
+            (
+                $replacementCandidate[
+                    'position'
+                ]
+                ?? null
+            )
+            !==
+            $currentPosition
+        ) {
+            continue;
+        }
+
+
+        if ($transferPairA === null) {
+
+            $transferPairA = [
+
+                'current' =>
+                    $currentId,
+
+                'replacement' =>
+                    $replacementId
+            ];
+
+            break;
+        }
+
+
+        if (
+            $currentId
+            !==
+            $transferPairA[
+                'current'
+            ]
+            &&
+            $currentId
+            !==
+            $transferPairA[
+                'replacement'
+            ]
+            &&
+            $replacementId
+            !==
+            $transferPairA[
+                'current'
+            ]
+            &&
+            $replacementId
+            !==
+            $transferPairA[
+                'replacement'
+            ]
+        ) {
+
+            $transferPairB = [
+
+                'current' =>
+                    $currentId,
+
+                'replacement' =>
+                    $replacementId
+            ];
+
+            break 2;
+        }
+    }
+}
+
+
+testPass(
+    'Two valid transfer pairs are available',
+    $transferPairA !== null
+    &&
+    $transferPairB !== null
+);
+
+
+if (
+    $transferPairA !== null
+    &&
+    $transferPairB !== null
+) {
+
+    $combinationResult =
+        $service
+            ->evaluateTransferCombination(
+                $transferPairA[
+                    'current'
+                ],
+                $transferPairA[
+                    'replacement'
+                ],
+                $transferPairB[
+                    'current'
+                ],
+                $transferPairB[
+                    'replacement'
+                ]
+            );
+
+
+    testPass(
+        'Transfer combination returns an array',
+        is_array(
+            $combinationResult
+        )
+    );
+
+
+    testPass(
+        'Combination transfer A exists',
+        isset(
+            $combinationResult[
+                'transfer_a'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Combination transfer B exists',
+        isset(
+            $combinationResult[
+                'transfer_b'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Combined movement data exists',
+        isset(
+            $combinationResult[
+                'combined_movements'
+            ]
+        )
+        &&
+        is_array(
+            $combinationResult[
+                'combined_movements'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Combined Intelligence movement exists',
+        array_key_exists(
+            'intelligence',
+            $combinationResult[
+                'combined_movements'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Combined strength movement exists',
+        array_key_exists(
+            'strength',
+            $combinationResult[
+                'combined_movements'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Combined value movement exists',
+        array_key_exists(
+            'value',
+            $combinationResult[
+                'combined_movements'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Combined fixture movement exists',
+        array_key_exists(
+            'fixtures',
+            $combinationResult[
+                'combined_movements'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Combined confidence movement exists',
+        array_key_exists(
+            'sample_confidence',
+            $combinationResult[
+                'combined_movements'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Combined budget movement exists',
+        array_key_exists(
+            'budget',
+            $combinationResult[
+                'combined_movements'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Combination affordability exists',
+        array_key_exists(
+            'is_affordable',
+            $combinationResult
+        )
+    );
+
+
+    testPass(
+        'Combination score exists',
+        array_key_exists(
+            'combination_score',
+            $combinationResult
+        )
+    );
+
+
+    testPass(
+        'Combination classification exists',
+        array_key_exists(
+            'classification',
+            $combinationResult
+        )
+    );
+
+
+    testPass(
+        'Combination summary exists',
+        array_key_exists(
+            'summary',
+            $combinationResult
+        )
+    );
+
+
+    testPass(
+        'Combination classification is not empty',
+        !empty(
+            $combinationResult[
+                'classification'
+            ]
+            ?? null
+        )
+    );
+
+
+    testPass(
+        'Transfer A preserves outgoing player ID',
+        (
+            (int) (
+                $combinationResult[
+                    'transfer_a'
+                ]['current_player']['player_id']
+                ?? 0
+            )
+        )
+        ===
+        (
+            (int)
+            $transferPairA[
+                'current'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Transfer A preserves incoming player ID',
+        (
+            (int) (
+                $combinationResult[
+                    'transfer_a'
+                ]['replacement']['player_id']
+                ?? 0
+            )
+        )
+        ===
+        (
+            (int)
+            $transferPairA[
+                'replacement'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Transfer B preserves outgoing player ID',
+        (
+            (int) (
+                $combinationResult[
+                    'transfer_b'
+                ]['current_player']['player_id']
+                ?? 0
+            )
+        )
+        ===
+        (
+            (int)
+            $transferPairB[
+                'current'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Transfer B preserves incoming player ID',
+        (
+            (int) (
+                $combinationResult[
+                    'transfer_b'
+                ]['replacement']['player_id']
+                ?? 0
+            )
+        )
+        ===
+        (
+            (int)
+            $transferPairB[
+                'replacement'
+            ]
+        )
+    );
+}
+
+/*
+ * ============================================================
+ * SCENARIO L
  * INVALID PLAYER
  * ============================================================
  */
 
 echo "<br>============================================<br>";
-echo "Scenario K: Invalid Player Handling<br>";
+echo "Scenario L: Invalid Player Handling<br>";
 echo "============================================<br>";
 
 
@@ -1638,6 +2059,82 @@ testPass(
     === null
 );
 
+testPass(
+    'Transfer combination rejects zero player ID',
+    $service
+        ->evaluateTransferCombination(
+            0,
+            $playerId,
+            $playerId,
+            1
+        )
+    === null
+);
+
+
+testPass(
+    'Transfer combination rejects negative player ID',
+    $service
+        ->evaluateTransferCombination(
+            -1,
+            $playerId,
+            $playerId,
+            1
+        )
+    === null
+);
+
+
+testPass(
+    'Transfer combination rejects identical first transfer',
+    $service
+        ->evaluateTransferCombination(
+            $playerId,
+            $playerId,
+            1,
+            2
+        )
+    === null
+);
+
+
+testPass(
+    'Transfer combination rejects duplicate outgoing players',
+    $service
+        ->evaluateTransferCombination(
+            $playerId,
+            1,
+            $playerId,
+            2
+        )
+    === null
+);
+
+
+testPass(
+    'Transfer combination rejects duplicate incoming players',
+    $service
+        ->evaluateTransferCombination(
+            1,
+            $playerId,
+            2,
+            $playerId
+        )
+    === null
+);
+
+
+testPass(
+    'Transfer combination rejects unknown player',
+    $service
+        ->evaluateTransferCombination(
+            999999999,
+            $playerId,
+            1,
+            2
+        )
+    === null
+);
 
 
 

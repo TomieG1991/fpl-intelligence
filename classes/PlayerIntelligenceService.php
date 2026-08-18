@@ -29,6 +29,8 @@ class PlayerIntelligenceService
     private ReplacementRecommendation $replacementRecommendation;
     
     private TransferDecision $transferDecision;
+    
+    private TransferCombination $transferCombination;
 
 
     /**
@@ -104,6 +106,9 @@ class PlayerIntelligenceService
             
         $this->transferDecision =
             new TransferDecision();
+            
+        $this->transferCombination =
+            new TransferCombination();
 
 
         /*
@@ -1300,6 +1305,236 @@ class PlayerIntelligenceService
             ->evaluateTransfer(
                 $currentPlayer,
                 $replacementPlayer
+            );
+    }
+    
+    /**
+     * Evaluate a linked two-transfer combination.
+     */
+    public function evaluateTransferCombination(
+        int $currentPlayerIdA,
+        int $replacementPlayerIdA,
+        int $currentPlayerIdB,
+        int $replacementPlayerIdB
+    ): ?array {
+
+        /*
+         * ========================================================
+         * BASIC VALIDATION
+         * ========================================================
+         */
+
+        if (
+            $currentPlayerIdA <= 0
+            ||
+            $replacementPlayerIdA <= 0
+            ||
+            $currentPlayerIdB <= 0
+            ||
+            $replacementPlayerIdB <= 0
+        ) {
+
+            return null;
+        }
+
+
+        /*
+         * A player cannot replace themselves.
+         */
+
+        if (
+            $currentPlayerIdA
+            ===
+            $replacementPlayerIdA
+            ||
+            $currentPlayerIdB
+            ===
+            $replacementPlayerIdB
+        ) {
+
+            return null;
+        }
+
+
+        /*
+         * Do not allow the same outgoing player twice.
+         */
+
+        if (
+            $currentPlayerIdA
+            ===
+            $currentPlayerIdB
+        ) {
+
+            return null;
+        }
+
+
+        /*
+         * Do not allow the same incoming player twice.
+         */
+
+        if (
+            $replacementPlayerIdA
+            ===
+            $replacementPlayerIdB
+        ) {
+
+            return null;
+        }
+
+
+        /*
+         * ========================================================
+         * LOAD PLAYER PROFILES
+         * ========================================================
+         */
+
+        $currentProfileA =
+            $this->getPlayerProfile(
+                $currentPlayerIdA
+            );
+
+
+        $replacementProfileA =
+            $this->getPlayerProfile(
+                $replacementPlayerIdA
+            );
+
+
+        $currentProfileB =
+            $this->getPlayerProfile(
+                $currentPlayerIdB
+            );
+
+
+        $replacementProfileB =
+            $this->getPlayerProfile(
+                $replacementPlayerIdB
+            );
+
+
+        if (
+            $currentProfileA === null
+            ||
+            $replacementProfileA === null
+            ||
+            $currentProfileB === null
+            ||
+            $replacementProfileB === null
+        ) {
+
+            return null;
+        }
+
+
+        /*
+         * ========================================================
+         * POSITION VALIDATION
+         * ========================================================
+         *
+         * Each individual transfer must preserve the player's
+         * position.
+         */
+
+        $currentPositionA =
+            $currentProfileA[
+                'player'
+            ]['position']
+            ?? null;
+
+
+        $replacementPositionA =
+            $replacementProfileA[
+                'player'
+            ]['position']
+            ?? null;
+
+
+        $currentPositionB =
+            $currentProfileB[
+                'player'
+            ]['position']
+            ?? null;
+
+
+        $replacementPositionB =
+            $replacementProfileB[
+                'player'
+            ]['position']
+            ?? null;
+
+
+        if (
+            $currentPositionA === null
+            ||
+            $replacementPositionA === null
+            ||
+            $currentPositionB === null
+            ||
+            $replacementPositionB === null
+        ) {
+
+            return null;
+        }
+
+
+        if (
+            $currentPositionA
+            !==
+            $replacementPositionA
+            ||
+            $currentPositionB
+            !==
+            $replacementPositionB
+        ) {
+
+            return null;
+        }
+
+
+        /*
+         * ========================================================
+         * BUILD TRANSFER PLAYER DATA
+         * ========================================================
+         */
+
+        $currentPlayerA =
+            $this->buildTransferDecisionPlayer(
+                $currentProfileA
+            );
+
+
+        $replacementA =
+            $this->buildTransferDecisionPlayer(
+                $replacementProfileA
+            );
+
+
+        $currentPlayerB =
+            $this->buildTransferDecisionPlayer(
+                $currentProfileB
+            );
+
+
+        $replacementB =
+            $this->buildTransferDecisionPlayer(
+                $replacementProfileB
+            );
+
+
+        /*
+         * ========================================================
+         * COMBINATION EVALUATION
+         * ========================================================
+         */
+
+        return $this->transferCombination
+            ->evaluateCombination(
+                $currentPlayerA,
+                $replacementA,
+                $currentPlayerB,
+                $replacementB
             );
     }
     

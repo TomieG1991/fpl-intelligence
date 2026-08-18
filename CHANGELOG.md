@@ -151,6 +151,15 @@ The project follows a sprint-based development process.
 - Extended `PlayerIntelligenceServiceTest.php` to cover Transfer Decision integration and invalid player handling.
 - Calibrated decision logic against real transfers including B.Fernandes → Saka, Gabriel → Frimpong, Haaland → Osula, and Dowman → Chiesa.
 - All automated tests passing.
+- Added Transfer Combination Intelligence for evaluating linked two-player transfer strategies.
+- Added combined transfer scoring across Intelligence, Strength, Value, Fixtures, sample confidence and budget movement.
+- Added combination classifications including Strong Improvement, Improvement, Risky Restructure, Downgrade and Unaffordable.
+- Added affordability analysis for linked transfers.
+- Added individual Transfer Decision results within combination evaluations.
+- Added `evaluateTransferCombination()` to `PlayerIntelligenceService`.
+- Added Transfer Combination unit and real-data diagnostic coverage.
+- Added Transfer Planner interface for interactively evaluating two-transfer strategies.
+- Added links from Transfer Planner results to player profiles and direct player comparisons.
 
 ### Changed
 - Improved Player Explorer availability visibility.
@@ -160,6 +169,11 @@ The project follows a sprint-based development process.
 - Extended PlayerIntelligenceServiceTest coverage to validate PlayerAssessment data within complete player profiles.
 - Reorganised the player profile layout into a clearer decision-making hierarchy:
   Player Hero → FPL Decision Snapshot → Core Ratings → FPL Assessment → Performance Intelligence → Fixture Intelligence.
+- Added Transfer Planner navigation to the Transfers workflow.
+- Extracted duplicated sidebar navigation into shared `public/includes/sidebar.php`.
+- Updated application pages to use the shared sidebar include.
+- Centralised active navigation state through `$activeNav`.
+- Player profile pages now correctly retain Players as their active navigation section.
 
 ## [0.12.0] - Player Explorer
 

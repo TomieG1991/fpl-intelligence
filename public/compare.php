@@ -311,7 +311,7 @@ function comparisonVerdictClass(
 
     return 'comparison-verdict-neutral';
 }
-
+$activeNav = 'compare';
 ?>
 <!DOCTYPE html>
 
@@ -352,129 +352,10 @@ function comparisonVerdictClass(
              SIDEBAR
              ================================================== -->
 
-        <aside class="sidebar">
-
-            <div class="brand">
-
-                <div class="brand-mark">
-                    FI
-                </div>
-
-                <div>
-
-                    <div class="brand-name">
-                        FPL Intelligence
-                    </div>
-
-                    <div class="brand-version">
-                        v0.13.0
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <nav
-                class="main-navigation"
-                aria-label="Main navigation"
-            >
-
-                <a
-                    href="index.php"
-                    class="nav-link"
-                >
-                    <span class="nav-icon">
-                        ◫
-                    </span>
-
-                    Dashboard
-                </a>
-
-
-                <a
-                    href="players.php"
-                    class="nav-link"
-                >
-                    <span class="nav-icon">
-                        👤
-                    </span>
-
-                    Players
-                </a>
-
-
-                <a
-                    href="compare.php"
-                    class="nav-link active"
-                >
-                    <span class="nav-icon">
-                        ⇄
-                    </span>
-
-                    Compare
-                </a>
-
-
-                <a
-                    href="#"
-                    class="nav-link"
-                >
-                    <span class="nav-icon">
-                        ⚽
-                    </span>
-
-                    Teams
-                </a>
-
-
-                <a
-                    href="transfers.php"
-                    class="nav-link"
-                >
-                    <span class="nav-icon">
-                        ◈
-                    </span>
-
-                    Fixtures
-                </a>
-
-
-                <a
-                    href="#"
-                    class="nav-link"
-                >
-                    <span class="nav-icon">
-                        ⇄
-                    </span>
-
-                    Transfers
-                </a>
-
-
-                <a
-                    href="#"
-                    class="nav-link"
-                >
-                    <span class="nav-icon">
-                        ★
-                    </span>
-
-                    Squad Builder
-                </a>
-
-            </nav>
-
-
-            <div class="sidebar-footer">
-
-                <span class="status-dot online"></span>
-
-                System Online
-
-            </div>
-
-        </aside>
+        <?php
+            require __DIR__
+                . '/includes/sidebar.php';
+            ?>
 
 
         <!-- ==================================================

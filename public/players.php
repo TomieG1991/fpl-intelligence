@@ -170,7 +170,7 @@ function ratingClass(
 
     return 'rating-low';
 }
-
+$activeNav = 'players';
 ?>
 <!DOCTYPE html>
 
@@ -211,129 +211,11 @@ function ratingClass(
              SIDEBAR
              ================================================== -->
 
-        <aside class="sidebar">
+        <?php
+            require __DIR__
+                . '/includes/sidebar.php';
 
-            <div class="brand">
-
-                <div class="brand-mark">
-                    FI
-                </div>
-
-                <div>
-
-                    <div class="brand-name">
-                        FPL Intelligence
-                    </div>
-
-                    <div class="brand-version">
-                        v0.12.0
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <nav
-                class="main-navigation"
-                aria-label="Main navigation"
-            >
-
-                <a
-                    href="index.php"
-                    class="nav-link"
-                >
-                    <span class="nav-icon">
-                        ◫
-                    </span>
-
-                    Dashboard
-                </a>
-
-
-                <a
-                    href="players.php"
-                    class="nav-link active"
-                    aria-current="page"
-                >
-                    <span class="nav-icon">
-                        👤
-                    </span>
-
-                    Players
-                </a>
-                
-                <a
-                    href="compare.php"
-                    class="nav-link"
-                >
-                    <span class="nav-icon">
-                        ⇄
-                    </span>
-
-                    Compare
-                </a>
-
-
-                <a
-                    href="#"
-                    class="nav-link"
-                >
-                    <span class="nav-icon">
-                        ⚽
-                    </span>
-
-                    Teams
-                </a>
-
-
-                <a
-                    href="#"
-                    class="nav-link"
-                >
-                    <span class="nav-icon">
-                        ◈
-                    </span>
-
-                    Fixtures
-                </a>
-
-
-                <a
-                    href="transfers.php"
-                    class="nav-link"
-                >
-                    <span class="nav-icon">
-                        ⇄
-                    </span>
-
-                    Transfers
-                </a>
-
-
-                <a
-                    href="#"
-                    class="nav-link"
-                >
-                    <span class="nav-icon">
-                        ★
-                    </span>
-
-                    Squad Builder
-                </a>
-
-            </nav>
-
-
-            <div class="sidebar-footer">
-
-                <span class="status-dot online"></span>
-
-                System Online
-
-            </div>
-
-        </aside>
+            ?>
 
 
         <!-- ==================================================
