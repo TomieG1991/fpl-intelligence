@@ -63,6 +63,11 @@ try {
     $players =
         $service
             ->getAllPlayerSummaries();
+            
+    $playerRepository =
+        new PlayerRepository(
+            $database->getConnection()
+        );
 
 
 } catch (Throwable $exception) {
@@ -2325,34 +2330,1027 @@ testPass(
     === null
 );
 
-
-
 /*
  * ============================================================
- * SUMMARY
+ * FPL SQUAD IMPORT MAPPING
  * ============================================================
  */
 
 echo "<br>============================================<br>";
-echo "Player Intelligence Service Test Summary<br>";
+echo "Scenario N: FPL Squad Import Mapping<br>";
 echo "============================================<br>";
 
 
-echo "Passed: "
-    . $passed
-    . "<br>";
+$allSummaries =
+    $service
+        ->getAllPlayerSummaries();
 
 
-echo "Failed: "
-    . $failed
-    . "<br><br>";
+$syntheticImportedPlayers =
+    [];
 
 
-if ($failed === 0) {
+foreach (
+    array_slice(
+        $allSummaries,
+        0,
+        3
+    )
+    as $index => $summary
+) {
 
-    echo "RESULT: TESTS PASSED ✅";
+    $player =
+        $playerRepository
+            ->getById(
+                (int) $summary[
+                    'player_id'
+                ]
+            );
 
-} else {
 
-    echo "RESULT: TESTS FAILED ❌";
+    if ($player === null) {
+        continue;
+    }
+
+
+    $syntheticImportedPlayers[] = [
+
+        'fpl_player_id' =>
+            (int) $player[
+                'fpl_player_id'
+            ],
+
+        'squad_position' =>
+            $index + 1,
+
+        'multiplier' =>
+            1,
+
+        'is_captain' =>
+            $index === 0,
+
+        'is_vice_captain' =>
+            $index === 1
+    ];
 }
+
+
+$syntheticImport = [
+
+    'status' =>
+        'success',
+
+    'entry' => [
+
+        'entry_id' =>
+            999999,
+
+        'team_name' =>
+            'Test Squad'
+    ],
+
+    'gameweek' =>
+        1,
+
+    'bank' =>
+        1.5,
+
+    'team_value' =>
+        100.0,
+
+    'players' =>
+        $syntheticImportedPlayers
+];
+
+
+$mappedSquad =
+    $service
+        ->buildSquadFromFPLImport(
+            $syntheticImport
+        );
+
+
+testPass(
+    'FPL squad mapping returns an array',
+    is_array(
+        $mappedSquad
+    )
+);
+
+
+testPass(
+    'Mapped squad preserves entry data',
+    (
+        $mappedSquad[
+            'entry'
+        ]['entry_id']
+        ?? null
+    )
+    === 999999
+);
+
+
+testPass(
+    'Mapped squad preserves bank',
+    (
+        $mappedSquad[
+            'bank'
+        ]
+        ?? null
+    )
+    === 1.5
+);
+
+
+testPass(
+    'Mapped squad preserves gameweek',
+    (
+        $mappedSquad[
+            'gameweek'
+        ]
+        ?? null
+    )
+    === 1
+);
+
+
+testPass(
+    'Mapped player count matches synthetic import',
+    (
+        $mappedSquad[
+            'mapped_count'
+        ]
+        ?? 0
+    )
+    ===
+    count(
+        $syntheticImportedPlayers
+    )
+);
+
+
+testPass(
+    'Synthetic import maps completely',
+    (
+        $mappedSquad[
+            'is_complete'
+        ]
+        ?? false
+    )
+    === true
+);
+
+
+foreach (
+    $mappedSquad[
+        'players'
+    ]
+    ?? []
+    as $mappedPlayer
+) {
+
+    testPass(
+        'Mapped squad player has local player ID',
+        (
+            $mappedPlayer[
+                'player_id'
+            ]
+            ?? 0
+        )
+        > 0
+    );
+
+
+    testPass(
+        'Mapped squad player preserves FPL player ID',
+        (
+            $mappedPlayer[
+                'fpl_player_id'
+            ]
+            ?? 0
+        )
+        > 0
+    );
+
+
+    testPass(
+        'Mapped squad player has position',
+        !empty(
+            $mappedPlayer[
+                'position'
+            ]
+            ?? null
+        )
+    );
+
+
+    testPass(
+        'Mapped squad player has Intelligence score',
+        array_key_exists(
+            'intelligence_score',
+            $mappedPlayer
+        )
+    );
+
+
+    testPass(
+        'Mapped squad player preserves squad position',
+        array_key_exists(
+            'squad_position',
+            $mappedPlayer
+        )
+    );
+}
+
+
+testPass(
+    'FPL squad mapping rejects non-success import',
+    $service
+        ->buildSquadFromFPLImport(
+            [
+                'status' =>
+                    'no_public_squad',
+
+                'players' =>
+                    []
+            ]
+        )
+    === null
+);
+
+
+testPass(
+    'FPL squad mapping rejects empty successful import',
+    $service
+        ->buildSquadFromFPLImport(
+            [
+                'status' =>
+                    'success',
+
+                'players' =>
+                    []
+            ]
+        )
+    === null
+);
+
+/*
+ * ============================================================
+ * SQUAD TRANSFER RECOMMENDATIONS
+ * ============================================================
+ */
+
+echo "<br>============================================<br>";
+echo "Scenario O: Squad Transfer Recommendations<br>";
+echo "============================================<br>";
+
+
+/*
+ * Build a valid 15-player squad from real summaries.
+ */
+
+$positionRequirements = [
+
+    'GK' => 2,
+    'DEF' => 5,
+    'MID' => 5,
+    'FWD' => 3
+];
+
+
+$squadForRecommendations =
+    [];
+
+
+$teamCounts =
+    [];
+
+
+foreach (
+    $positionRequirements
+    as $requiredPosition => $requiredCount
+) {
+
+    $selected =
+        0;
+
+
+    foreach (
+        $summaries
+        as $summary
+    ) {
+
+        if (
+            $selected
+            >=
+            $requiredCount
+        ) {
+
+            break;
+        }
+
+
+        if (
+            (
+                strtoupper(
+                    (string) (
+                        $summary[
+                            'position'
+                        ]
+                        ?? ''
+                    )
+                )
+            )
+            !==
+            $requiredPosition
+        ) {
+
+            continue;
+        }
+
+
+        $playerId =
+            (int) (
+                $summary[
+                    'player_id'
+                ]
+                ?? 0
+            );
+
+
+        if ($playerId <= 0) {
+            continue;
+        }
+
+
+        $profile =
+            $service
+                ->getPlayerProfile(
+                    $playerId
+                );
+
+
+        if ($profile === null) {
+            continue;
+        }
+
+
+        $teamId =
+            (int) (
+                $profile[
+                    'team'
+                ]['team_id']
+                ?? 0
+            );
+
+
+        if (
+            $teamId <= 0
+            ||
+            (
+                $teamCounts[
+                    $teamId
+                ]
+                ?? 0
+            )
+            >= 3
+        ) {
+
+            continue;
+        }
+
+
+        $squadForRecommendations[] =
+            [
+
+                'player_id' =>
+                    $playerId,
+
+                'fpl_player_id' =>
+                    $profile[
+                        'player'
+                    ]['fpl_player_id']
+                    ?? null,
+
+                'name' =>
+                    $profile[
+                        'player'
+                    ]['name']
+                    ?? null,
+
+                'team_id' =>
+                    $teamId,
+
+                'team_name' =>
+                    $profile[
+                        'team'
+                    ]['name']
+                    ?? null,
+
+                'position' =>
+                    $profile[
+                        'player'
+                    ]['position']
+                    ?? null,
+
+                'price' =>
+                    $profile[
+                        'summary'
+                    ]['price']
+                    ?? null,
+
+                'intelligence_score' =>
+                    $profile[
+                        'summary'
+                    ]['intelligence_score']
+                    ?? null,
+
+                'strength_rating' =>
+                    $profile[
+                        'summary'
+                    ]['strength_rating']
+                    ?? null,
+
+                'value_rating' =>
+                    $profile[
+                        'summary'
+                    ]['value_rating']
+                    ?? null,
+
+                'fixture_rating' =>
+                    $profile[
+                        'summary'
+                    ]['fixture_rating']
+                    ?? null,
+
+                'availability_rating' =>
+                    $profile[
+                        'summary'
+                    ]['availability_rating']
+                    ?? null,
+
+                'sample_confidence' =>
+                    $profile[
+                        'performance'
+                    ]['sample_confidence']
+                    ?? null,
+
+                'verdict' =>
+                    $profile[
+                        'assessment'
+                    ]['verdict']
+                    ?? null
+            ];
+
+
+        $teamCounts[
+            $teamId
+        ] =
+            (
+                $teamCounts[
+                    $teamId
+                ]
+                ?? 0
+            )
+            +
+            1;
+
+
+        $selected++;
+    }
+}
+
+
+testPass(
+    'Valid squad created for squad recommendations',
+    count(
+        $squadForRecommendations
+    )
+    === 15
+);
+
+
+$squadRecommendationResult =
+    $service
+        ->getSquadTransferRecommendations(
+            $squadForRecommendations,
+            1.0,
+            3,
+            3
+        );
+
+
+testPass(
+    'Squad recommendation service returns an array',
+    is_array(
+        $squadRecommendationResult
+    )
+);
+
+
+testPass(
+    'Squad recommendation analysis exists',
+    isset(
+        $squadRecommendationResult[
+            'analysis'
+        ]
+    )
+    &&
+    is_array(
+        $squadRecommendationResult[
+            'analysis'
+        ]
+    )
+);
+
+
+testPass(
+    'Squad recommendation analysis is valid',
+    (
+        $squadRecommendationResult[
+            'analysis'
+        ]['validation']['is_valid']
+        ?? false
+    )
+    === true
+);
+
+
+testPass(
+    'Squad transfer recommendations exist',
+    isset(
+        $squadRecommendationResult[
+            'recommendations'
+        ]
+    )
+    &&
+    is_array(
+        $squadRecommendationResult[
+            'recommendations'
+        ]
+    )
+);
+
+
+testPass(
+    'Squad transfer optimizer returns success',
+    (
+        $squadRecommendationResult[
+            'recommendations'
+        ]['status']
+        ?? null
+    )
+    ===
+    'success'
+);
+
+
+testPass(
+    'Squad recommendation priority limit is respected',
+    (
+        $squadRecommendationResult[
+            'recommendations'
+        ]['players_considered']
+        ?? 0
+    )
+    <= 3
+);
+
+
+foreach (
+    $squadRecommendationResult[
+        'recommendations'
+    ]['recommendations']
+    ?? []
+    as $recommendation
+) {
+
+    testPass(
+        'Squad recommendation outgoing player exists',
+        isset(
+            $recommendation[
+                'outgoing'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Squad recommendation transfer priority exists',
+        array_key_exists(
+            'transfer_priority',
+            $recommendation
+        )
+    );
+
+
+    testPass(
+        'Squad recommendation replacements exist',
+        isset(
+            $recommendation[
+                'replacements'
+            ]
+        )
+        &&
+        is_array(
+            $recommendation[
+                'replacements'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Squad recommendation replacement limit is respected',
+        count(
+            $recommendation[
+                'replacements'
+            ]
+            ?? []
+        )
+        <= 3
+    );
+}
+
+/*
+ * ============================================================
+ * SCENARIO P
+ * SQUAD DOUBLE TRANSFER RECOMMENDATIONS
+ * ============================================================
+ */
+
+echo "<br>============================================<br>";
+echo "Scenario P: Squad Double Transfer Recommendations<br>";
+echo "============================================<br>";
+
+
+$squadDoubleRecommendationResult =
+    $service
+        ->getSquadDoubleTransferRecommendations(
+            $squadForRecommendations,
+            1.0,
+            5,
+            5
+        );
+
+
+testPass(
+    'Squad double recommendation service returns an array',
+    is_array(
+        $squadDoubleRecommendationResult
+    )
+);
+
+
+testPass(
+    'Squad double recommendation analysis exists',
+    isset(
+        $squadDoubleRecommendationResult[
+            'analysis'
+        ]
+    )
+    &&
+    is_array(
+        $squadDoubleRecommendationResult[
+            'analysis'
+        ]
+    )
+);
+
+
+testPass(
+    'Squad double recommendation analysis is valid',
+    (
+        $squadDoubleRecommendationResult[
+            'analysis'
+        ]['validation']['is_valid']
+        ?? false
+    )
+    === true
+);
+
+
+testPass(
+    'Squad double transfer recommendations exist',
+    isset(
+        $squadDoubleRecommendationResult[
+            'recommendations'
+        ]
+    )
+    &&
+    is_array(
+        $squadDoubleRecommendationResult[
+            'recommendations'
+        ]
+    )
+);
+
+
+testPass(
+    'Squad double transfer optimizer returns success',
+    (
+        $squadDoubleRecommendationResult[
+            'recommendations'
+        ]['status']
+        ?? null
+    )
+    ===
+    'success'
+);
+
+
+testPass(
+    'Squad double transfer outgoing limit is respected',
+    (
+        $squadDoubleRecommendationResult[
+            'recommendations'
+        ]['priority_players_considered']
+        ?? 0
+    )
+    <= 5
+);
+
+
+testPass(
+    'Squad double transfer result limit is respected',
+    count(
+        $squadDoubleRecommendationResult[
+            'recommendations'
+        ]['combinations']
+        ?? []
+    )
+    <= 5
+);
+
+
+testPass(
+    'Squad double transfer outgoing pairs are considered',
+    (
+        $squadDoubleRecommendationResult[
+            'recommendations'
+        ]['outgoing_pairs_considered']
+        ?? 0
+    )
+    > 0
+);
+
+
+foreach (
+    $squadDoubleRecommendationResult[
+        'recommendations'
+    ]['combinations']
+    ?? []
+    as $combination
+) {
+
+    testPass(
+        'Squad double recommendation has transfer A',
+        isset(
+            $combination[
+                'transfer_a'
+            ]
+        )
+        &&
+        is_array(
+            $combination[
+                'transfer_a'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Squad double recommendation has transfer B',
+        isset(
+            $combination[
+                'transfer_b'
+            ]
+        )
+        &&
+        is_array(
+            $combination[
+                'transfer_b'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Squad double recommendation has classification',
+        !empty(
+            $combination[
+                'classification'
+            ]
+            ?? null
+        )
+    );
+
+
+    testPass(
+        'Squad double recommendation has combination score',
+        array_key_exists(
+            'combination_score',
+            $combination
+        )
+    );
+
+
+    testPass(
+        'Squad double recommendation has squad score',
+        array_key_exists(
+            'squad_score',
+            $combination[
+                'squad_optimizer'
+            ]
+            ?? []
+        )
+    );
+
+
+    testPass(
+        'Squad double recommendation has squad-aware summary',
+        !empty(
+            $combination[
+                'squad_optimizer'
+            ]['summary']
+            ?? null
+        )
+    );
+
+
+    testPass(
+        'Squad double recommendation has sequential rank',
+        (
+            $combination[
+                'squad_optimizer'
+            ]['rank']
+            ?? 0
+        )
+        > 0
+    );
+
+
+    testPass(
+        'Squad double recommendation is affordable',
+        (
+            (float) (
+                $combination[
+                    'optimizer'
+                ]['budget_after']
+                ?? -1
+            )
+        )
+        >= 0
+    );
+}
+
+
+/*
+ * ============================================================
+ * SQUAD DOUBLE RECOMMENDATION INVALID INPUT
+ * ============================================================
+ */
+
+testPass(
+    'Squad double recommendations reject negative bank',
+    (
+        $service
+            ->getSquadDoubleTransferRecommendations(
+                $squadForRecommendations,
+                -1.0,
+                5,
+                5
+            )[
+                'recommendations'
+            ]
+        ?? null
+    )
+    === null
+);
+
+
+testPass(
+    'Squad double recommendations reject outgoing limit below two',
+    (
+        $service
+            ->getSquadDoubleTransferRecommendations(
+                $squadForRecommendations,
+                0.0,
+                1,
+                5
+            )[
+                'recommendations'
+            ]
+        ?? null
+    )
+    === null
+);
+
+
+testPass(
+    'Squad double recommendations reject zero result limit',
+    (
+        $service
+            ->getSquadDoubleTransferRecommendations(
+                $squadForRecommendations,
+                0.0,
+                5,
+                0
+            )[
+                'recommendations'
+            ]
+        ?? null
+    )
+    === null
+);
+
+
+    /*
+     * ============================================================
+     * SQUAD RECOMMENDATION INVALID INPUT
+     * ============================================================
+     */
+
+    testPass(
+        'Squad recommendations reject negative bank',
+        (
+            $service
+                ->getSquadTransferRecommendations(
+                    $squadForRecommendations,
+                    -1.0,
+                    3,
+                    3
+                )[
+                    'recommendations'
+                ]
+            ?? null
+        )
+        === null
+    );
+
+
+    testPass(
+        'Squad recommendations reject zero priority limit',
+        (
+            $service
+                ->getSquadTransferRecommendations(
+                    $squadForRecommendations,
+                    0.0,
+                    0,
+                    3
+                )[
+                    'recommendations'
+                ]
+            ?? null
+        )
+        === null
+    );
+
+
+    testPass(
+        'Squad recommendations reject zero replacement limit',
+        (
+            $service
+                ->getSquadTransferRecommendations(
+                    $squadForRecommendations,
+                    0.0,
+                    3,
+                    0
+                )[
+                    'recommendations'
+                ]
+            ?? null
+        )
+        === null
+    );
+
+
+    /*
+     * ============================================================
+     * SUMMARY
+     * ============================================================
+     */
+
+    echo "<br>============================================<br>";
+    echo "Player Intelligence Service Test Summary<br>";
+    echo "============================================<br>";
+
+
+    echo "Passed: "
+        . $passed
+        . "<br>";
+
+
+    echo "Failed: "
+        . $failed
+        . "<br><br>";
+
+
+    if ($failed === 0) {
+
+        echo "RESULT: TESTS PASSED ✅";
+
+    } else {
+
+        echo "RESULT: TESTS FAILED ❌";
+    }

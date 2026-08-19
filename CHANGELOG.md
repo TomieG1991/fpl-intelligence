@@ -6,7 +6,64 @@ The project follows a sprint-based development process.
 
 ---
 
-## [0.14.0] - transfer Optipmizer
+## [0.15.0] - Squad Transfer Intelligence
+
+### Added
+- Added FPL squad importing for complete 15-player squads.
+- Added squad validation for position structure, duplicate players and club limits.
+- Added squad intelligence analysis including:
+  - average squad Intelligence
+  - positional Intelligence averages
+  - weakest-position detection
+  - individual transfer-priority scoring
+  - ranked transfer priorities
+- Added squad-aware single-transfer optimisation.
+- Added legal replacement filtering based on:
+  - player position
+  - available squad budget
+  - existing squad players
+  - FPL maximum-three-players-per-club rule
+- Added squad-aware double-transfer optimisation.
+- Added automatic evaluation of priority outgoing-player pairs.
+- Added same-position replacement preservation across double transfers.
+- Added combined affordability validation using the squad bank and outgoing player value.
+- Added final-squad validation after proposed double transfers.
+- Added candidate pruning to keep double-transfer optimisation efficient against the complete player pool.
+- Added squad-aware double-transfer ranking.
+- Added outgoing transfer-priority totals to double-transfer recommendations.
+- Added squad-priority bonus scoring.
+- Added `squad_score` combining transfer-combination quality with the importance of replacing the outgoing squad players.
+- Added resulting squad bank calculation and reporting.
+- Added squad-aware recommendation summaries.
+- Added service-level squad transfer optimisation through `PlayerIntelligenceService`.
+
+### Changed
+- Improved transfer-priority scoring so low sample confidence does not automatically make a player a high-priority sale.
+- Improved double-transfer ranking so recommendations consider both the quality of the incoming transfers and the weaknesses being removed from the existing squad.
+- Improved double-transfer candidate generation to prevent excessive memory usage with real FPL data.
+- Improved double-transfer result ordering using squad-aware scoring while preserving combination quality.
+- Improved recommendation summaries to report the actual resulting squad bank.
+
+### Testing
+- Added automated squad-import testing.
+- Added real-data squad-import diagnostics.
+- Added squad transfer intelligence testing.
+- Added real-data squad intelligence diagnostics.
+- Added squad transfer optimizer testing.
+- Added real-data squad transfer optimizer diagnostics.
+- Added double-transfer optimizer testing.
+- Added real-data double-transfer optimizer diagnostics.
+- Added validation for squad structure and transfer legality.
+- Added validation for transfer position preservation.
+- Added validation for incoming-player uniqueness.
+- Added validation for double-transfer affordability.
+- Added validation for squad-aware transfer-priority handling.
+- Added validation for sequential optimizer ranking.
+- Verified double-transfer optimisation against the complete real FPL player pool.
+- Verified optimizer runtime remains practical with real data.
+- Complete regression suite passes successfully.
+
+## [0.14.0] - Transfer Optipmizer
 
 ### Added
 - Added Transfer Optimizer intelligence for automatically finding the strongest affordable two-transfer combinations.

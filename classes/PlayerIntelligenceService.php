@@ -2021,4 +2021,858 @@ class PlayerIntelligenceService
                 $limit
             );
     }
+    
+    /**
+     * Build the squad-ready player structure used by
+     * SquadTransferIntelligence.
+     */
+    private function buildSquadPlayer(
+        array $profile,
+        array $pickMetadata
+    ): array {
+
+        return [
+
+            'player_id' =>
+                (int) (
+                    $profile[
+                        'player'
+                    ]['player_id']
+                    ?? 0
+                ),
+
+            'fpl_player_id' =>
+                (int) (
+                    $profile[
+                        'player'
+                    ]['fpl_player_id']
+                    ?? 0
+                ),
+
+            'name' =>
+                $profile[
+                    'player'
+                ]['name']
+                ?? null,
+
+            'position' =>
+                $profile[
+                    'player'
+                ]['position']
+                ?? null,
+
+            'team_id' =>
+                isset(
+                    $profile[
+                        'team'
+                    ]['team_id']
+                )
+                    ? (int) $profile[
+                        'team'
+                    ]['team_id']
+                    : null,
+
+            'team_name' =>
+                $profile[
+                    'team'
+                ]['name']
+                ?? null,
+
+            'price' =>
+                $profile[
+                    'summary'
+                ]['price']
+                ?? null,
+
+            'strength_rating' =>
+                $profile[
+                    'summary'
+                ]['strength_rating']
+                ?? null,
+
+            'value_rating' =>
+                $profile[
+                    'summary'
+                ]['value_rating']
+                ?? null,
+
+            'fixture_rating' =>
+                $profile[
+                    'summary'
+                ]['fixture_rating']
+                ?? null,
+
+            'availability_rating' =>
+                $profile[
+                    'summary'
+                ]['availability_rating']
+                ?? null,
+
+            'intelligence_score' =>
+                $profile[
+                    'summary'
+                ]['intelligence_score']
+                ?? null,
+
+            'sample_confidence' =>
+                $profile[
+                    'performance'
+                ]['sample_confidence']
+                ?? null,
+
+            'verdict' =>
+                $profile[
+                    'assessment'
+                ]['verdict']
+                ?? null,
+
+            'squad_position' =>
+                isset(
+                    $pickMetadata[
+                        'squad_position'
+                    ]
+                )
+                    ? (int) $pickMetadata[
+                        'squad_position'
+                    ]
+                    : null,
+
+            'multiplier' =>
+                isset(
+                    $pickMetadata[
+                        'multiplier'
+                    ]
+                )
+                    ? (int) $pickMetadata[
+                        'multiplier'
+                    ]
+                    : null,
+
+            'is_captain' =>
+                (bool) (
+                    $pickMetadata[
+                        'is_captain'
+                    ]
+                    ?? false
+                ),
+
+            'is_vice_captain' =>
+                (bool) (
+                    $pickMetadata[
+                        'is_vice_captain'
+                    ]
+                    ?? false
+                )
+        ];
+    }
+    
+    /**
+     * Convert an FPLSquadImporter result into the local
+     * squad structure used by squad intelligence.
+     */
+    public function buildSquadFromFPLImport(
+        array $importedSquad
+    ): ?array {
+
+        /*
+         * ========================================================
+         * VALIDATE IMPORT
+         * ========================================================
+         */
+
+        if (
+            (
+                $importedSquad[
+                    'status'
+                ]
+                ?? null
+            )
+            !==
+            'success'
+        ) {
+
+            return null;
+        }
+
+
+        $importedPlayers =
+            $importedSquad[
+                'players'
+            ]
+            ?? null;
+
+
+        if (
+            !is_array(
+                $importedPlayers
+            )
+            ||
+            empty(
+                $importedPlayers
+            )
+        ) {
+
+            return null;
+        }
+
+
+        /*
+         * ========================================================
+         * MAP PLAYERS
+         * ========================================================
+         */
+
+        $mappedPlayers =
+            [];
+
+
+        $unmapped =
+            [];
+
+
+        foreach (
+            $importedPlayers
+            as $pick
+        ) {
+
+            $fplPlayerId =
+                (int) (
+                    $pick[
+                        'fpl_player_id'
+                    ]
+                    ?? 0
+                );
+
+
+            if ($fplPlayerId <= 0) {
+
+                $unmapped[] = [
+
+                    'fpl_player_id' =>
+                        $fplPlayerId,
+
+                    'reason' =>
+                        'Invalid FPL player ID'
+                ];
+
+                continue;
+            }
+
+
+            $localPlayer =
+                $this->playerRepository
+                    ->getByFplPlayerId(
+                        $fplPlayerId
+                    );
+
+
+            if ($localPlayer === null) {
+
+                $unmapped[] = [
+
+                    'fpl_player_id' =>
+                        $fplPlayerId,
+
+                    'reason' =>
+                        'No matching local player'
+                ];
+
+                continue;
+            }
+
+
+            $localPlayerId =
+                (int) (
+                    $localPlayer[
+                        'id'
+                    ]
+                    ?? 0
+                );
+
+
+            if ($localPlayerId <= 0) {
+
+                $unmapped[] = [
+
+                    'fpl_player_id' =>
+                        $fplPlayerId,
+
+                    'reason' =>
+                        'Local player has invalid ID'
+                ];
+
+                continue;
+            }
+
+
+            $profile =
+                $this->getPlayerProfile(
+                    $localPlayerId
+                );
+
+
+            if ($profile === null) {
+
+                $unmapped[] = [
+
+                    'fpl_player_id' =>
+                        $fplPlayerId,
+
+                    'player_id' =>
+                        $localPlayerId,
+
+                    'reason' =>
+                        'Local player profile could not be built'
+                ];
+
+                continue;
+            }
+
+
+            $mappedPlayers[] =
+                $this->buildSquadPlayer(
+                    $profile,
+                    $pick
+                );
+        }
+
+
+        /*
+         * ========================================================
+         * RESULT
+         * ========================================================
+         */
+
+        return [
+
+            'entry' =>
+                $importedSquad[
+                    'entry'
+                ]
+                ?? [],
+
+            'gameweek' =>
+                $importedSquad[
+                    'gameweek'
+                ]
+                ?? null,
+
+            'bank' =>
+                $importedSquad[
+                    'bank'
+                ]
+                ?? null,
+
+            'team_value' =>
+                $importedSquad[
+                    'team_value'
+                ]
+                ?? null,
+
+            'imported_count' =>
+                count(
+                    $importedPlayers
+                ),
+
+            'mapped_count' =>
+                count(
+                    $mappedPlayers
+                ),
+
+            'unmapped_count' =>
+                count(
+                    $unmapped
+                ),
+
+            'is_complete' =>
+                (
+                    count(
+                        $importedPlayers
+                    )
+                    ===
+                    count(
+                        $mappedPlayers
+                    )
+                ),
+
+            'unmapped' =>
+                $unmapped,
+
+            'players' =>
+                $mappedPlayers
+        ];
+    }
+    
+    /**
+     * Build the lightweight player structure required by
+     * SquadTransferOptimizer / TransferDecision.
+     */
+    private function buildSquadTransferCandidate(
+        array $summary
+    ): ?array {
+
+        $playerId =
+            (int) (
+                $summary[
+                    'player_id'
+                ]
+                ?? 0
+            );
+
+
+        $position =
+            strtoupper(
+                trim(
+                    (string) (
+                        $summary[
+                            'position'
+                        ]
+                        ?? ''
+                    )
+                )
+            );
+
+
+        if (
+            $playerId <= 0
+            ||
+            $position === ''
+        ) {
+
+            return null;
+        }
+
+
+        $teamId =
+            isset(
+                $summary[
+                    'team_id'
+                ]
+            )
+                ? (int) $summary[
+                    'team_id'
+                ]
+                : 0;
+
+
+        /*
+         * Some summary structures may not expose team_id.
+         * Fall back to the repository if required.
+         */
+        if ($teamId <= 0) {
+
+            $player =
+                $this->playerRepository
+                    ->getById(
+                        $playerId
+                    );
+
+
+            if ($player === null) {
+                return null;
+            }
+
+
+            $teamId =
+                (int) (
+                    $player[
+                        'team_id'
+                    ]
+                    ?? 0
+                );
+        }
+
+
+        if ($teamId <= 0) {
+            return null;
+        }
+
+
+        /*
+         * TransferDecision expects sample confidence in the
+         * 0-1 range.
+         */
+        $confidence =
+            $summary[
+                'sample_confidence'
+            ]
+            ?? null;
+
+
+        if (
+            $confidence !== null
+            &&
+            is_numeric(
+                $confidence
+            )
+        ) {
+
+            $confidence =
+                (float) $confidence;
+
+
+            if ($confidence > 1) {
+
+                $confidence /=
+                    100;
+            }
+
+
+            $confidence =
+                max(
+                    0,
+                    min(
+                        1,
+                        $confidence
+                    )
+                );
+        }
+
+
+        return [
+
+            'player_id' =>
+                $playerId,
+
+            'name' =>
+                $summary[
+                    'name'
+                ]
+                ?? null,
+
+            'team_id' =>
+                $teamId,
+
+            'team_name' =>
+                $summary[
+                    'team_name'
+                ]
+                ?? null,
+
+            'position' =>
+                $position,
+
+            'price' =>
+                $summary[
+                    'price'
+                ]
+                ?? null,
+
+            'intelligence_score' =>
+                $summary[
+                    'intelligence_score'
+                ]
+                ?? null,
+
+            'strength_rating' =>
+                $summary[
+                    'strength_rating'
+                ]
+                ?? null,
+
+            'value_rating' =>
+                $summary[
+                    'value_rating'
+                ]
+                ?? null,
+
+            'fixture_rating' =>
+                $summary[
+                    'fixture_rating'
+                ]
+                ?? null,
+
+            'availability_rating' =>
+                $summary[
+                    'availability_rating'
+                ]
+                ?? null,
+
+            'sample_confidence' =>
+                $confidence,
+
+            'verdict' =>
+                $summary[
+                    'assessment_verdict'
+                ]
+                ?? null
+        ];
+    }
+    
+    /**
+     * Build the complete lightweight candidate pool used by
+     * squad transfer optimisation.
+     */
+    private function buildSquadTransferCandidatePool(): array
+    {
+
+        $summaries =
+            $this->getAllPlayerSummaries();
+
+
+        $candidates =
+            [];
+
+
+        foreach (
+            $summaries
+            as $summary
+        ) {
+
+            $candidate =
+                $this->buildSquadTransferCandidate(
+                    $summary
+                );
+
+
+            if ($candidate === null) {
+                continue;
+            }
+
+
+            $candidates[] =
+                $candidate;
+        }
+
+
+        return $candidates;
+    }
+    
+    /**
+     * Analyse a squad and return squad-aware single-transfer
+     * recommendations.
+     */
+    public function getSquadTransferRecommendations(
+        array $squad,
+        float $bank = 0.0,
+        int $priorityLimit = 5,
+        int $replacementLimit = 5
+    ): array {
+
+        /*
+         * ========================================================
+         * VALIDATION
+         * ========================================================
+         */
+
+        if (
+            $bank < 0
+            ||
+            $priorityLimit <= 0
+            ||
+            $replacementLimit <= 0
+        ) {
+
+            return [
+
+                'analysis' =>
+                    null,
+
+                'recommendations' =>
+                    null
+            ];
+        }
+
+
+        /*
+         * ========================================================
+         * SQUAD INTELLIGENCE
+         * ========================================================
+         */
+
+        $squadIntelligence =
+            new SquadTransferIntelligence();
+
+
+        $analysis =
+            $squadIntelligence
+                ->analyzeSquad(
+                    $squad,
+                    $bank
+                );
+
+
+        /*
+         * Return the analysis even when invalid so callers can
+         * inspect the validation issues.
+         */
+        if (
+            (
+                $analysis[
+                    'validation'
+                ]['is_valid']
+                ?? false
+            )
+            !== true
+        ) {
+
+            return [
+
+                'analysis' =>
+                    $analysis,
+
+                'recommendations' =>
+                    null
+            ];
+        }
+
+
+        /*
+         * ========================================================
+         * CANDIDATE POOL
+         * ========================================================
+         */
+
+        $candidatePool =
+            $this->buildSquadTransferCandidatePool();
+
+
+        /*
+         * ========================================================
+         * SQUAD TRANSFER OPTIMIZER
+         * ========================================================
+         */
+
+        $optimizer =
+            new SquadTransferOptimizer();
+
+
+        $recommendations =
+            $optimizer
+                ->findBestSingleTransfers(
+                    $analysis,
+                    $candidatePool,
+                    $priorityLimit,
+                    $replacementLimit
+                );
+
+
+        return [
+
+            'analysis' =>
+                $analysis,
+
+            'recommendations' =>
+                $recommendations
+        ];
+    }
+    
+    /**
+     * Analyse a squad and return squad-aware
+     * two-transfer restructuring recommendations.
+     */
+    public function getSquadDoubleTransferRecommendations(
+        array $squad,
+        float $bank = 0.0,
+        int $outgoingLimit = 5,
+        int $resultLimit = 10
+    ): array {
+
+        /*
+         * ========================================================
+         * VALIDATION
+         * ========================================================
+         */
+
+        if (
+            $bank < 0
+            ||
+            $outgoingLimit < 2
+            ||
+            $resultLimit <= 0
+        ) {
+
+            return [
+
+                'analysis' =>
+                    null,
+
+                'recommendations' =>
+                    null
+            ];
+        }
+
+
+        /*
+         * ========================================================
+         * SQUAD INTELLIGENCE
+         * ========================================================
+         */
+
+        $squadIntelligence =
+            new SquadTransferIntelligence();
+
+
+        $analysis =
+            $squadIntelligence
+                ->analyzeSquad(
+                    $squad,
+                    $bank
+                );
+
+
+        /*
+         * Return the squad analysis even when invalid so
+         * callers can inspect the validation issues.
+         */
+        if (
+            (
+                $analysis[
+                    'validation'
+                ]['is_valid']
+                ?? false
+            )
+            !== true
+        ) {
+
+            return [
+
+                'analysis' =>
+                    $analysis,
+
+                'recommendations' =>
+                    null
+            ];
+        }
+
+
+        /*
+         * ========================================================
+         * CANDIDATE POOL
+         * ========================================================
+         */
+
+        $candidatePool =
+            $this->buildSquadTransferCandidatePool();
+
+
+        /*
+         * ========================================================
+         * DOUBLE TRANSFER OPTIMIZER
+         * ========================================================
+         */
+
+        $optimizer =
+            new SquadTransferOptimizer();
+
+
+        $recommendations =
+            $optimizer
+                ->findBestDoubleTransfers(
+                    $analysis,
+                    $candidatePool,
+                    $outgoingLimit,
+                    $resultLimit
+                );
+
+
+        return [
+
+            'analysis' =>
+                $analysis,
+
+            'recommendations' =>
+                $recommendations
+        ];
+    }
 }
