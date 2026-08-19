@@ -21,7 +21,7 @@ $activeNav =
             </div>
 
             <div class="brand-version">
-                v0.13.0
+                v0.16.0
             </div>
 
         </div>
@@ -146,8 +146,8 @@ $activeNav =
 
 
         <a
-            href="#"
-            class="nav-link <?= $activeNav === 'squad-builder'
+            href="squad.php"
+            class="nav-link <?= $activeNav === 'squad'
                 ? 'active'
                 : ''; ?>"
         >
@@ -155,7 +155,7 @@ $activeNav =
                 ★
             </span>
 
-            Squad Builder
+            Squad Intelligence
         </a>
 
     </nav>

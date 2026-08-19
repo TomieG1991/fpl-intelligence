@@ -6,6 +6,79 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.16.0] - Squad Intelligence UI
+
+### Added
+- Added `public/squad.php` as the dedicated Squad Intelligence dashboard.
+- Added Squad Intelligence to the shared application sidebar navigation.
+- Added development preview mode for Squad Intelligence using `?preview=1`.
+- Added a complete synthetic 15-player preview squad for frontend development without requiring a live FPL squad import.
+- Added development preview banner and squad-status information.
+- Added Squad Intelligence Summary displaying:
+  - average squad Intelligence
+  - weakest position
+  - squad bank
+  - squad validity
+- Added Position Intelligence breakdown for GK, DEF, MID and FWD.
+- Added ranked Transfer Priorities showing the squad players most in need of review.
+- Added Best Single Moves section using the existing squad-aware single-transfer optimiser.
+- Added single-transfer recommendation cards displaying:
+  - outgoing player
+  - transfer priority
+  - replacement player
+  - transfer decision
+  - Intelligence movement
+  - replacement score
+  - resulting squad bank
+- Added Best Double Transfers section using the existing squad-aware double-transfer optimiser.
+- Added double-transfer recommendation cards displaying:
+  - Squad Score
+  - combination classification
+  - Transfer A
+  - Transfer B
+  - individual transfer decisions
+  - Intelligence movement
+  - resulting squad bank
+- Added expandable Current Squad section.
+- Added accessible Current Squad toggle with `aria-expanded` state handling.
+- Added player-profile navigation throughout Squad Intelligence.
+- Added responsive Squad Intelligence frontend styling.
+- Added dedicated styling for summary cards, position intelligence, transfer priorities, single-transfer recommendations, double-transfer plans and current-squad display.
+
+### Changed
+- Extended the shared application layout to support the Squad Intelligence dashboard.
+- Improved Squad Intelligence information hierarchy and spacing for clearer separation between analysis sections.
+- Improved transfer recommendation presentation so detailed intelligence remains available without overcrowding the interface.
+- Updated Squad Intelligence to use the shared `PlayerRepository` instance required by the squad analysis workflow.
+- Improved development preview output so the complete Squad Intelligence interface can be tested independently of a real FPL squad.
+- Improved responsive behaviour and content positioning alongside the fixed application sidebar.
+
+### Fixed
+- Fixed Squad Intelligence content overlapping the fixed sidebar.
+- Fixed overly compressed Squad Intelligence sections and recommendation output.
+- Fixed Current Squad content being permanently visible by introducing an expandable panel.
+- Fixed development preview presentation so synthetic squad data renders through the intended frontend structure.
+- Fixed `SquadPageTest.php` preview URL construction when executed through `runAllTests.php`.
+- Fixed test URL handling that incorrectly combined the localhost base URL with the Windows filesystem path.
+
+### Testing
+- Added `SquadPageTest.php` end-to-end Squad Intelligence page regression coverage.
+- Added HTTP validation of the development preview page.
+- Added validation of the Squad Intelligence application shell.
+- Added validation of development preview mode and the synthetic 15-player squad.
+- Added validation of Squad Intelligence Summary output.
+- Added validation of Position Intelligence output.
+- Added validation of Transfer Priority output.
+- Added validation of Best Single Moves recommendations.
+- Added validation of Best Double Transfers recommendations.
+- Added validation that double-transfer plans expose Squad Score, Transfer A and Transfer B.
+- Added validation of the expandable Current Squad control and accessibility state.
+- Added validation of player-profile navigation.
+- Added detection for PHP fatal errors, parse errors, uncaught errors, warnings and notices in rendered Squad Intelligence output.
+- Verified `SquadPageTest.php` passes when executed directly.
+- Verified `SquadPageTest.php` passes through `runAllTests.php`.
+- Complete automated regression suite passes successfully.
+
 ## [0.15.0] - Squad Transfer Intelligence
 
 ### Added
