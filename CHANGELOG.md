@@ -6,6 +6,145 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.17.0] - Wildcard / Full Squad Optimizer
+
+### Added
+- Added `WildcardOptimizer` for generating complete 15-player FPL squads from Player Intelligence data.
+- Added full wildcard squad construction using the required FPL structure of:
+  - 2 goalkeepers
+  - 5 defenders
+  - 5 midfielders
+  - 3 forwards
+- Added £100.0m wildcard budget enforcement.
+- Added maximum three-player-per-club enforcement.
+- Added duplicate-player protection.
+- Added beam-search based squad optimisation to evaluate strong full-squad combinations without exhaustive brute-force searching.
+- Added position-aware candidate pools combining high-scoring players with lower-cost budget enablers.
+- Added separate wildcard optimisation scores:
+  - Starter Score
+  - Squad Value Score
+  - Wildcard Score
+- Added role-aware squad optimisation so likely starters and supporting squad players are valued differently.
+- Added `WildcardSquadStructure` for analysing the strongest legal Starting XI from a generated wildcard squad.
+- Added evaluation of all legal FPL formations.
+- Added automatic best-formation selection.
+- Added ordered four-player bench generation.
+- Added separate Starting XI Score, Bench Score and Structure Score.
+- Added goalkeeper starter reliability requirements.
+- Added minimum goalkeeper sample-confidence requirement.
+- Added adaptive goalkeeper Starter Score quality floor based on the strongest reliable goalkeeper in the available player pool.
+- Added goalkeeper starter eligibility so low-confidence goalkeepers can remain as backup options without being selected in the Starting XI.
+- Added goalkeeper-aware minimum remaining budget calculation so beam-search states reserve enough budget for a valid starting goalkeeper.
+- Added bench reliability scoring.
+- Added confidence-based bench reliability penalties.
+- Added reliability-adjusted bench scoring while retaining low-confidence budget enablers as legal squad options.
+- Added weighted bench importance based on substitute order.
+- Added raw bench score and reliability-adjusted bench score reporting.
+- Added wildcard search diagnostic metadata including:
+  - beam width
+  - position score limit
+  - position cheap-player limit
+  - goalkeeper minimum confidence
+  - goalkeeper quality ratio
+  - goalkeeper Starter Score floor
+  - final states considered
+
+### Changed
+- Improved wildcard squad ranking so complete squad structure is prioritised over simply selecting the fifteen individually highest-scoring players.
+- Improved wildcard budget allocation so premium players can be selected when their Starting XI contribution justifies their price.
+- Improved role-aware beam-search ranking to distinguish likely starters from bench and budget-enabling squad players.
+- Improved candidate generation to preserve both high-quality and low-cost alternatives.
+- Improved final squad evaluation to consider the quality of the best legal Starting XI.
+- Improved goalkeeper selection so inexpensive but unreliable goalkeepers cannot become the recommended starter solely because they release budget elsewhere.
+- Improved beam-search budget feasibility checks to account for the cost of a reliable starting goalkeeper.
+- Improved bench construction so low-confidence players remain available as budget enablers but receive an appropriate reliability penalty.
+- Improved final squad ranking using Starting XI strength and reliability-adjusted bench contribution.
+- Improved wildcard diagnostics to expose Starter Score, Squad Value Score and Wildcard Score for every selected player.
+- Improved wildcard diagnostics to expose individual bench reliability penalties and adjusted bench values.
+
+### Model
+- Starter Score prioritises player quality and expected Starting XI contribution rather than price efficiency alone.
+- Squad Value Score measures the usefulness of a player within the overall £100.0m squad budget.
+- Wildcard Score provides a balanced player score for full-squad construction.
+- Starting XI quality contributes 85% of the final Structure Score.
+- Reliability-adjusted bench quality contributes 15% of the final Structure Score.
+- Starting goalkeeper eligibility requires both sufficient sample confidence and sufficient Starter Score quality.
+- Goalkeeper quality eligibility is adaptive rather than based on a fixed absolute score.
+- The goalkeeper Starter Score floor is set to 85% of the strongest goalkeeper meeting the minimum confidence requirement.
+- Goalkeeper starter minimum sample confidence is 50%.
+- Bench reliability remains score-based rather than a hard eligibility requirement.
+- Bench reliability penalties currently use:
+  - 75-100% confidence: 0% penalty
+  - 50-74.9% confidence: 2% penalty
+  - 25-49.9% confidence: 5% penalty
+  - 10-24.9% confidence: 10% penalty
+  - below 10% confidence: 18% penalty
+- Bench substitute contribution is weighted by bench order, with the first substitute carrying the greatest importance and the backup goalkeeper the least.
+
+### Performance
+- Added candidate pruning to keep full-squad optimisation practical against the complete Player Intelligence dataset.
+- Added fast minimum-remaining-cost calculations during beam search.
+- Added goalkeeper-aware budget reservation to remove impossible beam-search states earlier.
+- Current real-data optimisation evaluates approximately 400 valid wildcard candidates from the complete imported player pool.
+- Current wildcard optimisation runtime remains approximately six seconds on the local development environment.
+- Added regression protection requiring real-data wildcard optimisation to complete within 15 seconds.
+
+### Testing
+- Added `WildcardOptimizerTest.php` for synthetic wildcard optimiser behaviour.
+- Added validation of:
+  - successful squad generation
+  - squad size
+  - positional structure
+  - £100.0m budget
+  - remaining bank
+  - maximum three-player-per-club rule
+  - duplicate-player protection
+  - invalid squad handling
+  - over-budget squad handling
+  - empty player-pool handling
+  - invalid budget handling
+  - insufficient position-pool handling
+  - confidence normalisation
+- Added `WildcardSquadStructureTest.php`.
+- Added validation of:
+  - 11-player Starting XI construction
+  - four-player bench construction
+  - legal FPL formations
+  - best-formation selection
+  - bench ordering
+  - backup goalkeeper positioning
+  - all supported legal formations
+  - invalid squad rejection
+- Added `WildcardOptimizerRealDataTest.php`.
+- Added full real-data wildcard optimisation diagnostics using imported Player Intelligence data.
+- Added real-data validation of:
+  - 15-player squad construction
+  - squad validity
+  - positional structure
+  - budget
+  - duplicate protection
+  - maximum club limit
+  - Starting XI structure
+  - bench structure
+  - best formation
+  - Starter Score
+  - Squad Value Score
+  - Wildcard Score
+  - goalkeeper reliability
+  - bench reliability
+- Added individual bench reliability diagnostic output showing:
+  - sample confidence
+  - reliability penalty
+  - adjusted bench value
+- Added `WildcardOptimizerRegressionTest.php`.
+- Added 47 end-to-end real-data wildcard regression checks.
+- Added regression protection for squad legality, formation legality, goalkeeper reliability, bench reliability, score integrity, search metadata and runtime.
+- Verified the Wildcard Optimizer regression test passes all 47 checks.
+- Verified current real-data optimisation produces a legal £100.0m wildcard squad.
+- Verified goalkeeper confidence and adaptive quality-floor requirements are enforced.
+- Verified reliability-adjusted bench scoring operates correctly.
+- Verified the complete automated project regression suite passes successfully.
+
 ## [0.16.0] - Squad Intelligence UI
 
 ### Added
