@@ -784,6 +784,10 @@ $squadAnalysis =
 
 $singleTransferResult =
     null;
+    
+    
+$captainRecommendations =
+    null;
 
 
 $doubleTransferResult =
@@ -1005,6 +1009,60 @@ if (
 
         $pageError =
             'Unable to import this FPL squad at the moment.';
+    }
+}
+
+/*
+ * ============================================================
+ * CAPTAIN INTELLIGENCE
+ * ============================================================
+ */
+
+if (
+    $mappedSquad !== null
+    &&
+    (
+        $mappedSquad[
+            'is_complete'
+        ]
+        ?? false
+    )
+    &&
+    $service !== null
+) {
+
+    try {
+
+        $captainRecommendations =
+            $service
+                ->getCaptainRecommendations(
+                    $mappedSquad[
+                        'players'
+                    ]
+                    ?? [],
+                    5
+                );
+
+
+        if (
+            (
+                $captainRecommendations[
+                    'status'
+                ]
+                ?? null
+            )
+            !==
+            'success'
+        ) {
+
+            $captainRecommendations =
+                null;
+        }
+
+    } catch (Throwable $exception) {
+
+        $captainRecommendations =
+            null;
     }
 }
 
@@ -1578,6 +1636,449 @@ function squadMovementClass(
                     </div>
 
                 </section>
+                
+                <?php if (
+                    $captainRecommendations !== null
+                    &&
+                    (
+                        $captainRecommendations[
+                            'status'
+                        ]
+                        ?? null
+                    )
+                    ===
+                    'success'
+                ): ?>
+
+                    <?php
+
+                    $recommendedCaptain =
+                        $captainRecommendations[
+                            'captain'
+                        ]
+                        ?? null;
+
+
+                    $recommendedViceCaptain =
+                        $captainRecommendations[
+                            'vice_captain'
+                        ]
+                        ?? null;
+
+
+                    $captainAlternatives =
+                        $captainRecommendations[
+                            'alternatives'
+                        ]
+                        ?? [];
+
+                    ?>
+
+
+                    <!-- ==============================================
+                         CAPTAIN INTELLIGENCE
+                         ============================================== -->
+
+                    <section class="dashboard-section captain-intelligence-section">
+
+                        <div class="section-heading">
+
+                            <div>
+
+                                <p class="eyebrow">
+                                    Captain Intelligence
+                                </p>
+
+                                <h2>
+                                    Captain Recommendations
+                                </h2>
+
+                                <p class="section-description">
+                                    Ranked captaincy options using the immediate fixture,
+                                    player strength, attacking threat, confidence and
+                                    availability.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="captain-primary-grid">
+
+                            <?php foreach (
+                                [
+                                    [
+                                        'player' =>
+                                            $recommendedCaptain,
+
+                                        'label' =>
+                                            'Captain',
+
+                                        'rank' =>
+                                            1,
+
+                                        'class' =>
+                                            'captain-primary-card-main'
+                                    ],
+
+                                    [
+                                        'player' =>
+                                            $recommendedViceCaptain,
+
+                                        'label' =>
+                                            'Vice-Captain',
+
+                                        'rank' =>
+                                            2,
+
+                                        'class' =>
+                                            ''
+                                    ]
+                                ]
+                                as $captainCard
+                            ): ?>
+
+                                <?php
+
+                                $captainPlayer =
+                                    $captainCard[
+                                        'player'
+                                    ];
+
+
+                                if (
+                                    !is_array(
+                                        $captainPlayer
+                                    )
+                                ) {
+
+                                    continue;
+                                }
+
+
+                                $components =
+                                    $captainPlayer[
+                                        'components'
+                                    ]
+                                    ?? [];
+
+                                ?>
+
+                                <a
+                                    class="captain-primary-card <?= htmlspecialchars(
+                                        $captainCard[
+                                            'class'
+                                        ],
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    ); ?>"
+                                    href="player.php?id=<?= (int) (
+                                        $captainPlayer[
+                                            'player_id'
+                                        ]
+                                        ?? 0
+                                    ); ?>"
+                                >
+
+                                    <div class="captain-card-top">
+
+                                        <span class="captain-role-badge">
+                                            <?= htmlspecialchars(
+                                                $captainCard[
+                                                    'label'
+                                                ],
+                                                ENT_QUOTES,
+                                                'UTF-8'
+                                            ); ?>
+                                        </span>
+
+                                        <span class="captain-rank">
+                                            #<?= (int) $captainCard[
+                                                'rank'
+                                            ]; ?>
+                                        </span>
+
+                                    </div>
+
+
+                                    <strong class="captain-player-name">
+                                        <?= htmlspecialchars(
+                                            (string) (
+                                                $captainPlayer[
+                                                    'name'
+                                                ]
+                                                ?? 'Unknown'
+                                            ),
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ); ?>
+                                    </strong>
+
+
+                                    <span class="captain-player-meta">
+
+                                        <?= htmlspecialchars(
+                                            (string) (
+                                                $captainPlayer[
+                                                    'team_name'
+                                                ]
+                                                ?? 'Unknown'
+                                            ),
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ); ?>
+
+                                        ·
+
+                                        <?= htmlspecialchars(
+                                            (string) (
+                                                $captainPlayer[
+                                                    'position'
+                                                ]
+                                                ?? ''
+                                            ),
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ); ?>
+
+                                    </span>
+
+
+                                    <div class="captain-score-row">
+
+                                        <div>
+
+                                            <span>
+                                                Captain Score
+                                            </span>
+
+                                            <strong>
+                                                <?= squadPageRating(
+                                                    $captainPlayer[
+                                                        'captain_score'
+                                                    ]
+                                                    ?? null
+                                                ); ?>
+                                            </strong>
+
+                                        </div>
+
+
+                                        <div>
+
+                                            <span>
+                                                Level
+                                            </span>
+
+                                            <strong>
+                                                <?= htmlspecialchars(
+                                                    (string) (
+                                                        $captainPlayer[
+                                                            'classification'
+                                                        ]
+                                                        ?? '—'
+                                                    ),
+                                                    ENT_QUOTES,
+                                                    'UTF-8'
+                                                ); ?>
+                                            </strong>
+
+                                        </div>
+
+
+                                        <div>
+
+                                            <span>
+                                                Fixture
+                                            </span>
+
+                                            <strong>
+                                                <?= squadPageRating(
+                                                    $components[
+                                                        'fixture'
+                                                    ]
+                                                    ?? null
+                                                ); ?>
+                                            </strong>
+
+                                        </div>
+
+
+                                        <div>
+
+                                            <span>
+                                                Threat
+                                            </span>
+
+                                            <strong>
+                                                <?= squadPageRating(
+                                                    $components[
+                                                        'attacking_threat'
+                                                    ]
+                                                    ?? null
+                                                ); ?>
+                                            </strong>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <?php if (
+                                        (
+                                            $captainPlayer[
+                                                'current_is_captain'
+                                            ]
+                                            ?? false
+                                        )
+                                        === true
+                                    ): ?>
+
+                                        <span class="captain-current-note">
+                                            Current FPL Captain
+                                        </span>
+
+                                    <?php elseif (
+                                        (
+                                            $captainPlayer[
+                                                'current_is_vice_captain'
+                                            ]
+                                            ?? false
+                                        )
+                                        === true
+                                    ): ?>
+
+                                        <span class="captain-current-note">
+                                            Current FPL Vice-Captain
+                                        </span>
+
+                                    <?php endif; ?>
+
+                                </a>
+
+                            <?php endforeach; ?>
+
+                        </div>
+
+
+                        <?php if (
+                            !empty(
+                                $captainAlternatives
+                            )
+                        ): ?>
+
+                            <div class="captain-alternatives">
+
+                                <p class="captain-alternatives-heading">
+                                    Other Captaincy Options
+                                </p>
+
+
+                                <div class="captain-alternatives-grid">
+
+                                    <?php foreach (
+                                        $captainAlternatives
+                                        as $alternative
+                                    ): ?>
+
+                                        <a
+                                            class="captain-alternative-card"
+                                            href="player.php?id=<?= (int) (
+                                                $alternative[
+                                                    'player_id'
+                                                ]
+                                                ?? 0
+                                            ); ?>"
+                                        >
+
+                                            <span class="captain-alternative-rank">
+                                                #<?= (int) (
+                                                    $alternative[
+                                                        'rank'
+                                                    ]
+                                                    ?? 0
+                                                ); ?>
+                                            </span>
+
+
+                                            <strong>
+                                                <?= htmlspecialchars(
+                                                    (string) (
+                                                        $alternative[
+                                                            'name'
+                                                        ]
+                                                        ?? 'Unknown'
+                                                    ),
+                                                    ENT_QUOTES,
+                                                    'UTF-8'
+                                                ); ?>
+                                            </strong>
+
+
+                                            <span>
+                                                <?= htmlspecialchars(
+                                                    (string) (
+                                                        $alternative[
+                                                            'team_name'
+                                                        ]
+                                                        ?? 'Unknown'
+                                                    ),
+                                                    ENT_QUOTES,
+                                                    'UTF-8'
+                                                ); ?>
+
+                                                ·
+
+                                                <?= htmlspecialchars(
+                                                    (string) (
+                                                        $alternative[
+                                                            'position'
+                                                        ]
+                                                        ?? ''
+                                                    ),
+                                                    ENT_QUOTES,
+                                                    'UTF-8'
+                                                ); ?>
+                                            </span>
+
+
+                                            <span>
+                                                Captain
+                                                <?= squadPageRating(
+                                                    $alternative[
+                                                        'captain_score'
+                                                    ]
+                                                    ?? null
+                                                ); ?>
+
+                                                ·
+
+                                                <?= htmlspecialchars(
+                                                    (string) (
+                                                        $alternative[
+                                                            'classification'
+                                                        ]
+                                                        ?? '—'
+                                                    ),
+                                                    ENT_QUOTES,
+                                                    'UTF-8'
+                                                ); ?>
+                                            </span>
+
+                                        </a>
+
+                                    <?php endforeach; ?>
+
+                                </div>
+
+                            </div>
+
+                        <?php endif; ?>
+
+                    </section>
+
+                <?php endif; ?>
                 
                 <?php if (
                     $squadAnalysis !== null

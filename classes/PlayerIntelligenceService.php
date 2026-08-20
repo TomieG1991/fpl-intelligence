@@ -197,6 +197,12 @@ class PlayerIntelligenceService
                 $teams,
                 $fixtures
             );
+            
+        $teamNextFixtureRatings =
+            $this->buildTeamNextFixtureRatings(
+                $teams,
+                $fixtures
+            );
 
 
         /*
@@ -221,6 +227,12 @@ class PlayerIntelligenceService
             $fixtureRating =
                 $teamFixtureRatings[$teamId]
                 ?? null;
+                
+            $nextFixtureRating =
+                $teamNextFixtureRatings[
+                    $teamId
+                ]
+                ?? null;
 
 
             try {
@@ -237,6 +249,8 @@ class PlayerIntelligenceService
                     $profile['summary']
                     ?? [];
 
+                $summary['next_fixture_rating'] =
+                    $nextFixtureRating;
 
                 /*
                  * Preserve useful explorer data that does
@@ -294,12 +308,51 @@ class PlayerIntelligenceService
                     ?? null;
 
 
+                /*
+                 * --------------------------------------------------------
+                 * ATTACKING PERFORMANCE RATINGS
+                 * --------------------------------------------------------
+                 *
+                 * Expose the normalised attacking ratings already
+                 * calculated by PlayerPerformance so downstream
+                 * intelligence models such as Captain Intelligence
+                 * can use them without rebuilding the player profile.
+                 */
+
+                $summary['goals_rating'] =
+                    $profile[
+                        'performance'
+                    ]['goals_rating']
+                    ?? null;
+
+
+                $summary['assists_rating'] =
+                    $profile[
+                        'performance'
+                    ]['assists_rating']
+                    ?? null;
+
+
+                $summary['expected_goals_rating'] =
+                    $profile[
+                        'performance'
+                    ]['expected_goals_rating']
+                    ?? null;
+
+
+                $summary['expected_assists_rating'] =
+                    $profile[
+                        'performance'
+                    ]['expected_assists_rating']
+                    ?? null;
+
+
                 $summary['bps_per_90'] =
                     $profile[
                         'performance'
                     ]['bps_per_90']
                     ?? null;
-                    
+                                    
                 $summaryAssessment =
                     $this->playerAssessment
                         ->buildAssessment(
@@ -533,6 +586,194 @@ class PlayerIntelligenceService
                     'next_5'
                 ]
                 ?? null;
+        }
+
+
+        return $ratings;
+    }
+    
+    /**
+     * Build the immediate next-fixture opportunity rating
+     * for each Premier League team.
+     *
+     * This is intentionally separate from buildTeamFixtureRatings(),
+     * which represents the rolling next-five fixture opportunity used
+     * by general Player Intelligence.
+     *
+     * Captain Intelligence needs the single upcoming fixture only.
+     */
+    private function buildTeamNextFixtureRatings(
+        array $teams,
+        array $fixtures
+    ): array {
+
+        if (
+            empty(
+                $teams
+            )
+            ||
+            empty(
+                $fixtures
+            )
+        ) {
+
+            return [];
+        }
+
+
+        /*
+         * --------------------------------------------------------
+         * BASELINE TEAM STRENGTH
+         * --------------------------------------------------------
+         */
+
+        $teamBaselines =
+            $this->teamStrength
+                ->calculateTeamStrengths(
+                    $teams
+                );
+
+
+        /*
+         * --------------------------------------------------------
+         * COMPLETE TEAM MODELS
+         * --------------------------------------------------------
+         */
+
+        $completeTeamModels =
+            [];
+
+
+        foreach (
+            $teamBaselines
+            as $teamId => $baseline
+        ) {
+
+            $performance =
+                $this->teamPerformance
+                    ->analyse(
+                        $fixtures,
+                        (int) $teamId
+                    );
+
+
+            $completeTeamModels[
+                $teamId
+            ] =
+                $this->teamStrengthModel
+                    ->buildTeamModel(
+                        $baseline,
+                        $performance,
+                        $this->teamPerformance
+                    );
+        }
+
+
+        /*
+         * --------------------------------------------------------
+         * NEXT FIXTURE OPPORTUNITY
+         * --------------------------------------------------------
+         */
+
+        $ratings =
+            [];
+
+
+        foreach (
+            $completeTeamModels
+            as $teamId => $teamModel
+        ) {
+
+            /*
+             * We deliberately request one fixture only.
+             */
+
+            $upcomingFixtures =
+                $this->fixtureRepository
+                    ->getUpcomingForTeam(
+                        (int) $teamId,
+                        1
+                    );
+
+
+            if (
+                empty(
+                    $upcomingFixtures
+                )
+            ) {
+
+                $ratings[
+                    $teamId
+                ] =
+                    null;
+
+                continue;
+            }
+
+
+            $fixtureRun =
+                $this->fixtureIntelligence
+                    ->analyseFixtureRun(
+                        $upcomingFixtures,
+                        $completeTeamModels,
+                        (int) $teamId
+                    );
+
+
+            /*
+             * analyseFixtureRun() returns opportunity_score
+             * for each analysed fixture.
+             */
+
+            $firstFixture =
+                $fixtureRun[
+                    0
+                ]
+                ?? null;
+
+
+            if (
+                !is_array(
+                    $firstFixture
+                )
+                ||
+                !isset(
+                    $firstFixture[
+                        'opportunity_score'
+                    ]
+                )
+                ||
+                !is_numeric(
+                    $firstFixture[
+                        'opportunity_score'
+                    ]
+                )
+            ) {
+
+                $ratings[
+                    $teamId
+                ] =
+                    null;
+
+                continue;
+            }
+
+
+            $ratings[
+                $teamId
+            ] =
+                round(
+                    max(
+                        0.0,
+                        min(
+                            100.0,
+                            (float) $firstFixture[
+                                'opportunity_score'
+                            ]
+                        )
+                    ),
+                    2
+                );
         }
 
 
@@ -997,6 +1238,38 @@ class PlayerIntelligenceService
                 $profile[
                     'performance'
                 ]['sample_confidence']
+                ?? null,
+                
+            'goals_rating' =>
+                $profile[
+                    'performance'
+                ][
+                    'goals_rating'
+                ]
+                ?? null,
+
+            'assists_rating' =>
+                $profile[
+                    'performance'
+                ][
+                    'assists_rating'
+                ]
+                ?? null,
+
+            'expected_goals_rating' =>
+                $profile[
+                    'performance'
+                ][
+                    'expected_goals_rating'
+                ]
+                ?? null,
+
+            'expected_assists_rating' =>
+                $profile[
+                    'performance'
+                ][
+                    'expected_assists_rating'
+                ]
                 ?? null,
 
             'verdict' =>
@@ -2400,6 +2673,732 @@ class PlayerIntelligenceService
 
             'players' =>
                 $mappedPlayers
+        ];
+    }
+    
+    /**
+     * Analyse a complete FPL squad and return ranked
+     * Captain Intelligence recommendations.
+     *
+     * Captain Intelligence deliberately uses the lightweight
+     * application-level player summaries because those contain
+     * the immediate next-fixture rating and the normalised
+     * attacking-performance ratings required by the captain model.
+     */
+    public function getCaptainRecommendations(
+        array $squad,
+        int $limit = 5
+    ): array {
+
+        /*
+         * ========================================================
+         * VALIDATION
+         * ========================================================
+         */
+
+        if (
+            $limit < 2
+        ) {
+
+            return [
+
+                'status' =>
+                    'invalid',
+
+                'message' =>
+                    'Captain recommendation limit must be at least two.',
+
+                'captain' =>
+                    null,
+
+                'vice_captain' =>
+                    null,
+
+                'alternatives' =>
+                    [],
+
+                'rankings' =>
+                    []
+            ];
+        }
+
+
+        if (
+            count(
+                $squad
+            )
+            !== 15
+        ) {
+
+            return [
+
+                'status' =>
+                    'invalid',
+
+                'message' =>
+                    'Captain Intelligence requires a complete 15-player FPL squad.',
+
+                'captain' =>
+                    null,
+
+                'vice_captain' =>
+                    null,
+
+                'alternatives' =>
+                    [],
+
+                'rankings' =>
+                    []
+            ];
+        }
+
+
+        /*
+         * --------------------------------------------------------
+         * VALIDATE SQUAD PLAYER IDS
+         * --------------------------------------------------------
+         */
+
+        $squadPlayerIds =
+            [];
+
+
+        foreach (
+            $squad
+            as $squadPlayer
+        ) {
+
+            $playerId =
+                (int) (
+                    $squadPlayer[
+                        'player_id'
+                    ]
+                    ?? 0
+                );
+
+
+            if (
+                $playerId <= 0
+            ) {
+
+                return [
+
+                    'status' =>
+                        'invalid',
+
+                    'message' =>
+                        'Captain Intelligence squad contains an invalid player.',
+
+                    'captain' =>
+                        null,
+
+                    'vice_captain' =>
+                        null,
+
+                    'alternatives' =>
+                        [],
+
+                    'rankings' =>
+                        []
+                ];
+            }
+
+
+            if (
+                in_array(
+                    $playerId,
+                    $squadPlayerIds,
+                    true
+                )
+            ) {
+
+                return [
+
+                    'status' =>
+                        'invalid',
+
+                    'message' =>
+                        'Captain Intelligence squad contains duplicate players.',
+
+                    'captain' =>
+                        null,
+
+                    'vice_captain' =>
+                        null,
+
+                    'alternatives' =>
+                        [],
+
+                    'rankings' =>
+                        []
+                ];
+            }
+
+
+            $squadPlayerIds[] =
+                $playerId;
+        }
+
+
+        /*
+         * ========================================================
+         * PLAYER SUMMARY LOOKUP
+         * ========================================================
+         */
+
+        $summaries =
+            $this->getAllPlayerSummaries();
+
+
+        $summaryLookup =
+            [];
+
+
+        foreach (
+            $summaries
+            as $summary
+        ) {
+
+            $playerId =
+                (int) (
+                    $summary[
+                        'player_id'
+                    ]
+                    ?? 0
+                );
+
+
+            if (
+                $playerId <= 0
+            ) {
+
+                continue;
+            }
+
+
+            $summaryLookup[
+                $playerId
+            ] =
+                $summary;
+        }
+
+
+        /*
+         * ========================================================
+         * CAPTAIN EVALUATION
+         * ========================================================
+         */
+
+        $captainIntelligence =
+            new CaptainIntelligence();
+
+
+        $rankings =
+            [];
+
+
+        $rejectedPlayers =
+            [];
+
+
+        foreach (
+            $squad
+            as $squadPlayer
+        ) {
+
+            $playerId =
+                (int) $squadPlayer[
+                    'player_id'
+                ];
+
+
+            $summary =
+                $summaryLookup[
+                    $playerId
+                ]
+                ?? null;
+
+
+            if (
+                $summary === null
+            ) {
+
+                $rejectedPlayers[] = [
+
+                    'player_id' =>
+                        $playerId,
+
+                    'reason' =>
+                        'Player summary could not be found.'
+                ];
+
+                continue;
+            }
+
+
+            $captainInput = [
+
+                'player_id' =>
+                    $playerId,
+
+                'name' =>
+                    (string) (
+                        $summary[
+                            'name'
+                        ]
+                        ?? $squadPlayer[
+                            'name'
+                        ]
+                        ?? ''
+                    ),
+
+                'position' =>
+                    strtoupper(
+                        trim(
+                            (string) (
+                                $summary[
+                                    'position'
+                                ]
+                                ?? $squadPlayer[
+                                    'position'
+                                ]
+                                ?? ''
+                            )
+                        )
+                    ),
+
+                'strength_score' =>
+                    $summary[
+                        'strength_rating'
+                    ]
+                    ?? null,
+
+                /*
+                 * Captain Intelligence uses the immediate fixture,
+                 * not the general next-five fixture rating.
+                 */
+                'fixture_score' =>
+                    $summary[
+                        'next_fixture_rating'
+                    ]
+                    ?? null,
+
+                'sample_confidence' =>
+                    $summary[
+                        'sample_confidence'
+                    ]
+                    ?? null,
+
+                'availability' =>
+                    $summary[
+                        'availability_rating'
+                    ]
+                    ?? null,
+
+                'goals_rating' =>
+                    $summary[
+                        'goals_rating'
+                    ]
+                    ?? null,
+
+                'assists_rating' =>
+                    $summary[
+                        'assists_rating'
+                    ]
+                    ?? null,
+
+                'expected_goals_rating' =>
+                    $summary[
+                        'expected_goals_rating'
+                    ]
+                    ?? null,
+
+                'expected_assists_rating' =>
+                    $summary[
+                        'expected_assists_rating'
+                    ]
+                    ?? null
+            ];
+
+
+            $result =
+                $captainIntelligence
+                    ->evaluate(
+                        $captainInput
+                    );
+
+
+            if (
+                (
+                    $result[
+                        'status'
+                    ]
+                    ?? null
+                )
+                !==
+                'success'
+            ) {
+
+                $rejectedPlayers[] = [
+
+                    'player_id' =>
+                        $playerId,
+
+                    'name' =>
+                        $captainInput[
+                            'name'
+                        ],
+
+                    'reason' =>
+                        $result[
+                            'message'
+                        ]
+                        ?? 'Captain evaluation failed.'
+                ];
+
+                continue;
+            }
+
+
+            /*
+             * ----------------------------------------------------
+             * SQUAD / DISPLAY METADATA
+             * ----------------------------------------------------
+             */
+
+            $result[
+                'team_id'
+            ] =
+                isset(
+                    $squadPlayer[
+                        'team_id'
+                    ]
+                )
+                    ? (int) $squadPlayer[
+                        'team_id'
+                    ]
+                    : null;
+
+
+            $result[
+                'team_name'
+            ] =
+                $summary[
+                    'team_name'
+                ]
+                ?? $squadPlayer[
+                    'team_name'
+                ]
+                ?? null;
+
+
+            $result[
+                'price'
+            ] =
+                $summary[
+                    'price'
+                ]
+                ?? $squadPlayer[
+                    'price'
+                ]
+                ?? null;
+
+
+            $result[
+                'squad_position'
+            ] =
+                isset(
+                    $squadPlayer[
+                        'squad_position'
+                    ]
+                )
+                    ? (int) $squadPlayer[
+                        'squad_position'
+                    ]
+                    : null;
+
+
+            /*
+             * Preserve the captaincy imported from FPL so the UI
+             * can later compare the user's current selection with
+             * the intelligence recommendation.
+             */
+
+            $result[
+                'current_is_captain'
+            ] =
+                (bool) (
+                    $squadPlayer[
+                        'is_captain'
+                    ]
+                    ?? false
+                );
+
+
+            $result[
+                'current_is_vice_captain'
+            ] =
+                (bool) (
+                    $squadPlayer[
+                        'is_vice_captain'
+                    ]
+                    ?? false
+                );
+
+
+            $rankings[] =
+                $result;
+        }
+
+
+        /*
+         * ========================================================
+         * MINIMUM USABLE RESULT
+         * ========================================================
+         */
+
+        if (
+            count(
+                $rankings
+            )
+            < 2
+        ) {
+
+            return [
+
+                'status' =>
+                    'invalid',
+
+                'message' =>
+                    'Not enough squad players could be evaluated for captaincy.',
+
+                'captain' =>
+                    null,
+
+                'vice_captain' =>
+                    null,
+
+                'alternatives' =>
+                    [],
+
+                'rankings' =>
+                    $rankings,
+
+                'rejected_players' =>
+                    $rejectedPlayers
+            ];
+        }
+
+
+        /*
+         * ========================================================
+         * RANKING
+         * ========================================================
+         */
+
+        usort(
+            $rankings,
+            function (
+                array $a,
+                array $b
+            ): int {
+
+                /*
+                 * Primary ordering:
+                 * Captain Score.
+                 */
+
+                $scoreComparison =
+                    (
+                        $b[
+                            'captain_score'
+                        ]
+                        ?? 0
+                    )
+                    <=>
+                    (
+                        $a[
+                            'captain_score'
+                        ]
+                        ?? 0
+                    );
+
+
+                if (
+                    $scoreComparison !== 0
+                ) {
+
+                    return $scoreComparison;
+                }
+
+
+                /*
+                 * Tie-breaker 1:
+                 * attacking upside.
+                 */
+
+                $threatComparison =
+                    (
+                        $b[
+                            'components'
+                        ][
+                            'attacking_threat'
+                        ]
+                        ?? 0
+                    )
+                    <=>
+                    (
+                        $a[
+                            'components'
+                        ][
+                            'attacking_threat'
+                        ]
+                        ?? 0
+                    );
+
+
+                if (
+                    $threatComparison !== 0
+                ) {
+
+                    return $threatComparison;
+                }
+
+
+                /*
+                 * Tie-breaker 2:
+                 * underlying player strength.
+                 */
+
+                return (
+                    $b[
+                        'components'
+                    ][
+                        'strength'
+                    ]
+                    ?? 0
+                )
+                <=>
+                (
+                    $a[
+                        'components'
+                    ][
+                        'strength'
+                    ]
+                    ?? 0
+                );
+            }
+        );
+
+
+        /*
+         * Add explicit ranking numbers after sorting.
+         */
+
+        foreach (
+            $rankings
+            as $index => &$ranking
+        ) {
+
+            $ranking[
+                'rank'
+            ] =
+                $index + 1;
+        }
+
+
+        unset(
+            $ranking
+        );
+
+
+        /*
+         * ========================================================
+         * RECOMMENDATIONS
+         * ========================================================
+         */
+
+        $recommendationLimit =
+            min(
+                $limit,
+                count(
+                    $rankings
+                )
+            );
+
+
+        $recommendations =
+            array_slice(
+                $rankings,
+                0,
+                $recommendationLimit
+            );
+
+
+        $captain =
+            $recommendations[
+                0
+            ];
+
+
+        $viceCaptain =
+            $recommendations[
+                1
+            ];
+
+
+        $alternatives =
+            array_slice(
+                $recommendations,
+                2
+            );
+
+
+        return [
+
+            'status' =>
+                'success',
+
+            'message' =>
+                'Captain Intelligence recommendations generated successfully.',
+
+            'captain' =>
+                $captain,
+
+            'vice_captain' =>
+                $viceCaptain,
+
+            'alternatives' =>
+                $alternatives,
+
+            /*
+             * Complete 15-player ordering is retained so future UI
+             * and diagnostics can inspect the entire squad rather
+             * than only the displayed recommendations.
+             */
+            'rankings' =>
+                $rankings,
+
+            'squad_count' =>
+                count(
+                    $squad
+                ),
+
+            'evaluated_count' =>
+                count(
+                    $rankings
+                ),
+
+            'rejected_count' =>
+                count(
+                    $rejectedPlayers
+                ),
+
+            'rejected_players' =>
+                $rejectedPlayers,
+
+            'recommendation_limit' =>
+                $recommendationLimit
         ];
     }
     

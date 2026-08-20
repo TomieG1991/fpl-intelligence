@@ -6,6 +6,122 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.19.0] - Captain Intelligence
+
+### Added
+- Added `CaptainIntelligence.php` as the dedicated captaincy evaluation engine.
+- Added Captain Intelligence scoring for evaluating FPL captaincy candidates.
+- Added Captain Score using:
+  - player strength
+  - immediate next-fixture opportunity
+  - attacking threat
+  - sample confidence
+  - player availability
+- Added position-aware attacking threat modelling for goalkeepers, defenders, midfielders and forwards.
+- Added attacking threat inputs derived from:
+  - goals
+  - assists
+  - expected goals
+  - expected assists
+- Added Captain Intelligence fields to Player Intelligence summaries:
+  - goals rating
+  - assists rating
+  - expected goals rating
+  - expected assists rating
+  - next-fixture rating
+- Added dedicated next-fixture intelligence so captaincy decisions use the immediate fixture rather than the broader fixture horizon.
+- Added calibrated captain fixture scoring to prevent extreme fixture ratings from dominating Captain Score.
+- Added raw and calibrated fixture components to Captain Intelligence output.
+- Added Captain Intelligence core score representing underlying captaincy quality before reliability adjustments.
+- Added confidence and availability modifiers as multiplicative risk adjustments.
+- Added Captain Intelligence classifications:
+  - Elite Captain
+  - Strong Captain
+  - Good Option
+  - Differential
+  - Avoid
+- Added squad-level Captain Intelligence recommendations.
+- Added automatic captain and vice-captain recommendations from a complete 15-player FPL squad.
+- Added ranked alternative captaincy options.
+- Added complete squad captaincy rankings.
+- Added preservation of current FPL captain and vice-captain metadata within recommendation output.
+- Added Captain Intelligence integration to Squad Intelligence.
+- Added Captain Recommendations section to the Squad Intelligence dashboard.
+- Added prominent captain and vice-captain recommendation cards.
+- Added alternative captaincy cards for the next-best ranked options.
+- Added Captain Score, classification, fixture and attacking threat metrics to captain recommendation cards.
+- Added development preview support so Captain Intelligence can be inspected before the live FPL gameweek squad becomes publicly available.
+- Added responsive Captain Intelligence dashboard styling.
+
+### Changed
+- Extended Player Intelligence to expose the attacking and fixture metrics required by Captain Intelligence.
+- Changed captain fixture evaluation to use the player's immediate next fixture rather than the multi-fixture Fixture Rating.
+- Calibrated extreme next-fixture ratings toward neutral values before applying them to Captain Score.
+- Changed confidence from an additive Captain Score component to a risk modifier.
+- Changed availability from an additive Captain Score component to a risk modifier.
+- Improved Captain Score balance so strong fixtures support captaincy decisions without overwhelming player quality and attacking threat.
+- Improved low-confidence handling so high underlying scores are reduced when the available player sample is unreliable.
+- Improved captaincy ranking behaviour so attacking midfielders and forwards naturally compete for the highest recommendations.
+- Improved goalkeeper handling so goalkeepers do not dominate captaincy rankings through strength and fixture scores alone.
+- Extended Squad Intelligence from squad analysis into captaincy decision support.
+- Improved Captain Intelligence presentation with clear visual hierarchy between captain, vice-captain and alternative options.
+
+### Fixed
+- Fixed Captain Intelligence initially receiving zero-valued strength, fixture and availability inputs from Player Intelligence.
+- Fixed attacking threat initially returning zero because required attacking ratings were not exposed by Player Intelligence.
+- Fixed next-fixture calculations using broader fixture-horizon data instead of the immediate upcoming fixture.
+- Fixed extreme fixture ratings having excessive influence on Captain Score.
+- Fixed goalkeeper and defender captaincy candidates ranking disproportionately highly before position-aware attacking threat was introduced.
+- Fixed low-confidence players receiving insufficient penalties despite unreliable sample sizes.
+- Fixed Captain Intelligence component output containing duplicated `components` array declarations during development.
+- Fixed undefined next-fixture rating usage within player replacement analysis.
+- Fixed Captain Intelligence classification thresholds so score labels correctly reflect the calibrated scoring model.
+- Fixed real-squad Captain Intelligence testing incorrectly failing when FPL has not yet exposed a public gameweek squad.
+
+### Testing
+- Added dedicated `CaptainIntelligenceTest.php` unit and behaviour coverage.
+- Added validation of strong captain scoring and Captain Score bounds.
+- Added validation that better fixtures improve Captain Score.
+- Added validation of raw and calibrated fixture scores.
+- Added validation that higher attacking threat improves Captain Score.
+- Added validation of position-aware attacking threat behaviour.
+- Added validation of confidence normalisation and confidence modifiers.
+- Added validation of availability modifiers.
+- Added validation of invalid Captain Intelligence inputs.
+- Added validation of Captain Intelligence component output.
+- Added explicit Captain Intelligence classification threshold tests.
+- Verified `CaptainIntelligenceTest.php` passes all 36 checks with 0 failures.
+- Added `CaptainIntelligenceRealDataTest.php` against the live project player dataset.
+- Verified Captain Intelligence against 581 Player Intelligence summaries.
+- Verified 400 current players can be evaluated as valid captaincy candidates.
+- Added next-fixture team-distribution diagnostics covering all 20 Premier League teams.
+- Added validation that real Captain Scores remain numeric and between 0 and 100.
+- Added validation that real captain rankings are not dominated by goalkeepers.
+- Added validation that attacking players appear within the highest-ranked captaincy candidates.
+- Verified `CaptainIntelligenceRealDataTest.php` passes all 14 checks with 0 failures.
+- Added `CaptainIntelligenceRegressionTest.php` for long-term Captain Intelligence regression protection.
+- Added regression validation of required Player Intelligence captain fields.
+- Added regression validation of fixture calibration.
+- Added regression validation of confidence and availability modifier bounds.
+- Added regression validation of captain ranking composition.
+- Added regression validation of Captain Intelligence classification distribution.
+- Added Captain Intelligence performance regression coverage.
+- Verified `CaptainIntelligenceRegressionTest.php` passes all 33 checks with 0 failures.
+- Added squad-level Captain Intelligence recommendation tests.
+- Added validation of captain and vice-captain ranking.
+- Added validation of alternative captaincy recommendations.
+- Added validation that all 15 squad players are ranked.
+- Added validation of sequential captaincy ranking.
+- Added validation that Captain Score ordering is preserved.
+- Added validation of Captain Intelligence component propagation through squad recommendations.
+- Added validation of current FPL captaincy metadata preservation.
+- Added validation of invalid recommendation limits.
+- Added validation that incomplete and duplicate squads are rejected.
+- Added real FPL squad Captain Intelligence production-path diagnostics.
+- Added graceful test handling for the FPL API `no_public_squad` state before gameweek squads become publicly available.
+- Verified Captain Intelligence real-squad diagnostics pass without treating unavailable pre-gameweek FPL squad data as an application failure.
+- Verified Player Intelligence, Captain Intelligence and Captain Recommendation regression coverage passes successfully.
+
 ## [0.18.0] - Wildcard Intelligence UI
 
 ### Added

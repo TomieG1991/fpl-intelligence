@@ -149,6 +149,24 @@ testPass(
 
 /*
  * ============================================================
+ * SUMMARY CAPTAIN / FIXTURE DATA
+ * ============================================================
+ */
+
+if ($testPlayer !== null) {
+
+    testPass(
+        'Player summary contains next fixture rating',
+        array_key_exists(
+            'next_fixture_rating',
+            $testPlayer
+        )
+    );
+}
+
+
+/*
+ * ============================================================
  * SUMMARY ASSESSMENT DATA
  * ============================================================
  */
@@ -3323,6 +3341,947 @@ testPass(
         )
         === null
     );
+    
+    echo "<br>============================================<br>";
+    echo "Scenario Q: Captain Intelligence Recommendations<br>";
+    echo "============================================<br>";
+
+
+    /*
+     * Build a dedicated 15-player Captain Intelligence squad.
+     *
+     * The squad used by the transfer recommendation tests is built
+     * for transfer-analysis requirements and can contain players
+     * that do not yet have every Captain Intelligence input.
+     *
+     * Captain Intelligence requires usable:
+     *
+     * - strength rating
+     * - immediate next-fixture rating
+     * - sample confidence
+     * - availability rating
+     */
+
+    $captainPositionRequirements = [
+
+        'GK' =>
+            2,
+
+        'DEF' =>
+            5,
+
+        'MID' =>
+            5,
+
+        'FWD' =>
+            3
+    ];
+
+
+    $captainSquadForRecommendations =
+        [];
+
+
+    $captainPlayerIds =
+        [];
+
+
+    foreach (
+        $captainPositionRequirements
+        as $requiredPosition => $requiredCount
+    ) {
+
+        $selected =
+            0;
+
+
+        foreach (
+            $summaries
+            as $summary
+        ) {
+
+            if (
+                $selected
+                >=
+                $requiredCount
+            ) {
+
+                break;
+            }
+
+
+            $playerId =
+                (int) (
+                    $summary[
+                        'player_id'
+                    ]
+                    ?? 0
+                );
+
+
+            $position =
+                strtoupper(
+                    trim(
+                        (string) (
+                            $summary[
+                                'position'
+                            ]
+                            ?? ''
+                        )
+                    )
+                );
+
+
+            if (
+                $playerId <= 0
+                ||
+                $position !== $requiredPosition
+                ||
+                in_array(
+                    $playerId,
+                    $captainPlayerIds,
+                    true
+                )
+            ) {
+
+                continue;
+            }
+
+
+            /*
+             * These are the fields CaptainIntelligence::evaluate()
+             * requires in order to return success.
+             */
+
+            if (
+                !is_numeric(
+                    $summary[
+                        'strength_rating'
+                    ]
+                    ?? null
+                )
+                ||
+                !is_numeric(
+                    $summary[
+                        'next_fixture_rating'
+                    ]
+                    ?? null
+                )
+                ||
+                !is_numeric(
+                    $summary[
+                        'sample_confidence'
+                    ]
+                    ?? null
+                )
+                ||
+                !is_numeric(
+                    $summary[
+                        'availability_rating'
+                    ]
+                    ?? null
+                )
+            ) {
+
+                continue;
+            }
+
+
+            $captainSquadForRecommendations[] = [
+
+                'player_id' =>
+                    $playerId,
+
+                'name' =>
+                    $summary[
+                        'name'
+                    ]
+                    ?? null,
+
+                'position' =>
+                    $position,
+
+                'team_id' =>
+                    $summary[
+                        'team_id'
+                    ]
+                    ?? null,
+
+                'team_name' =>
+                    $summary[
+                        'team_name'
+                    ]
+                    ?? null,
+
+                'price' =>
+                    $summary[
+                        'price'
+                    ]
+                    ?? null,
+
+                'squad_position' =>
+                    count(
+                        $captainSquadForRecommendations
+                    )
+                    + 1,
+
+                'is_captain' =>
+                    false,
+
+                'is_vice_captain' =>
+                    false
+            ];
+
+
+            $captainPlayerIds[] =
+                $playerId;
+
+
+            $selected++;
+        }
+    }
+
+
+    testPass(
+        'Valid 15-player Captain Intelligence squad was created',
+        count(
+            $captainSquadForRecommendations
+        )
+        === 15
+    );
+
+
+    $captainRecommendationResult =
+        $service
+            ->getCaptainRecommendations(
+                $captainSquadForRecommendations,
+                5
+            );
+
+
+    /*
+     * ------------------------------------------------------------
+     * BASE RESULT
+     * ------------------------------------------------------------
+     */
+
+    testPass(
+        'Captain recommendation service returns an array',
+        is_array(
+            $captainRecommendationResult
+        )
+    );
+
+
+    testPass(
+        'Captain recommendation service returns success',
+        (
+            $captainRecommendationResult[
+                'status'
+            ]
+            ?? null
+        )
+        ===
+        'success'
+    );
+
+
+    testPass(
+        'Captain recommendation message is returned',
+        !empty(
+            $captainRecommendationResult[
+                'message'
+            ]
+            ?? null
+        )
+    );
+
+
+    /*
+     * ------------------------------------------------------------
+     * CAPTAIN
+     * ------------------------------------------------------------
+     */
+
+    $recommendedCaptain =
+        $captainRecommendationResult[
+            'captain'
+        ]
+        ?? null;
+
+
+    testPass(
+        'Recommended captain exists',
+        is_array(
+            $recommendedCaptain
+        )
+    );
+
+
+    testPass(
+        'Recommended captain has rank one',
+        (
+            $recommendedCaptain[
+                'rank'
+            ]
+            ?? null
+        )
+        === 1
+    );
+
+
+    testPass(
+        'Recommended captain has numeric Captain Score',
+        is_numeric(
+            $recommendedCaptain[
+                'captain_score'
+            ]
+            ?? null
+        )
+    );
+
+
+    testPass(
+        'Recommended captain has classification',
+        !empty(
+            $recommendedCaptain[
+                'classification'
+            ]
+            ?? null
+        )
+    );
+
+
+    testPass(
+        'Recommended captain contains Captain Intelligence components',
+        isset(
+            $recommendedCaptain[
+                'components'
+            ]
+        )
+        &&
+        is_array(
+            $recommendedCaptain[
+                'components'
+            ]
+        )
+    );
+
+
+    /*
+     * ------------------------------------------------------------
+     * VICE-CAPTAIN
+     * ------------------------------------------------------------
+     */
+
+    $recommendedViceCaptain =
+        $captainRecommendationResult[
+            'vice_captain'
+        ]
+        ?? null;
+
+
+    testPass(
+        'Recommended vice-captain exists',
+        is_array(
+            $recommendedViceCaptain
+        )
+    );
+
+
+    testPass(
+        'Recommended vice-captain has rank two',
+        (
+            $recommendedViceCaptain[
+                'rank'
+            ]
+            ?? null
+        )
+        === 2
+    );
+
+
+    testPass(
+        'Captain and vice-captain are different players',
+        (
+            $recommendedCaptain[
+                'player_id'
+            ]
+            ?? null
+        )
+        !==
+        (
+            $recommendedViceCaptain[
+                'player_id'
+            ]
+            ?? null
+        )
+    );
+
+
+    /*
+     * ------------------------------------------------------------
+     * ALTERNATIVES
+     * ------------------------------------------------------------
+     */
+
+    $captainAlternatives =
+        $captainRecommendationResult[
+            'alternatives'
+        ]
+        ?? [];
+
+
+    testPass(
+        'Captain alternatives are returned',
+        is_array(
+            $captainAlternatives
+        )
+    );
+
+
+    testPass(
+        'Recommendation limit of five returns three alternatives',
+        count(
+            $captainAlternatives
+        )
+        === 3
+    );
+
+
+    $alternativeRanksValid =
+        true;
+
+
+    foreach (
+        $captainAlternatives
+        as $index => $alternative
+    ) {
+
+        $expectedRank =
+            $index + 3;
+
+
+        if (
+            (
+                $alternative[
+                    'rank'
+                ]
+                ?? null
+            )
+            !==
+            $expectedRank
+        ) {
+
+            $alternativeRanksValid =
+                false;
+
+            break;
+        }
+    }
+
+
+    testPass(
+        'Captain alternatives preserve sequential ranking',
+        $alternativeRanksValid
+    );
+
+
+    /*
+     * ------------------------------------------------------------
+     * COMPLETE SQUAD RANKING
+     * ------------------------------------------------------------
+     */
+
+    $captainRankings =
+        $captainRecommendationResult[
+            'rankings'
+        ]
+        ?? [];
+
+
+    testPass(
+        'Complete captain ranking is returned',
+        is_array(
+            $captainRankings
+        )
+    );
+
+
+    testPass(
+        'Complete captain ranking contains all 15 squad players',
+        count(
+            $captainRankings
+        )
+        === 15
+    );
+
+
+    $captainRanksSequential =
+        true;
+
+
+    $previousCaptainScore =
+        null;
+
+
+    $captainScoresOrdered =
+        true;
+
+
+    foreach (
+        $captainRankings
+        as $index => $ranking
+    ) {
+
+        if (
+            (
+                $ranking[
+                    'rank'
+                ]
+                ?? null
+            )
+            !==
+            (
+                $index + 1
+            )
+        ) {
+
+            $captainRanksSequential =
+                false;
+        }
+
+
+        $captainScore =
+            $ranking[
+                'captain_score'
+            ]
+            ?? null;
+
+
+        if (
+            !is_numeric(
+                $captainScore
+            )
+        ) {
+
+            $captainScoresOrdered =
+                false;
+
+            continue;
+        }
+
+
+        $captainScore =
+            (float) $captainScore;
+
+
+        if (
+            $previousCaptainScore !== null
+            &&
+            $captainScore > $previousCaptainScore
+        ) {
+
+            $captainScoresOrdered =
+                false;
+        }
+
+
+        $previousCaptainScore =
+            $captainScore;
+    }
+
+
+    testPass(
+        'Complete captain ranking uses sequential ranks',
+        $captainRanksSequential
+    );
+
+
+    testPass(
+        'Complete captain ranking is ordered by Captain Score',
+        $captainScoresOrdered
+    );
+
+
+    /*
+     * ------------------------------------------------------------
+     * SQUAD METADATA
+     * ------------------------------------------------------------
+     */
+
+    testPass(
+        'Captain service reports 15-player squad count',
+        (
+            $captainRecommendationResult[
+                'squad_count'
+            ]
+            ?? null
+        )
+        === 15
+    );
+
+
+    testPass(
+        'Captain service evaluates all 15 squad players',
+        (
+            $captainRecommendationResult[
+                'evaluated_count'
+            ]
+            ?? null
+        )
+        === 15
+    );
+
+
+    testPass(
+        'Captain service rejects no players from valid squad',
+        (
+            $captainRecommendationResult[
+                'rejected_count'
+            ]
+            ?? null
+        )
+        === 0
+    );
+
+
+    testPass(
+        'Captain recommendation limit is preserved',
+        (
+            $captainRecommendationResult[
+                'recommendation_limit'
+            ]
+            ?? null
+        )
+        === 5
+    );
+
+
+    /*
+     * ------------------------------------------------------------
+     * CAPTAIN MODEL DATA
+     * ------------------------------------------------------------
+     */
+
+    $captainComponents =
+        $recommendedCaptain[
+            'components'
+        ]
+        ?? [];
+
+
+    testPass(
+        'Recommended captain uses raw next-fixture score',
+        array_key_exists(
+            'raw_fixture',
+            $captainComponents
+        )
+    );
+
+
+    testPass(
+        'Recommended captain uses calibrated fixture score',
+        array_key_exists(
+            'fixture',
+            $captainComponents
+        )
+    );
+
+
+    testPass(
+        'Recommended captain includes attacking threat',
+        array_key_exists(
+            'attacking_threat',
+            $captainComponents
+        )
+    );
+
+
+    testPass(
+        'Recommended captain includes confidence modifier',
+        array_key_exists(
+            'confidence_modifier',
+            $captainComponents
+        )
+    );
+
+
+    testPass(
+        'Recommended captain includes availability modifier',
+        array_key_exists(
+            'availability_modifier',
+            $captainComponents
+        )
+    );
+
+
+    /*
+     * ------------------------------------------------------------
+     * CURRENT FPL CAPTAINCY METADATA
+     * ------------------------------------------------------------
+     */
+
+    $currentCaptainFlagsPresent =
+        true;
+
+
+    foreach (
+        $captainRankings
+        as $ranking
+    ) {
+
+        if (
+            !array_key_exists(
+                'current_is_captain',
+                $ranking
+            )
+            ||
+            !array_key_exists(
+                'current_is_vice_captain',
+                $ranking
+            )
+        ) {
+
+            $currentCaptainFlagsPresent =
+                false;
+
+            break;
+        }
+    }
+
+
+    testPass(
+        'Captain rankings preserve current FPL captaincy metadata',
+        $currentCaptainFlagsPresent
+    );
+
+
+    /*
+     * ------------------------------------------------------------
+     * INVALID LIMIT
+     * ------------------------------------------------------------
+     */
+
+    $invalidCaptainLimitResult =
+        $service
+            ->getCaptainRecommendations(
+                $captainSquadForRecommendations,
+                1
+            );
+
+
+    testPass(
+        'Captain recommendations reject limit below two',
+        (
+            $invalidCaptainLimitResult[
+                'status'
+            ]
+            ?? null
+        )
+        ===
+        'invalid'
+    );
+
+
+    testPass(
+        'Invalid captain limit returns no captain',
+        (
+            $invalidCaptainLimitResult[
+                'captain'
+            ]
+            ?? null
+        )
+        === null
+    );
+
+
+    /*
+     * ------------------------------------------------------------
+     * INCOMPLETE SQUAD
+     * ------------------------------------------------------------
+     */
+
+    $incompleteCaptainSquad =
+        array_slice(
+            $captainSquadForRecommendations,
+            0,
+            14
+        );
+
+
+    $incompleteCaptainResult =
+        $service
+            ->getCaptainRecommendations(
+                $incompleteCaptainSquad,
+                5
+            );
+
+
+    testPass(
+        'Captain recommendations reject incomplete squad',
+        (
+            $incompleteCaptainResult[
+                'status'
+            ]
+            ?? null
+        )
+        ===
+        'invalid'
+    );
+
+
+    testPass(
+        'Incomplete captain squad returns no rankings',
+        empty(
+            $incompleteCaptainResult[
+                'rankings'
+            ]
+            ?? []
+        )
+    );
+
+
+    /*
+     * ------------------------------------------------------------
+     * DUPLICATE PLAYER
+     * ------------------------------------------------------------
+     */
+
+    $duplicateCaptainSquad =
+        $captainSquadForRecommendations;
+
+
+    /*
+     * Replace the final player with the first player so the squad
+     * still contains exactly 15 entries but contains a duplicate.
+     */
+
+    $duplicateCaptainSquad[
+        14
+    ] =
+        $duplicateCaptainSquad[
+            0
+        ];
+
+
+    $duplicateCaptainResult =
+        $service
+            ->getCaptainRecommendations(
+                $duplicateCaptainSquad,
+                5
+            );
+
+
+    testPass(
+        'Captain recommendations reject duplicate squad players',
+        (
+            $duplicateCaptainResult[
+                'status'
+            ]
+            ?? null
+        )
+        ===
+        'invalid'
+    );
+
+
+    testPass(
+        'Duplicate captain squad returns no captain',
+        (
+            $duplicateCaptainResult[
+                'captain'
+            ]
+            ?? null
+        )
+        === null
+    );
+
+
+    /*
+     * ------------------------------------------------------------
+     * RESULT DIAGNOSTIC
+     * ------------------------------------------------------------
+     */
+
+    if (
+        is_array(
+            $recommendedCaptain
+        )
+    ) {
+
+        echo "Recommended Captain: "
+            . htmlspecialchars(
+                (string) (
+                    $recommendedCaptain[
+                        'name'
+                    ]
+                    ?? 'Unknown'
+                ),
+                ENT_QUOTES,
+                'UTF-8'
+            )
+            . " | Score "
+            . number_format(
+                (float) (
+                    $recommendedCaptain[
+                        'captain_score'
+                    ]
+                    ?? 0
+                ),
+                2
+            )
+            . " | "
+            . htmlspecialchars(
+                (string) (
+                    $recommendedCaptain[
+                        'classification'
+                    ]
+                    ?? ''
+                ),
+                ENT_QUOTES,
+                'UTF-8'
+            )
+            . "<br>";
+    }
+
+
+    if (
+        is_array(
+            $recommendedViceCaptain
+        )
+    ) {
+
+        echo "Recommended Vice-Captain: "
+            . htmlspecialchars(
+                (string) (
+                    $recommendedViceCaptain[
+                        'name'
+                    ]
+                    ?? 'Unknown'
+                ),
+                ENT_QUOTES,
+                'UTF-8'
+            )
+            . " | Score "
+            . number_format(
+                (float) (
+                    $recommendedViceCaptain[
+                        'captain_score'
+                    ]
+                    ?? 0
+                ),
+                2
+            )
+            . "<br>";
+    }
+
+
+    echo "Captain Rankings: "
+        . count(
+            $captainRankings
+        )
+        . "<br>";
 
 
     /*
