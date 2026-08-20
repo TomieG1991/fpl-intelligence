@@ -21,7 +21,7 @@ $activeNav =
             </div>
 
             <div class="brand-version">
-                v0.17.0
+                v0.18.0
             </div>
 
         </div>
@@ -156,6 +156,22 @@ $activeNav =
             </span>
 
             Squad Intelligence
+        </a>
+        
+        <a
+            href="wildcard.php"
+            class="nav-link <?= (
+                $activeNav
+                ?? ''
+            ) === 'wildcard'
+                ? 'active'
+                : ''; ?>"
+        >
+            <span class="nav-icon">
+                ✦
+            </span>
+
+            Wildcard Intelligence
         </a>
 
     </nav>

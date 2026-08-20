@@ -6,6 +6,111 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.18.0] - Wildcard Intelligence UI
+
+### Added
+- Added `public/wildcard.php` as the dedicated Wildcard Intelligence dashboard.
+- Added Wildcard Intelligence to the shared application sidebar navigation.
+- Added on-demand wildcard squad generation through the Wildcard Intelligence interface.
+- Added wildcard summary cards displaying:
+  - squad cost
+  - remaining bank
+  - best formation
+  - Starting XI Score
+  - Structure Score
+- Added Starting XI pitch view for visualising the optimizer's recommended team by position.
+- Added dedicated goalkeeper, defender, midfielder and forward pitch rows.
+- Added Starting XI player cards displaying:
+  - player name
+  - team
+  - price
+  - Starter Score
+  - Wildcard Score
+- Added direct player-profile navigation from Starting XI player cards.
+- Added Ordered Bench section displaying all four substitutes in optimizer-selected order.
+- Added bench player cards displaying:
+  - substitute order
+  - player identity
+  - position
+  - team
+  - price
+  - sample confidence
+  - reliability penalty
+  - adjusted bench value
+- Added visual reliability warnings for low-confidence bench players.
+- Added Structure & Reliability intelligence section displaying:
+  - Wildcard Score
+  - Raw Bench Score
+  - Adjusted Bench Score
+  - Bench Reliability Penalty
+  - goalkeeper minimum confidence
+  - goalkeeper Starter Score quality floor
+- Added Why This Squad explanation section.
+- Added generated squad insights covering:
+  - best formation
+  - reliable starting goalkeeper
+  - premium squad core
+  - wildcard budget usage
+  - bench reliability
+- Added Generate Wildcard Squad and Regenerate Squad actions.
+- Added responsive Wildcard Intelligence styling for summary cards, pitch layout, bench cards and intelligence panels.
+
+### Changed
+- Extended the shared application layout to support the Wildcard Intelligence dashboard.
+- Improved wildcard output presentation so optimizer results are presented as decision-support intelligence rather than raw diagnostic data.
+- Improved Starting XI readability by replacing a standard player list with a position-based pitch layout.
+- Improved visual separation between goalkeeper, defence, midfield and forward lines.
+- Improved section spacing and hierarchy throughout the Wildcard Intelligence page.
+- Improved bench presentation so substitute order and reliability risk can be understood at a glance.
+- Improved goalkeeper intelligence presentation so minimum confidence and adaptive Starter Score requirements are visible in the UI.
+- Improved wildcard squad explanation so important optimizer decisions are translated into user-facing insights.
+- Improved responsive behaviour of wildcard summary, pitch, bench and intelligence components.
+
+### Fixed
+- Fixed duplicate Wildcard Starting XI output during pitch-view development.
+- Fixed Wildcard pitch player cards being compressed into narrow vertical columns.
+- Fixed Starting XI pitch rows not using the available dashboard width effectively.
+- Fixed inconsistent spacing between Wildcard dashboard sections and section eyebrow headings.
+- Fixed goalkeeper reliability values not reading from the correct optimizer result fields.
+- Fixed Wildcard summary cards initially rendering without the intended card styling.
+- Fixed Starting XI and substitute sections lacking sufficient visual separation.
+
+### Testing
+- Added `WildcardPageTest.php` end-to-end Wildcard Intelligence page regression coverage.
+- Added HTTP validation of the initial Wildcard Intelligence page.
+- Added HTTP validation of generated wildcard mode.
+- Added validation of the Wildcard Intelligence application shell and navigation.
+- Added validation of Generate Wildcard Squad and Regenerate Squad actions.
+- Added validation that the idle page does not prematurely render generated squad output.
+- Added validation of wildcard summary output including:
+  - squad cost
+  - remaining bank
+  - formation
+  - Starting XI Score
+  - Structure Score
+- Added validation of the Starting XI pitch structure.
+- Added validation of goalkeeper, defender, midfielder and forward pitch rows.
+- Added validation that the pitch contains exactly 11 Starting XI player cards.
+- Added validation that Starting XI player cards link to player profiles.
+- Added validation of the Ordered Bench section.
+- Added validation that exactly four bench player cards are rendered.
+- Added validation of bench ordering from Bench 1 through Bench 4.
+- Added validation of bench confidence information.
+- Added validation of Structure & Reliability intelligence output.
+- Added validation of Wildcard Score, Raw Bench Score, Adjusted Bench Score and Reliability Penalty.
+- Added validation of goalkeeper minimum confidence and adaptive quality-floor output.
+- Added validation of Why This Squad intelligence.
+- Added validation of Best Formation, Reliable Goalkeeper, Premium Core, Budget Use and Bench Reliability insights.
+- Added validation that all 15 generated squad players provide player-profile navigation.
+- Added rendered-page detection for PHP fatal errors, parse errors, uncaught errors, warnings and notices.
+- Added Wildcard Intelligence page performance regression checks.
+- Verified the initial Wildcard Intelligence page loads within the two-second regression threshold.
+- Verified generated wildcard optimisation and page rendering complete within the 15-second regression threshold.
+- Verified `WildcardPageTest.php` passes all 59 checks with 0 failures.
+- Verified `WildcardPageTest.php` passes through `runAllTests.php`.
+- Complete automated project regression suite passes successfully.
+
+
 ## [0.17.0] - Wildcard / Full Squad Optimizer
 
 ### Added
