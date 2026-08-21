@@ -1263,4 +1263,221 @@ public function calculateOpportunityTrend(
             2
         );
     }
+    
+    /**
+ * Calculate fixture opportunity adjusted for the player's position.
+ *
+ * Defensive positions care primarily about the opponent's
+ * attacking strength.
+ *
+ * Attacking positions care primarily about the opponent's
+ * defensive strength.
+ *
+ * If the required performance evidence is unavailable, the
+ * existing base fixture opportunity is preserved unchanged.
+ *
+ * @param float       $baseOpportunity
+ * @param string      $position
+ * @param float|null  $opponentAttackRating
+ * @param float|null  $opponentDefenceRating
+ *
+ * @return float
+ */
+public function calculatePositionAwareOpportunity(
+    float $baseOpportunity,
+    string $position,
+    ?float $opponentAttackRating = null,
+    ?float $opponentDefenceRating = null
+): float {
+
+    /*
+     * ========================================================
+     * NORMALISE BASE OPPORTUNITY
+     * ========================================================
+     */
+
+    $baseOpportunity =
+        max(
+            0.0,
+            min(
+                100.0,
+                $baseOpportunity
+            )
+        );
+
+
+    $position =
+        strtoupper(
+            trim(
+                $position
+            )
+        );
+
+
+    /*
+     * ========================================================
+     * POSITION VALIDATION
+     * ========================================================
+     *
+     * Unknown positions safely retain the existing fixture
+     * opportunity rather than introducing an artificial
+     * adjustment.
+     */
+
+    if (
+        !in_array(
+            $position,
+            [
+                'GK',
+                'DEF',
+                'MID',
+                'FWD'
+            ],
+            true
+        )
+    ) {
+
+        return round(
+            $baseOpportunity,
+            2
+        );
+    }
+
+
+    /*
+     * ========================================================
+     * SELECT RELEVANT OPPONENT PERFORMANCE
+     * ========================================================
+     *
+     * GK / DEF:
+     *     opponent attack is the relevant threat.
+     *
+     * MID / FWD:
+     *     opponent defence is the relevant resistance.
+     */
+
+    if (
+        $position === 'GK'
+        ||
+        $position === 'DEF'
+    ) {
+
+        if (
+            $opponentAttackRating === null
+        ) {
+
+            return round(
+                $baseOpportunity,
+                2
+            );
+        }
+
+
+        $opponentRating =
+            max(
+                0.0,
+                min(
+                    100.0,
+                    $opponentAttackRating
+                )
+            );
+
+    } else {
+
+        if (
+            $opponentDefenceRating === null
+        ) {
+
+            return round(
+                $baseOpportunity,
+                2
+            );
+        }
+
+
+        $opponentRating =
+            max(
+                0.0,
+                min(
+                    100.0,
+                    $opponentDefenceRating
+                )
+            );
+    }
+
+
+    /*
+     * ========================================================
+     * CONVERT OPPONENT STRENGTH TO OPPORTUNITY
+     * ========================================================
+     *
+     * Opponent rating:
+     *
+     *     0   = extremely weak
+     *     50  = neutral
+     *     100 = extremely strong
+     *
+     * We invert that scale so weakness becomes opportunity:
+     *
+     *     0   -> 100 opportunity
+     *     50  -> 50 opportunity
+     *     100 -> 0 opportunity
+     */
+
+    $performanceOpportunity =
+        100.0
+        -
+        $opponentRating;
+
+
+    /*
+     * ========================================================
+     * BLEND WITH EXISTING FIXTURE MODEL
+     * ========================================================
+     *
+     * Existing Fixture Intelligence remains the dominant
+     * component.
+     *
+     * 75% = established fixture opportunity
+     * 25% = position-specific opponent performance
+     *
+     * This prevents early-season performance evidence from
+     * overwhelming the established fixture model.
+     */
+
+    $positionAwareOpportunity =
+        (
+            $baseOpportunity
+            *
+            0.75
+        )
+        +
+        (
+            $performanceOpportunity
+            *
+            0.25
+        );
+
+
+    /*
+     * ========================================================
+     * FINAL SCORE BOUNDS
+     * ========================================================
+     */
+
+    $positionAwareOpportunity =
+        max(
+            0.0,
+            min(
+                100.0,
+                $positionAwareOpportunity
+            )
+        );
+
+
+    return round(
+        $positionAwareOpportunity,
+        2
+    );
+}
 }

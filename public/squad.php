@@ -103,25 +103,396 @@ function buildSquadPreview(
     PlayerRepository $playerRepository
 ): ?array {
 
+    /*
+     * ========================================================
+     * MANUAL PREVIEW SQUAD
+     * ========================================================
+     *
+     * Temporary real-world development squad for checking
+     * Squad Intelligence against the current GW1 selection.
+     */
+
+    $previewSquad = [
+
+        'GK' => [
+
+            [
+                'name' =>
+                    'Verbruggen',
+
+                'aliases' => [
+                    'Verbruggen'
+                ]
+            ],
+
+            [
+                'name' =>
+                    'Kinsky',
+
+                'aliases' => [
+                    'Kinsky',
+                    'Kinský'
+                ]
+            ]
+        ],
+
+
+        'DEF' => [
+
+            [
+                'name' =>
+                    'Maguire',
+
+                'aliases' => [
+                    'Maguire'
+                ]
+            ],
+
+            [
+                'name' =>
+                    'Calafiori',
+
+                'aliases' => [
+                    'Calafiori'
+                ]
+            ],
+
+            [
+                'name' =>
+                    'De Cuyper',
+
+                'aliases' => [
+                    'De Cuyper',
+                    'Decuyper',
+                    'DeCuyper'
+                ]
+            ],
+
+            [
+                'name' =>
+                    'Mitchell',
+
+                'aliases' => [
+                    'Mitchell',
+                    'Mitchel'
+                ]
+            ],
+
+            [
+                'name' =>
+                    'Thomas',
+
+                'aliases' => [
+                    'Thomas'
+                ]
+            ]
+        ],
+
+
+        'MID' => [
+
+            [
+                'name' =>
+                    'Tzolis',
+
+                'aliases' => [
+                    'Tzolis'
+                ]
+            ],
+
+            [
+                'name' =>
+                    'Mbeumo',
+
+                'aliases' => [
+                    'Mbeumo'
+                ]
+            ],
+
+            [
+                'name' =>
+                    'Anderson',
+
+                'aliases' => [
+                    'Anderson'
+                ]
+            ],
+
+            [
+                'name' =>
+                    'Gibbs-White',
+
+                'aliases' => [
+                    'Gibbs-White',
+                    'Gibbs White'
+                ]
+            ],
+
+            [
+                'name' =>
+                    'Rogers',
+
+                'aliases' => [
+                    'Rogers'
+                ]
+            ]
+        ],
+
+
+        'FWD' => [
+
+            [
+                'name' =>
+                    'Joao Pedro',
+
+                'aliases' => [
+                    'Joao Pedro',
+                    'João Pedro',
+                    'J.Pedro'
+                ]
+            ],
+
+            [
+                'name' =>
+                    'Haaland',
+
+                'aliases' => [
+                    'Haaland'
+                ]
+            ],
+
+            [
+                'name' =>
+                    'Brobbey',
+
+                'aliases' => [
+                    'Brobbey'
+                ]
+            ]
+        ]
+    ];
+
+
+    /*
+     * ========================================================
+     * NORMALISE PLAYER NAMES
+     * ========================================================
+     */
+
+    $normaliseName =
+        static function (
+            string $name
+        ): string {
+
+            $name =
+                trim(
+                    $name
+                );
+
+
+            /*
+             * Convert accented characters where possible.
+             */
+
+            if (
+                function_exists(
+                    'iconv'
+                )
+            ) {
+
+                $converted =
+                    @iconv(
+                        'UTF-8',
+                        'ASCII//TRANSLIT//IGNORE',
+                        $name
+                    );
+
+
+                if (
+                    is_string(
+                        $converted
+                    )
+                    &&
+                    $converted !== ''
+                ) {
+
+                    $name =
+                        $converted;
+                }
+            }
+
+
+            $name =
+                strtolower(
+                    $name
+                );
+
+
+            /*
+             * Remove spaces, punctuation and separators so:
+             *
+             * De Cuyper
+             * DeCuyper
+             * de-cuyper
+             *
+             * all resolve consistently.
+             */
+
+            $name =
+                preg_replace(
+                    '/[^a-z0-9]/',
+                    '',
+                    $name
+                )
+                ?? '';
+
+
+            return $name;
+        };
+
+
+    /*
+     * ========================================================
+     * LOAD CURRENT DATA
+     * ========================================================
+     */
+
     $summaries =
         $service
             ->getAllPlayerSummaries();
 
 
-    $candidatesByPosition = [
+    $localPlayers =
+        $playerRepository
+            ->getAll();
 
-        'GK' =>
-            [],
 
-        'DEF' =>
-            [],
+    /*
+     * ========================================================
+     * BUILD PLAYER LOOKUPS
+     * ========================================================
+     */
 
-        'MID' =>
-            [],
+    $localById =
+        [];
 
-        'FWD' =>
-            []
-    ];
+
+    $localByName =
+        [];
+
+
+    foreach (
+        $localPlayers
+        as $localPlayer
+    ) {
+
+        $playerId =
+            (int) (
+                $localPlayer[
+                    'id'
+                ]
+                ?? 0
+            );
+
+
+        if (
+            $playerId <= 0
+        ) {
+
+            continue;
+        }
+
+
+        $localById[
+            $playerId
+        ] =
+            $localPlayer;
+
+
+        $possibleNames = [
+
+            $localPlayer[
+                'web_name'
+            ]
+            ?? '',
+
+            $localPlayer[
+                'first_name'
+            ]
+            ?? '',
+
+            $localPlayer[
+                'second_name'
+            ]
+            ?? ''
+        ];
+
+
+        foreach (
+            $possibleNames
+            as $possibleName
+        ) {
+
+            $normalised =
+                $normaliseName(
+                    (string) $possibleName
+                );
+
+
+            if (
+                $normalised !== ''
+            ) {
+
+                $localByName[
+                    $normalised
+                ] =
+                    $localPlayer;
+            }
+        }
+
+
+        /*
+         * Also index the complete first + second name.
+         */
+
+        $fullName =
+            trim(
+                (
+                    $localPlayer[
+                        'first_name'
+                    ]
+                    ?? ''
+                )
+                . ' '
+                . (
+                    $localPlayer[
+                        'second_name'
+                    ]
+                    ?? ''
+                )
+            );
+
+
+        if (
+            $fullName !== ''
+        ) {
+
+            $localByName[
+                $normaliseName(
+                    $fullName
+                )
+            ] =
+                $localPlayer;
+        }
+    }
+
+
+    $summaryByPlayerId =
+        [];
+
+
+    $summaryByName =
+        [];
 
 
     foreach (
@@ -138,263 +509,454 @@ function buildSquadPreview(
             );
 
 
-        $position =
-            strtoupper(
-                trim(
-                    (string) (
-                        $summary[
-                            'position'
-                        ]
-                        ?? ''
-                    )
-                )
-            );
-
-
         if (
-            $playerId <= 0
-            ||
-            !isset(
-                $candidatesByPosition[
-                    $position
-                ]
-            )
+            $playerId > 0
         ) {
 
-            continue;
+            $summaryByPlayerId[
+                $playerId
+            ] =
+                $summary;
         }
 
 
-        $localPlayer =
-            $playerRepository
-                ->getById(
-                    $playerId
-                );
-
-
-        if ($localPlayer === null) {
-            continue;
-        }
-
-
-        $teamId =
-            (int) (
-                $localPlayer[
-                    'team_id'
-                ]
-                ?? 0
-            );
-
-
-        if ($teamId <= 0) {
-            continue;
-        }
-
-
-        $intelligence =
-            $summary[
-                'intelligence_score'
-            ]
-            ?? null;
-
-
-        if (
-            $intelligence === null
-            ||
-            !is_numeric(
-                $intelligence
-            )
-        ) {
-
-            continue;
-        }
-
-
-        $confidence =
-            $summary[
-                'sample_confidence'
-            ]
-            ?? null;
-
-
-        if (
-            $confidence !== null
-            &&
-            is_numeric(
-                $confidence
-            )
-        ) {
-
-            $confidence =
-                (float) $confidence;
-
-
-            if ($confidence > 1) {
-
-                $confidence /=
-                    100;
-            }
-        }
-
-
-        $player = [
-
-            'player_id' =>
-                $playerId,
-
-            'fpl_player_id' =>
-                isset(
-                    $localPlayer[
-                        'fpl_player_id'
-                    ]
-                )
-                    ? (int) $localPlayer[
-                        'fpl_player_id'
-                    ]
-                    : null,
-
-            'name' =>
+        $summaryName =
+            (string) (
                 $summary[
                     'name'
                 ]
-                ?? (
-                    $localPlayer[
-                        'web_name'
-                    ]
-                    ?? null
-                ),
-
-            'team_id' =>
-                $teamId,
-
-            'team_name' =>
-                $summary[
-                    'team_name'
-                ]
-                ?? null,
-
-            'position' =>
-                $position,
-
-            'price' =>
-                $summary[
-                    'price'
-                ]
-                ?? null,
-
-            'intelligence_score' =>
-                (float) $intelligence,
-
-            'strength_rating' =>
-                $summary[
-                    'strength_rating'
-                ]
-                ?? null,
-
-            'value_rating' =>
-                $summary[
-                    'value_rating'
-                ]
-                ?? null,
-
-            'fixture_rating' =>
-                $summary[
-                    'fixture_rating'
-                ]
-                ?? null,
-
-            'availability_rating' =>
-                $summary[
-                    'availability_rating'
-                ]
-                ?? null,
-
-            'sample_confidence' =>
-                $confidence,
-
-            'verdict' =>
-                $summary[
-                    'assessment_verdict'
-                ]
-                ?? null
-        ];
+                ?? ''
+            );
 
 
-        $candidatesByPosition[
-            $position
-        ][] =
-            $player;
+        if (
+            $summaryName !== ''
+        ) {
+
+            $summaryByName[
+                $normaliseName(
+                    $summaryName
+                )
+            ] =
+                $summary;
+        }
     }
 
 
+    /*
+     * ========================================================
+     * RESOLVE MANUAL SQUAD
+     * ========================================================
+     */
+
+    $players =
+        [];
+
+
+    $missingPlayers =
+        [];
+
+
     foreach (
-        $candidatesByPosition
-        as &$positionPlayers
+        $previewSquad
+        as $requiredPosition => $requestedPlayers
     ) {
 
-        usort(
-            $positionPlayers,
-            static function (
-                array $a,
-                array $b
-            ): int {
+        foreach (
+            $requestedPlayers
+            as $requestedPlayer
+        ) {
 
-                return (
-                    (float) (
-                        $b[
-                            'intelligence_score'
+            $aliases =
+                $requestedPlayer[
+                    'aliases'
+                ]
+                ?? [];
+
+
+            $localPlayer =
+                null;
+
+
+            $summary =
+                null;
+
+
+            /*
+             * ------------------------------------------------
+             * TRY LOCAL PLAYER LOOKUP
+             * ------------------------------------------------
+             */
+
+            foreach (
+                $aliases
+                as $alias
+            ) {
+
+                $normalisedAlias =
+                    $normaliseName(
+                        $alias
+                    );
+
+
+                if (
+                    isset(
+                        $localByName[
+                            $normalisedAlias
                         ]
-                        ?? 0
                     )
-                )
-                <=>
-                (
-                    (float) (
-                        $a[
-                            'intelligence_score'
+                ) {
+
+                    $localPlayer =
+                        $localByName[
+                            $normalisedAlias
+                        ];
+
+
+                    break;
+                }
+            }
+
+
+            /*
+             * ------------------------------------------------
+             * TRY SUMMARY LOOKUP
+             * ------------------------------------------------
+             */
+
+            if (
+                $localPlayer !== null
+            ) {
+
+                $localPlayerId =
+                    (int) (
+                        $localPlayer[
+                            'id'
                         ]
                         ?? 0
+                    );
+
+
+                $summary =
+                    $summaryByPlayerId[
+                        $localPlayerId
+                    ]
+                    ?? null;
+            }
+
+
+            /*
+             * If the repository-name lookup missed, try the
+             * Player Intelligence display name directly.
+             */
+
+            if (
+                $summary === null
+            ) {
+
+                foreach (
+                    $aliases
+                    as $alias
+                ) {
+
+                    $normalisedAlias =
+                        $normaliseName(
+                            $alias
+                        );
+
+
+                    if (
+                        isset(
+                            $summaryByName[
+                                $normalisedAlias
+                            ]
+                        )
+                    ) {
+
+                        $summary =
+                            $summaryByName[
+                                $normalisedAlias
+                            ];
+
+
+                        $summaryPlayerId =
+                            (int) (
+                                $summary[
+                                    'player_id'
+                                ]
+                                ?? 0
+                            );
+
+
+                        $localPlayer =
+                            $localById[
+                                $summaryPlayerId
+                            ]
+                            ?? null;
+
+
+                        break;
+                    }
+                }
+            }
+
+
+            if (
+                $localPlayer === null
+                ||
+                $summary === null
+            ) {
+
+                $missingPlayers[] =
+                    $requestedPlayer[
+                        'name'
+                    ]
+                    ?? 'Unknown';
+
+
+                continue;
+            }
+
+
+            /*
+             * ------------------------------------------------
+             * VALIDATE POSITION
+             * ------------------------------------------------
+             */
+
+            $position =
+                strtoupper(
+                    trim(
+                        (string) (
+                            $summary[
+                                'position'
+                            ]
+                            ?? ''
+                        )
                     )
                 );
+
+
+            if (
+                $position
+                !==
+                $requiredPosition
+            ) {
+
+                $missingPlayers[] =
+                    (
+                        $requestedPlayer[
+                            'name'
+                        ]
+                        ?? 'Unknown'
+                    )
+                    . ' (expected '
+                    . $requiredPosition
+                    . ', found '
+                    . (
+                        $position !== ''
+                            ? $position
+                            : 'unknown'
+                    )
+                    . ')';
+
+
+                continue;
             }
+
+
+            /*
+             * ------------------------------------------------
+             * CONFIDENCE NORMALISATION
+             * ------------------------------------------------
+             */
+
+            $confidence =
+                $summary[
+                    'sample_confidence'
+                ]
+                ?? null;
+
+
+            if (
+                $confidence !== null
+                &&
+                is_numeric(
+                    $confidence
+                )
+            ) {
+
+                $confidence =
+                    (float) $confidence;
+
+
+                if (
+                    $confidence > 1
+                ) {
+
+                    $confidence /=
+                        100;
+                }
+            }
+
+
+            /*
+             * ------------------------------------------------
+             * BUILD STANDARD SQUAD PLAYER
+             * ------------------------------------------------
+             */
+
+            $players[] = [
+
+                'player_id' =>
+                    (int) (
+                        $summary[
+                            'player_id'
+                        ]
+                        ?? 0
+                    ),
+
+                'fpl_player_id' =>
+                    isset(
+                        $localPlayer[
+                            'fpl_player_id'
+                        ]
+                    )
+                        ? (int) $localPlayer[
+                            'fpl_player_id'
+                        ]
+                        : null,
+
+                'name' =>
+                    $summary[
+                        'name'
+                    ]
+                    ?? (
+                        $localPlayer[
+                            'web_name'
+                        ]
+                        ?? null
+                    ),
+
+                'team_id' =>
+                    (int) (
+                        $localPlayer[
+                            'team_id'
+                        ]
+                        ?? 0
+                    ),
+
+                'team_name' =>
+                    $summary[
+                        'team_name'
+                    ]
+                    ?? null,
+
+                'position' =>
+                    $position,
+
+                'price' =>
+                    $summary[
+                        'price'
+                    ]
+                    ?? null,
+
+                'intelligence_score' =>
+                    is_numeric(
+                        $summary[
+                            'intelligence_score'
+                        ]
+                        ?? null
+                    )
+                        ? (float) $summary[
+                            'intelligence_score'
+                        ]
+                        : null,
+
+                'strength_rating' =>
+                    $summary[
+                        'strength_rating'
+                    ]
+                    ?? null,
+
+                'value_rating' =>
+                    $summary[
+                        'value_rating'
+                    ]
+                    ?? null,
+
+                'fixture_rating' =>
+                    $summary[
+                        'fixture_rating'
+                    ]
+                    ?? null,
+
+                'availability_rating' =>
+                    $summary[
+                        'availability_rating'
+                    ]
+                    ?? null,
+
+                'sample_confidence' =>
+                    $confidence,
+
+                'verdict' =>
+                    $summary[
+                        'assessment_verdict'
+                    ]
+                    ?? null
+            ];
+        }
+    }
+
+
+    /*
+     * ========================================================
+     * REQUIRE ALL 15 PLAYERS
+     * ========================================================
+     */
+
+    if (
+        !empty(
+            $missingPlayers
+        )
+        ||
+        count(
+            $players
+        )
+        !== 15
+    ) {
+
+        throw new RuntimeException(
+            'Unable to resolve manual preview players: '
+            . implode(
+                ', ',
+                $missingPlayers
+            )
         );
     }
 
 
-    unset(
-        $positionPlayers
-    );
+    /*
+     * ========================================================
+     * VALIDATE FPL POSITION COUNTS
+     * ========================================================
+     */
 
-
-    $requiredCounts = [
+    $positionCounts = [
 
         'GK' =>
-            2,
+            0,
 
         'DEF' =>
-            5,
+            0,
 
         'MID' =>
-            5,
+            0,
 
         'FWD' =>
-            3
+            0
     ];
-
-
-    $percentiles = [
-
-        0.00,
-        0.20,
-        0.40,
-        0.60,
-        0.80,
-        1.00
-    ];
-
-
-    $players =
-        [];
 
 
     $teamCounts =
@@ -402,299 +964,109 @@ function buildSquadPreview(
 
 
     foreach (
-        $requiredCounts
-        as $position => $requiredCount
+        $players
+        as $player
     ) {
 
-        $pool =
-            $candidatesByPosition[
-                $position
+        $position =
+            $player[
+                'position'
             ]
-            ?? [];
-
-
-        $selected =
-            [];
-
-
-        foreach (
-            $percentiles
-            as $percentile
-        ) {
-
-            if (
-                count(
-                    $selected
-                )
-                >=
-                $requiredCount
-            ) {
-
-                break;
-            }
-
-
-            $index =
-                (int) round(
-                    (
-                        count(
-                            $pool
-                        )
-                        -
-                        1
-                    )
-                    *
-                    $percentile
-                );
-
-
-            $candidate =
-                $pool[
-                    $index
-                ]
-                ?? null;
-
-
-            if ($candidate === null) {
-                continue;
-            }
-
-
-            $playerId =
-                (int) (
-                    $candidate[
-                        'player_id'
-                    ]
-                    ?? 0
-                );
-
-
-            $teamId =
-                (int) (
-                    $candidate[
-                        'team_id'
-                    ]
-                    ?? 0
-                );
-
-
-            if (
-                $playerId <= 0
-                ||
-                $teamId <= 0
-            ) {
-
-                continue;
-            }
-
-
-            $alreadySelected =
-                false;
-
-
-            foreach (
-                $players
-                as $existing
-            ) {
-
-                if (
-                    (
-                        (int) (
-                            $existing[
-                                'player_id'
-                            ]
-                            ?? 0
-                        )
-                    )
-                    ===
-                    $playerId
-                ) {
-
-                    $alreadySelected =
-                        true;
-
-                    break;
-                }
-            }
-
-
-            if ($alreadySelected) {
-                continue;
-            }
-
-
-            if (
-                (
-                    $teamCounts[
-                        $teamId
-                    ]
-                    ?? 0
-                )
-                >= 3
-            ) {
-
-                continue;
-            }
-
-
-            $selected[] =
-                $candidate;
-
-
-            $players[] =
-                $candidate;
-
-
-            $teamCounts[
-                $teamId
-            ] =
-                (
-                    $teamCounts[
-                        $teamId
-                    ]
-                    ?? 0
-                )
-                +
-                1;
-        }
+            ?? '';
 
 
         if (
-            count(
-                $selected
+            isset(
+                $positionCounts[
+                    $position
+                ]
             )
-            <
-            $requiredCount
         ) {
 
-            foreach (
-                $pool
-                as $candidate
-            ) {
-
-                if (
-                    count(
-                        $selected
-                    )
-                    >=
-                    $requiredCount
-                ) {
-
-                    break;
-                }
+            $positionCounts[
+                $position
+            ]++;
+        }
 
 
-                $playerId =
-                    (int) (
-                        $candidate[
-                            'player_id'
-                        ]
-                        ?? 0
-                    );
+        $teamId =
+            (int) (
+                $player[
+                    'team_id'
+                ]
+                ?? 0
+            );
 
 
-                $teamId =
-                    (int) (
-                        $candidate[
-                            'team_id'
-                        ]
-                        ?? 0
-                    );
-
-
-                if (
-                    $playerId <= 0
-                    ||
-                    $teamId <= 0
-                ) {
-
-                    continue;
-                }
-
-
-                $alreadySelected =
-                    false;
-
-
-                foreach (
-                    $players
-                    as $existing
-                ) {
-
-                    if (
-                        (
-                            (int) (
-                                $existing[
-                                    'player_id'
-                                ]
-                                ?? 0
-                            )
-                        )
-                        ===
-                        $playerId
-                    ) {
-
-                        $alreadySelected =
-                            true;
-
-                        break;
-                    }
-                }
-
-
-                if ($alreadySelected) {
-                    continue;
-                }
-
-
-                if (
-                    (
-                        $teamCounts[
-                            $teamId
-                        ]
-                        ?? 0
-                    )
-                    >= 3
-                ) {
-
-                    continue;
-                }
-
-
-                $selected[] =
-                    $candidate;
-
-
-                $players[] =
-                    $candidate;
-
-
+        $teamCounts[
+            $teamId
+        ] =
+            (
                 $teamCounts[
                     $teamId
-                ] =
-                    (
-                        $teamCounts[
-                            $teamId
-                        ]
-                        ?? 0
-                    )
-                    +
-                    1;
-            }
-        }
+                ]
+                ?? 0
+            )
+            +
+            1;
+    }
 
+
+    if (
+        $positionCounts[
+            'GK'
+        ]
+        !== 2
+        ||
+        $positionCounts[
+            'DEF'
+        ]
+        !== 5
+        ||
+        $positionCounts[
+            'MID'
+        ]
+        !== 5
+        ||
+        $positionCounts[
+            'FWD'
+        ]
+        !== 3
+    ) {
+
+        throw new RuntimeException(
+            'Manual preview squad does not contain a valid FPL positional structure.'
+        );
+    }
+
+
+    foreach (
+        $teamCounts
+        as $count
+    ) {
 
         if (
-            count(
-                $selected
-            )
-            !==
-            $requiredCount
+            $count > 3
         ) {
 
-            return null;
+            throw new RuntimeException(
+                'Manual preview squad exceeds the three-player-per-club limit.'
+            );
         }
     }
+
+
+    /*
+     * ========================================================
+     * TEAM VALUE + BANK
+     * ========================================================
+     *
+     * Treat £100.0m as the total FPL starting budget and
+     * calculate the actual remaining bank from current prices.
+     */
+
+    $totalBudget =
+        100.0;
 
 
     $teamValue =
@@ -716,13 +1088,32 @@ function buildSquadPreview(
     }
 
 
+    $teamValue =
+        round(
+            $teamValue,
+            1
+        );
+
+
+    $bank =
+        round(
+            $totalBudget
+            -
+            $teamValue,
+            1
+        );
+
+
+    /*
+     * ========================================================
+     * COMPLETE PREVIEW IMPORT
+     * ========================================================
+     */
+
     return [
 
         'is_complete' =>
-            count(
-                $players
-            )
-            === 15,
+            true,
 
         'entry' => [
 
@@ -730,7 +1121,7 @@ function buildSquadPreview(
                 0,
 
             'team_name' =>
-                'Development Preview Squad',
+                'GW1 Real Squad Preview',
 
             'manager_name' =>
                 'Preview Mode'
@@ -740,21 +1131,16 @@ function buildSquadPreview(
             1,
 
         'team_value' =>
-            round(
-                $teamValue,
-                1
-            ),
+            $teamValue,
 
         'bank' =>
-            1.5,
+            $bank,
 
         'imported_count' =>
             15,
 
         'mapped_count' =>
-            count(
-                $players
-            ),
+            15,
 
         'unmapped_count' =>
             0,

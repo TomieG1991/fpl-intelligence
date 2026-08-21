@@ -6,6 +6,86 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.25.0] - Position-Aware Fixture Intelligence
+
+### Added
+- Added Position-Aware Fixture Intelligence for evaluating immediate fixture opportunity according to a player's FPL position.
+- Added `FixtureIntelligence::calculatePositionAwareOpportunity()` as the dedicated position-aware fixture scoring model.
+- Added position-specific opponent analysis so:
+  - goalkeepers and defenders evaluate the opponent's Attack Rating
+  - midfielders and forwards evaluate the opponent's Defence Rating
+- Added conversion of opponent strength into player opportunity so weaker opponent performance produces a stronger player-facing fixture opportunity.
+- Added conservative position-aware fixture blending using:
+  - 75% existing immediate fixture opportunity
+  - 25% position-specific opponent performance opportunity
+- Added explicit neutral behaviour where an opponent Attack or Defence Rating of 50 preserves a neutral position-specific contribution.
+- Added clean no-evidence fallback behaviour so the existing immediate fixture opportunity is preserved when the required opponent Attack or Defence Rating is unavailable.
+- Added safe handling of unsupported player positions without introducing artificial fixture adjustments.
+- Added 0-100 bounds to all position-aware fixture outputs.
+- Added `position_aware_fixture_rating` to Player Intelligence summaries.
+- Added `base_next_fixture_rating` to preserve the original immediate fixture opportunity for diagnostics and transparency.
+- Added next-opponent context to Player Intelligence summaries.
+- Added `next_opponent_team_id` to Player Intelligence summaries.
+- Added `next_opponent_attack_rating` to Player Intelligence summaries.
+- Added `next_opponent_defence_rating` to Player Intelligence summaries.
+- Added next-opponent lookup support for every Premier League team.
+- Added Team Intelligence Attack and Defence Rating lookup support within the Player Intelligence pipeline.
+
+### Changed
+- Extended Fixture Intelligence from general opponent-strength analysis into position-specific FPL fixture analysis.
+- Changed immediate player fixture evaluation so the same fixture can produce different opportunity depending on player position once opponent performance evidence exists.
+- Changed goalkeeper and defender immediate fixture evaluation to account for the opponent's attacking performance.
+- Changed midfielder and forward immediate fixture evaluation to account for the opponent's defensive performance.
+- Changed `next_fixture_rating` to represent the authoritative position-aware immediate fixture opportunity.
+- Preserved the previous immediate fixture value separately as `base_next_fixture_rating`.
+- Integrated Team Attack & Defence Intelligence from v0.24.0 into player-level fixture evaluation.
+- Reused existing Team Intelligence Attack and Defence outputs rather than duplicating TeamPerformance calculations inside Player Intelligence.
+- Preserved the existing Fixture Intelligence model as the dominant component of immediate fixture evaluation.
+- Improved early-season stability by limiting position-specific performance evidence to 25% of the adjusted fixture opportunity.
+- Improved Player Intelligence transparency by exposing both the base fixture opportunity and the position-aware result.
+- Extended existing downstream intelligence systems that consume `next_fixture_rating` so position-aware fixture information can influence immediate FPL decisions.
+- Preserved existing player fixture behaviour when no completed Premier League Attack or Defence evidence is available.
+
+### Fixed
+- Fixed immediate fixture evaluation treating goalkeepers, defenders, midfielders and forwards identically despite facing different FPL-relevant opponent threats.
+- Fixed opponent general strength being the only team-level context available to immediate player fixture evaluation.
+- Fixed Team Attack and Defence Intelligence existing independently of player-facing fixture decisions.
+- Prevented unavailable early-season Attack and Defence data from generating artificial position-aware fixture adjustments.
+- Prevented extreme position-specific opponent ratings from pushing fixture opportunity outside the valid 0-100 range.
+- Fixed Position-Aware Fixture Intelligence integration variables initially being calculated outside the individual player-summary loop.
+- Restored correct per-player calculation of next opponent, opponent Attack Rating, opponent Defence Rating and position-aware fixture opportunity.
+
+### Testing
+- Added `PositionAwareFixtureIntelligenceTest.php` for dedicated Position-Aware Fixture Intelligence regression coverage.
+- Added validation that Fixture Intelligence exposes `calculatePositionAwareOpportunity()`.
+- Added validation of position-aware fixture calculation for:
+  - goalkeepers
+  - defenders
+  - midfielders
+  - forwards
+- Added validation that all position-aware fixture outputs remain between 0 and 100.
+- Added validation that defender fixture opportunity improves against a weak opponent attack.
+- Added validation that defender fixture opportunity worsens against a strong opponent attack.
+- Added validation that defensive fixture ratings remain correctly ordered by opponent Attack Rating.
+- Added validation that goalkeeper opportunity is higher against a weaker opponent attack.
+- Added validation that midfielder fixture opportunity improves against a weak opponent defence.
+- Added validation that midfielder fixture opportunity worsens against a strong opponent defence.
+- Added validation that attacking fixture ratings remain correctly ordered by opponent Defence Rating.
+- Added validation that forward opportunity is higher against a weaker opponent defence.
+- Added validation of no-evidence fallback behaviour for all four FPL positions.
+- Added validation that missing opponent Attack or Defence evidence preserves the existing base fixture opportunity.
+- Added extreme-value regression coverage for position-aware fixture score bounds.
+- Added validation that invalid player positions are safely handled.
+- Added Player Intelligence summary integration coverage for `position_aware_fixture_rating`.
+- Added validation that all available position-aware fixture ratings remain within the 0-100 scale.
+- Added integration coverage between position-aware fixture output and existing immediate `next_fixture_rating`.
+- Added current no-evidence regression coverage so preseason behaviour remains stable before completed Premier League performance data exists.
+- Added Position-Aware Fixture Intelligence performance regression coverage.
+- Verified `PositionAwareFixtureIntelligenceTest.php` passes with 0 failures.
+- Updated `SquadPageTest.php` to reflect the current development preview squad used during regression testing.
+- Verified `SquadPageTest.php` passes with Position-Aware Fixture Intelligence integrated.
+- Verified the complete `RunAllTests.php` project regression suite passes successfully.
+
 ## [0.24.0] - Team Attack & Defence Intelligence
 
 ### Added

@@ -580,7 +580,7 @@ squadPageTest(
     'Development preview squad is rendered',
     stripos(
         $html,
-        'Development Preview Squad'
+        'GW1 Real Squad Preview'
     )
     !== false
 );

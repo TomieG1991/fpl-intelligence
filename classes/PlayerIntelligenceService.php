@@ -203,6 +203,202 @@ class PlayerIntelligenceService
                 $teams,
                 $fixtures
             );
+            
+        /*
+         * --------------------------------------------------------
+         * POSITION-AWARE NEXT-FIXTURE SUPPORT
+         * --------------------------------------------------------
+         *
+         * Build:
+         *
+         * - the next opponent for each Premier League team
+         * - current opponent Attack / Defence Ratings
+         *
+         * Position-aware Fixture Intelligence is deliberately
+         * applied only to the immediate fixture.
+         */
+
+        $teamNextOpponentIds =
+            [];
+
+
+        foreach (
+            $teams
+            as $team
+        ) {
+
+            $teamId =
+                (int) (
+                    $team[
+                        'id'
+                    ]
+                    ?? 0
+                );
+
+
+            if (
+                $teamId <= 0
+            ) {
+
+                continue;
+            }
+
+
+            $upcomingFixtures =
+                $this->fixtureRepository
+                    ->getUpcomingForTeam(
+                        $teamId,
+                        1
+                    );
+
+
+            $nextFixture =
+                $upcomingFixtures[
+                    0
+                ]
+                ?? null;
+
+
+            if (
+                !is_array(
+                    $nextFixture
+                )
+            ) {
+
+                $teamNextOpponentIds[
+                    $teamId
+                ] =
+                    null;
+
+                continue;
+            }
+
+
+            $homeTeamId =
+                (int) (
+                    $nextFixture[
+                        'home_team_id'
+                    ]
+                    ?? 0
+                );
+
+
+            $awayTeamId =
+                (int) (
+                    $nextFixture[
+                        'away_team_id'
+                    ]
+                    ?? 0
+                );
+
+
+            if (
+                $homeTeamId === $teamId
+            ) {
+
+                $teamNextOpponentIds[
+                    $teamId
+                ] =
+                    $awayTeamId > 0
+                        ? $awayTeamId
+                        : null;
+
+            } elseif (
+                $awayTeamId === $teamId
+            ) {
+
+                $teamNextOpponentIds[
+                    $teamId
+                ] =
+                    $homeTeamId > 0
+                        ? $homeTeamId
+                        : null;
+
+            } else {
+
+                $teamNextOpponentIds[
+                    $teamId
+                ] =
+                    null;
+            }
+        }
+
+
+        /*
+         * Team Intelligence already owns Attack / Defence
+         * performance ratings, so reuse those outputs rather
+         * than rebuilding TeamPerformance calculations here.
+         */
+
+        $teamIntelligenceSummaries =
+            $this->getAllTeamIntelligenceSummaries();
+
+
+        $teamAttackDefenceLookup =
+            [];
+
+
+        foreach (
+            $teamIntelligenceSummaries
+            as $teamSummary
+        ) {
+
+            $summaryTeamId =
+                (int) (
+                    $teamSummary[
+                        'team_id'
+                    ]
+                    ?? 0
+                );
+
+
+            if (
+                $summaryTeamId <= 0
+            ) {
+
+                continue;
+            }
+
+
+            $teamAttackDefenceLookup[
+                $summaryTeamId
+            ] = [
+
+                'attack_rating' =>
+                    isset(
+                        $teamSummary[
+                            'attack_rating'
+                        ]
+                    )
+                    &&
+                    is_numeric(
+                        $teamSummary[
+                            'attack_rating'
+                        ]
+                    )
+                        ? (float) $teamSummary[
+                            'attack_rating'
+                        ]
+                        : null,
+
+                'defence_rating' =>
+                    isset(
+                        $teamSummary[
+                            'defence_rating'
+                        ]
+                    )
+                    &&
+                    is_numeric(
+                        $teamSummary[
+                            'defence_rating'
+                        ]
+                    )
+                        ? (float) $teamSummary[
+                            'defence_rating'
+                        ]
+                        : null
+            ];
+        }
 
 
         /*
@@ -235,6 +431,90 @@ class PlayerIntelligenceService
                 ?? null;
 
 
+            /*
+             * --------------------------------------------------------
+             * POSITION-AWARE IMMEDIATE FIXTURE
+             * --------------------------------------------------------
+             */
+
+            $position =
+                strtoupper(
+                    trim(
+                        (string) (
+                            $player[
+                                'position'
+                            ]
+                            ?? ''
+                        )
+                    )
+                );
+
+
+            $nextOpponentId =
+                $teamNextOpponentIds[
+                    $teamId
+                ]
+                ?? null;
+
+
+            $opponentAttackRating =
+                null;
+
+
+            $opponentDefenceRating =
+                null;
+
+
+            if (
+                $nextOpponentId !== null
+                &&
+                isset(
+                    $teamAttackDefenceLookup[
+                        $nextOpponentId
+                    ]
+                )
+            ) {
+
+                $opponentAttackRating =
+                    $teamAttackDefenceLookup[
+                        $nextOpponentId
+                    ][
+                        'attack_rating'
+                    ]
+                    ?? null;
+
+
+                $opponentDefenceRating =
+                    $teamAttackDefenceLookup[
+                        $nextOpponentId
+                    ][
+                        'defence_rating'
+                    ]
+                    ?? null;
+            }
+
+
+            /*
+             * No upcoming fixture means there is no player-facing
+             * immediate fixture opportunity to calculate.
+             */
+
+            $positionAwareFixtureRating =
+                $nextFixtureRating !== null
+                &&
+                is_numeric(
+                    $nextFixtureRating
+                )
+                    ? $this->fixtureIntelligence
+                        ->calculatePositionAwareOpportunity(
+                            (float) $nextFixtureRating,
+                            $position,
+                            $opponentAttackRating,
+                            $opponentDefenceRating
+                        )
+                    : null;
+
+
             try {
 
                 $profile =
@@ -249,8 +529,44 @@ class PlayerIntelligenceService
                     $profile['summary']
                     ?? [];
 
-                $summary['next_fixture_rating'] =
+                /*
+                 * Preserve the original team-level immediate fixture
+                 * opportunity for transparency.
+                 */
+
+                $summary['base_next_fixture_rating'] =
                     $nextFixtureRating;
+
+
+                /*
+                 * Expose the new explicit player-facing fixture metric.
+                 */
+
+                $summary['position_aware_fixture_rating'] =
+                    $positionAwareFixtureRating;
+
+
+                /*
+                 * Downstream Gameweek and Captain Intelligence already
+                 * consume next_fixture_rating.
+                 *
+                 * Make the position-aware value authoritative while
+                 * retaining the raw value above for diagnostics.
+                 */
+
+                $summary['next_fixture_rating'] =
+                    $positionAwareFixtureRating;
+                    
+                $summary['next_opponent_team_id'] =
+                    $nextOpponentId;
+
+
+                $summary['next_opponent_attack_rating'] =
+                    $opponentAttackRating;
+
+
+                $summary['next_opponent_defence_rating'] =
+                    $opponentDefenceRating;
 
                 /*
                  * Preserve useful explorer data that does
@@ -407,6 +723,7 @@ class PlayerIntelligenceService
                 continue;
             }
         }
+        
 
 
         return $summaries;
