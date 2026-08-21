@@ -4007,6 +4007,309 @@ class PlayerIntelligenceService
         ];
     }
     
+    
+    /**
+     * Build the complete manager-level Gameweek Intelligence decision
+     * from the current 15-player FPL squad.
+     *
+     * This orchestration method deliberately reuses the existing
+     * production intelligence layers rather than duplicating any
+     * scoring logic.
+     */
+    public function getGameweekDecision(
+        array $squad,
+        float $bank = 0.0
+    ): array {
+
+        /*
+         * ========================================================
+         * BASIC VALIDATION
+         * ========================================================
+         */
+
+        if (
+            count(
+                $squad
+            )
+            !== 15
+        ) {
+
+            return [
+
+                'status' =>
+                    'invalid',
+
+                'message' =>
+                    'Gameweek Decision Intelligence requires a complete 15-player FPL squad.',
+
+                'overall_action' =>
+                    null,
+
+                'gameweek' =>
+                    null,
+
+                'captaincy' =>
+                    null,
+
+                'transfers' =>
+                    null,
+
+                'decision' =>
+                    null
+            ];
+        }
+
+
+        if (
+            $bank < 0
+        ) {
+
+            return [
+
+                'status' =>
+                    'invalid',
+
+                'message' =>
+                    'Gameweek Decision Intelligence cannot use a negative bank value.',
+
+                'overall_action' =>
+                    null,
+
+                'gameweek' =>
+                    null,
+
+                'captaincy' =>
+                    null,
+
+                'transfers' =>
+                    null,
+
+                'decision' =>
+                    null
+            ];
+        }
+
+
+        /*
+         * ========================================================
+         * GAMEWEEK STARTING XI
+         * ========================================================
+         */
+
+        $gameweekResult =
+            $this->getGameweekStartingXI(
+                $squad
+            );
+
+
+        if (
+            (
+                $gameweekResult[
+                    'status'
+                ]
+                ?? null
+            )
+            !==
+            'success'
+        ) {
+
+            return [
+
+                'status' =>
+                    'invalid',
+
+                'message' =>
+                    $gameweekResult[
+                        'message'
+                    ]
+                    ?? 'Gameweek Starting XI intelligence could not be generated.',
+
+                'overall_action' =>
+                    null,
+
+                'gameweek' =>
+                    $gameweekResult,
+
+                'captaincy' =>
+                    null,
+
+                'transfers' =>
+                    null,
+
+                'decision' =>
+                    null
+            ];
+        }
+
+
+        /*
+         * ========================================================
+         * CAPTAIN INTELLIGENCE
+         * ========================================================
+         */
+
+        $captainResult =
+            $this->getCaptainRecommendations(
+                $squad,
+                5
+            );
+
+
+        if (
+            (
+                $captainResult[
+                    'status'
+                ]
+                ?? null
+            )
+            !==
+            'success'
+        ) {
+
+            return [
+
+                'status' =>
+                    'invalid',
+
+                'message' =>
+                    $captainResult[
+                        'message'
+                    ]
+                    ?? 'Captain Intelligence could not be generated.',
+
+                'overall_action' =>
+                    null,
+
+                'gameweek' =>
+                    $gameweekResult,
+
+                'captaincy' =>
+                    $captainResult,
+
+                'transfers' =>
+                    null,
+
+                'decision' =>
+                    null
+            ];
+        }
+
+
+        /*
+         * ========================================================
+         * TRANSFER INTELLIGENCE
+         * ========================================================
+         *
+         * We deliberately reuse the squad-aware single-transfer
+         * recommendation service here.
+         *
+         * This gives the decision engine one clear transfer signal
+         * without immediately complicating v1 with double-transfer
+         * combinations.
+         */
+
+        $transferResult =
+            $this->getSquadTransferRecommendations(
+                $squad,
+                $bank,
+                5,
+                5
+            );
+
+
+        /*
+         * ========================================================
+         * DECISION ENGINE
+         * ========================================================
+         */
+
+        $decisionEngine =
+            new GameweekDecisionEngine();
+
+
+        $decision =
+            $decisionEngine
+                ->evaluate(
+                    $gameweekResult,
+                    $captainResult,
+                    $transferResult
+                );
+
+
+        if (
+            (
+                $decision[
+                    'status'
+                ]
+                ?? null
+            )
+            !==
+            'success'
+        ) {
+
+            return [
+
+                'status' =>
+                    'invalid',
+
+                'message' =>
+                    $decision[
+                        'message'
+                    ]
+                    ?? 'Gameweek Decision Intelligence could not be generated.',
+
+                'overall_action' =>
+                    null,
+
+                'gameweek' =>
+                    $gameweekResult,
+
+                'captaincy' =>
+                    $captainResult,
+
+                'transfers' =>
+                    $transferResult,
+
+                'decision' =>
+                    $decision
+            ];
+        }
+
+
+        /*
+         * ========================================================
+         * COMPLETE RESULT
+         * ========================================================
+         */
+
+        return [
+
+            'status' =>
+                'success',
+
+            'message' =>
+                'Complete Gameweek Intelligence decision generated successfully.',
+
+            'overall_action' =>
+                $decision[
+                    'overall_action'
+                ]
+                ?? null,
+
+            'gameweek' =>
+                $gameweekResult,
+
+            'captaincy' =>
+                $captainResult,
+
+            'transfers' =>
+                $transferResult,
+
+            'decision' =>
+                $decision
+        ];
+    }
+    
     /**
      * Build the lightweight player structure required by
      * SquadTransferOptimizer / TransferDecision.

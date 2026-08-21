@@ -86,6 +86,10 @@ $gameweekResult =
     null;
 
 
+$decisionResult =
+    null;
+
+
 $pageError =
     null;
 
@@ -899,7 +903,7 @@ if (
 
 /*
  * ============================================================
- * GAMEWEEK STARTING XI
+ * COMPLETE GAMEWEEK DECISION INTELLIGENCE
  * ============================================================
  */
 
@@ -918,32 +922,62 @@ if (
 
     try {
 
-        $gameweekResult =
+        $bank =
+            is_numeric(
+                $mappedSquad[
+                    'bank'
+                ]
+                ?? null
+            )
+                ? (float) $mappedSquad[
+                    'bank'
+                ]
+                : 0.0;
+
+
+        $decisionResult =
             $service
-                ->getGameweekStartingXI(
+                ->getGameweekDecision(
                     $mappedSquad[
                         'players'
                     ]
-                    ?? []
+                    ?? [],
+                    $bank
                 );
 
 
         if (
             (
-                $gameweekResult[
+                $decisionResult[
                     'status'
                 ]
                 ?? null
             )
-            !==
+            ===
             'success'
         ) {
 
+            /*
+             * Preserve the existing page contract.
+             *
+             * The rest of gameweek.php already expects
+             * $gameweekResult, so use the Gameweek output
+             * produced by the complete decision pipeline.
+             */
+
+            $gameweekResult =
+                $decisionResult[
+                    'gameweek'
+                ]
+                ?? null;
+
+        } else {
+
             $pageError =
-                $gameweekResult[
+                $decisionResult[
                     'message'
                 ]
-                ?? 'Gameweek Starting XI could not be generated.';
+                ?? 'Gameweek Decision Intelligence could not be generated.';
         }
 
     } catch (
@@ -951,7 +985,7 @@ if (
     ) {
 
         $pageError =
-            'Unable to generate Gameweek Intelligence at the moment.';
+            'Unable to generate Gameweek Decision Intelligence at the moment.';
     }
 }
 
@@ -1247,8 +1281,447 @@ function gameweekPageEscape(
                         'entry'
                     ]
                     ?? [];
+                    
+                
+                /*
+                 * ============================================================
+                 * GAMEWEEK DECISION INTELLIGENCE
+                 * ============================================================
+                 */
+
+                $decision =
+                    $decisionResult[
+                        'decision'
+                    ]
+                    ?? [];
+
+
+                $captaincy =
+                    $decisionResult[
+                        'captaincy'
+                    ]
+                    ?? [];
+
+
+                $transfers =
+                    $decisionResult[
+                        'transfers'
+                    ]
+                    ?? [];
+
+
+                $overallAction =
+                    $decisionResult[
+                        'overall_action'
+                    ]
+                    ?? 'Review';
+
+
+                $captain =
+                    $captaincy[
+                        'captain'
+                    ]
+                    ?? [];
+
+
+                $viceCaptain =
+                    $captaincy[
+                        'vice_captain'
+                    ]
+                    ?? [];
+
+
+                $squadRisks =
+                    $decision[
+                        'squad_risks'
+                    ]
+                    ?? [];
+
+
+                $transferAdvice =
+                    $decision[
+                        'transfer_advice'
+                    ]
+                    ?? [];
+
+
+                /*
+                 * Current single-transfer optimizer structure:
+                 *
+                 * transfers
+                 *   -> recommendations
+                 *      -> recommendations
+                 *         -> first outgoing player
+                 */
+
+                $transferGroups =
+                    $transfers[
+                        'recommendations'
+                    ][
+                        'recommendations'
+                    ]
+                    ?? [];
+
+
+                $topTransferGroup =
+                    $transferGroups[
+                        0
+                    ]
+                    ?? [];
+
+
+                $topOutgoing =
+                    $topTransferGroup[
+                        'outgoing'
+                    ]
+                    ?? [];
+
+
+                $topReplacement =
+                    $topTransferGroup[
+                        'replacements'
+                    ][
+                        0
+                    ]
+                    ?? [];
+
+
+                $topIncoming =
+                    $topReplacement[
+                        'player'
+                    ]
+                    ?? [];
+
+
+                $keyInsights =
+                    $decision[
+                        'key_insights'
+                    ]
+                    ?? [];
 
                 ?>
+                
+                <!-- ==============================================
+                     GAMEWEEK DECISION
+                     ============================================== -->
+
+                <section class="dashboard-section gameweek-decision-section">
+
+                    <div class="section-heading">
+
+                        <p class="eyebrow">
+                            Decision Intelligence
+                        </p>
+
+                        <h2>
+                            What Should You Do?
+                        </h2>
+
+                    </div>
+
+
+                    <div
+                        class="gameweek-decision-hero gameweek-decision-hero-<?=
+                            strtolower(
+                                str_replace(
+                                    ' ',
+                                    '-',
+                                    $overallAction
+                                )
+                            );
+                        ?>"
+                    >
+
+                        <div class="gameweek-decision-hero-content">
+
+                            <p class="eyebrow">
+                                Overall Action
+                            </p>
+
+                            <h3>
+                                <?= gameweekPageEscape(
+                                    $overallAction
+                                ); ?>
+                            </h3>
+
+
+                            <p class="gameweek-decision-message">
+
+                                <?php if (
+                                    $overallAction ===
+                                    'Urgent Action'
+                                ): ?>
+
+                                    Your squad contains an issue that requires
+                                    immediate attention before the deadline.
+
+                                <?php elseif (
+                                    $overallAction ===
+                                    'Make Transfer'
+                                ): ?>
+
+                                    Transfer Intelligence has identified a
+                                    high-priority move that is strong enough
+                                    to justify using a transfer.
+
+                                <?php elseif (
+                                    $overallAction ===
+                                    'Consider Transfer'
+                                ): ?>
+
+                                    There are squad issues or transfer opportunities
+                                    worth reviewing before finalising your team.
+
+                                <?php else: ?>
+
+                                    No current issue is strong enough to justify
+                                    forcing a transfer. Your squad can be held.
+
+                                <?php endif; ?>
+
+                            </p>
+
+                        </div>
+
+
+                        <div class="gameweek-decision-risk-summary">
+
+                            <span>
+                                Squad Risks
+                            </span>
+
+                            <strong>
+                                <?= (int) (
+                                    $squadRisks[
+                                        'count'
+                                    ]
+                                    ?? 0
+                                ); ?>
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="gameweek-decision-grid">
+
+
+                        <!-- CAPTAIN -->
+
+                        <div class="gameweek-decision-card">
+
+                            <p class="eyebrow">
+                                Captain
+                            </p>
+
+                            <h3>
+                                <?= gameweekPageEscape(
+                                    $captain[
+                                        'name'
+                                    ]
+                                    ?? 'N/A'
+                                ); ?>
+                            </h3>
+
+                            <div class="gameweek-decision-card-meta">
+
+                                <span>
+                                    Captain Score
+                                </span>
+
+                                <strong>
+                                    <?= gameweekPageRating(
+                                        $captain[
+                                            'captain_score'
+                                        ]
+                                        ?? null,
+                                        2
+                                    ); ?>
+                                </strong>
+
+                            </div>
+
+                            <p>
+                                <?= gameweekPageEscape(
+                                    $captain[
+                                        'classification'
+                                    ]
+                                    ?? 'No classification'
+                                ); ?>
+                            </p>
+
+                        </div>
+
+
+                        <!-- VICE CAPTAIN -->
+
+                        <div class="gameweek-decision-card">
+
+                            <p class="eyebrow">
+                                Vice-Captain
+                            </p>
+
+                            <h3>
+                                <?= gameweekPageEscape(
+                                    $viceCaptain[
+                                        'name'
+                                    ]
+                                    ?? 'N/A'
+                                ); ?>
+                            </h3>
+
+                            <div class="gameweek-decision-card-meta">
+
+                                <span>
+                                    Captain Score
+                                </span>
+
+                                <strong>
+                                    <?= gameweekPageRating(
+                                        $viceCaptain[
+                                            'captain_score'
+                                        ]
+                                        ?? null,
+                                        2
+                                    ); ?>
+                                </strong>
+
+                            </div>
+
+                            <p>
+                                <?= gameweekPageEscape(
+                                    $viceCaptain[
+                                        'classification'
+                                    ]
+                                    ?? 'No classification'
+                                ); ?>
+                            </p>
+
+                        </div>
+
+
+                        <!-- FORMATION -->
+
+                        <div class="gameweek-decision-card">
+
+                            <p class="eyebrow">
+                                Formation
+                            </p>
+
+                            <h3>
+                                <?= gameweekPageEscape(
+                                    $gameweekResult[
+                                        'formation'
+                                    ]
+                                    ?? 'N/A'
+                                ); ?>
+                            </h3>
+
+                            <div class="gameweek-decision-card-meta">
+
+                                <span>
+                                    Starting XI Score
+                                </span>
+
+                                <strong>
+                                    <?= gameweekPageRating(
+                                        $gameweekResult[
+                                            'starting_xi_score'
+                                        ]
+                                        ?? null,
+                                        2
+                                    ); ?>
+                                </strong>
+
+                            </div>
+
+                            <p>
+                                Highest-rated legal formation
+                            </p>
+
+                        </div>
+
+
+                        <!-- TRANSFER -->
+
+                        <div class="gameweek-decision-card">
+
+                            <p class="eyebrow">
+                                Transfer
+                            </p>
+
+                            <h3>
+                                <?= gameweekPageEscape(
+                                    $transferAdvice[
+                                        'action'
+                                    ]
+                                    ?? 'Review'
+                                ); ?>
+                            </h3>
+
+                            <div class="gameweek-decision-card-meta">
+
+                                <span>
+                                    Priority
+                                </span>
+
+                                <strong>
+                                    <?= gameweekPageEscape(
+                                        $transferAdvice[
+                                            'priority'
+                                        ]
+                                        ?? 'Unknown'
+                                    ); ?>
+                                </strong>
+
+                            </div>
+
+                            <p>
+
+                                <?php if (
+                                    !empty(
+                                        $topOutgoing[
+                                            'name'
+                                        ]
+                                        ?? null
+                                    )
+                                    &&
+                                    !empty(
+                                        $topIncoming[
+                                            'name'
+                                        ]
+                                        ?? null
+                                    )
+                                ): ?>
+
+                                    <?= gameweekPageEscape(
+                                        $topOutgoing[
+                                            'name'
+                                        ]
+                                    ); ?>
+
+                                    →
+
+                                    <?= gameweekPageEscape(
+                                        $topIncoming[
+                                            'name'
+                                        ]
+                                    ); ?>
+
+                                <?php else: ?>
+
+                                    No specific transfer recommendation available.
+
+                                <?php endif; ?>
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </section>
 
 
                 <!-- ==============================================
@@ -1364,6 +1837,384 @@ function gameweekPageEscape(
                         </div>
 
                     </div>
+
+                </section>
+                
+                <!-- ==============================================
+                     SQUAD RISKS
+                     ============================================== -->
+
+                <section class="dashboard-section gameweek-risks-section">
+
+                    <div class="section-heading">
+
+                        <p class="eyebrow">
+                            Squad Reliability
+                        </p>
+
+                        <h2>
+                            Squad Risks
+                        </h2>
+
+                    </div>
+
+
+                    <p class="gameweek-section-description">
+                        Availability and confidence issues that could affect your
+                        gameweek plan.
+                    </p>
+
+
+                    <?php
+
+                    $riskList =
+                        $squadRisks[
+                            'risks'
+                        ]
+                        ?? [];
+
+
+                    $displayRisks =
+                        array_slice(
+                            $riskList,
+                            0,
+                            5
+                        );
+
+                    ?>
+
+
+                    <div class="gameweek-risk-summary-grid">
+
+                        <div class="gameweek-risk-summary-card">
+
+                            <span>
+                                Total Risks
+                            </span>
+
+                            <strong>
+                                <?= (int) (
+                                    $squadRisks[
+                                        'count'
+                                    ]
+                                    ?? 0
+                                ); ?>
+                            </strong>
+
+                        </div>
+
+
+                        <div class="gameweek-risk-summary-card">
+
+                            <span>
+                                Critical
+                            </span>
+
+                            <strong>
+                                <?= (int) (
+                                    $squadRisks[
+                                        'critical_count'
+                                    ]
+                                    ?? 0
+                                ); ?>
+                            </strong>
+
+                        </div>
+
+
+                        <div class="gameweek-risk-summary-card">
+
+                            <span>
+                                High
+                            </span>
+
+                            <strong>
+                                <?= (int) (
+                                    $squadRisks[
+                                        'high_count'
+                                    ]
+                                    ?? 0
+                                ); ?>
+                            </strong>
+
+                        </div>
+
+
+                        <div class="gameweek-risk-summary-card">
+
+                            <span>
+                                Starting XI Risks
+                            </span>
+
+                            <strong>
+                                <?= (int) (
+                                    $squadRisks[
+                                        'starting_xi_risk_count'
+                                    ]
+                                    ?? 0
+                                ); ?>
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <?php if (
+                        empty(
+                            $displayRisks
+                        )
+                    ): ?>
+
+                        <div class="gameweek-risk-empty">
+
+                            <strong>
+                                No material squad risks detected.
+                            </strong>
+
+                            <p>
+                                Your recommended squad structure currently has no
+                                significant availability or confidence concerns.
+                            </p>
+
+                        </div>
+
+                    <?php else: ?>
+
+                        <div class="gameweek-risk-list">
+
+                            <?php foreach (
+                                $displayRisks
+                                as $risk
+                            ): ?>
+
+                                <?php
+
+                                $severity =
+                                    strtolower(
+                                        trim(
+                                            (string) (
+                                                $risk[
+                                                    'severity'
+                                                ]
+                                                ?? 'medium'
+                                            )
+                                        )
+                                    );
+
+                                ?>
+
+                                <div
+                                    class="gameweek-risk-card gameweek-risk-card-<?=
+                                        gameweekPageEscape(
+                                            $severity
+                                        );
+                                    ?>"
+                                >
+
+                                    <div class="gameweek-risk-card-main">
+
+                                        <div>
+
+                                            <span class="gameweek-risk-severity">
+                                                <?= gameweekPageEscape(
+                                                    ucfirst(
+                                                        $severity
+                                                    )
+                                                ); ?>
+                                            </span>
+
+                                            <h3>
+                                                <?= gameweekPageEscape(
+                                                    $risk[
+                                                        'name'
+                                                    ]
+                                                    ?? 'Unknown Player'
+                                                ); ?>
+                                            </h3>
+
+                                        </div>
+
+
+                                        <div class="gameweek-risk-value">
+
+                                            <?= gameweekPageRating(
+                                                $risk[
+                                                    'value'
+                                                ]
+                                                ?? null,
+                                                1
+                                            ); ?>
+
+                                            <?php if (
+                                                (
+                                                    $risk[
+                                                        'type'
+                                                    ]
+                                                    ?? null
+                                                )
+                                                ===
+                                                'confidence'
+                                                ||
+                                                (
+                                                    $risk[
+                                                        'type'
+                                                    ]
+                                                    ?? null
+                                                )
+                                                ===
+                                                'availability'
+                                            ): ?>
+
+                                                %
+
+                                            <?php endif; ?>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="gameweek-risk-meta">
+
+                                        <span>
+                                            <?= gameweekPageEscape(
+                                                ucfirst(
+                                                    str_replace(
+                                                        '_',
+                                                        ' ',
+                                                        $risk[
+                                                            'location'
+                                                        ]
+                                                        ?? ''
+                                                    )
+                                                )
+                                            ); ?>
+                                        </span>
+
+                                        <span>
+                                            <?= gameweekPageEscape(
+                                                ucfirst(
+                                                    $risk[
+                                                        'type'
+                                                    ]
+                                                    ?? ''
+                                                )
+                                            ); ?>
+                                        </span>
+
+                                    </div>
+
+
+                                    <p>
+                                        <?= gameweekPageEscape(
+                                            $risk[
+                                                'message'
+                                            ]
+                                            ?? ''
+                                        ); ?>
+                                    </p>
+
+                                </div>
+
+                            <?php endforeach; ?>
+
+                        </div>
+
+
+                        <?php if (
+                            count(
+                                $riskList
+                            )
+                            >
+                            count(
+                                $displayRisks
+                            )
+                        ): ?>
+
+                            <p class="gameweek-risk-more">
+
+                                Showing the 5 highest-priority risks from
+                                <?= count(
+                                    $riskList
+                                ); ?>
+                                detected issues.
+
+                            </p>
+
+                        <?php endif; ?>
+
+                    <?php endif; ?>
+
+                </section>
+                
+                <!-- ==============================================
+                     KEY INSIGHTS
+                     ============================================== -->
+
+                <section class="dashboard-section gameweek-insights-section">
+
+                    <div class="section-heading">
+
+                        <p class="eyebrow">
+                            Decision Explanation
+                        </p>
+
+                        <h2>
+                            Key Insights
+                        </h2>
+
+                    </div>
+
+
+                    <p class="gameweek-section-description">
+                        The main reasons behind the current Gameweek Intelligence
+                        recommendation.
+                    </p>
+
+
+                    <?php if (
+                        empty(
+                            $keyInsights
+                        )
+                    ): ?>
+
+                        <div class="gameweek-insight-empty">
+
+                            <p>
+                                No additional Gameweek Decision insights are available.
+                            </p>
+
+                        </div>
+
+                    <?php else: ?>
+
+                        <div class="gameweek-insight-list">
+
+                            <?php foreach (
+                                $keyInsights
+                                as $index => $insight
+                            ): ?>
+
+                                <div class="gameweek-insight-card">
+
+                                    <div class="gameweek-insight-number">
+                                        <?= $index + 1; ?>
+                                    </div>
+
+                                    <p>
+                                        <?= gameweekPageEscape(
+                                            $insight
+                                        ); ?>
+                                    </p>
+
+                                </div>
+
+                            <?php endforeach; ?>
+
+                        </div>
+
+                    <?php endif; ?>
 
                 </section>
 

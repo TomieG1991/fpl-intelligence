@@ -4923,6 +4923,664 @@ testPass(
             ?? 0
         )
         . "<br>";
+        
+        
+    /*
+     * ============================================================
+     * SCENARIO S: GAMEWEEK DECISION INTELLIGENCE
+     * ============================================================
+     */
+
+    echo "<br>============================================<br>";
+    echo "Scenario S: Gameweek Decision Intelligence<br>";
+    echo "============================================<br>";
+
+
+    /*
+     * Reuse the valid 15-player squad already built for the
+     * Gameweek Starting XI service test.
+     */
+
+    $decisionResult =
+        $service
+            ->getGameweekDecision(
+                $squadForRecommendations,
+                0.0
+            );
+
+
+    testPass(
+        'Gameweek Decision Intelligence returns an array',
+        is_array(
+            $decisionResult
+        )
+    );
+
+
+    testPass(
+        'Gameweek Decision Intelligence returns success',
+        (
+            $decisionResult[
+                'status'
+            ]
+            ?? null
+        )
+        ===
+        'success'
+    );
+
+
+    testPass(
+        'Gameweek Decision Intelligence returns a message',
+        !empty(
+            $decisionResult[
+                'message'
+            ]
+            ?? null
+        )
+    );
+
+
+    testPass(
+        'Gameweek Decision Intelligence returns an overall action',
+        !empty(
+            $decisionResult[
+                'overall_action'
+            ]
+            ?? null
+        )
+    );
+
+
+    /*
+     * ============================================================
+     * GAMEWEEK OUTPUT
+     * ============================================================
+     */
+
+    testPass(
+        'Gameweek Decision Intelligence includes Gameweek output',
+        isset(
+            $decisionResult[
+                'gameweek'
+            ]
+        )
+        &&
+        is_array(
+            $decisionResult[
+                'gameweek'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Decision Gameweek output returns success',
+        (
+            $decisionResult[
+                'gameweek'
+            ][
+                'status'
+            ]
+            ?? null
+        )
+        ===
+        'success'
+    );
+
+
+    testPass(
+        'Decision Gameweek output contains Starting XI',
+        count(
+            $decisionResult[
+                'gameweek'
+            ][
+                'starting_xi'
+            ]
+            ?? []
+        )
+        ===
+        11
+    );
+
+
+    testPass(
+        'Decision Gameweek output contains bench',
+        count(
+            $decisionResult[
+                'gameweek'
+            ][
+                'bench'
+            ]
+            ?? []
+        )
+        ===
+        4
+    );
+
+
+    testPass(
+        'Decision Gameweek output contains formation',
+        !empty(
+            $decisionResult[
+                'gameweek'
+            ][
+                'formation'
+            ]
+            ?? null
+        )
+    );
+
+
+    /*
+     * ============================================================
+     * CAPTAIN INTELLIGENCE OUTPUT
+     * ============================================================
+     */
+
+    testPass(
+        'Gameweek Decision Intelligence includes Captain Intelligence',
+        isset(
+            $decisionResult[
+                'captaincy'
+            ]
+        )
+        &&
+        is_array(
+            $decisionResult[
+                'captaincy'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Decision Captain Intelligence returns success',
+        (
+            $decisionResult[
+                'captaincy'
+            ][
+                'status'
+            ]
+            ?? null
+        )
+        ===
+        'success'
+    );
+
+
+    testPass(
+        'Decision Captain Intelligence contains captain',
+        isset(
+            $decisionResult[
+                'captaincy'
+            ][
+                'captain'
+            ]
+        )
+        &&
+        is_array(
+            $decisionResult[
+                'captaincy'
+            ][
+                'captain'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Decision Captain Intelligence contains vice-captain',
+        isset(
+            $decisionResult[
+                'captaincy'
+            ][
+                'vice_captain'
+            ]
+        )
+        &&
+        is_array(
+            $decisionResult[
+                'captaincy'
+            ][
+                'vice_captain'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Decision captain has numeric Captain Score',
+        is_numeric(
+            $decisionResult[
+                'captaincy'
+            ][
+                'captain'
+            ][
+                'captain_score'
+            ]
+            ?? null
+        )
+    );
+
+
+    /*
+     * ============================================================
+     * TRANSFER INTELLIGENCE OUTPUT
+     * ============================================================
+     */
+
+    testPass(
+        'Gameweek Decision Intelligence includes Transfer Intelligence',
+        array_key_exists(
+            'transfers',
+            $decisionResult
+        )
+    );
+
+
+    testPass(
+        'Decision Transfer Intelligence is an array',
+        is_array(
+            $decisionResult[
+                'transfers'
+            ]
+            ?? null
+        )
+    );
+
+
+    /*
+     * ============================================================
+     * DECISION ENGINE OUTPUT
+     * ============================================================
+     */
+
+    testPass(
+        'Gameweek Decision Intelligence includes decision output',
+        isset(
+            $decisionResult[
+                'decision'
+            ]
+        )
+        &&
+        is_array(
+            $decisionResult[
+                'decision'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Decision engine output returns success',
+        (
+            $decisionResult[
+                'decision'
+            ][
+                'status'
+            ]
+            ?? null
+        )
+        ===
+        'success'
+    );
+
+
+    testPass(
+        'Decision engine overall action matches service output',
+        (
+            $decisionResult[
+                'decision'
+            ][
+                'overall_action'
+            ]
+            ?? null
+        )
+        ===
+        (
+            $decisionResult[
+                'overall_action'
+            ]
+            ?? null
+        )
+    );
+
+
+    testPass(
+        'Decision engine preserves recommended formation',
+        (
+            $decisionResult[
+                'decision'
+            ][
+                'formation'
+            ]
+            ?? null
+        )
+        ===
+        (
+            $decisionResult[
+                'gameweek'
+            ][
+                'formation'
+            ]
+            ?? null
+        )
+    );
+
+
+    testPass(
+        'Decision engine preserves captain recommendation',
+        (
+            (int) (
+                $decisionResult[
+                    'decision'
+                ][
+                    'captain'
+                ][
+                    'player_id'
+                ]
+                ?? 0
+            )
+        )
+        ===
+        (
+            (int) (
+                $decisionResult[
+                    'captaincy'
+                ][
+                    'captain'
+                ][
+                    'player_id'
+                ]
+                ?? 0
+            )
+        )
+    );
+
+
+    testPass(
+        'Decision engine preserves vice-captain recommendation',
+        (
+            (int) (
+                $decisionResult[
+                    'decision'
+                ][
+                    'vice_captain'
+                ][
+                    'player_id'
+                ]
+                ?? 0
+            )
+        )
+        ===
+        (
+            (int) (
+                $decisionResult[
+                    'captaincy'
+                ][
+                    'vice_captain'
+                ][
+                    'player_id'
+                ]
+                ?? 0
+            )
+        )
+    );
+
+
+    /*
+     * ============================================================
+     * SQUAD RISK OUTPUT
+     * ============================================================
+     */
+
+    testPass(
+        'Decision engine returns squad risk analysis',
+        isset(
+            $decisionResult[
+                'decision'
+            ][
+                'squad_risks'
+            ]
+        )
+        &&
+        is_array(
+            $decisionResult[
+                'decision'
+            ][
+                'squad_risks'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Squad risk count is returned',
+        is_numeric(
+            $decisionResult[
+                'decision'
+            ][
+                'squad_risks'
+            ][
+                'count'
+            ]
+            ?? null
+        )
+    );
+
+
+    testPass(
+        'Squad risks array is returned',
+        isset(
+            $decisionResult[
+                'decision'
+            ][
+                'squad_risks'
+            ][
+                'risks'
+            ]
+        )
+        &&
+        is_array(
+            $decisionResult[
+                'decision'
+            ][
+                'squad_risks'
+            ][
+                'risks'
+            ]
+        )
+    );
+
+
+    /*
+     * ============================================================
+     * KEY INSIGHTS
+     * ============================================================
+     */
+
+    testPass(
+        'Decision engine returns key insights',
+        isset(
+            $decisionResult[
+                'decision'
+            ][
+                'key_insights'
+            ]
+        )
+        &&
+        is_array(
+            $decisionResult[
+                'decision'
+            ][
+                'key_insights'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Decision engine returns at least one key insight',
+        count(
+            $decisionResult[
+                'decision'
+            ][
+                'key_insights'
+            ]
+            ?? []
+        )
+        > 0
+    );
+
+
+    /*
+     * ============================================================
+     * INVALID INPUT
+     * ============================================================
+     */
+
+    $invalidDecisionSquad =
+        array_slice(
+            $squadForRecommendations,
+            0,
+            14
+        );
+
+
+    $invalidDecisionResult =
+        $service
+            ->getGameweekDecision(
+                $invalidDecisionSquad,
+                0.0
+            );
+
+
+    testPass(
+        'Gameweek Decision Intelligence rejects incomplete squad',
+        (
+            $invalidDecisionResult[
+                'status'
+            ]
+            ?? null
+        )
+        ===
+        'invalid'
+    );
+
+
+    testPass(
+        'Incomplete Gameweek decision returns no overall action',
+        array_key_exists(
+            'overall_action',
+            $invalidDecisionResult
+        )
+        &&
+        $invalidDecisionResult[
+            'overall_action'
+        ]
+        ===
+        null
+    );
+
+
+    $negativeBankDecision =
+        $service
+            ->getGameweekDecision(
+                $squadForRecommendations,
+                -1.0
+            );
+
+
+    testPass(
+        'Gameweek Decision Intelligence rejects negative bank',
+        (
+            $negativeBankDecision[
+                'status'
+            ]
+            ?? null
+        )
+        ===
+        'invalid'
+    );
+
+
+    echo "Overall Action: "
+        . (
+            $decisionResult[
+                'overall_action'
+            ]
+            ?? 'N/A'
+        )
+        . "<br>";
+
+
+    echo "Recommended Formation: "
+        . (
+            $decisionResult[
+                'gameweek'
+            ][
+                'formation'
+            ]
+            ?? 'N/A'
+        )
+        . "<br>";
+
+
+    echo "Recommended Captain: "
+        . (
+            $decisionResult[
+                'captaincy'
+            ][
+                'captain'
+            ][
+                'name'
+            ]
+            ?? 'N/A'
+        )
+        . "<br>";
+
+
+    echo "Recommended Vice-Captain: "
+        . (
+            $decisionResult[
+                'captaincy'
+            ][
+                'vice_captain'
+            ][
+                'name'
+            ]
+            ?? 'N/A'
+        )
+        . "<br>";
+
+
+    echo "Squad Risks: "
+        . (
+            $decisionResult[
+                'decision'
+            ][
+                'squad_risks'
+            ][
+                'count'
+            ]
+            ?? 0
+        )
+        . "<br>";
+
+
+    echo "Transfer Action: "
+        . (
+            $decisionResult[
+                'decision'
+            ][
+                'transfer_advice'
+            ][
+                'action'
+            ]
+            ?? 'N/A'
+        )
+        . "<br>";
 
 
     /*

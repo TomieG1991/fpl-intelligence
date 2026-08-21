@@ -6,6 +6,266 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.21.0] - Gameweek Decision Intelligence
+
+### Added
+- Added `GameweekDecisionEngine.php` as the manager-level Gameweek Decision Intelligence orchestration layer.
+- Added Gameweek Decision Intelligence for answering the higher-level question:
+  - what should I actually do this gameweek?
+- Added overall Gameweek Decision classifications:
+  - Hold
+  - Consider Transfer
+  - Make Transfer
+  - Urgent Action
+- Added manager-level decision output combining:
+  - Gameweek Starting XI Intelligence
+  - Captain Intelligence
+  - Transfer Intelligence
+  - squad reliability risk
+  - manager-facing key insights
+- Added preservation of recommended formation, Starting XI, bench, captain and vice-captain within the complete decision output.
+- Added squad-risk analysis covering:
+  - player availability
+  - sample confidence
+  - Starting XI risk
+  - bench risk
+  - critical severity
+  - high severity
+  - medium severity
+  - low severity
+- Added availability risk thresholds for detecting:
+  - major availability concerns
+  - significant availability concerns
+  - partial availability concerns
+- Added confidence risk thresholds for detecting:
+  - very low sample confidence
+  - limited sample confidence
+- Added separate treatment of Starting XI and bench risks so starter issues can escalate decision severity.
+- Added transfer-decision integration using the existing squad-aware single-transfer recommendation engine.
+- Added transfer-advice classifications:
+  - Hold
+  - Consider Transfer
+  - Make Transfer
+  - Review
+- Added transfer priority extraction from:
+  - direct priority values
+  - transfer-priority scores
+  - priority labels
+  - decision classifications
+  - transfer actions
+- Added support for the real nested `getSquadTransferRecommendations()` result structure.
+- Added transfer recommendation unwrapping from the optimizer response.
+- Added transfer priority scoring based primarily on outgoing-player transfer priority.
+- Added fallback support for replacement `decision_score` where required.
+- Added transfer priority mapping for:
+  - High
+  - Moderate
+  - Medium
+  - Low
+- Added manager-facing Gameweek Decision insights covering:
+  - recommended formation
+  - captain
+  - vice-captain
+  - squad reliability risks
+  - transfer priority
+  - overall gameweek recommendation
+- Added `getGameweekDecision()` to `PlayerIntelligenceService`.
+- Added complete Gameweek Decision orchestration through the existing production intelligence pipeline.
+- Added complete Gameweek Decision output containing:
+  - overall action
+  - Gameweek Starting XI output
+  - Captain Intelligence output
+  - Transfer Intelligence output
+  - squad risk analysis
+  - key insights
+- Added validation that Gameweek Decision Intelligence requires a complete 15-player FPL squad.
+- Added validation that negative bank values are rejected.
+- Added Gameweek Decision Intelligence to the existing `public/gameweek.php` dashboard.
+- Added top-level Decision Intelligence section to the Gameweek dashboard.
+- Added prominent "What Should You Do?" overall action panel.
+- Added action-specific visual states for:
+  - Hold
+  - Consider Transfer
+  - Make Transfer
+  - Urgent Action
+- Added Gameweek Decision summary cards displaying:
+  - captain
+  - vice-captain
+  - recommended formation
+  - transfer action
+- Added Captain Score and classification to the captain and vice-captain decision cards.
+- Added transfer priority and top transfer recommendation to the transfer decision card.
+- Added squad-risk count to the overall action panel.
+- Added dedicated Squad Risks dashboard section.
+- Added squad-risk summary cards displaying:
+  - total risks
+  - critical risks
+  - high risks
+  - Starting XI risks
+- Added detailed squad-risk cards displaying:
+  - player name
+  - severity
+  - risk type
+  - squad location
+  - risk value
+  - manager-facing explanation
+- Added capped squad-risk display so only the five highest-priority issues are shown in the dashboard.
+- Added no-risk dashboard state when no material squad issues are detected.
+- Added dedicated Key Insights section.
+- Added numbered manager-facing decision insight cards.
+- Added responsive styling for Gameweek Decision Intelligence, Squad Risks and Key Insights.
+
+### Changed
+- Extended Gameweek Intelligence from team-selection support into complete manager-level weekly decision support.
+- Changed `gameweek.php` to use the complete `getGameweekDecision()` production pipeline rather than calling only `getGameweekStartingXI()`.
+- Preserved the existing Gameweek page contract by sourcing `$gameweekResult` from the complete Gameweek Decision result.
+- Reused the existing Gameweek Starting XI, Captain Intelligence and Transfer Intelligence systems rather than duplicating scoring logic.
+- Improved Gameweek page hierarchy so the overall manager decision is presented before supporting Gameweek statistics.
+- Improved Gameweek dashboard flow to present:
+  - overall decision
+  - Gameweek summary
+  - squad risks
+  - key insights
+  - Starting XI
+  - bench
+  - formation comparison
+- Improved transfer integration so Gameweek Decision Intelligence reads the existing nested squad-transfer optimizer output correctly.
+- Improved transfer action selection so the manager-level decision uses outgoing-player transfer priority rather than relying only on generic transfer fields.
+- Improved transfer priority interpretation so `Moderate` transfer labels map correctly to medium-priority decision support.
+- Improved squad reliability modelling so Starting XI availability and confidence issues have greater decision impact than equivalent bench concerns.
+- Improved overall action precedence so:
+  - critical squad risk produces Urgent Action
+  - high transfer priority produces Make Transfer
+  - high squad risk or medium transfer priority produces Consider Transfer
+  - otherwise the squad can be held
+- Improved Gameweek Intelligence presentation by separating the manager-facing recommendation from the underlying Gameweek Summary.
+- Improved squad-risk presentation so reliability problems can be understood without exposing raw diagnostic output.
+- Improved key-insight presentation so the reasoning behind the recommendation can be scanned quickly.
+- Improved responsive behaviour for decision cards, risk summaries and insight components.
+
+### Fixed
+- Fixed Gameweek Decision Intelligence initially failing service integration because the test referenced an undefined `$gameweekSquad` variable instead of the existing `$squadForRecommendations`.
+- Fixed invalid-result tests incorrectly failing because PHP null-coalescing converted valid `null` output into fallback values.
+- Fixed the decision engine initially treating real Transfer Intelligence as `Unknown` because the production transfer result is nested under optimizer output.
+- Fixed transfer advice initially returning:
+  - Review
+  - Unknown priority
+  - no transfer score
+  despite valid high-priority transfer recommendations being available.
+- Fixed real transfer recommendation extraction so the decision engine reads the optimizer's nested recommendation groups.
+- Fixed transfer priority scoring so the outgoing player's `transfer_priority` is used as the main manager-action signal.
+- Fixed transfer priority label handling so `High` and `Moderate` values from Squad Transfer Intelligence are understood by Gameweek Decision Intelligence.
+- Fixed manager-level transfer advice so high-priority squad-transfer recommendations now correctly produce `Make Transfer`.
+- Fixed overall action remaining at `Consider Transfer` when valid Transfer Intelligence supported a stronger `Make Transfer` recommendation.
+- Fixed the Gameweek page initially exposing only Starting XI Intelligence rather than the complete manager-level decision pipeline.
+- Fixed Decision Intelligence page-state handling so the idle page does not render decision, risk or insight output before a squad is analysed.
+- Fixed Gameweek Decision UI spacing so Decision Intelligence, Squad Risks and Key Insights maintain consistent section hierarchy.
+
+### Testing
+- Added dedicated `GameweekDecisionEngineTest.php` unit and behaviour coverage.
+- Added validation of successful Gameweek Decision generation.
+- Added validation of overall action output.
+- Added validation that low-risk squads can recommend Hold.
+- Added validation that Gameweek Intelligence data is preserved through the decision engine.
+- Added validation that recommended formation is preserved.
+- Added validation that Starting XI Score and Bench Score are preserved.
+- Added validation that the complete Starting XI and bench are preserved.
+- Added validation that Captain Intelligence recommendations are preserved.
+- Added validation that captain and vice-captain remain distinct decision outputs.
+- Added validation that Captain Score is preserved.
+- Added validation of clean squad-risk analysis.
+- Added validation that unavailable starters create critical squad risk.
+- Added validation that critical starter risk produces Urgent Action.
+- Added validation that very low-confidence starters create high squad risk.
+- Added validation that high confidence risk can produce Consider Transfer.
+- Added validation of low, medium and high transfer-priority actions.
+- Added validation that transfer recommendations are preserved.
+- Added validation of numeric transfer-priority fallback behaviour.
+- Added validation that Gameweek Decision Intelligence succeeds without Transfer Intelligence data.
+- Added validation of manager-facing key insights.
+- Added validation that 0-1 confidence values are normalised before risk analysis.
+- Added validation that invalid Gameweek Intelligence is rejected.
+- Added validation that incomplete Starting XI structures are rejected.
+- Added validation that invalid Captain Intelligence is rejected.
+- Added validation of the complete Gameweek Decision result structure.
+- Verified `GameweekDecisionEngineTest.php` passes all 57 checks with 0 failures.
+- Added Gameweek Decision Intelligence integration coverage to `PlayerIntelligenceServiceTest.php`.
+- Added validation of the complete service orchestration path:
+  - Gameweek Starting XI
+  - Captain Intelligence
+  - Transfer Intelligence
+  - Gameweek Decision Engine
+- Added validation that Gameweek Decision Intelligence returns a valid overall action.
+- Added validation that Gameweek, Captain and Transfer outputs are included in the complete decision response.
+- Added validation that decision output preserves formation, captain and vice-captain recommendations.
+- Added validation of squad-risk count and detailed risk output.
+- Added validation that key insights are generated.
+- Added validation that incomplete squads are rejected.
+- Added validation that negative bank values are rejected.
+- Verified `PlayerIntelligenceServiceTest.php` passes all 395 checks with 0 failures after Gameweek Decision integration.
+- Added `GameweekDecisionRealDataTest.php` against the current live project dataset.
+- Verified Gameweek Decision Intelligence against 599 current Player Intelligence summaries.
+- Added real-data construction of a legal 15-player squad.
+- Added validation of:
+  - two goalkeepers
+  - five defenders
+  - five midfielders
+  - three forwards
+  - three-player-per-club limit
+- Added real-data validation of the complete Gameweek Decision production path.
+- Added real-data diagnostics for:
+  - overall action
+  - recommended formation
+  - Starting XI Score
+  - Bench Score
+  - captain
+  - vice-captain
+  - squad-risk summary
+  - detailed squad risks
+  - transfer advice
+  - raw Transfer Intelligence structure
+  - outgoing transfer priorities
+  - ranked replacements
+  - replacement decision types
+  - replacement decision scores
+  - key insights
+- Added validation that detailed squad-risk counts match reported risk totals.
+- Added validation of risk type, severity and numeric risk values.
+- Added validation that raw squad-transfer analysis remains valid.
+- Added validation that the transfer optimizer returns successful recommendation output.
+- Added validation of Gameweek Decision action classifications.
+- Added validation that the final decision preserves Gameweek and Captain Intelligence output.
+- Added complete Gameweek Decision performance regression coverage.
+- Verified `GameweekDecisionRealDataTest.php` passes all 37 checks with 0 failures.
+- Added real-data validation that high-priority transfer output is correctly mapped into Gameweek Decision Intelligence.
+- Verified high-priority transfer output correctly produces:
+  - `Make Transfer`
+  - `High` priority
+  - numeric transfer score
+- Extended `GameweekPageTest.php` with Gameweek Decision Intelligence UI coverage.
+- Added validation that the idle page does not prematurely render:
+  - Decision Intelligence
+  - Squad Risks
+  - Key Insights
+- Added validation of the "What Should You Do?" section.
+- Added validation of the Overall Action panel.
+- Added validation of supported action-specific hero classes.
+- Added validation that exactly four supporting decision cards are rendered.
+- Added validation of Captain, Vice-Captain, Formation and Transfer decision cards.
+- Added validation of Captain Score, Starting XI Score and transfer priority output.
+- Added validation of the Squad Reliability section.
+- Added validation that exactly four squad-risk summary cards are rendered.
+- Added validation of Total Risks, Critical, High and Starting XI Risks summaries.
+- Added validation that detailed risk output is capped at five cards.
+- Added validation of risk severity styling.
+- Added validation of clean-state squad-risk handling.
+- Added validation of the Decision Explanation and Key Insights sections.
+- Added validation that at least one numbered insight is rendered.
+- Added validation that the overall gameweek recommendation appears in Key Insights.
+- Verified extended `GameweekPageTest.php` passes successfully with all Decision Intelligence UI checks green.
+- Verified `RunAllTests.php` passes successfully after complete Gameweek Decision Intelligence integration.
+- Complete automated project regression suite passes successfully.
+
 ## [0.20.0] - Gameweek Intelligence
 
 ### Added

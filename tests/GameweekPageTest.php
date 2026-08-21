@@ -439,6 +439,35 @@ gameweekPageCheck(
     === false
 );
 
+gameweekPageCheck(
+    'Idle page does not render Gameweek Decision Intelligence',
+    stripos(
+        $initialHtml,
+        'gameweek-decision-hero'
+    )
+    === false
+);
+
+
+gameweekPageCheck(
+    'Idle page does not render squad risk output',
+    stripos(
+        $initialHtml,
+        'gameweek-risk-summary-grid'
+    )
+    === false
+);
+
+
+gameweekPageCheck(
+    'Idle page does not render Key Insights output',
+    stripos(
+        $initialHtml,
+        'gameweek-insight-list'
+    )
+    === false
+);
+
 
 echo "<br>";
 
@@ -626,17 +655,423 @@ gameweekPageCheck(
 echo "Summary Cards: "
     . $summaryCardCount
     . "<br><br>";
-
+    
 
 /*
  * ============================================================
  * SCENARIO F
+ * GAMEWEEK DECISION INTELLIGENCE
+ * ============================================================
+ */
+
+echo "============================================<br>";
+echo "Scenario F: Gameweek Decision Intelligence<br>";
+echo "============================================<br>";
+
+
+gameweekPageCheck(
+    'Decision Intelligence eyebrow is rendered',
+    preg_match(
+        '/<p\s+class="eyebrow">\s*Decision Intelligence\s*<\/p>/i',
+        $previewHtml
+    )
+    === 1
+);
+
+
+gameweekPageCheck(
+    'What Should You Do section is rendered',
+    stripos(
+        $previewHtml,
+        'What Should You Do?'
+    )
+    !== false
+);
+
+
+gameweekPageCheck(
+    'Overall Action is rendered',
+    preg_match(
+        '/<p\s+class="eyebrow">\s*Overall Action\s*<\/p>/i',
+        $previewHtml
+    )
+    === 1
+);
+
+
+gameweekPageCheck(
+    'Decision hero is rendered',
+    stripos(
+        $previewHtml,
+        'gameweek-decision-hero'
+    )
+    !== false
+);
+
+
+$validActionRendered =
+    preg_match(
+        '/gameweek-decision-hero-(?:hold|consider-transfer|make-transfer|urgent-action)/i',
+        $previewHtml
+    )
+    === 1;
+
+
+gameweekPageCheck(
+    'Decision hero uses a valid Overall Action class',
+    $validActionRendered
+);
+
+
+gameweekPageCheck(
+    'Decision hero contains squad risk count',
+    stripos(
+        $previewHtml,
+        'Squad Risks'
+    )
+    !== false
+);
+
+
+preg_match_all(
+    '/class="gameweek-decision-card"/i',
+    $previewHtml,
+    $decisionCardMatches
+);
+
+
+$decisionCardCount =
+    count(
+        $decisionCardMatches[
+            0
+        ]
+        ?? []
+    );
+
+
+gameweekPageCheck(
+    'Decision Intelligence contains exactly four supporting cards',
+    $decisionCardCount
+    === 4
+);
+
+
+gameweekPageCheck(
+    'Decision Intelligence contains Captain card',
+    preg_match(
+        '/<p\s+class="eyebrow">\s*Captain\s*<\/p>/i',
+        $previewHtml
+    )
+    === 1
+);
+
+
+gameweekPageCheck(
+    'Decision Intelligence contains Vice-Captain card',
+    preg_match(
+        '/<p\s+class="eyebrow">\s*Vice-Captain\s*<\/p>/i',
+        $previewHtml
+    )
+    === 1
+);
+
+
+gameweekPageCheck(
+    'Decision Intelligence contains Formation card',
+    preg_match(
+        '/<p\s+class="eyebrow">\s*Formation\s*<\/p>/i',
+        $previewHtml
+    )
+    >= 1
+);
+
+
+gameweekPageCheck(
+    'Decision Intelligence contains Transfer card',
+    preg_match(
+        '/<p\s+class="eyebrow">\s*Transfer\s*<\/p>/i',
+        $previewHtml
+    )
+    === 1
+);
+
+
+gameweekPageCheck(
+    'Captain decision card contains Captain Score',
+    stripos(
+        $previewHtml,
+        'Captain Score'
+    )
+    !== false
+);
+
+
+gameweekPageCheck(
+    'Formation decision card contains Starting XI Score',
+    stripos(
+        $previewHtml,
+        'Starting XI Score'
+    )
+    !== false
+);
+
+
+gameweekPageCheck(
+    'Transfer decision card contains Priority',
+    stripos(
+        $previewHtml,
+        'Priority'
+    )
+    !== false
+);
+
+
+echo "Decision Cards: "
+    . $decisionCardCount
+    . "<br><br>";
+
+
+/*
+ * ============================================================
+ * SCENARIO G
+ * SQUAD RISKS & KEY INSIGHTS
+ * ============================================================
+ */
+
+echo "============================================<br>";
+echo "Scenario G: Squad Risks & Key Insights<br>";
+echo "============================================<br>";
+
+
+gameweekPageCheck(
+    'Squad Reliability eyebrow is rendered',
+    preg_match(
+        '/<p\s+class="eyebrow">\s*Squad Reliability\s*<\/p>/i',
+        $previewHtml
+    )
+    === 1
+);
+
+
+gameweekPageCheck(
+    'Squad Risks section is rendered',
+    preg_match(
+        '/<h2>\s*Squad Risks\s*<\/h2>/i',
+        $previewHtml
+    )
+    === 1
+);
+
+
+preg_match_all(
+    '/class="gameweek-risk-summary-card"/i',
+    $previewHtml,
+    $riskSummaryCardMatches
+);
+
+
+$riskSummaryCardCount =
+    count(
+        $riskSummaryCardMatches[
+            0
+        ]
+        ?? []
+    );
+
+
+gameweekPageCheck(
+    'Squad Risks contains exactly four summary cards',
+    $riskSummaryCardCount
+    === 4
+);
+
+
+gameweekPageCheck(
+    'Squad Risks contains Total Risks summary',
+    stripos(
+        $previewHtml,
+        'Total Risks'
+    )
+    !== false
+);
+
+
+gameweekPageCheck(
+    'Squad Risks contains Critical summary',
+    stripos(
+        $previewHtml,
+        '>Critical<'
+    )
+    !== false
+    ||
+    preg_match(
+        '/>\s*Critical\s*</i',
+        $previewHtml
+    )
+    === 1
+);
+
+
+gameweekPageCheck(
+    'Squad Risks contains High summary',
+    stripos(
+        $previewHtml,
+        '>High<'
+    )
+    !== false
+    ||
+    preg_match(
+        '/>\s*High\s*</i',
+        $previewHtml
+    )
+    === 1
+);
+
+
+gameweekPageCheck(
+    'Squad Risks contains Starting XI Risks summary',
+    stripos(
+        $previewHtml,
+        'Starting XI Risks'
+    )
+    !== false
+);
+
+
+preg_match_all(
+    '/class="gameweek-risk-card\s+gameweek-risk-card-(?:critical|high|medium|low)"/i',
+    $previewHtml,
+    $riskCardMatches
+);
+
+
+$riskCardCount =
+    count(
+        $riskCardMatches[
+            0
+        ]
+        ?? []
+    );
+
+
+gameweekPageCheck(
+    'Rendered detailed squad risks never exceed five cards',
+    $riskCardCount
+    <= 5
+);
+
+
+gameweekPageCheck(
+    'Squad risk cards expose severity styling',
+    $riskCardCount === 0
+    ||
+    preg_match(
+        '/gameweek-risk-card-(?:critical|high|medium|low)/i',
+        $previewHtml
+    )
+    === 1
+);
+
+
+gameweekPageCheck(
+    'Squad risk section supports either detailed risks or clean-state message',
+    $riskCardCount > 0
+    ||
+    stripos(
+        $previewHtml,
+        'No material squad risks detected.'
+    )
+    !== false
+);
+
+
+gameweekPageCheck(
+    'Decision Explanation eyebrow is rendered',
+    preg_match(
+        '/<p\s+class="eyebrow">\s*Decision Explanation\s*<\/p>/i',
+        $previewHtml
+    )
+    === 1
+);
+
+
+gameweekPageCheck(
+    'Key Insights section is rendered',
+    preg_match(
+        '/<h2>\s*Key Insights\s*<\/h2>/i',
+        $previewHtml
+    )
+    === 1
+);
+
+
+preg_match_all(
+    '/class="gameweek-insight-card"/i',
+    $previewHtml,
+    $insightCardMatches
+);
+
+
+$insightCardCount =
+    count(
+        $insightCardMatches[
+            0
+        ]
+        ?? []
+    );
+
+
+gameweekPageCheck(
+    'Key Insights contains at least one insight card',
+    $insightCardCount
+    > 0
+);
+
+
+gameweekPageCheck(
+    'Key Insights contains numbered insight markers',
+    stripos(
+        $previewHtml,
+        'gameweek-insight-number'
+    )
+    !== false
+);
+
+
+gameweekPageCheck(
+    'Key Insights includes overall gameweek recommendation',
+    stripos(
+        $previewHtml,
+        'Overall gameweek recommendation'
+    )
+    !== false
+);
+
+
+echo "Risk Summary Cards: "
+    . $riskSummaryCardCount
+    . "<br>";
+
+
+echo "Detailed Risk Cards: "
+    . $riskCardCount
+    . "<br>";
+
+
+echo "Insight Cards: "
+    . $insightCardCount
+    . "<br><br>";
+
+
+/*
+ * ============================================================
+ * SCENARIO H
  * STARTING XI PITCH
  * ============================================================
  */
 
 echo "============================================<br>";
-echo "Scenario F: Starting XI Pitch<br>";
+echo "Scenario H: Starting XI Pitch<br>";
 echo "============================================<br>";
 
 
@@ -751,13 +1186,13 @@ echo "Starting XI Player Cards: "
 
 /*
  * ============================================================
- * SCENARIO G
+ * SCENARIO I
  * ORDERED BENCH
  * ============================================================
  */
 
 echo "============================================<br>";
-echo "Scenario G: Ordered Bench<br>";
+echo "Scenario I: Ordered Bench<br>";
 echo "============================================<br>";
 
 
@@ -910,13 +1345,13 @@ echo "Bench Player Cards: "
 
 /*
  * ============================================================
- * SCENARIO H
+ * SCENARIO J
  * FORMATION COMPARISON
  * ============================================================
  */
 
 echo "============================================<br>";
-echo "Scenario H: Formation Comparison<br>";
+echo "Scenario J: Formation Comparison<br>";
 echo "============================================<br>";
 
 
@@ -1039,13 +1474,13 @@ echo "Recommended Formation Cards: "
 
 /*
  * ============================================================
- * SCENARIO I
+ * SCENARIO K
  * PLAYER NAVIGATION
  * ============================================================
  */
 
 echo "============================================<br>";
-echo "Scenario I: Player Navigation<br>";
+echo "Scenario K: Player Navigation<br>";
 echo "============================================<br>";
 
 
@@ -1086,13 +1521,13 @@ echo "Player Profile Links: "
 
 /*
  * ============================================================
- * SCENARIO J
+ * SCENARIO L
  * PAGE CONTENT INTEGRITY
  * ============================================================
  */
 
 echo "============================================<br>";
-echo "Scenario J: Page Content Integrity<br>";
+echo "Scenario L: Page Content Integrity<br>";
 echo "============================================<br>";
 
 
@@ -1140,13 +1575,13 @@ echo "<br>";
 
 /*
  * ============================================================
- * SCENARIO K
+ * SCENARIO M
  * PHP ERROR DETECTION
  * ============================================================
  */
 
 echo "============================================<br>";
-echo "Scenario K: PHP Error Detection<br>";
+echo "Scenario M: PHP Error Detection<br>";
 echo "============================================<br>";
 
 
@@ -1221,13 +1656,13 @@ echo "<br>";
 
 /*
  * ============================================================
- * SCENARIO L
+ * SCENARIO N
  * PERFORMANCE
  * ============================================================
  */
 
 echo "============================================<br>";
-echo "Scenario L: Performance<br>";
+echo "Scenario N: Performance<br>";
 echo "============================================<br>";
 
 
