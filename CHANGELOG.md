@@ -6,6 +6,90 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.22.0] - Team Intelligence
+
+### Added
+- Added squad-independent Team Intelligence for evaluating and comparing all 20 Premier League teams.
+- Added `getAllTeamIntelligenceSummaries()` to Player Intelligence Service.
+- Added Team Intelligence summaries combining existing team strength and fixture intelligence.
+- Added Team Intelligence Score for ranking Premier League teams using:
+  - overall team strength
+  - home strength
+  - away strength
+  - upcoming fixture opportunity
+  - performance-adjusted team strength
+- Added Team Intelligence classifications:
+  - Elite
+  - Strong
+  - Average
+  - Weak
+  - Poor
+- Added fixture classifications for identifying short-term fixture opportunity.
+- Added fixture trend information to Team Intelligence summaries.
+- Added complete 20-team Team Intelligence ranking ordered by Intelligence Score.
+- Added `public/teams.php` as the dedicated Team Intelligence dashboard.
+- Added Team Intelligence Summary displaying:
+  - teams analysed
+  - Elite team count
+  - Strong team count
+  - average Team Intelligence Score
+  - average fixture rating
+- Added Premier League Team Intelligence ranking table.
+- Added compact league-style comparison of all 20 Premier League teams.
+- Added ranking positions for every Premier League team.
+- Added team identity and short-name information to the Team Intelligence table.
+- Added Team Intelligence Score and classification badges.
+- Added overall, home and away strength metrics.
+- Added upcoming fixture rating and fixture classification.
+- Added fixture trend information.
+- Added recent-form and W-D-L placeholders driven by completed Premier League fixture data.
+- Added explanatory Team Intelligence content covering:
+  - Current Strength
+  - Fixture Opportunity
+  - Team Intelligence
+- Added responsive Team Intelligence table behaviour for smaller displays.
+- Added Teams navigation integration using the shared application sidebar.
+
+### Changed
+- Extended Player Intelligence Service from player-level and squad-level analysis into league-wide Team Intelligence.
+- Reused existing team-strength and fixture-intelligence models rather than introducing duplicate team evaluation logic.
+- Combined performance-adjusted team strength with upcoming fixture opportunity to produce Team Intelligence rankings.
+- Improved Team Intelligence presentation from large individual team cards to a compact league-style ranking table.
+- Improved comparison of all 20 Premier League teams by displaying key strength and fixture metrics within a single ranking view.
+- Improved Team Intelligence visual hierarchy using the shared application shell, topbar and dashboard structure.
+- Improved Team Intelligence section spacing so eyebrow labels clearly introduce their associated content.
+- Improved responsive handling of the Team Intelligence summary and ranking table.
+- Preserved completed-match-driven recent form so preseason or previous-season results are not incorrectly presented as current Premier League form.
+
+### Fixed
+- Fixed Team Intelligence page initially using a page structure inconsistent with the shared application shell.
+- Fixed the fixed application sidebar overlapping Team Intelligence page content.
+- Fixed Team Intelligence content alignment by restoring the shared `app-content`, `topbar` and `dashboard` structure.
+- Fixed Team Intelligence section eyebrow spacing so section labels no longer visually attach to preceding content.
+- Fixed excessive vertical space caused by the original full-width team ranking cards.
+- Fixed inefficient use of horizontal space within the original Team Intelligence ranking presentation.
+
+### Testing
+- Added `TeamIntelligenceServiceTest.php` for dedicated Team Intelligence service coverage.
+- Added validation that Player Intelligence Service exposes `getAllTeamIntelligenceSummaries()`.
+- Added validation that Team Intelligence returns exactly 20 Premier League teams.
+- Added validation of required Team Intelligence summary fields.
+- Added validation of local and FPL team identity integrity.
+- Added validation that team IDs and FPL team IDs remain unique.
+- Added validation that home, away and overall strength values are numeric and remain between 0 and 100.
+- Added validation that Team Intelligence Scores are numeric and remain between 0 and 100.
+- Added validation of Team Intelligence classifications.
+- Added validation that fixture ratings are numeric and remain between 0 and 100.
+- Added validation of fixture classifications.
+- Added validation that every team exposes fixture trend information.
+- Added validation that Team Intelligence summaries are correctly ordered by Intelligence Score.
+- Added Team Intelligence classification-distribution diagnostics.
+- Added Team Intelligence performance regression coverage.
+- Verified Team Intelligence returns all 20 Premier League teams successfully.
+- Verified Arsenal currently ranks first in the development dataset with a Team Intelligence Score of 95.33.
+- Verified Team Intelligence produces multiple classification levels across the Premier League.
+- Verified `TeamIntelligenceServiceTest.php` passes all 38 checks with 0 failures.
+
 ## [0.21.0] - Gameweek Decision Intelligence
 
 ### Added

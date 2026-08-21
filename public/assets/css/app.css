@@ -9355,3 +9355,341 @@ a {
         flex-direction: column;
     }
 }
+
+/* ------------------------------------------------------------
+   TEAM INTELLIGENCE
+   ------------------------------------------------------------ */
+
+.team-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 0;
+}
+
+.team-summary-card {
+    padding: 18px;
+    border: 1px solid #33415c;
+    border-radius: 10px;
+    background: #172135;
+}
+
+.team-summary-card span {
+    display: block;
+    margin-bottom: 8px;
+    color: #8293ae;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.team-summary-card strong {
+    color: #ffffff;
+    font-size: 1.45rem;
+}
+
+.team-section-description {
+    max-width: 780px;
+    margin: 12px 0 0;
+    color: #8fa1bd;
+    line-height: 1.6;
+}
+
+.team-intelligence-badge,
+.team-fixture-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 9px;
+    border: 1px solid #46536d;
+    border-radius: 999px;
+    font-size: 0.67rem;
+    font-weight: 800;
+}
+
+.team-intelligence-badge-elite {
+    border-color: #7c5cff;
+    color: #b7adff;
+}
+
+.team-intelligence-badge-strong {
+    border-color: #4f9b78;
+    color: #8fd4ae;
+}
+
+.team-intelligence-badge-average {
+    border-color: #c99c54;
+    color: #e2c48c;
+}
+
+.team-intelligence-badge-weak {
+    border-color: #b77a63;
+    color: #d9a38d;
+}
+
+.team-intelligence-badge-poor {
+    border-color: #c85c68;
+    color: #e59aa3;
+}
+
+.team-fixture-badge-excellent {
+    color: #8fd4ae;
+}
+
+.team-fixture-badge-good {
+    color: #a7d7ba;
+}
+
+.team-fixture-badge-average {
+    color: #e2c48c;
+}
+
+.team-fixture-badge-difficult {
+    color: #d9a38d;
+}
+
+.team-fixture-badge-very-difficult {
+    color: #e59aa3;
+}
+
+/* ------------------------------------------------------------
+   TEAM INTELLIGENCE RANKING TABLE
+   ------------------------------------------------------------ */
+
+.team-ranking-table-wrapper {
+    margin-top: 18px;
+    overflow-x: auto;
+    border: 1px solid #33415c;
+    border-radius: 12px;
+    background: #172135;
+}
+
+.team-ranking-table {
+    width: 100%;
+    min-width: 1050px;
+    border-collapse: collapse;
+}
+
+.team-ranking-table th,
+.team-ranking-table td {
+    padding: 13px 14px;
+    border-bottom: 1px solid #2c3951;
+    text-align: left;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.team-ranking-table th {
+    color: #8293ae;
+    background: #111a2b;
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.team-ranking-table td {
+    color: #d7dfec;
+    font-size: 0.78rem;
+}
+
+.team-ranking-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.team-ranking-table tbody tr {
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease;
+}
+
+.team-ranking-table tbody tr:hover {
+    background: #1a263c;
+}
+
+.team-rank-column {
+    width: 54px;
+    text-align: center !important;
+}
+
+.team-rank-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid #6556d9;
+    border-radius: 50%;
+    color: #b7adff;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.team-name-cell {
+    min-width: 150px;
+}
+
+.team-name-cell strong {
+    display: block;
+    color: #ffffff;
+    font-size: 0.84rem;
+}
+
+.team-name-cell span {
+    display: block;
+    margin-top: 3px;
+    color: #8293ae;
+    font-size: 0.68rem;
+}
+
+.team-table-score {
+    color: #ffffff;
+    font-size: 0.86rem;
+}
+
+.team-trend-cell {
+    color: #aab8cb;
+}
+
+.team-form-value {
+    color: #ffffff;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+}
+
+.team-record-cell {
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.team-ranking-note {
+    margin: 10px 0 0;
+    padding-bottom: 4px;
+    color: #8293ae;
+    font-size: 0.72rem;
+    line-height: 1.5;
+}
+
+.team-ranking-metrics {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.team-ranking-metric {
+    padding: 12px;
+    border: 1px solid #2c3951;
+    border-radius: 8px;
+    background: #111a2b;
+}
+
+.team-ranking-metric span,
+.team-ranking-footer span {
+    display: block;
+    margin-bottom: 5px;
+    color: #8293ae;
+    font-size: 0.66rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.team-ranking-metric strong,
+.team-ranking-footer strong {
+    color: #ffffff;
+    font-size: 0.82rem;
+}
+
+.team-ranking-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 22px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #2c3951;
+}
+
+.team-explanation-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 18px;
+}
+
+.team-explanation-card {
+    padding: 18px;
+    border: 1px solid #33415c;
+    border-radius: 10px;
+    background: #172135;
+}
+
+.team-explanation-card h3 {
+    margin: 0 0 8px;
+    color: #ffffff;
+    font-size: 0.95rem;
+}
+
+.team-explanation-card p {
+    margin: 0;
+    color: #8fa1bd;
+    font-size: 0.8rem;
+    line-height: 1.6;
+}
+@media (max-width: 1200px) {
+
+    .team-summary-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 850px) {
+
+    .team-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .team-explanation-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+
+    .team-summary-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.team-dashboard {
+    padding-bottom: 48px;
+}
+
+/* ------------------------------------------------------------
+   TEAM INTELLIGENCE SECTION SPACING
+   ------------------------------------------------------------ */
+
+.team-dashboard .dashboard-section {
+    margin: 0;
+}
+
+.team-dashboard .dashboard-section + .dashboard-section {
+    margin-top: 42px;
+}
+
+.team-dashboard .section-heading {
+    margin-bottom: 18px;
+}
+
+.team-dashboard .section-heading .eyebrow {
+    margin: 0 0 10px;
+}
+
+.team-dashboard .section-heading h2 {
+    margin: 0;
+}
+
+.team-dashboard .team-section-description {
+    margin-top: -4px;
+    margin-bottom: 0;
+}

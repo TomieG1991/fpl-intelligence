@@ -473,6 +473,681 @@ class PlayerIntelligenceService
                 count($players)
             );
     }
+    
+    
+    /**
+     * Build Team Intelligence summaries for every current
+     * Premier League team.
+     *
+     * This method reuses the existing team strength,
+     * performance and fixture intelligence models rather
+     * than recalculating those concepts independently.
+     *
+     * Results are ordered by Team Intelligence Score,
+     * highest first.
+     */
+    public function getAllTeamIntelligenceSummaries(): array
+    {
+        /*
+         * ========================================================
+         * LOAD SOURCE DATA
+         * ========================================================
+         */
+
+        $teams =
+            $this->teamRepository
+                ->getAll();
+
+
+        $fixtures =
+            $this->fixtureRepository
+                ->getAll();
+
+
+        if (
+            empty(
+                $teams
+            )
+        ) {
+
+            return [];
+        }
+
+
+        /*
+         * ========================================================
+         * BASELINE TEAM STRENGTH
+         * ========================================================
+         */
+
+        $teamBaselines =
+            $this->teamStrength
+                ->calculateTeamStrengths(
+                    $teams
+                );
+
+
+        /*
+         * ========================================================
+         * COMPLETE CURRENT TEAM MODELS
+         * ========================================================
+         *
+         * TeamStrengthModel blends the FPL baseline with actual
+         * completed-match performance as the season progresses.
+         */
+
+        $completeTeamModels =
+            [];
+
+
+        $teamPerformanceLookup =
+            [];
+
+
+        foreach (
+            $teamBaselines
+            as $teamId => $baseline
+        ) {
+
+            $performance =
+                $this->teamPerformance
+                    ->analyse(
+                        $fixtures,
+                        (int) $teamId
+                    );
+
+
+            $teamPerformanceLookup[
+                (int) $teamId
+            ] =
+                $performance;
+
+
+            $completeTeamModels[
+                (int) $teamId
+            ] =
+                $this->teamStrengthModel
+                    ->buildTeamModel(
+                        $baseline,
+                        $performance,
+                        $this->teamPerformance
+                    );
+        }
+
+
+        /*
+         * ========================================================
+         * SUPPORTING TEAM INTELLIGENCE MODELS
+         * ========================================================
+         */
+
+        $teamIntelligence =
+            new TeamIntelligence();
+
+
+        $teamFixtureProfile =
+            new TeamFixtureProfile();
+
+
+        /*
+         * ========================================================
+         * BUILD TEAM LOOKUP
+         * ========================================================
+         */
+
+        $teamLookup =
+            [];
+
+
+        foreach (
+            $teams
+            as $team
+        ) {
+
+            $teamId =
+                (int) (
+                    $team[
+                        'id'
+                    ]
+                    ?? 0
+                );
+
+
+            if (
+                $teamId <= 0
+            ) {
+
+                continue;
+            }
+
+
+            $teamLookup[
+                $teamId
+            ] =
+                $team;
+        }
+
+
+        /*
+         * ========================================================
+         * BUILD SUMMARIES
+         * ========================================================
+         */
+
+        $summaries =
+            [];
+
+
+        foreach (
+            $completeTeamModels
+            as $teamId => $teamModel
+        ) {
+
+            $team =
+                $teamLookup[
+                    $teamId
+                ]
+                ?? null;
+
+
+            if (
+                !is_array(
+                    $team
+                )
+            ) {
+
+                continue;
+            }
+
+
+            /*
+             * ----------------------------------------------------
+             * UPCOMING FIXTURE RUN
+             * ----------------------------------------------------
+             *
+             * Request up to ten upcoming fixtures so the existing
+             * TeamFixtureProfile can calculate next-5/6/8/10 data,
+             * trend information and best/worst runs.
+             */
+
+            $upcomingFixtures =
+                $this->fixtureRepository
+                    ->getUpcomingForTeam(
+                        (int) $teamId,
+                        10
+                    );
+
+
+            $fixtureRun =
+                $this->fixtureIntelligence
+                    ->analyseFixtureRun(
+                        $upcomingFixtures,
+                        $completeTeamModels,
+                        (int) $teamId
+                    );
+
+
+            $fixtureProfile =
+                $teamFixtureProfile
+                    ->buildProfileFromAnalysis(
+                        (int) $teamId,
+                        (string) (
+                            $team[
+                                'name'
+                            ]
+                            ?? ''
+                        ),
+                        $fixtureRun,
+                        $this->fixtureIntelligence
+                    );
+
+
+            /*
+             * ----------------------------------------------------
+             * CURRENT STRENGTH
+             * ----------------------------------------------------
+             */
+
+            $strengthHome =
+                isset(
+                    $teamModel[
+                        'home'
+                    ]
+                )
+                &&
+                is_numeric(
+                    $teamModel[
+                        'home'
+                    ]
+                )
+                    ? (float) $teamModel[
+                        'home'
+                    ]
+                    : null;
+
+
+            $strengthAway =
+                isset(
+                    $teamModel[
+                        'away'
+                    ]
+                )
+                &&
+                is_numeric(
+                    $teamModel[
+                        'away'
+                    ]
+                )
+                    ? (float) $teamModel[
+                        'away'
+                    ]
+                    : null;
+
+
+            $strengthOverall =
+                isset(
+                    $teamModel[
+                        'overall'
+                    ]
+                )
+                &&
+                is_numeric(
+                    $teamModel[
+                        'overall'
+                    ]
+                )
+                    ? (float) $teamModel[
+                        'overall'
+                    ]
+                    : null;
+
+
+            /*
+             * ----------------------------------------------------
+             * FIXTURE RATING
+             * ----------------------------------------------------
+             */
+
+            $fixtureRating =
+                isset(
+                    $fixtureProfile[
+                        'fixture_rating'
+                    ]
+                )
+                &&
+                is_numeric(
+                    $fixtureProfile[
+                        'fixture_rating'
+                    ]
+                )
+                    ? (float) $fixtureProfile[
+                        'fixture_rating'
+                    ]
+                    : null;
+
+
+            /*
+             * ----------------------------------------------------
+             * TEAM INTELLIGENCE SCORE
+             * ----------------------------------------------------
+             *
+             * TeamIntelligence already owns the official weighting:
+             *
+             * 60% current team strength
+             * 40% fixture opportunity
+             */
+
+            $intelligenceScore =
+                $teamIntelligence
+                    ->calculateIntelligenceScore(
+                        $strengthOverall,
+                        $fixtureRating
+                    );
+
+
+            $intelligenceLabel =
+                $teamIntelligence
+                    ->getIntelligenceLabel(
+                        $intelligenceScore
+                    );
+
+
+            /*
+             * ----------------------------------------------------
+             * PERFORMANCE
+             * ----------------------------------------------------
+             */
+
+            $performance =
+                $teamPerformanceLookup[
+                    $teamId
+                ]
+                ?? [];
+
+
+            /*
+             * ----------------------------------------------------
+             * SUMMARY
+             * ----------------------------------------------------
+             */
+
+            $summaries[] = [
+
+                'team_id' =>
+                    (int) $teamId,
+
+                'fpl_team_id' =>
+                    isset(
+                        $team[
+                            'fpl_team_id'
+                        ]
+                    )
+                        ? (int) $team[
+                            'fpl_team_id'
+                        ]
+                        : null,
+
+                'name' =>
+                    (string) (
+                        $team[
+                            'name'
+                        ]
+                        ?? ''
+                    ),
+
+                'short_name' =>
+                    (string) (
+                        $team[
+                            'short_name'
+                        ]
+                        ?? ''
+                    ),
+
+                /*
+                 * Current strength model.
+                 */
+
+                'strength_home' =>
+                    $strengthHome,
+
+                'strength_away' =>
+                    $strengthAway,
+
+                'strength_overall' =>
+                    $strengthOverall,
+
+                /*
+                 * Team Intelligence.
+                 */
+
+                'intelligence_score' =>
+                    $intelligenceScore,
+
+                'intelligence_label' =>
+                    $intelligenceLabel,
+
+                /*
+                 * Fixture Intelligence.
+                 */
+
+                'fixture_rating' =>
+                    $fixtureRating,
+
+                'fixture_label' =>
+                    $fixtureProfile[
+                        'fixture_label'
+                    ]
+                    ?? null,
+
+                'fixture_trend' =>
+                    $fixtureProfile[
+                        'trend'
+                    ]
+                    ?? 'Insufficient Data',
+
+                'next_5' =>
+                    $fixtureProfile[
+                        'next_5'
+                    ]
+                    ?? null,
+
+                'next_6' =>
+                    $fixtureProfile[
+                        'next_6'
+                    ]
+                    ?? null,
+
+                'next_8' =>
+                    $fixtureProfile[
+                        'next_8'
+                    ]
+                    ?? null,
+
+                'next_10' =>
+                    $fixtureProfile[
+                        'next_10'
+                    ]
+                    ?? null,
+
+                'best_run' =>
+                    $fixtureProfile[
+                        'best_run'
+                    ]
+                    ?? null,
+
+                'worst_run' =>
+                    $fixtureProfile[
+                        'worst_run'
+                    ]
+                    ?? null,
+
+                /*
+                 * Performance context.
+                 */
+
+                'played' =>
+                    (int) (
+                        $performance[
+                            'played'
+                        ]
+                        ?? 0
+                    ),
+
+                'wins' =>
+                    (int) (
+                        $performance[
+                            'wins'
+                        ]
+                        ?? 0
+                    ),
+
+                'draws' =>
+                    (int) (
+                        $performance[
+                            'draws'
+                        ]
+                        ?? 0
+                    ),
+
+                'losses' =>
+                    (int) (
+                        $performance[
+                            'losses'
+                        ]
+                        ?? 0
+                    ),
+
+                'points' =>
+                    (int) (
+                        $performance[
+                            'points'
+                        ]
+                        ?? 0
+                    ),
+
+                'goals_for' =>
+                    (int) (
+                        $performance[
+                            'goals_for'
+                        ]
+                        ?? 0
+                    ),
+
+                'goals_against' =>
+                    (int) (
+                        $performance[
+                            'goals_against'
+                        ]
+                        ?? 0
+                    ),
+
+                'goal_difference' =>
+                    (int) (
+                        $performance[
+                            'goal_difference'
+                        ]
+                        ?? 0
+                    ),
+
+                'recent_form' =>
+                    $performance[
+                        'recent_form'
+                    ]
+                    ?? [],
+
+                /*
+                 * Model transparency.
+                 */
+
+                'performance_rating' =>
+                    $teamModel[
+                        'performance_rating'
+                    ]
+                    ?? null,
+
+                'baseline_weight' =>
+                    $teamModel[
+                        'baseline_weight'
+                    ]
+                    ?? null,
+
+                'performance_weight' =>
+                    $teamModel[
+                        'performance_weight'
+                    ]
+                    ?? null
+            ];
+        }
+
+
+        /*
+         * ========================================================
+         * RANK BY TEAM INTELLIGENCE SCORE
+         * ========================================================
+         */
+
+        usort(
+            $summaries,
+            function (
+                array $a,
+                array $b
+            ): int {
+
+                $scoreA =
+                    $a[
+                        'intelligence_score'
+                    ]
+                    ?? null;
+
+
+                $scoreB =
+                    $b[
+                        'intelligence_score'
+                    ]
+                    ?? null;
+
+
+                /*
+                 * Null scores always belong at the bottom.
+                 */
+
+                if (
+                    $scoreA === null
+                    &&
+                    $scoreB === null
+                ) {
+
+                    return strcasecmp(
+                        (string) (
+                            $a[
+                                'name'
+                            ]
+                            ?? ''
+                        ),
+                        (string) (
+                            $b[
+                                'name'
+                            ]
+                            ?? ''
+                        )
+                    );
+                }
+
+
+                if (
+                    $scoreA === null
+                ) {
+
+                    return 1;
+                }
+
+
+                if (
+                    $scoreB === null
+                ) {
+
+                    return -1;
+                }
+
+
+                $comparison =
+                    (float) $scoreB
+                    <=>
+                    (float) $scoreA;
+
+
+                /*
+                 * Stable human-readable tie-break.
+                 */
+
+                if (
+                    $comparison === 0
+                ) {
+
+                    return strcasecmp(
+                        (string) (
+                            $a[
+                                'name'
+                            ]
+                            ?? ''
+                        ),
+                        (string) (
+                            $b[
+                                'name'
+                            ]
+                            ?? ''
+                        )
+                    );
+                }
+
+
+                return $comparison;
+            }
+        );
+
+
+        return $summaries;
+    }
 
 
     /**

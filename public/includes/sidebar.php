@@ -21,7 +21,7 @@ $activeNav =
             </div>
 
             <div class="brand-version">
-                v0.21.0
+                v0.22.0
             </div>
 
         </div>
@@ -77,7 +77,7 @@ $activeNav =
 
 
         <a
-            href="#"
+            href="teams.php"
             class="nav-link <?= $activeNav === 'teams'
                 ? 'active'
                 : ''; ?>"
