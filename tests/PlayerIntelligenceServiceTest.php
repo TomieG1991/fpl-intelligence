@@ -4282,6 +4282,647 @@ testPass(
             $captainRankings
         )
         . "<br>";
+        
+        
+    /*
+     * ============================================================
+     * SCENARIO R
+     * GAMEWEEK STARTING XI SERVICE
+     * ============================================================
+     */
+
+    echo "<br>============================================<br>";
+    echo "Scenario R: Gameweek Starting XI Service<br>";
+    echo "============================================<br>";
+
+
+    /*
+     * Reuse the valid real-data 15-player squad already built for
+     * squad transfer recommendations.
+     *
+     * GameweekStartingXI does not require every player to have a
+     * complete intelligence sample because the service/model owns
+     * conservative fallback behaviour.
+     */
+
+    $gameweekStartingXIResult =
+        $service
+            ->getGameweekStartingXI(
+                $squadForRecommendations
+            );
+
+
+    /*
+     * ------------------------------------------------------------
+     * BASE RESULT
+     * ------------------------------------------------------------
+     */
+
+    testPass(
+        'Gameweek Starting XI service returns an array',
+        is_array(
+            $gameweekStartingXIResult
+        )
+    );
+
+
+    testPass(
+        'Gameweek Starting XI service returns success',
+        (
+            $gameweekStartingXIResult[
+                'status'
+            ]
+            ?? null
+        )
+        ===
+        'success'
+    );
+
+
+    testPass(
+        'Gameweek Starting XI service returns a message',
+        !empty(
+            $gameweekStartingXIResult[
+                'message'
+            ]
+            ?? null
+        )
+    );
+
+
+    /*
+     * ------------------------------------------------------------
+     * SQUAD STRUCTURE
+     * ------------------------------------------------------------
+     */
+
+    $gameweekStartingXI =
+        $gameweekStartingXIResult[
+            'starting_xi'
+        ]
+        ?? [];
+
+
+    $gameweekBench =
+        $gameweekStartingXIResult[
+            'bench'
+        ]
+        ?? [];
+
+
+    testPass(
+        'Gameweek Starting XI contains exactly 11 players',
+        count(
+            $gameweekStartingXI
+        )
+        === 11
+    );
+
+
+    testPass(
+        'Gameweek bench contains exactly four players',
+        count(
+            $gameweekBench
+        )
+        === 4
+    );
+
+
+    testPass(
+        'Gameweek formation is returned',
+        !empty(
+            $gameweekStartingXIResult[
+                'formation'
+            ]
+            ?? null
+        )
+    );
+
+
+    testPass(
+        'Gameweek service evaluates all eight legal formations',
+        (
+            $gameweekStartingXIResult[
+                'formation_count'
+            ]
+            ?? null
+        )
+        === 8
+    );
+
+
+    /*
+     * ------------------------------------------------------------
+     * POSITION STRUCTURE
+     * ------------------------------------------------------------
+     */
+
+    $gameweekPositionCounts = [
+
+        'GK' =>
+            0,
+
+        'DEF' =>
+            0,
+
+        'MID' =>
+            0,
+
+        'FWD' =>
+            0
+    ];
+
+
+    foreach (
+        $gameweekStartingXI
+        as $player
+    ) {
+
+        $position =
+            $player[
+                'position'
+            ]
+            ?? '';
+
+
+        if (
+            isset(
+                $gameweekPositionCounts[
+                    $position
+                ]
+            )
+        ) {
+
+            $gameweekPositionCounts[
+                $position
+            ]++;
+        }
+    }
+
+
+    testPass(
+        'Gameweek Starting XI contains one goalkeeper',
+        $gameweekPositionCounts[
+            'GK'
+        ]
+        === 1
+    );
+
+
+    testPass(
+        'Gameweek Starting XI contains between three and five defenders',
+        $gameweekPositionCounts[
+            'DEF'
+        ]
+        >= 3
+        &&
+        $gameweekPositionCounts[
+            'DEF'
+        ]
+        <= 5
+    );
+
+
+    testPass(
+        'Gameweek Starting XI contains between two and five midfielders',
+        $gameweekPositionCounts[
+            'MID'
+        ]
+        >= 2
+        &&
+        $gameweekPositionCounts[
+            'MID'
+        ]
+        <= 5
+    );
+
+
+    testPass(
+        'Gameweek Starting XI contains between one and three forwards',
+        $gameweekPositionCounts[
+            'FWD'
+        ]
+        >= 1
+        &&
+        $gameweekPositionCounts[
+            'FWD'
+        ]
+        <= 3
+    );
+
+
+    /*
+     * ------------------------------------------------------------
+     * GAMEWEEK SCORE OUTPUT
+     * ------------------------------------------------------------
+     */
+
+    $gameweekAllPlayers =
+        array_merge(
+            $gameweekStartingXI,
+            $gameweekBench
+        );
+
+
+    $allGameweekScoresNumeric =
+        true;
+
+
+    $allGameweekScoresBounded =
+        true;
+
+
+    $allGameweekComponentsPresent =
+        true;
+
+
+    foreach (
+        $gameweekAllPlayers
+        as $player
+    ) {
+
+        $score =
+            $player[
+                'gameweek_score'
+            ]
+            ?? null;
+
+
+        if (
+            !is_numeric(
+                $score
+            )
+        ) {
+
+            $allGameweekScoresNumeric =
+                false;
+            $allGameweekScoresBounded =
+                false;
+
+            continue;
+        }
+
+
+        $score =
+            (float) $score;
+
+
+        if (
+            $score < 0
+            ||
+            $score > 100
+        ) {
+
+            $allGameweekScoresBounded =
+                false;
+        }
+
+
+        if (
+            !isset(
+                $player[
+                    'gameweek_components'
+                ]
+            )
+            ||
+            !is_array(
+                $player[
+                    'gameweek_components'
+                ]
+            )
+        ) {
+
+            $allGameweekComponentsPresent =
+                false;
+        }
+    }
+
+
+    testPass(
+        'All squad players contain numeric Gameweek Scores',
+        $allGameweekScoresNumeric
+    );
+
+
+    testPass(
+        'All Gameweek Scores remain between 0 and 100',
+        $allGameweekScoresBounded
+    );
+
+
+    testPass(
+        'All squad players contain Gameweek score components',
+        $allGameweekComponentsPresent
+    );
+
+
+    /*
+     * ------------------------------------------------------------
+     * IMMEDIATE FIXTURE DATA
+     * ------------------------------------------------------------
+     */
+
+    $fixtureComponentsPresent =
+        true;
+
+
+    foreach (
+        $gameweekAllPlayers
+        as $player
+    ) {
+
+        if (
+            !array_key_exists(
+                'fixture',
+                $player[
+                    'gameweek_components'
+                ]
+                ?? []
+            )
+        ) {
+
+            $fixtureComponentsPresent =
+                false;
+
+            break;
+        }
+    }
+
+
+    testPass(
+        'Gameweek players expose immediate fixture component',
+        $fixtureComponentsPresent
+    );
+
+
+    /*
+     * ------------------------------------------------------------
+     * SERVICE SUMMARY LOOKUP
+     * ------------------------------------------------------------
+     */
+
+    testPass(
+        'Gameweek service reports 15-player squad count',
+        (
+            $gameweekStartingXIResult[
+                'squad_count'
+            ]
+            ?? null
+        )
+        === 15
+    );
+
+
+    testPass(
+        'Gameweek service matches all squad players to current summaries',
+        (
+            $gameweekStartingXIResult[
+                'summary_matches'
+            ]
+            ?? null
+        )
+        === 15
+    );
+
+
+    testPass(
+        'Gameweek service requires no summary fallbacks for this real-data squad',
+        (
+            $gameweekStartingXIResult[
+                'summary_fallbacks'
+            ]
+            ?? null
+        )
+        === 0
+    );
+
+
+    /*
+     * ------------------------------------------------------------
+     * BENCH ORDER
+     * ------------------------------------------------------------
+     */
+
+    $gameweekBenchOrderValid =
+        true;
+
+
+    foreach (
+        $gameweekBench
+        as $index => $player
+    ) {
+
+        if (
+            (
+                $player[
+                    'bench_order'
+                ]
+                ?? null
+            )
+            !==
+            (
+                $index + 1
+            )
+        ) {
+
+            $gameweekBenchOrderValid =
+                false;
+
+            break;
+        }
+    }
+
+
+    testPass(
+        'Gameweek bench order is sequential from one to four',
+        $gameweekBenchOrderValid
+    );
+
+
+    testPass(
+        'Gameweek bench four is the backup goalkeeper',
+        (
+            $gameweekBench[
+                3
+            ][
+                'position'
+            ]
+            ?? null
+        )
+        ===
+        'GK'
+    );
+
+
+    /*
+     * ------------------------------------------------------------
+     * SCORE INTEGRITY
+     * ------------------------------------------------------------
+     */
+
+    testPass(
+        'Gameweek Starting XI Score is numeric',
+        is_numeric(
+            $gameweekStartingXIResult[
+                'starting_xi_score'
+            ]
+            ?? null
+        )
+    );
+
+
+    testPass(
+        'Gameweek Bench Score is numeric',
+        is_numeric(
+            $gameweekStartingXIResult[
+                'bench_score'
+            ]
+            ?? null
+        )
+    );
+
+
+    /*
+     * ------------------------------------------------------------
+     * INVALID SQUAD
+     * ------------------------------------------------------------
+     */
+
+    $incompleteGameweekSquad =
+        array_slice(
+            $squadForRecommendations,
+            0,
+            14
+        );
+
+
+    $incompleteGameweekResult =
+        $service
+            ->getGameweekStartingXI(
+                $incompleteGameweekSquad
+            );
+
+
+    testPass(
+        'Gameweek service rejects incomplete squad',
+        (
+            $incompleteGameweekResult[
+                'status'
+            ]
+            ?? null
+        )
+        ===
+        'invalid'
+    );
+
+
+    testPass(
+        'Incomplete Gameweek squad returns no Starting XI',
+        empty(
+            $incompleteGameweekResult[
+                'starting_xi'
+            ]
+            ?? []
+        )
+    );
+
+
+    $duplicateGameweekSquad =
+        $squadForRecommendations;
+
+
+    $duplicateGameweekSquad[
+        14
+    ] =
+        $duplicateGameweekSquad[
+            0
+        ];
+
+
+    $duplicateGameweekResult =
+        $service
+            ->getGameweekStartingXI(
+                $duplicateGameweekSquad
+            );
+
+
+    testPass(
+        'Gameweek service rejects duplicate squad players',
+        (
+            $duplicateGameweekResult[
+                'status'
+            ]
+            ?? null
+        )
+        ===
+        'invalid'
+    );
+
+
+    /*
+     * ------------------------------------------------------------
+     * RESULT DIAGNOSTIC
+     * ------------------------------------------------------------
+     */
+
+    echo "Recommended Formation: "
+        . htmlspecialchars(
+            (string) (
+                $gameweekStartingXIResult[
+                    'formation'
+                ]
+                ?? 'N/A'
+            ),
+            ENT_QUOTES,
+            'UTF-8'
+        )
+        . "<br>";
+
+
+    echo "Starting XI Score: "
+        . number_format(
+            (float) (
+                $gameweekStartingXIResult[
+                    'starting_xi_score'
+                ]
+                ?? 0
+            ),
+            2
+        )
+        . "<br>";
+
+
+    echo "Bench Score: "
+        . number_format(
+            (float) (
+                $gameweekStartingXIResult[
+                    'bench_score'
+                ]
+                ?? 0
+            ),
+            2
+        )
+        . "<br>";
+
+
+    echo "Summary Matches: "
+        . (int) (
+            $gameweekStartingXIResult[
+                'summary_matches'
+            ]
+            ?? 0
+        )
+        . "<br>";
+
+
+    echo "Summary Fallbacks: "
+        . (int) (
+            $gameweekStartingXIResult[
+                'summary_fallbacks'
+            ]
+            ?? 0
+        )
+        . "<br>";
 
 
     /*

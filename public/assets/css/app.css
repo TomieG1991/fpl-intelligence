@@ -8728,3 +8728,283 @@ a {
     background: transparent;
     color: #b7adff;
 }
+
+/* ============================================================
+   GAMEWEEK INTELLIGENCE
+   ============================================================ */
+
+.gameweek-dashboard {
+    padding-bottom: 48px;
+}
+
+
+/* ------------------------------------------------------------
+   GAMEWEEK SQUAD INPUT
+   ------------------------------------------------------------ */
+
+.gameweek-dashboard .squad-import-form {
+    margin-top: 20px;
+    max-width: 620px;
+}
+
+.gameweek-dashboard .squad-import-form > label {
+    display: block;
+    margin-bottom: 8px;
+    color: #9fb1cc;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.gameweek-dashboard .squad-import-controls {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+}
+
+.gameweek-dashboard .squad-import-controls input {
+    flex: 1;
+    min-width: 0;
+    padding: 12px 14px;
+    border: 1px solid #33415c;
+    border-radius: 8px;
+    background: #172135;
+    color: #f5f7fb;
+    font: inherit;
+    outline: none;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.gameweek-dashboard .squad-import-controls input::placeholder {
+    color: #71809a;
+}
+
+.gameweek-dashboard .squad-import-controls input:focus {
+    border-color: #7c5cff;
+    box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.12);
+}
+
+.gameweek-dashboard .squad-import-controls button {
+    padding: 12px 18px;
+    border: 1px solid #7c5cff;
+    border-radius: 8px;
+    background: #7c5cff;
+    color: #ffffff;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.gameweek-dashboard .squad-import-controls button:hover {
+    background: #6d4df0;
+    border-color: #6d4df0;
+    transform: translateY(-1px);
+}
+
+.gameweek-preview-link {
+    margin: 14px 0 0;
+    color: #8293ae;
+    font-size: 0.82rem;
+}
+
+.gameweek-preview-link a {
+    color: #a99aff;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.gameweek-preview-link a:hover {
+    text-decoration: underline;
+}
+
+
+/* ------------------------------------------------------------
+   SECTION DESCRIPTIONS
+   ------------------------------------------------------------ */
+
+.gameweek-section-description {
+    max-width: 900px;
+    margin: 0 0 20px;
+    color: #8fa1bd;
+    font-size: 0.9rem;
+    line-height: 1.7;
+}
+
+
+/* ------------------------------------------------------------
+   FORMATION COMPARISON
+   ------------------------------------------------------------ */
+
+.gameweek-formation-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 22px;
+}
+
+.gameweek-formation-card {
+    position: relative;
+    padding: 18px;
+    border: 1px solid #33415c;
+    border-radius: 10px;
+    background: #172135;
+    transition:
+        border-color 0.2s ease,
+        transform 0.2s ease,
+        background 0.2s ease;
+}
+
+.gameweek-formation-card:hover {
+    border-color: #52617c;
+    background: #1a263c;
+    transform: translateY(-2px);
+}
+
+.gameweek-formation-card-best {
+    border-color: #7c5cff;
+    box-shadow: inset 0 0 0 1px rgba(124, 92, 255, 0.15);
+}
+
+.gameweek-formation-card-best::after {
+    content: "RECOMMENDED";
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    padding: 4px 7px;
+    border: 1px solid rgba(124, 92, 255, 0.55);
+    border-radius: 999px;
+    background: rgba(124, 92, 255, 0.14);
+    color: #b9adff;
+    font-size: 0.58rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+
+.gameweek-formation-rank {
+    margin-bottom: 10px;
+    color: #8d7cff;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+}
+
+.gameweek-formation-name {
+    display: block;
+    margin-bottom: 18px;
+    color: #f5f7fb;
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.gameweek-formation-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    padding-top: 14px;
+    border-top: 1px solid #2c3951;
+}
+
+.gameweek-formation-metrics > div {
+    min-width: 0;
+}
+
+.gameweek-formation-metrics span {
+    display: block;
+    margin-bottom: 5px;
+    color: #8293ae;
+    font-size: 0.68rem;
+}
+
+.gameweek-formation-metrics strong {
+    color: #ffffff;
+    font-size: 0.95rem;
+}
+
+
+/* ------------------------------------------------------------
+   GAMEWEEK PITCH ENHANCEMENTS
+   ------------------------------------------------------------ */
+
+.gameweek-dashboard .wildcard-pitch-player-score {
+    grid-template-columns: auto auto auto auto;
+    align-items: center;
+    column-gap: 5px;
+}
+
+.gameweek-dashboard .wildcard-pitch-player-score span {
+    white-space: nowrap;
+}
+
+.gameweek-dashboard .wildcard-pitch-player {
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+.gameweek-dashboard .wildcard-pitch-player:hover {
+    transform: translateY(-2px);
+}
+
+
+/* ------------------------------------------------------------
+   GAMEWEEK BENCH
+   ------------------------------------------------------------ */
+
+.gameweek-dashboard .wildcard-bench-card {
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+.gameweek-dashboard .wildcard-bench-card:hover {
+    transform: translateY(-2px);
+}
+
+
+/* ------------------------------------------------------------
+   RESPONSIVE GAMEWEEK INTELLIGENCE
+   ------------------------------------------------------------ */
+
+@media (max-width: 1200px) {
+
+    .gameweek-formation-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+
+@media (max-width: 760px) {
+
+    .gameweek-dashboard .squad-import-controls {
+        flex-direction: column;
+    }
+
+    .gameweek-dashboard .squad-import-controls button {
+        width: 100%;
+    }
+
+    .gameweek-formation-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .gameweek-formation-card {
+        padding: 16px;
+    }
+}
+
+/* ------------------------------------------------------------
+   GAMEWEEK SECTION SPACING
+   ------------------------------------------------------------ */
+
+.gameweek-dashboard .dashboard-section + .dashboard-section {
+    margin-top: 40px;
+}

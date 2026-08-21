@@ -2677,6 +2677,611 @@ class PlayerIntelligenceService
     }
     
     /**
+     * Build the strongest legal Starting XI for the immediate
+     * gameweek from a complete 15-player FPL squad.
+     *
+     * The squad itself provides identity / imported FPL metadata.
+     * Current Player Intelligence summaries provide the latest
+     * gameweek-specific scoring inputs.
+     */
+    public function getGameweekStartingXI(
+        array $squad
+    ): array {
+
+        /*
+         * ========================================================
+         * VALIDATION
+         * ========================================================
+         */
+
+        if (
+            count(
+                $squad
+            )
+            !== 15
+        ) {
+
+            return [
+
+                'status' =>
+                    'invalid',
+
+                'message' =>
+                    'Gameweek Starting XI requires a complete 15-player FPL squad.',
+
+                'formation' =>
+                    null,
+
+                'starting_xi_score' =>
+                    null,
+
+                'bench_score' =>
+                    null,
+
+                'starting_xi' =>
+                    [],
+
+                'bench' =>
+                    [],
+
+                'formations' =>
+                    [],
+
+                'formation_count' =>
+                    0,
+
+                'squad_count' =>
+                    count(
+                        $squad
+                    )
+            ];
+        }
+
+
+        /*
+         * --------------------------------------------------------
+         * VALIDATE SQUAD IDENTITIES
+         * --------------------------------------------------------
+         */
+
+        $squadPlayerIds =
+            [];
+
+
+        foreach (
+            $squad
+            as $squadPlayer
+        ) {
+
+            if (
+                !is_array(
+                    $squadPlayer
+                )
+            ) {
+
+                return [
+
+                    'status' =>
+                        'invalid',
+
+                    'message' =>
+                        'Gameweek squad contains invalid player data.',
+
+                    'formation' =>
+                        null,
+
+                    'starting_xi_score' =>
+                        null,
+
+                    'bench_score' =>
+                        null,
+
+                    'starting_xi' =>
+                        [],
+
+                    'bench' =>
+                        [],
+
+                    'formations' =>
+                        [],
+
+                    'formation_count' =>
+                        0,
+
+                    'squad_count' =>
+                        count(
+                            $squad
+                        )
+                ];
+            }
+
+
+            $playerId =
+                (int) (
+                    $squadPlayer[
+                        'player_id'
+                    ]
+                    ?? 0
+                );
+
+
+            if (
+                $playerId <= 0
+            ) {
+
+                return [
+
+                    'status' =>
+                        'invalid',
+
+                    'message' =>
+                        'Gameweek squad contains an invalid player ID.',
+
+                    'formation' =>
+                        null,
+
+                    'starting_xi_score' =>
+                        null,
+
+                    'bench_score' =>
+                        null,
+
+                    'starting_xi' =>
+                        [],
+
+                    'bench' =>
+                        [],
+
+                    'formations' =>
+                        [],
+
+                    'formation_count' =>
+                        0,
+
+                    'squad_count' =>
+                        count(
+                            $squad
+                        )
+                ];
+            }
+
+
+            if (
+                in_array(
+                    $playerId,
+                    $squadPlayerIds,
+                    true
+                )
+            ) {
+
+                return [
+
+                    'status' =>
+                        'invalid',
+
+                    'message' =>
+                        'Gameweek squad contains duplicate players.',
+
+                    'formation' =>
+                        null,
+
+                    'starting_xi_score' =>
+                        null,
+
+                    'bench_score' =>
+                        null,
+
+                    'starting_xi' =>
+                        [],
+
+                    'bench' =>
+                        [],
+
+                    'formations' =>
+                        [],
+
+                    'formation_count' =>
+                        0,
+
+                    'squad_count' =>
+                        count(
+                            $squad
+                        )
+                ];
+            }
+
+
+            $squadPlayerIds[] =
+                $playerId;
+        }
+
+
+        /*
+         * ========================================================
+         * CURRENT PLAYER INTELLIGENCE
+         * ========================================================
+         *
+         * Do not rely only on the intelligence values stored in the
+         * mapped squad. Reload the lightweight summaries so the
+         * recommendation uses the latest:
+         *
+         * - Player Intelligence
+         * - strength
+         * - immediate next fixture
+         * - availability
+         * - sample confidence
+         */
+
+        $summaries =
+            $this->getAllPlayerSummaries();
+
+
+        $summaryLookup =
+            [];
+
+
+        foreach (
+            $summaries
+            as $summary
+        ) {
+
+            $playerId =
+                (int) (
+                    $summary[
+                        'player_id'
+                    ]
+                    ?? 0
+                );
+
+
+            if (
+                $playerId <= 0
+            ) {
+
+                continue;
+            }
+
+
+            $summaryLookup[
+                $playerId
+            ] =
+                $summary;
+        }
+
+
+        /*
+         * ========================================================
+         * BUILD GAMEWEEK PLAYER INPUT
+         * ========================================================
+         */
+
+        $gameweekSquad =
+            [];
+
+
+        $summaryMatches =
+            0;
+
+
+        $summaryFallbacks =
+            0;
+
+
+        foreach (
+            $squad
+            as $squadPlayer
+        ) {
+
+            $playerId =
+                (int) $squadPlayer[
+                    'player_id'
+                ];
+
+
+            $summary =
+                $summaryLookup[
+                    $playerId
+                ]
+                ?? null;
+
+
+            if (
+                $summary !== null
+            ) {
+
+                $summaryMatches++;
+
+            } else {
+
+                /*
+                 * A missing summary must not silently remove a genuine
+                 * member of the manager's 15-player squad.
+                 *
+                 * GameweekStartingXI already owns conservative fallback
+                 * behaviour for missing intelligence inputs.
+                 */
+
+                $summaryFallbacks++;
+            }
+
+
+            $gameweekPlayer =
+                $squadPlayer;
+
+
+            /*
+             * ----------------------------------------------------
+             * IDENTITY / DISPLAY DATA
+             * ----------------------------------------------------
+             */
+
+            $gameweekPlayer[
+                'player_id'
+            ] =
+                $playerId;
+
+
+            $gameweekPlayer[
+                'name'
+            ] =
+                $summary[
+                    'name'
+                ]
+                ?? $squadPlayer[
+                    'name'
+                ]
+                ?? null;
+
+
+            $gameweekPlayer[
+                'position'
+            ] =
+                strtoupper(
+                    trim(
+                        (string) (
+                            $summary[
+                                'position'
+                            ]
+                            ?? $squadPlayer[
+                                'position'
+                            ]
+                            ?? ''
+                        )
+                    )
+                );
+
+
+            $gameweekPlayer[
+                'team_id'
+            ] =
+                isset(
+                    $squadPlayer[
+                        'team_id'
+                    ]
+                )
+                    ? (int) $squadPlayer[
+                        'team_id'
+                    ]
+                    : (
+                        isset(
+                            $summary[
+                                'team_id'
+                            ]
+                        )
+                            ? (int) $summary[
+                                'team_id'
+                            ]
+                            : null
+                    );
+
+
+            $gameweekPlayer[
+                'team_name'
+            ] =
+                $summary[
+                    'team_name'
+                ]
+                ?? $squadPlayer[
+                    'team_name'
+                ]
+                ?? null;
+
+
+            $gameweekPlayer[
+                'price'
+            ] =
+                $summary[
+                    'price'
+                ]
+                ?? $squadPlayer[
+                    'price'
+                ]
+                ?? null;
+
+
+            /*
+             * ----------------------------------------------------
+             * GAMEWEEK INTELLIGENCE INPUTS
+             * ----------------------------------------------------
+             */
+
+            $gameweekPlayer[
+                'intelligence_score'
+            ] =
+                $summary[
+                    'intelligence_score'
+                ]
+                ?? $squadPlayer[
+                    'intelligence_score'
+                ]
+                ?? null;
+
+
+            $gameweekPlayer[
+                'strength_rating'
+            ] =
+                $summary[
+                    'strength_rating'
+                ]
+                ?? $squadPlayer[
+                    'strength_rating'
+                ]
+                ?? null;
+
+
+            /*
+             * Immediate fixture only.
+             *
+             * Deliberately do not fall back to fixture_rating here
+             * because that represents the broader fixture horizon.
+             * GameweekStartingXI will use its neutral fixture fallback
+             * if next_fixture_rating is unavailable.
+             */
+
+            $gameweekPlayer[
+                'next_fixture_rating'
+            ] =
+                $summary[
+                    'next_fixture_rating'
+                ]
+                ?? null;
+
+
+            $gameweekPlayer[
+                'availability_rating'
+            ] =
+                $summary[
+                    'availability_rating'
+                ]
+                ?? $squadPlayer[
+                    'availability_rating'
+                ]
+                ?? null;
+
+
+            $gameweekPlayer[
+                'sample_confidence'
+            ] =
+                $summary[
+                    'sample_confidence'
+                ]
+                ?? $squadPlayer[
+                    'sample_confidence'
+                ]
+                ?? null;
+
+
+            /*
+             * ----------------------------------------------------
+             * PRESERVE CURRENT FPL SELECTION METADATA
+             * ----------------------------------------------------
+             *
+             * This will later let the Gameweek UI compare the
+             * recommended XI with the manager's current XI.
+             */
+
+            $gameweekPlayer[
+                'squad_position'
+            ] =
+                isset(
+                    $squadPlayer[
+                        'squad_position'
+                    ]
+                )
+                    ? (int) $squadPlayer[
+                        'squad_position'
+                    ]
+                    : null;
+
+
+            $gameweekPlayer[
+                'multiplier'
+            ] =
+                isset(
+                    $squadPlayer[
+                        'multiplier'
+                    ]
+                )
+                    ? (int) $squadPlayer[
+                        'multiplier'
+                    ]
+                    : null;
+
+
+            $gameweekPlayer[
+                'is_captain'
+            ] =
+                (bool) (
+                    $squadPlayer[
+                        'is_captain'
+                    ]
+                    ?? false
+                );
+
+
+            $gameweekPlayer[
+                'is_vice_captain'
+            ] =
+                (bool) (
+                    $squadPlayer[
+                        'is_vice_captain'
+                    ]
+                    ?? false
+                );
+
+
+            $gameweekSquad[] =
+                $gameweekPlayer;
+        }
+
+
+        /*
+         * ========================================================
+         * STARTING XI OPTIMISATION
+         * ========================================================
+         */
+
+        $optimizer =
+            new GameweekStartingXI();
+
+
+        $result =
+            $optimizer
+                ->optimize(
+                    $gameweekSquad
+                );
+
+
+        /*
+         * ========================================================
+         * SERVICE METADATA
+         * ========================================================
+         */
+
+        $result[
+            'squad_count'
+        ] =
+            count(
+                $squad
+            );
+
+
+        $result[
+            'summary_matches'
+        ] =
+            $summaryMatches;
+
+
+        $result[
+            'summary_fallbacks'
+        ] =
+            $summaryFallbacks;
+
+
+        return $result;
+    }
+    
+    /**
      * Analyse a complete FPL squad and return ranked
      * Captain Intelligence recommendations.
      *

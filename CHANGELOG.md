@@ -6,6 +6,186 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.20.0] - Gameweek Intelligence
+
+### Added
+- Added dedicated Gameweek Intelligence for optimising a complete 15-player FPL squad for the immediate upcoming gameweek.
+- Added Gameweek Score for evaluating each squad player's short-term starting value.
+- Added Gameweek Score using:
+  - Player Intelligence
+  - player strength
+  - immediate next-fixture opportunity
+  - sample confidence
+  - player availability
+- Added calibrated immediate-fixture scoring so Gameweek Intelligence uses the same controlled fixture scale established by Captain Intelligence.
+- Added Gameweek core score representing underlying immediate-gameweek quality before reliability adjustments.
+- Added confidence and availability modifiers as multiplicative Gameweek Score risk adjustments.
+- Added automatic Starting XI optimisation across all eight legal FPL formations:
+  - 3-4-3
+  - 3-5-2
+  - 4-3-3
+  - 4-4-2
+  - 4-5-1
+  - 5-2-3
+  - 5-3-2
+  - 5-4-1
+- Added automatic selection of the highest-scoring legal Starting XI.
+- Added automatic ordered substitute bench generation.
+- Added enforced backup-goalkeeper placement at Bench 4.
+- Added formation comparison output for all eight legal FPL formations.
+- Added Starting XI Score and Bench Score metrics.
+- Added complete Gameweek Score component output for every evaluated squad player.
+- Added summary matching between imported squad players and current Player Intelligence summaries.
+- Added fallback tracking for squad players that cannot be matched to current Player Intelligence summaries.
+- Added `public/gameweek.php` as the dedicated Gameweek Intelligence dashboard.
+- Added Gameweek Intelligence to the shared application sidebar navigation.
+- Added FPL Entry ID input for analysing a manager's gameweek squad.
+- Added development preview mode so Gameweek Intelligence can be inspected before the live FPL gameweek squad becomes publicly available.
+- Added Gameweek Summary cards displaying:
+  - recommended formation
+  - Starting XI Score
+  - Bench Score
+  - gameweek
+  - squad size
+- Added Starting XI pitch view for visualising the recommended line-up by position.
+- Added dedicated goalkeeper, defender, midfielder and forward pitch rows.
+- Added Starting XI player cards displaying:
+  - player name
+  - team
+  - price
+  - Gameweek Score
+  - immediate fixture rating
+- Added direct player-profile navigation from Starting XI player cards.
+- Added Ordered Bench section displaying all four substitutes in recommended order.
+- Added bench player cards displaying:
+  - substitute order
+  - player identity
+  - position
+  - team
+  - price
+  - Gameweek Score
+  - immediate fixture rating
+  - sample confidence
+  - availability
+- Added Formation Intelligence section comparing every legal FPL formation.
+- Added formation comparison cards displaying:
+  - formation rank
+  - formation
+  - Starting XI Score
+  - Bench Score
+- Added recommended-formation highlighting within the formation comparison.
+- Added responsive Gameweek Intelligence dashboard styling.
+
+### Changed
+- Extended Player Intelligence with squad-level Gameweek Starting XI optimisation.
+- Changed immediate Gameweek fixture evaluation to use calibrated next-fixture values rather than uncompressed extreme fixture ratings.
+- Calibrated raw next-fixture ratings so:
+  - strongest fixtures are reduced from 100 to 80
+  - strong fixtures are reduced toward 60
+  - neutral fixtures remain around 50
+  - difficult fixtures are raised toward 40
+  - weakest fixtures are raised from 0 to 20
+- Improved Gameweek Score balance so immediate fixture quality supports selection decisions without overwhelming underlying player quality.
+- Improved confidence handling so low-sample players receive stronger reliability penalties when competing for Starting XI places.
+- Improved availability handling so players with availability concerns are appropriately reduced in Gameweek Score.
+- Improved formation selection so all eight legal FPL structures are evaluated against the same 15-player squad.
+- Improved bench construction so outfield substitutes are ordered separately while the backup goalkeeper remains fixed at Bench 4.
+- Extended the application from captaincy decision support into complete weekly team-selection decision support.
+- Improved Gameweek Intelligence presentation with a position-based pitch rather than a standard player list.
+- Improved visual separation between goalkeeper, defence, midfield and forward lines.
+- Improved Gameweek dashboard section spacing so Starting XI, Substitutes and Formation Intelligence sections have consistent visual hierarchy.
+- Improved formation comparison presentation so the recommended structure can be identified immediately.
+- Improved responsive behaviour of Gameweek summary, pitch, bench and formation components.
+
+### Fixed
+- Fixed Gameweek fixture scoring initially using uncalibrated raw next-fixture ratings, causing extreme fixture values to have excessive influence on Starting XI selection.
+- Fixed strongest fixtures initially contributing a full 100-point fixture component instead of the calibrated 80-point value.
+- Fixed weakest fixtures initially contributing a zero fixture component instead of the calibrated 20-point floor.
+- Fixed low-confidence players retaining too much Gameweek value before confidence penalties were strengthened.
+- Fixed Gameweek dashboard section eyebrow spacing so section labels visually belong to the content they introduce.
+- Fixed Gameweek page regression checks that initially failed because rendered HTML whitespace differed from literal test strings.
+- Fixed bench-order page tests so Bench 1 through Bench 4 are validated against the actual rendered bench-card markup.
+- Fixed Gameweek Score, formation Bench metric and immediate-gameweek content checks to tolerate valid rendered HTML whitespace.
+
+### Testing
+- Added Gameweek Starting XI service coverage to `PlayerIntelligenceServiceTest.php`.
+- Added validation that Gameweek Starting XI optimisation returns a successful result.
+- Added validation that the recommended Starting XI contains exactly 11 players.
+- Added validation that the ordered bench contains exactly four players.
+- Added validation that the recommended formation is returned.
+- Added validation that all eight legal FPL formations are evaluated.
+- Added validation of legal Starting XI positional structure:
+  - exactly one goalkeeper
+  - three to five defenders
+  - two to five midfielders
+  - one to three forwards
+- Added validation that all Gameweek Scores are numeric and remain between 0 and 100.
+- Added validation that Gameweek Score components are returned for every squad player.
+- Added validation of immediate fixture components.
+- Added validation that all 15 squad players are evaluated.
+- Added validation of Player Intelligence summary matching and fallback counts.
+- Added validation of sequential bench ordering.
+- Added validation that the backup goalkeeper is always Bench 4.
+- Added validation of Starting XI Score and Bench Score.
+- Added validation that incomplete squads are rejected.
+- Added validation that duplicate-player squads are rejected.
+- Verified Player Intelligence service coverage passes with Gameweek Starting XI integration.
+- Added `GameweekStartingXIRealDataTest.php` against the live project player dataset.
+- Verified Gameweek Intelligence against 581 current Player Intelligence summaries.
+- Added construction of a valid real-data 15-player FPL squad containing:
+  - two goalkeepers
+  - five defenders
+  - five midfielders
+  - three forwards
+- Added validation of the three-player-per-club squad constraint.
+- Added real-data validation that all 15 squad players match current Player Intelligence summaries.
+- Added real-data validation that no Player Intelligence summary fallbacks are required for the diagnostic squad.
+- Added detailed Starting XI diagnostics including:
+  - Gameweek Score
+  - Player Intelligence
+  - strength
+  - calibrated fixture rating
+  - core score
+  - confidence
+  - confidence modifier
+  - availability
+  - availability modifier
+- Added detailed ordered-bench diagnostics.
+- Added real-data comparison of all eight legal formations.
+- Added validation that formation results are ordered by Starting XI Score.
+- Added real-data Starting XI positional-distribution validation.
+- Added Gameweek Score and reliability-modifier integrity checks.
+- Added complete real-data Gameweek Intelligence performance regression coverage.
+- Verified `GameweekStartingXIRealDataTest.php` passes all 32 checks with 0 failures.
+- Added `GameweekPageTest.php` end-to-end Gameweek Intelligence page regression coverage.
+- Added HTTP validation of the initial Gameweek Intelligence page.
+- Added HTTP validation of development preview mode.
+- Added validation of the Gameweek Intelligence application shell and active navigation.
+- Added validation of the FPL Entry ID input and Analyse Gameweek action.
+- Added validation that the idle page does not prematurely render generated recommendation output.
+- Added validation of all five Gameweek Summary cards.
+- Added validation of the Starting XI pitch structure.
+- Added validation of goalkeeper, defender, midfielder and forward pitch rows.
+- Added validation that the pitch contains exactly 11 Starting XI player cards.
+- Added validation of the Ordered Bench section.
+- Added validation that exactly four bench player cards are rendered.
+- Added validation of Bench 1 through Bench 4 ordering.
+- Added validation that Bench 4 is the backup goalkeeper.
+- Added validation of bench Gameweek Score, confidence and availability output.
+- Added validation of the Formation Intelligence section.
+- Added validation that exactly eight formation comparison cards are rendered.
+- Added validation that exactly one formation is marked as recommended.
+- Added validation of formation rankings from first through eighth.
+- Added validation that all 15 generated squad players provide player-profile navigation.
+- Added validation of Gameweek Intelligence explanatory content.
+- Added rendered-page detection for PHP fatal errors, parse errors, uncaught errors, warnings, notices and undefined variables.
+- Added Gameweek Intelligence page performance regression checks.
+- Verified the initial Gameweek Intelligence page loads within the two-second regression threshold.
+- Verified Gameweek Intelligence development preview renders within the 15-second regression threshold.
+- Verified `GameweekPageTest.php` passes all 71 checks with 0 failures.
+- Verified `GameweekPageTest.php` passes through `RunAllTests.php`.
+- Complete automated project regression suite passes successfully.
+
 ## [0.19.0] - Captain Intelligence
 
 ### Added

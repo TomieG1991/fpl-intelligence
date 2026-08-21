@@ -21,7 +21,7 @@ $activeNav =
             </div>
 
             <div class="brand-version">
-                v0.19.0
+                v0.20.0
             </div>
 
         </div>
@@ -156,6 +156,22 @@ $activeNav =
             </span>
 
             Squad Intelligence
+        </a>
+        
+        <a
+            href="gameweek.php"
+            class="nav-link <?= (
+                $activeNav
+                ?? ''
+            ) === 'gameweek'
+                ? 'active'
+                : ''; ?>"
+        >
+            <span class="nav-icon">
+                ◉
+            </span>
+
+            Gameweek Intelligence
         </a>
         
         <a
