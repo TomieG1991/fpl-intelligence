@@ -593,6 +593,14 @@ if (
                                         </th>
 
                                         <th>
+                                            Attack
+                                        </th>
+
+                                        <th>
+                                            Defence
+                                        </th>
+
+                                        <th>
                                             Next 5
                                         </th>
 
@@ -757,6 +765,30 @@ if (
                                                     ]
                                                     ?? null
                                                 ); ?>
+                                            </td>
+
+
+                                            <td class="team-attack-cell">
+
+                                                <?= teamsPageRating(
+                                                    $team[
+                                                        'attack_rating'
+                                                    ]
+                                                    ?? null
+                                                ); ?>
+
+                                            </td>
+
+
+                                            <td class="team-defence-cell">
+
+                                                <?= teamsPageRating(
+                                                    $team[
+                                                        'defence_rating'
+                                                    ]
+                                                    ?? null
+                                                ); ?>
+
                                             </td>
 
 

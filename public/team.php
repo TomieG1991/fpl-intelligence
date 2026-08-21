@@ -888,6 +888,12 @@ $players =
                         <h2>
                             Premier League Performance
                         </h2>
+                        
+                        <p class="team-profile-performance-description">
+                            Attack and Defence Ratings use completed Premier League
+                            matches only. Ratings remain unavailable until the team has
+                            played at least one league fixture.
+                        </p>
 
                     </div>
 
@@ -1013,6 +1019,49 @@ $players =
 
                                 ?>
                             </strong>
+
+                        </div>
+                        
+                        <div class="team-profile-form-rating">
+
+                            <span>
+                                Attack Rating
+                            </span>
+
+                            <strong>
+                                <?= teamProfileRating(
+                                    $form[
+                                        'attack_rating'
+                                    ]
+                                    ?? null
+                                ); ?>
+                            </strong>
+
+                            <small>
+                                Goals scored per game
+                            </small>
+
+                        </div>
+
+
+                        <div class="team-profile-form-rating">
+
+                            <span>
+                                Defence Rating
+                            </span>
+
+                            <strong>
+                                <?= teamProfileRating(
+                                    $form[
+                                        'defence_rating'
+                                    ]
+                                    ?? null
+                                ); ?>
+                            </strong>
+
+                            <small>
+                                Goals conceded per game
+                            </small>
 
                         </div>
 

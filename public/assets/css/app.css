@@ -9878,8 +9878,28 @@ a {
 
 .team-profile-form-grid {
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 14px;
+}
+
+.team-profile-performance-description {
+    max-width: 760px;
+    margin: -6px 0 18px;
+    color: #8293ae;
+    font-size: 0.76rem;
+    line-height: 1.6;
+}
+
+.team-profile-form-rating {
+    position: relative;
+}
+
+.team-profile-form-rating small {
+    display: block;
+    margin-top: 6px;
+    color: #718096;
+    font-size: 0.65rem;
+    line-height: 1.4;
 }
 
 .team-profile-player-table-wrapper {
@@ -10008,4 +10028,10 @@ a {
     outline: 2px solid #7c5cff;
     outline-offset: 4px;
     border-radius: 3px;
+}
+
+.team-attack-cell,
+.team-defence-cell {
+    font-weight: 700;
+    color: #ffffff;
 }

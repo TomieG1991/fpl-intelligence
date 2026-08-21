@@ -588,6 +588,8 @@ $requiredHeaders = [
     'Overall',
     'Home',
     'Away',
+    'Attack',
+    'Defence',
     'Next 5',
     'Fixtures',
     'Trend',
@@ -825,6 +827,162 @@ echo "Fixture Badges: "
     . $fixtureBadgeCount
     . "<br><br>";
 
+
+$attackCellCount =
+    substr_count(
+        $normalisedHtml,
+        'class="team-attack-cell"'
+    );
+
+
+$defenceCellCount =
+    substr_count(
+        $normalisedHtml,
+        'class="team-defence-cell"'
+    );
+
+
+teamsPageCheck(
+    'Every ranked team exposes Attack Rating output',
+    $attackCellCount === 20
+);
+
+
+teamsPageCheck(
+    'Every ranked team exposes Defence Rating output',
+    $defenceCellCount === 20
+);
+
+preg_match_all(
+    '/class="team-attack-cell">\s*([^<]+)\s*<\/td>/i',
+    $normalisedHtml,
+    $attackMatches
+);
+
+
+preg_match_all(
+    '/class="team-defence-cell">\s*([^<]+)\s*<\/td>/i',
+    $normalisedHtml,
+    $defenceMatches
+);
+
+
+$attackValues =
+    array_map(
+        'trim',
+        $attackMatches[
+            1
+        ]
+        ?? []
+    );
+
+
+$defenceValues =
+    array_map(
+        'trim',
+        $defenceMatches[
+            1
+        ]
+        ?? []
+    );
+
+
+$allAttackValuesValid =
+    count(
+        $attackValues
+    )
+    === 20;
+
+
+foreach (
+    $attackValues
+    as $value
+) {
+
+    if (
+        $value === '—'
+    ) {
+
+        continue;
+    }
+
+
+    if (
+        !is_numeric(
+            $value
+        )
+        ||
+        (float) $value < 0
+        ||
+        (float) $value > 100
+    ) {
+
+        $allAttackValuesValid =
+            false;
+
+        break;
+    }
+}
+
+
+$allDefenceValuesValid =
+    count(
+        $defenceValues
+    )
+    === 20;
+
+
+foreach (
+    $defenceValues
+    as $value
+) {
+
+    if (
+        $value === '—'
+    ) {
+
+        continue;
+    }
+
+
+    if (
+        !is_numeric(
+            $value
+        )
+        ||
+        (float) $value < 0
+        ||
+        (float) $value > 100
+    ) {
+
+        $allDefenceValuesValid =
+            false;
+
+        break;
+    }
+}
+
+
+teamsPageCheck(
+    'All rendered Attack Ratings are numeric 0-100 or unavailable',
+    $allAttackValuesValid
+);
+
+
+teamsPageCheck(
+    'All rendered Defence Ratings are numeric 0-100 or unavailable',
+    $allDefenceValuesValid
+);
+
+
+echo "Attack Rating Cells: "
+    . $attackCellCount
+    . "<br>";
+
+
+echo "Defence Rating Cells: "
+    . $defenceCellCount
+    . "<br>";
 
 /*
  * ============================================================

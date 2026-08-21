@@ -6,6 +6,84 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.24.0] - Team Attack & Defence Intelligence
+
+### Added
+- Added first-class Team Attack and Defence Intelligence to the Team Intelligence system.
+- Added `attack_rating` to league-wide Team Intelligence summaries.
+- Added `defence_rating` to league-wide Team Intelligence summaries.
+- Added Attack Rating and Defence Rating propagation into individual Team Intelligence profiles.
+- Added performance-derived Attack Rating using completed Premier League goals scored per game.
+- Added performance-derived Defence Rating using completed Premier League goals conceded per game.
+- Added 0-100 Attack Rating scale where stronger goalscoring performance produces a higher rating.
+- Added 0-100 Defence Rating scale where stronger defensive performance and fewer goals conceded produce a higher rating.
+- Added explicit no-evidence behaviour so Attack and Defence Ratings remain unavailable until a team has completed a Premier League fixture.
+- Added Attack and Defence columns to the league-wide Team Intelligence rankings.
+- Added Attack Rating and Defence Rating cards to the Premier League Performance section of individual team profiles.
+- Added explanatory context showing that Attack Rating is derived from goals scored per game.
+- Added explanatory context showing that Defence Rating is derived from goals conceded per game.
+- Added Team Intelligence profile explanation clarifying that Attack and Defence Ratings use completed Premier League matches only.
+- Added unavailable-state presentation using `—` before sufficient Premier League performance evidence exists.
+
+### Changed
+- Promoted the existing `TeamPerformance` attack and defence calculations into first-class Team Intelligence outputs.
+- Reused the existing `calculateAttackRating()` and `calculateDefenceRating()` model rather than introducing duplicate attack and defence scoring logic.
+- Extended `getAllTeamIntelligenceSummaries()` with performance-derived Attack and Defence Ratings.
+- Extended `getTeamIntelligenceProfile()` with Attack and Defence Rating data.
+- Improved the league-wide Team Intelligence rankings so overall team strength can be viewed alongside attacking and defensive performance.
+- Improved individual Team Intelligence profiles by separating baseline/current strength from performance-derived attacking and defensive evidence.
+- Changed the Premier League Performance profile layout from six desktop columns to four columns so the expanded eight-card section remains balanced and readable.
+- Preserved `null` Attack and Defence Ratings when no completed Premier League match evidence exists rather than fabricating preseason performance values.
+- Improved Team Intelligence readiness for live-season data so Attack and Defence Ratings automatically become numeric once completed Premier League results are available.
+
+### Fixed
+- Fixed Team Attack and Defence ratings being calculated within `TeamPerformance` but not exposed through Team Intelligence summaries.
+- Fixed individual Team Intelligence profiles not receiving existing Attack and Defence Rating data.
+- Fixed the Team Intelligence UI having no visibility of attacking and defensive performance despite the underlying calculations already existing.
+- Prevented preseason and no-match states from being represented by misleading artificial Attack or Defence Ratings.
+- Prevented duplication of existing TeamPerformance attack and defence scoring logic by integrating the established model instead of creating a second intelligence engine.
+
+### Testing
+- Added `TeamAttackDefenceIntelligenceTest.php` for dedicated Team Attack and Defence Intelligence regression coverage.
+- Added validation that `TeamPerformance` exposes `calculateAttackRating()`.
+- Added validation that `TeamPerformance` exposes `calculateDefenceRating()`.
+- Added validation of Attack Rating against elite, average and poor attacking performance.
+- Added validation that three goals scored per game produces the maximum Attack Rating.
+- Added validation that one and a half goals scored per game produces a neutral Attack Rating.
+- Added validation that zero goals scored produces the minimum Attack Rating.
+- Added validation that stronger attacking performance produces a higher Attack Rating.
+- Added validation of Defence Rating against elite, average and poor defensive performance.
+- Added validation that zero goals conceded produces the maximum Defence Rating.
+- Added validation that one and a half goals conceded per game produces a neutral Defence Rating.
+- Added validation that three goals conceded per game produces the minimum Defence Rating.
+- Added validation that fewer goals conceded produces a higher Defence Rating.
+- Added validation that Attack Ratings remain bounded between 0 and 100.
+- Added validation that Defence Ratings remain bounded between 0 and 100.
+- Added validation that Attack Rating returns `null` when no matches have been played.
+- Added validation that Defence Rating returns `null` when no matches have been played.
+- Added synthetic completed-fixture analysis covering matches played, goals scored and goals conceded.
+- Added validation that completed fixture evidence produces numeric Attack and Defence Ratings.
+- Added validation of Attack and Defence Rating propagation into all 20 Team Intelligence summaries.
+- Added validation that available Team Intelligence Attack and Defence Ratings remain between 0 and 100.
+- Added validation that every team exposes either a numeric rating or a valid unavailable state.
+- Added validation of Attack and Defence Rating propagation into individual Team Intelligence profiles.
+- Added profile-to-summary consistency validation for Attack and Defence Ratings.
+- Added Team Attack and Defence integration performance regression coverage.
+- Extended `TeamsPageTest.php` with Attack and Defence table-header coverage.
+- Added validation that all 20 ranked teams expose Attack Rating output.
+- Added validation that all 20 ranked teams expose Defence Rating output.
+- Added validation that rendered league-wide Attack Ratings are either numeric values between 0 and 100 or unavailable.
+- Added validation that rendered league-wide Defence Ratings are either numeric values between 0 and 100 or unavailable.
+- Extended `TeamIntelligenceProfilePageTest.php` with Attack and Defence Rating UI coverage.
+- Added validation of Attack and Defence Rating explanatory content.
+- Added validation of goals-scored and goals-conceded explanatory labels.
+- Added validation that individual profile Attack and Defence Rating values are rendered.
+- Added validation that profile Attack and Defence Ratings are either numeric values between 0 and 100 or unavailable.
+- Verified `TeamAttackDefenceIntelligenceTest.php` passes with 0 failures.
+- Verified `TeamsPageTest.php` passes with Team Attack and Defence Intelligence integration.
+- Verified `TeamIntelligenceProfilePageTest.php` passes with Team Attack and Defence Intelligence integration.
+- Verified the complete `RunAllTests.php` project regression suite passes successfully.
+
 ## [0.23.0] - Team Intelligence Profiles
 
 ### Added

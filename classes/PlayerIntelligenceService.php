@@ -823,6 +823,20 @@ class PlayerIntelligenceService
                     $teamId
                 ]
                 ?? [];
+                
+            
+            $attackRating =
+                $this->teamPerformance
+                    ->calculateAttackRating(
+                        $performance
+                    );
+
+
+            $defenceRating =
+                $this->teamPerformance
+                    ->calculateDefenceRating(
+                        $performance
+                    );
 
 
             /*
@@ -1014,6 +1028,12 @@ class PlayerIntelligenceService
                         'recent_form'
                     ]
                     ?? [],
+                    
+                'attack_rating' =>
+                    $attackRating,
+
+                'defence_rating' =>
+                    $defenceRating,
 
                 /*
                  * Model transparency.
@@ -2037,7 +2057,19 @@ class PlayerIntelligenceService
                             'goal_difference'
                         ]
                         ?? 0
-                    )
+                    ),
+                    
+                'attack_rating' =>
+                    $teamSummary[
+                        'attack_rating'
+                    ]
+                    ?? null,
+
+                'defence_rating' =>
+                    $teamSummary[
+                        'defence_rating'
+                    ]
+                    ?? null
             ],
 
 

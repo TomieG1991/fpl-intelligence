@@ -869,6 +869,23 @@ teamProfilePageCheck(
     ) !== false
 );
 
+teamProfilePageCheck(
+    'Attack and Defence Rating explanation is rendered',
+    strpos(
+        $normalisedHtml,
+        'Attack and Defence Ratings use completed Premier League matches only'
+    ) !== false
+);
+
+
+teamProfilePageCheck(
+    'Performance explanation states ratings require completed fixtures',
+    strpos(
+        $normalisedHtml,
+        'played at least one league fixture'
+    ) !== false
+);
+
 
 $formCardCount =
     substr_count(
@@ -890,7 +907,9 @@ foreach (
         'Wins',
         'Draws',
         'Losses',
-        'Goal Difference'
+        'Goal Difference',
+        'Attack Rating',
+        'Defence Rating'
     ]
     as $label
 ) {
@@ -904,6 +923,132 @@ foreach (
         ) !== false
     );
 }
+
+teamProfilePageCheck(
+    'Attack Rating explanation is rendered',
+    strpos(
+        $normalisedHtml,
+        'Goals scored per game'
+    ) !== false
+);
+
+
+teamProfilePageCheck(
+    'Defence Rating explanation is rendered',
+    strpos(
+        $normalisedHtml,
+        'Goals conceded per game'
+    ) !== false
+);
+
+$attackRatingRendered =
+    preg_match(
+        '/Attack Rating\s*<\/span>\s*<strong>\s*([^<]+)\s*<\/strong>/i',
+        $normalisedHtml,
+        $attackRatingMatch
+    )
+    === 1;
+
+
+$defenceRatingRendered =
+    preg_match(
+        '/Defence Rating\s*<\/span>\s*<strong>\s*([^<]+)\s*<\/strong>/i',
+        $normalisedHtml,
+        $defenceRatingMatch
+    )
+    === 1;
+
+
+teamProfilePageCheck(
+    'Attack Rating value is rendered',
+    $attackRatingRendered
+);
+
+
+teamProfilePageCheck(
+    'Defence Rating value is rendered',
+    $defenceRatingRendered
+);
+
+
+$attackRatingValue =
+    trim(
+        (string) (
+            $attackRatingMatch[
+                1
+            ]
+            ?? ''
+        )
+    );
+
+
+$defenceRatingValue =
+    trim(
+        (string) (
+            $defenceRatingMatch[
+                1
+            ]
+            ?? ''
+        )
+    );
+
+
+$attackRatingValid =
+    $attackRatingValue === '—'
+    ||
+    (
+        is_numeric(
+            $attackRatingValue
+        )
+        &&
+        (float) $attackRatingValue >= 0
+        &&
+        (float) $attackRatingValue <= 100
+    );
+
+
+$defenceRatingValid =
+    $defenceRatingValue === '—'
+    ||
+    (
+        is_numeric(
+            $defenceRatingValue
+        )
+        &&
+        (float) $defenceRatingValue >= 0
+        &&
+        (float) $defenceRatingValue <= 100
+    );
+
+
+teamProfilePageCheck(
+    'Rendered Attack Rating is numeric 0-100 or unavailable',
+    $attackRatingValid
+);
+
+
+teamProfilePageCheck(
+    'Rendered Defence Rating is numeric 0-100 or unavailable',
+    $defenceRatingValid
+);
+
+
+echo "Rendered Attack Rating: "
+    . htmlspecialchars(
+        $attackRatingValue,
+        ENT_QUOTES,
+        'UTF-8'
+    )
+    . "<br>";
+
+
+echo "Rendered Defence Rating: "
+    . htmlspecialchars(
+        $defenceRatingValue,
+        ENT_QUOTES,
+        'UTF-8'
+    )
+    . "<br>";
 
 
 echo "<br>";
