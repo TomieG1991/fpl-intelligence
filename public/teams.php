@@ -663,23 +663,37 @@ if (
 
                                             <td class="team-name-cell">
 
-                                                <strong>
-                                                    <?= teamsPageEscape(
-                                                        $team[
-                                                            'name'
-                                                        ]
-                                                        ?? 'Unknown Team'
-                                                    ); ?>
-                                                </strong>
+                                                <a
+                                                    href="team.php?id=<?=
+                                                        (int) (
+                                                            $team[
+                                                                'team_id'
+                                                            ]
+                                                            ?? 0
+                                                        );
+                                                    ?>"
+                                                    class="team-name-link"
+                                                >
 
-                                                <span>
-                                                    <?= teamsPageEscape(
-                                                        $team[
-                                                            'short_name'
-                                                        ]
-                                                        ?? ''
-                                                    ); ?>
-                                                </span>
+                                                    <strong>
+                                                        <?= teamsPageEscape(
+                                                            $team[
+                                                                'name'
+                                                            ]
+                                                            ?? 'Unknown Team'
+                                                        ); ?>
+                                                    </strong>
+
+                                                    <span>
+                                                        <?= teamsPageEscape(
+                                                            $team[
+                                                                'short_name'
+                                                            ]
+                                                            ?? ''
+                                                        ); ?>
+                                                    </span>
+
+                                                </a>
 
                                             </td>
 

@@ -1148,6 +1148,909 @@ class PlayerIntelligenceService
 
         return $summaries;
     }
+    
+    
+    /**
+     * Build the complete Team Intelligence profile for one
+     * current Premier League team.
+     *
+     * The profile deliberately reuses the ranked Team Intelligence
+     * summaries so Team Intelligence, strength, fixture opportunity
+     * and performance calculations continue to have one source
+     * of truth.
+     */
+    public function getTeamIntelligenceProfile(
+        int $teamId
+    ): array {
+
+        /*
+         * ========================================================
+         * VALIDATION
+         * ========================================================
+         */
+
+        if (
+            $teamId <= 0
+        ) {
+
+            return [
+
+                'status' =>
+                    'invalid',
+
+                'message' =>
+                    'A valid Team Intelligence team ID is required.',
+
+                'team' =>
+                    null,
+
+                'ranking' =>
+                    null,
+
+                'strength' =>
+                    null,
+
+                'fixtures' =>
+                    null,
+
+                'form' =>
+                    null,
+
+                'players' =>
+                    []
+            ];
+        }
+
+
+        /*
+         * ========================================================
+         * TEAM INTELLIGENCE SUMMARY
+         * ========================================================
+         *
+         * Reuse the ranked collection rather than rebuilding the
+         * Team Intelligence calculations here.
+         *
+         * The array position also gives us the team's current
+         * Intelligence ranking.
+         */
+
+        $teamSummaries =
+            $this->getAllTeamIntelligenceSummaries();
+
+
+        $teamSummary =
+            null;
+
+
+        $teamRank =
+            null;
+
+
+        foreach (
+            $teamSummaries
+            as $index => $summary
+        ) {
+
+            $summaryTeamId =
+                (int) (
+                    $summary[
+                        'team_id'
+                    ]
+                    ?? 0
+                );
+
+
+            if (
+                $summaryTeamId
+                !==
+                $teamId
+            ) {
+
+                continue;
+            }
+
+
+            $teamSummary =
+                $summary;
+
+
+            $teamRank =
+                $index + 1;
+
+
+            break;
+        }
+
+
+        /*
+         * ========================================================
+         * UNKNOWN TEAM
+         * ========================================================
+         */
+
+        if (
+            $teamSummary === null
+        ) {
+
+            return [
+
+                'status' =>
+                    'invalid',
+
+                'message' =>
+                    'The requested Team Intelligence team could not be found.',
+
+                'team' =>
+                    null,
+
+                'ranking' =>
+                    null,
+
+                'strength' =>
+                    null,
+
+                'fixtures' =>
+                    null,
+
+                'form' =>
+                    null,
+
+                'players' =>
+                    []
+            ];
+        }
+
+
+        /*
+         * ========================================================
+         * UPCOMING FIXTURES
+         * ========================================================
+         *
+         * The summary already owns the calculated fixture rating,
+         * label and trend.
+         *
+         * Here we additionally expose the underlying upcoming
+         * fixture records for the detailed team profile page.
+         */
+
+        $upcomingFixtures =
+            $this->fixtureRepository
+                ->getUpcomingForTeam(
+                    $teamId,
+                    10
+                );
+
+
+        if (
+            !is_array(
+                $upcomingFixtures
+            )
+        ) {
+
+            $upcomingFixtures =
+                [];
+        }
+        
+        
+        /*
+         * ========================================================
+         * FIXTURE OPPONENT LOOKUP
+         * ========================================================
+         *
+         * Resolve opponent identity once inside the service so
+         * public/team.php does not need to rebuild the complete
+         * Team Intelligence collection for every fixture card.
+         */
+
+        $teamLookup =
+            [];
+
+
+        foreach (
+            $teamSummaries
+            as $summary
+        ) {
+
+            $summaryTeamId =
+                (int) (
+                    $summary[
+                        'team_id'
+                    ]
+                    ?? 0
+                );
+
+
+            if (
+                $summaryTeamId <= 0
+            ) {
+
+                continue;
+            }
+
+
+            $teamLookup[
+                $summaryTeamId
+            ] = [
+
+                'team_id' =>
+                    $summaryTeamId,
+
+                'name' =>
+                    (string) (
+                        $summary[
+                            'name'
+                        ]
+                        ?? ''
+                    ),
+
+                'short_name' =>
+                    (string) (
+                        $summary[
+                            'short_name'
+                        ]
+                        ?? ''
+                    )
+            ];
+        }
+
+
+        /*
+         * ========================================================
+         * DECORATE UPCOMING FIXTURES
+         * ========================================================
+         */
+
+        $profileFixtures =
+            [];
+
+
+        foreach (
+            $upcomingFixtures
+            as $fixture
+        ) {
+
+            $homeTeamId =
+                (int) (
+                    $fixture[
+                        'home_team_id'
+                    ]
+                    ?? 0
+                );
+
+
+            $awayTeamId =
+                (int) (
+                    $fixture[
+                        'away_team_id'
+                    ]
+                    ?? 0
+                );
+
+
+            $isHome =
+                $homeTeamId
+                ===
+                $teamId;
+
+
+            $opponentId =
+                $isHome
+                    ? $awayTeamId
+                    : $homeTeamId;
+
+
+            $opponent =
+                $teamLookup[
+                    $opponentId
+                ]
+                ?? [];
+
+
+            $profileFixtures[] =
+                array_merge(
+                    $fixture,
+                    [
+
+                        'opponent_id' =>
+                            $opponentId,
+
+                        'opponent_name' =>
+                            (string) (
+                                $opponent[
+                                    'name'
+                                ]
+                                ?? 'Unknown'
+                            ),
+
+                        'opponent_short_name' =>
+                            (string) (
+                                $opponent[
+                                    'short_name'
+                                ]
+                                ?? ''
+                            ),
+
+                        'venue' =>
+                            $isHome
+                                ? 'Home'
+                                : 'Away',
+
+                        'is_home' =>
+                            $isHome
+                    ]
+                );
+        }
+
+
+        /*
+         * ========================================================
+         * TEAM PLAYERS
+         * ========================================================
+         *
+         * Reuse the lightweight Player Intelligence summaries so
+         * the team profile can later display and rank the club's
+         * current FPL assets without loading a full profile for
+         * every player.
+         */
+
+        $playerSummaries =
+            $this->getAllPlayerSummaries();
+
+
+        $teamPlayers =
+            [];
+
+
+        foreach (
+            $playerSummaries
+            as $playerSummary
+        ) {
+
+            $playerId =
+                (int) (
+                    $playerSummary[
+                        'player_id'
+                    ]
+                    ?? 0
+                );
+
+
+            if (
+                $playerId <= 0
+            ) {
+
+                continue;
+            }
+
+
+            /*
+             * Player summaries currently expose the team name but
+             * may not always expose the local team ID directly.
+             *
+             * Resolve the player's repository record when required
+             * so the profile contract always returns a reliable
+             * local team_id.
+             */
+
+            $playerTeamId =
+                isset(
+                    $playerSummary[
+                        'team_id'
+                    ]
+                )
+                    ? (int) $playerSummary[
+                        'team_id'
+                    ]
+                    : 0;
+
+
+            if (
+                $playerTeamId <= 0
+            ) {
+
+                $playerRecord =
+                    $this->playerRepository
+                        ->getById(
+                            $playerId
+                        );
+
+
+                $playerTeamId =
+                    (int) (
+                        $playerRecord[
+                            'team_id'
+                        ]
+                        ?? 0
+                    );
+            }
+
+
+            if (
+                $playerTeamId
+                !==
+                $teamId
+            ) {
+
+                continue;
+            }
+
+
+            $teamPlayers[] = [
+
+                'player_id' =>
+                    $playerId,
+
+                'team_id' =>
+                    $playerTeamId,
+
+                'name' =>
+                    (string) (
+                        $playerSummary[
+                            'name'
+                        ]
+                        ?? ''
+                    ),
+
+                'position' =>
+                    $playerSummary[
+                        'position'
+                    ]
+                    ?? null,
+
+                'price' =>
+                    $playerSummary[
+                        'price'
+                    ]
+                    ?? null,
+
+                'intelligence_score' =>
+                    $playerSummary[
+                        'intelligence_score'
+                    ]
+                    ?? null,
+
+                'strength_rating' =>
+                    $playerSummary[
+                        'strength_rating'
+                    ]
+                    ?? null,
+
+                'value_rating' =>
+                    $playerSummary[
+                        'value_rating'
+                    ]
+                    ?? null,
+
+                'fixture_rating' =>
+                    $playerSummary[
+                        'fixture_rating'
+                    ]
+                    ?? null,
+
+                'next_fixture_rating' =>
+                    $playerSummary[
+                        'next_fixture_rating'
+                    ]
+                    ?? null,
+
+                'availability_rating' =>
+                    $playerSummary[
+                        'availability_rating'
+                    ]
+                    ?? null,
+
+                'sample_confidence' =>
+                    $playerSummary[
+                        'sample_confidence'
+                    ]
+                    ?? null,
+
+                'assessment_verdict' =>
+                    $playerSummary[
+                        'assessment_verdict'
+                    ]
+                    ?? null
+            ];
+        }
+
+
+        /*
+         * --------------------------------------------------------
+         * PLAYER ORDERING
+         * --------------------------------------------------------
+         *
+         * Highest Player Intelligence first.
+         *
+         * Null Intelligence Scores belong at the bottom, with
+         * player name providing a stable tie-break.
+         */
+
+        usort(
+            $teamPlayers,
+            function (
+                array $a,
+                array $b
+            ): int {
+
+                $scoreA =
+                    $a[
+                        'intelligence_score'
+                    ]
+                    ?? null;
+
+
+                $scoreB =
+                    $b[
+                        'intelligence_score'
+                    ]
+                    ?? null;
+
+
+                if (
+                    $scoreA === null
+                    &&
+                    $scoreB === null
+                ) {
+
+                    return strcasecmp(
+                        (string) (
+                            $a[
+                                'name'
+                            ]
+                            ?? ''
+                        ),
+                        (string) (
+                            $b[
+                                'name'
+                            ]
+                            ?? ''
+                        )
+                    );
+                }
+
+
+                if (
+                    $scoreA === null
+                ) {
+
+                    return 1;
+                }
+
+
+                if (
+                    $scoreB === null
+                ) {
+
+                    return -1;
+                }
+
+
+                $comparison =
+                    (float) $scoreB
+                    <=>
+                    (float) $scoreA;
+
+
+                if (
+                    $comparison !== 0
+                ) {
+
+                    return $comparison;
+                }
+
+
+                return strcasecmp(
+                    (string) (
+                        $a[
+                            'name'
+                        ]
+                        ?? ''
+                    ),
+                    (string) (
+                        $b[
+                            'name'
+                        ]
+                        ?? ''
+                    )
+                );
+            }
+        );
+
+
+        /*
+         * ========================================================
+         * COMPLETE PROFILE
+         * ========================================================
+         */
+
+        return [
+
+            'status' =>
+                'success',
+
+            'message' =>
+                'Team Intelligence profile generated successfully.',
+
+
+            /*
+             * ----------------------------------------------------
+             * TEAM IDENTITY
+             * ----------------------------------------------------
+             */
+
+            'team' => [
+
+                'team_id' =>
+                    (int) (
+                        $teamSummary[
+                            'team_id'
+                        ]
+                        ?? 0
+                    ),
+
+                'fpl_team_id' =>
+                    isset(
+                        $teamSummary[
+                            'fpl_team_id'
+                        ]
+                    )
+                        ? (int) $teamSummary[
+                            'fpl_team_id'
+                        ]
+                        : null,
+
+                'name' =>
+                    (string) (
+                        $teamSummary[
+                            'name'
+                        ]
+                        ?? ''
+                    ),
+
+                'short_name' =>
+                    (string) (
+                        $teamSummary[
+                            'short_name'
+                        ]
+                        ?? ''
+                    )
+            ],
+
+
+            /*
+             * ----------------------------------------------------
+             * TEAM INTELLIGENCE RANKING
+             * ----------------------------------------------------
+             */
+
+            'ranking' => [
+
+                'rank' =>
+                    $teamRank,
+
+                'intelligence_score' =>
+                    $teamSummary[
+                        'intelligence_score'
+                    ]
+                    ?? null,
+
+                'intelligence_label' =>
+                    $teamSummary[
+                        'intelligence_label'
+                    ]
+                    ?? null
+            ],
+
+
+            /*
+             * ----------------------------------------------------
+             * CURRENT STRENGTH
+             * ----------------------------------------------------
+             */
+
+            'strength' => [
+
+                'overall' =>
+                    $teamSummary[
+                        'strength_overall'
+                    ]
+                    ?? null,
+
+                'home' =>
+                    $teamSummary[
+                        'strength_home'
+                    ]
+                    ?? null,
+
+                'away' =>
+                    $teamSummary[
+                        'strength_away'
+                    ]
+                    ?? null,
+
+                'performance_rating' =>
+                    $teamSummary[
+                        'performance_rating'
+                    ]
+                    ?? null,
+
+                'baseline_weight' =>
+                    $teamSummary[
+                        'baseline_weight'
+                    ]
+                    ?? null,
+
+                'performance_weight' =>
+                    $teamSummary[
+                        'performance_weight'
+                    ]
+                    ?? null
+            ],
+
+
+            /*
+             * ----------------------------------------------------
+             * FIXTURE INTELLIGENCE
+             * ----------------------------------------------------
+             */
+
+            'fixtures' => [
+
+                'rating' =>
+                    $teamSummary[
+                        'fixture_rating'
+                    ]
+                    ?? null,
+
+                'label' =>
+                    $teamSummary[
+                        'fixture_label'
+                    ]
+                    ?? null,
+
+                'trend' =>
+                    $teamSummary[
+                        'fixture_trend'
+                    ]
+                    ?? 'Insufficient Data',
+
+                'next_5' =>
+                    $teamSummary[
+                        'next_5'
+                    ]
+                    ?? null,
+
+                'next_6' =>
+                    $teamSummary[
+                        'next_6'
+                    ]
+                    ?? null,
+
+                'next_8' =>
+                    $teamSummary[
+                        'next_8'
+                    ]
+                    ?? null,
+
+                'next_10' =>
+                    $teamSummary[
+                        'next_10'
+                    ]
+                    ?? null,
+
+                'best_run' =>
+                    $teamSummary[
+                        'best_run'
+                    ]
+                    ?? null,
+
+                'worst_run' =>
+                    $teamSummary[
+                        'worst_run'
+                    ]
+                    ?? null,
+
+                'upcoming' =>
+                    $profileFixtures
+            ],
+
+
+            /*
+             * ----------------------------------------------------
+             * CURRENT PREMIER LEAGUE FORM
+             * ----------------------------------------------------
+             */
+
+            'form' => [
+
+                'recent_form' =>
+                    is_array(
+                        $teamSummary[
+                            'recent_form'
+                        ]
+                        ?? null
+                    )
+                        ? $teamSummary[
+                            'recent_form'
+                        ]
+                        : [],
+
+                'played' =>
+                    (int) (
+                        $teamSummary[
+                            'played'
+                        ]
+                        ?? 0
+                    ),
+
+                'wins' =>
+                    (int) (
+                        $teamSummary[
+                            'wins'
+                        ]
+                        ?? 0
+                    ),
+
+                'draws' =>
+                    (int) (
+                        $teamSummary[
+                            'draws'
+                        ]
+                        ?? 0
+                    ),
+
+                'losses' =>
+                    (int) (
+                        $teamSummary[
+                            'losses'
+                        ]
+                        ?? 0
+                    ),
+
+                'points' =>
+                    (int) (
+                        $teamSummary[
+                            'points'
+                        ]
+                        ?? 0
+                    ),
+
+                'goals_for' =>
+                    (int) (
+                        $teamSummary[
+                            'goals_for'
+                        ]
+                        ?? 0
+                    ),
+
+                'goals_against' =>
+                    (int) (
+                        $teamSummary[
+                            'goals_against'
+                        ]
+                        ?? 0
+                    ),
+
+                'goal_difference' =>
+                    (int) (
+                        $teamSummary[
+                            'goal_difference'
+                        ]
+                        ?? 0
+                    )
+            ],
+
+
+            /*
+             * ----------------------------------------------------
+             * CURRENT FPL PLAYERS
+             * ----------------------------------------------------
+             */
+
+            'players' =>
+                $teamPlayers
+        ];
+    }
 
 
     /**

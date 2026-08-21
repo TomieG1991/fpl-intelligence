@@ -6,6 +6,138 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.23.0] - Team Intelligence Profiles
+
+### Added
+- Added detailed Team Intelligence profiles for individual Premier League teams.
+- Added `getTeamIntelligenceProfile()` to `PlayerIntelligenceService` as the dedicated team-profile service.
+- Added complete team-profile output containing:
+  - team identity
+  - Premier League Team Intelligence ranking
+  - Team Intelligence Score
+  - Team Intelligence classification
+  - overall team strength
+  - home strength
+  - away strength
+  - fixture intelligence
+  - current form
+  - current FPL players
+- Added league-ranking context so individual team profiles preserve their position within the complete Team Intelligence rankings.
+- Added fixture-profile output containing:
+  - overall fixture rating
+  - fixture classification
+  - fixture trend
+  - next-five fixture rating
+  - next-six fixture rating
+  - next-eight fixture rating
+  - next-ten fixture rating
+  - best fixture run
+  - worst fixture run
+  - upcoming fixture records
+- Added opponent identity to upcoming team fixtures.
+- Added opponent name and short-name data to team-profile fixture output.
+- Added Home/Away venue context to upcoming fixture records.
+- Added current Premier League form output containing:
+  - recent form
+  - matches played
+  - wins
+  - draws
+  - losses
+  - points
+  - goals scored
+  - goals conceded
+  - goal difference
+- Added current FPL player collection to each Team Intelligence profile.
+- Added Player Intelligence data to team-profile player output including:
+  - Player Intelligence Score
+  - strength rating
+  - value rating
+  - fixture rating
+  - immediate next-fixture rating
+  - availability
+  - sample confidence
+  - assessment verdict
+- Added automatic ordering of team players by Player Intelligence Score.
+- Added `public/team.php` as the dedicated Team Intelligence profile dashboard.
+- Added Team Intelligence profile hero displaying:
+  - league rank
+  - team identity
+  - Team Intelligence Score
+  - Team Intelligence classification
+- Added Current Strength Profile displaying overall, home and away team strength.
+- Added detailed Fixture Intelligence section.
+- Added upcoming fixture cards displaying opponent, venue and gameweek.
+- Added Premier League Performance section for current team form.
+- Added Current Player Intelligence table for all current FPL players belonging to the selected team.
+- Added direct navigation from Team Intelligence profiles to existing Player Intelligence profiles.
+- Added navigation from the league-wide Team Intelligence rankings into individual team profiles.
+- Added controlled invalid-team profile state.
+- Added responsive Team Intelligence profile styling.
+
+### Changed
+- Extended Team Intelligence from a league-wide ranking system into a navigable league-to-team-to-player intelligence structure.
+- Reused the existing ranked Team Intelligence summaries as the source of truth for individual team profiles.
+- Improved Team Intelligence architecture so profile generation does not duplicate the existing team scoring model.
+- Moved upcoming-fixture opponent resolution into the service layer rather than resolving opponents within the presentation layer.
+- Improved upcoming fixture data so rendered pages receive presentation-ready opponent and venue information.
+- Removed repeated calls to `getAllTeamIntelligenceSummaries()` while rendering individual fixture cards.
+- Improved Team Intelligence profile fixture presentation by moving the fixture classification into a compact heading badge.
+- Improved Fixture Intelligence layout so Next 5, Next 6, Next 8 and Next 10 ratings have consistent visual hierarchy.
+- Improved team ranking navigation by making team names direct links to their Team Intelligence profiles.
+- Improved accessibility of team-profile navigation with standard keyboard-accessible links and visible focus handling.
+- Improved Team Intelligence profile section spacing and responsive behaviour.
+- Preserved current Player Intelligence as the source of truth for player-level scores displayed within team profiles.
+
+### Fixed
+- Fixed inefficient Team Intelligence profile rendering that initially rebuilt the complete 20-team Intelligence collection for every upcoming fixture.
+- Fixed upcoming fixture opponent resolution being performed inside `team.php` instead of the service layer.
+- Fixed fixture classification badge styling that initially caused the classification to render as an oversized empty container.
+- Fixed fixture summary layout after moving the fixture classification outside the numerical rating grid.
+- Fixed Team Intelligence profile page regression checks that initially failed because rendered HTML whitespace differed from literal test strings.
+- Fixed Arsenal title and short-name page checks to tolerate valid rendered HTML whitespace.
+- Fixed fixture classification page checks to tolerate valid rendered HTML whitespace.
+- Fixed Next 5, Next 6, Next 8 and Next 10 rating checks to validate rendered markup correctly.
+- Fixed Home/Away fixture venue checks to tolerate valid rendered HTML whitespace.
+
+### Testing
+- Added `TeamIntelligenceProfileTest.php` for dedicated Team Intelligence profile service coverage.
+- Added validation that `PlayerIntelligenceService` exposes `getTeamIntelligenceProfile()`.
+- Added real-team profile validation against the current Premier League dataset.
+- Added validation of complete Team Intelligence profile result structure.
+- Added validation of team identity including local team ID, FPL team ID, team name and short name.
+- Added validation of league ranking and Team Intelligence Score.
+- Added validation that Team Intelligence Scores remain between 0 and 100.
+- Added validation of supported Team Intelligence classifications.
+- Added validation of overall, home and away team strength.
+- Added validation that team strength values remain between 0 and 100.
+- Added validation of fixture rating, fixture classification and fixture trend.
+- Added validation of upcoming fixture records.
+- Added validation of current team-form structure and numeric form metrics.
+- Added validation that current FPL players are returned for the selected team.
+- Added validation that all returned players belong to the requested team.
+- Added validation of player IDs and player names.
+- Added consistency checks between individual Team Intelligence profiles and the existing ranked Team Intelligence summaries.
+- Added invalid-team profile handling coverage.
+- Added Team Intelligence profile performance regression coverage.
+- Verified `TeamIntelligenceProfileTest.php` passes all 66 checks with 0 failures.
+- Added `TeamIntelligenceProfilePageTest.php` for end-to-end Team Intelligence profile page regression coverage.
+- Added HTTP validation of valid Team Intelligence profile requests.
+- Added validation of the shared application shell and active Teams navigation.
+- Added validation of Team Intelligence profile identity and league-ranking output.
+- Added validation of the Team Intelligence hero and classification badge.
+- Added validation of the five Current Strength Profile summary cards.
+- Added validation of Fixture Intelligence summary output.
+- Added validation that exactly ten upcoming fixture cards are rendered for the current Arsenal diagnostic profile.
+- Added validation of current fixture opponents, Home/Away venue information and gameweek numbers.
+- Added validation of the Premier League Performance section.
+- Added validation of the Current Player Intelligence table.
+- Added validation of current Arsenal Player Intelligence profile links.
+- Added validation of Player Intelligence table structure and navigation.
+- Added invalid Team Intelligence profile page coverage.
+- Added rendered-page detection for PHP fatal errors, parse errors, uncaught errors, warnings, notices and undefined variables.
+- Added valid and invalid Team Intelligence profile page performance regression coverage.
+- Verified `TeamIntelligenceProfilePageTest.php` passes with 0 failures.
+
 ## [0.22.0] - Team Intelligence
 
 ### Added
@@ -89,6 +221,50 @@ The project follows a sprint-based development process.
 - Verified Arsenal currently ranks first in the development dataset with a Team Intelligence Score of 95.33.
 - Verified Team Intelligence produces multiple classification levels across the Premier League.
 - Verified `TeamIntelligenceServiceTest.php` passes all 38 checks with 0 failures.
+- Added `TeamsPageTest.php` end-to-end Team Intelligence page regression coverage.
+- Added HTTP validation of the Team Intelligence page.
+- Added validation of the shared application shell and active Teams navigation.
+- Added validation of the Team Intelligence Summary section.
+- Added validation that exactly five Team Intelligence summary cards are rendered.
+- Added validation of:
+  - teams analysed
+  - Elite team count
+  - Strong team count
+  - average Team Intelligence
+  - average fixture rating
+- Added validation of the Premier League Team Intelligence ranking section.
+- Added validation of the complete ranking table structure.
+- Added validation of all ranking table columns:
+  - Team
+  - Intelligence
+  - Level
+  - Overall
+  - Home
+  - Away
+  - Next 5
+  - Fixtures
+  - Trend
+  - Form
+  - W-D-L
+- Added validation that exactly 20 team ranking rows are rendered.
+- Added validation that rankings run from position 1 through position 20.
+- Added validation that every team has:
+  - Team Intelligence Score
+  - Team Intelligence classification badge
+  - fixture classification badge
+  - fixture trend
+  - recent form output
+  - W-D-L output
+- Added validation that rendered teams remain ordered by Team Intelligence Score.
+- Added validation that all 20 current Premier League teams are present in the ranking.
+- Added validation of completed-match context for recent form and W-D-L output.
+- Added validation of the Team Intelligence explanation section.
+- Added validation of Current Strength, Fixture Opportunity and Team Intelligence explanations.
+- Added rendered-page detection for PHP fatal errors, parse errors, uncaught errors, warnings, notices and undefined variables.
+- Added Team Intelligence page performance regression coverage.
+- Verified `TeamsPageTest.php` passes all 75 checks with 0 failures.
+- Verified `TeamsPageTest.php` passes through `RunAllTests.php`.
+- Verified the complete automated project regression suite remains green after Team Intelligence integration.
 
 ## [0.21.0] - Gameweek Decision Intelligence
 

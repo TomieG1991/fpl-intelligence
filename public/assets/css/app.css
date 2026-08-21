@@ -9693,3 +9693,319 @@ a {
     margin-top: -4px;
     margin-bottom: 0;
 }
+
+/* ------------------------------------------------------------
+   TEAM INTELLIGENCE PROFILE
+   ------------------------------------------------------------ */
+
+.team-profile-dashboard .dashboard-section + .dashboard-section {
+    margin-top: 42px;
+}
+
+.team-profile-dashboard .section-heading {
+    margin-bottom: 18px;
+}
+
+.team-profile-dashboard .section-heading .eyebrow {
+    margin: 0 0 10px;
+}
+
+.team-profile-dashboard .section-heading h2 {
+    margin: 0;
+}
+
+.team-profile-back-link {
+    display: inline-flex;
+    margin-bottom: 22px;
+    color: #a99fff;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.team-profile-back-link:hover {
+    color: #ffffff;
+}
+
+.team-profile-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 24px;
+    border: 1px solid #33415c;
+    border-radius: 12px;
+    background: #172135;
+}
+
+.team-profile-hero h2 {
+    margin: 8px 0 4px;
+    color: #ffffff;
+    font-size: 1.8rem;
+}
+
+.team-profile-short-name {
+    margin: 0;
+    color: #8293ae;
+}
+
+.team-profile-hero-badges {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.team-profile-score {
+    text-align: right;
+}
+
+.team-profile-score span {
+    display: block;
+    color: #8293ae;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.team-profile-score strong {
+    display: block;
+    margin-top: 4px;
+    color: #ffffff;
+    font-size: 1.6rem;
+}
+
+.team-profile-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.team-profile-summary-card,
+.team-profile-form-grid > div,
+.team-profile-fixture-summary > div {
+    padding: 16px 18px;
+    border: 1px solid #33415c;
+    border-radius: 10px;
+    background: #172135;
+}
+
+.team-profile-summary-card span,
+.team-profile-form-grid span,
+.team-profile-fixture-summary span {
+    display: block;
+    margin-bottom: 6px;
+    color: #8293ae;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.team-profile-summary-card strong,
+.team-profile-form-grid strong,
+.team-profile-fixture-summary strong {
+    color: #ffffff;
+    font-size: 1.15rem;
+}
+
+.team-profile-fixture-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.team-profile-fixture-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.team-profile-fixture-heading .team-fixture-badge {
+    flex: 0 0 auto;
+    margin-bottom: 1px;
+}
+.team-profile-fixture-list {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.team-profile-fixture-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid #2c3951;
+    border-radius: 9px;
+    background: #111a2b;
+}
+
+.team-profile-fixture-number {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid #6556d9;
+    border-radius: 50%;
+    color: #b7adff;
+    font-size: 0.68rem;
+    font-weight: 800;
+}
+
+.team-profile-fixture-card strong {
+    display: block;
+    color: #ffffff;
+    font-size: 0.78rem;
+}
+
+.team-profile-fixture-card span {
+    display: block;
+    margin-top: 3px;
+    color: #8293ae;
+    font-size: 0.68rem;
+}
+
+.team-profile-fixture-gameweek {
+    margin-left: auto;
+    color: #aab8cb;
+    font-size: 0.68rem;
+    font-weight: 700;
+}
+
+.team-profile-form-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.team-profile-player-table-wrapper {
+    margin-top: 18px;
+    overflow-x: auto;
+    border: 1px solid #33415c;
+    border-radius: 12px;
+    background: #172135;
+}
+
+.team-profile-player-table {
+    width: 100%;
+    min-width: 900px;
+    border-collapse: collapse;
+}
+
+.team-profile-player-table th,
+.team-profile-player-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #2c3951;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.team-profile-player-table th {
+    color: #8293ae;
+    background: #111a2b;
+    font-size: 0.66rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.team-profile-player-table td {
+    color: #d7dfec;
+    font-size: 0.78rem;
+}
+
+.team-profile-player-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.team-profile-player-table tbody tr:hover {
+    background: #1a263c;
+}
+
+.team-profile-player-link {
+    color: #ffffff;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.team-profile-player-link:hover {
+    color: #b7adff;
+}
+
+@media (max-width: 1200px) {
+
+    .team-profile-summary-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .team-profile-fixture-list {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .team-profile-form-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 850px) {
+
+    .team-profile-hero {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .team-profile-hero-badges {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .team-profile-score {
+        text-align: left;
+    }
+
+    .team-profile-fixture-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    
+    .team-profile-fixture-heading {
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 600px) {
+
+    .team-profile-summary-grid,
+    .team-profile-fixture-summary,
+    .team-profile-fixture-list,
+    .team-profile-form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .team-profile-fixture-heading {
+        flex-direction: column;
+    }
+}
+
+.team-name-link {
+    display: inline-block;
+    color: inherit;
+    text-decoration: none;
+}
+
+.team-name-link strong {
+    transition: color 0.15s ease;
+}
+
+.team-name-link:hover strong {
+    color: #b7adff;
+}
+
+.team-name-link:focus-visible {
+    outline: 2px solid #7c5cff;
+    outline-offset: 4px;
+    border-radius: 3px;
+}
