@@ -380,6 +380,13 @@ $pageUrl =
     . $host
     . $projectWebPath
     . '/public/squad.php?preview=1';
+    
+$manualPageUrl =
+    $scheme
+    . '://'
+    . $host
+    . $projectWebPath
+    . '/public/squad.php?preview=manual';
 
 
 /*
@@ -406,6 +413,18 @@ $runtime =
 
 $html =
     $response[
+        'body'
+    ]
+    ?? '';
+    
+$manualResponse =
+    fetchSquadPreviewPage(
+        $manualPageUrl
+    );
+
+
+$manualHtml =
+    $manualResponse[
         'body'
     ]
     ?? '';
@@ -580,7 +599,7 @@ squadPageTest(
     'Development preview squad is rendered',
     stripos(
         $html,
-        'GW1 Real Squad Preview'
+        'Development Preview Squad'
     )
     !== false
 );
@@ -597,6 +616,61 @@ squadPageTest(
         '15 / 15'
     )
     !== false
+);
+
+squadPageTest(
+    'Manual squad preview request succeeds',
+    (
+        $manualResponse[
+            'success'
+        ]
+        ?? false
+    )
+    === true
+);
+
+
+squadPageTest(
+    'Manual squad preview is rendered',
+    stripos(
+        $manualHtml,
+        'Manual Squad Preview'
+    )
+    !== false
+);
+
+
+squadPageTest(
+    'Manual preview contains fifteen-player squad indicator',
+    stripos(
+        preg_replace(
+            '/\s+/',
+            ' ',
+            $manualHtml
+        ),
+        '15 / 15'
+    )
+    !== false
+);
+
+
+squadPageTest(
+    'Manual preview contains no PHP warning output',
+    stripos(
+        $manualHtml,
+        'Warning:'
+    )
+    === false
+);
+
+
+squadPageTest(
+    'Manual preview contains no PHP fatal error',
+    stripos(
+        $manualHtml,
+        'Fatal error'
+    )
+    === false
 );
 
 

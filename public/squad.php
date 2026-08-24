@@ -88,17 +88,40 @@ $entryId =
         ? (int) $entryIdInput
         : null;
         
-$previewMode =
-    filter_input(
-        INPUT_GET,
-        'preview',
-        FILTER_VALIDATE_BOOLEAN
+$previewInput =
+    isset(
+        $_GET[
+            'preview'
+        ]
     )
-        ? true
-        : false;
+        ? strtolower(
+            trim(
+                (string) $_GET[
+                    'preview'
+                ]
+            )
+        )
+        : '';
 
 
-function buildSquadPreview(
+$previewMode =
+    in_array(
+        $previewInput,
+        [
+            '1',
+            'true',
+            'generic',
+            'manual'
+        ],
+        true
+    );
+
+
+$manualPreviewMode =
+    $previewInput === 'manual';
+
+
+function buildManualSquadPreview(
     PlayerIntelligenceService $service,
     PlayerRepository $playerRepository
 ): ?array {
@@ -1121,7 +1144,658 @@ function buildSquadPreview(
                 0,
 
             'team_name' =>
-                'GW1 Real Squad Preview',
+                'Manual Squad Preview',
+
+            'manager_name' =>
+                'Manual Preview Mode'
+        ],
+
+        'gameweek' =>
+            1,
+
+        'team_value' =>
+            $teamValue,
+
+        'bank' =>
+            $bank,
+
+        'imported_count' =>
+            15,
+
+        'mapped_count' =>
+            15,
+
+        'unmapped_count' =>
+            0,
+
+        'players' =>
+            $players
+    ];
+}
+
+function buildSquadPreview(
+    PlayerIntelligenceService $service,
+    PlayerRepository $playerRepository
+): ?array {
+
+    /*
+     * ========================================================
+     * GENERIC DEVELOPMENT PREVIEW
+     * ========================================================
+     *
+     * Build a deterministic legal FPL squad from the current
+     * Player Intelligence dataset.
+     *
+     * This preview deliberately avoids depending on specific
+     * player names so automated page tests survive transfers,
+     * player additions and normal FPL dataset changes.
+     */
+
+    $summaries =
+        $service
+            ->getAllPlayerSummaries();
+
+
+    $localPlayers =
+        $playerRepository
+            ->getAll();
+
+
+    if (
+        empty(
+            $summaries
+        )
+        ||
+        empty(
+            $localPlayers
+        )
+    ) {
+
+        return null;
+    }
+
+
+    /*
+     * ========================================================
+     * LOCAL PLAYER LOOKUP
+     * ========================================================
+     */
+
+    $localById =
+        [];
+
+
+    foreach (
+        $localPlayers
+        as $localPlayer
+    ) {
+
+        $playerId =
+            (int) (
+                $localPlayer[
+                    'id'
+                ]
+                ?? 0
+            );
+
+
+        if (
+            $playerId <= 0
+        ) {
+
+            continue;
+        }
+
+
+        $localById[
+            $playerId
+        ] =
+            $localPlayer;
+    }
+
+
+    /*
+     * ========================================================
+     * BUILD USABLE CANDIDATES
+     * ========================================================
+     */
+
+    $candidatesByPosition = [
+
+        'GK' =>
+            [],
+
+        'DEF' =>
+            [],
+
+        'MID' =>
+            [],
+
+        'FWD' =>
+            []
+    ];
+
+
+    foreach (
+        $summaries
+        as $summary
+    ) {
+
+        $playerId =
+            (int) (
+                $summary[
+                    'player_id'
+                ]
+                ?? 0
+            );
+
+
+        if (
+            $playerId <= 0
+            ||
+            !isset(
+                $localById[
+                    $playerId
+                ]
+            )
+        ) {
+
+            continue;
+        }
+
+
+        $localPlayer =
+            $localById[
+                $playerId
+            ];
+
+
+        $position =
+            strtoupper(
+                trim(
+                    (string) (
+                        $summary[
+                            'position'
+                        ]
+                        ?? ''
+                    )
+                )
+            );
+
+
+        if (
+            !isset(
+                $candidatesByPosition[
+                    $position
+                ]
+            )
+        ) {
+
+            continue;
+        }
+
+
+        $teamId =
+            (int) (
+                $localPlayer[
+                    'team_id'
+                ]
+                ?? 0
+            );
+
+
+        if (
+            $teamId <= 0
+        ) {
+
+            continue;
+        }
+
+
+        $price =
+            is_numeric(
+                $summary[
+                    'price'
+                ]
+                ?? null
+            )
+                ? (float) $summary[
+                    'price'
+                ]
+                : null;
+
+
+        if (
+            $price === null
+            ||
+            $price <= 0
+        ) {
+
+            continue;
+        }
+
+
+        $intelligenceScore =
+            is_numeric(
+                $summary[
+                    'intelligence_score'
+                ]
+                ?? null
+            )
+                ? (float) $summary[
+                    'intelligence_score'
+                ]
+                : 0.0;
+
+
+        $confidence =
+            $summary[
+                'sample_confidence'
+            ]
+            ?? null;
+
+
+        if (
+            $confidence !== null
+            &&
+            is_numeric(
+                $confidence
+            )
+        ) {
+
+            $confidence =
+                (float) $confidence;
+
+
+            if (
+                $confidence > 1
+            ) {
+
+                $confidence /=
+                    100;
+            }
+        }
+
+
+        $candidatesByPosition[
+            $position
+        ][] = [
+
+            'player_id' =>
+                $playerId,
+
+            'fpl_player_id' =>
+                isset(
+                    $localPlayer[
+                        'fpl_player_id'
+                    ]
+                )
+                    ? (int) $localPlayer[
+                        'fpl_player_id'
+                    ]
+                    : null,
+
+            'name' =>
+                $summary[
+                    'name'
+                ]
+                ?? $localPlayer[
+                    'web_name'
+                ]
+                ?? null,
+
+            'team_id' =>
+                $teamId,
+
+            'team_name' =>
+                $summary[
+                    'team_name'
+                ]
+                ?? null,
+
+            'position' =>
+                $position,
+
+            'price' =>
+                $price,
+
+            'intelligence_score' =>
+                $intelligenceScore,
+
+            'strength_rating' =>
+                $summary[
+                    'strength_rating'
+                ]
+                ?? null,
+
+            'value_rating' =>
+                $summary[
+                    'value_rating'
+                ]
+                ?? null,
+
+            'fixture_rating' =>
+                $summary[
+                    'fixture_rating'
+                ]
+                ?? null,
+
+            'availability_rating' =>
+                $summary[
+                    'availability_rating'
+                ]
+                ?? null,
+
+            'sample_confidence' =>
+                $confidence,
+
+            'verdict' =>
+                $summary[
+                    'assessment_verdict'
+                ]
+                ?? null
+        ];
+    }
+
+
+    /*
+     * ========================================================
+     * ORDER CANDIDATES
+     * ========================================================
+     *
+     * Prioritise affordable players first, then Intelligence.
+     *
+     * Using value-conscious candidates makes it much easier
+     * for the generated squad to remain inside the £100m
+     * development budget as FPL prices change.
+     */
+
+    foreach (
+        $candidatesByPosition
+        as &$positionCandidates
+    ) {
+
+        usort(
+            $positionCandidates,
+            function (
+                array $a,
+                array $b
+            ): int {
+
+                $priceComparison =
+                    (
+                        $a[
+                            'price'
+                        ]
+                        ?? 999
+                    )
+                    <=>
+                    (
+                        $b[
+                            'price'
+                        ]
+                        ?? 999
+                    );
+
+
+                if (
+                    $priceComparison !== 0
+                ) {
+
+                    return $priceComparison;
+                }
+
+
+                $intelligenceComparison =
+                    (
+                        $b[
+                            'intelligence_score'
+                        ]
+                        ?? 0
+                    )
+                    <=>
+                    (
+                        $a[
+                            'intelligence_score'
+                        ]
+                        ?? 0
+                    );
+
+
+                if (
+                    $intelligenceComparison !== 0
+                ) {
+
+                    return $intelligenceComparison;
+                }
+
+
+                return strcasecmp(
+                    (string) (
+                        $a[
+                            'name'
+                        ]
+                        ?? ''
+                    ),
+                    (string) (
+                        $b[
+                            'name'
+                        ]
+                        ?? ''
+                    )
+                );
+            }
+        );
+    }
+
+
+    unset(
+        $positionCandidates
+    );
+
+
+    /*
+     * ========================================================
+     * SELECT LEGAL 15-PLAYER SQUAD
+     * ========================================================
+     */
+
+    $requiredCounts = [
+
+        'GK' =>
+            2,
+
+        'DEF' =>
+            5,
+
+        'MID' =>
+            5,
+
+        'FWD' =>
+            3
+    ];
+
+
+    $players =
+        [];
+
+
+    $teamCounts =
+        [];
+
+
+    foreach (
+        $requiredCounts
+        as $position => $requiredCount
+    ) {
+
+        $selectedForPosition =
+            0;
+
+
+        foreach (
+            $candidatesByPosition[
+                $position
+            ]
+            as $candidate
+        ) {
+
+            $teamId =
+                (int) (
+                    $candidate[
+                        'team_id'
+                    ]
+                    ?? 0
+                );
+
+
+            if (
+                (
+                    $teamCounts[
+                        $teamId
+                    ]
+                    ?? 0
+                )
+                >= 3
+            ) {
+
+                continue;
+            }
+
+
+            $players[] =
+                $candidate;
+
+
+            $teamCounts[
+                $teamId
+            ] =
+                (
+                    $teamCounts[
+                        $teamId
+                    ]
+                    ?? 0
+                )
+                +
+                1;
+
+
+            $selectedForPosition++;
+
+
+            if (
+                $selectedForPosition
+                >=
+                $requiredCount
+            ) {
+
+                break;
+            }
+        }
+
+
+        if (
+            $selectedForPosition
+            !==
+            $requiredCount
+        ) {
+
+            return null;
+        }
+    }
+
+
+    /*
+     * ========================================================
+     * FINAL VALIDATION
+     * ========================================================
+     */
+
+    if (
+        count(
+            $players
+        )
+        !== 15
+    ) {
+
+        return null;
+    }
+
+
+    /*
+     * ========================================================
+     * TEAM VALUE + BANK
+     * ========================================================
+     */
+
+    $teamValue =
+        0.0;
+
+
+    foreach (
+        $players
+        as $player
+    ) {
+
+        $teamValue +=
+            (float) (
+                $player[
+                    'price'
+                ]
+                ?? 0
+            );
+    }
+
+
+    $teamValue =
+        round(
+            $teamValue,
+            1
+        );
+
+
+    $bank =
+        round(
+            100.0
+            -
+            $teamValue,
+            1
+        );
+
+
+    /*
+     * The preview should always represent a legal development
+     * squad. If future FPL pricing makes this generated squad
+     * exceed £100m, fail cleanly rather than returning an
+     * unrealistic preview.
+     */
+
+    if (
+        $bank < 0
+    ) {
+
+        return null;
+    }
+
+
+    /*
+     * ========================================================
+     * COMPLETE GENERIC PREVIEW
+     * ========================================================
+     */
+
+    return [
+
+        'is_complete' =>
+            true,
+
+        'entry' => [
+
+            'entry_id' =>
+                0,
+
+            'team_name' =>
+                'Development Preview Squad',
 
             'manager_name' =>
                 'Preview Mode'
@@ -1196,10 +1870,15 @@ if (
     try {
 
         $mappedSquad =
-            buildSquadPreview(
-                $service,
-                $playerRepository
-            );
+            $manualPreviewMode
+                ? buildManualSquadPreview(
+                    $service,
+                    $playerRepository
+                )
+                : buildSquadPreview(
+                    $service,
+                    $playerRepository
+                );
 
 
         if (
