@@ -459,8 +459,20 @@ foreach (
                 ? (float) $summary[
                     'sample_confidence'
                 ]
+                : null,
+
+        'effective_confidence' =>
+            is_numeric(
+                $summary[
+                    'effective_confidence'
+                ]
+                ?? null
+            )
+                ? (float) $summary[
+                    'effective_confidence'
+                ]
                 : null
-    ];
+            ];
 
 
     $candidates[] =
@@ -480,6 +492,7 @@ echo "Valid Wildcard Candidates: "
     . "<br><br>";
 
 
+
 echo "<strong>Candidate Counts by Position</strong><br>";
 
 
@@ -496,6 +509,7 @@ foreach (
 
 
 echo "<br>";
+
 
 
 /*

@@ -6,6 +6,114 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.26.0] - Effective Confidence & Live Gameweek Intelligence
+
+### Added
+- Added Effective Confidence as a dedicated decision-reliability signal for live and early-season FPL intelligence.
+- Added `effective_confidence` to the Player Performance model.
+- Added team available-minutes awareness so player participation can be evaluated against the amount of Premier League football their team has actually completed.
+- Added Effective Confidence calculation using:
+  - 40% Sample Confidence
+  - 60% current team participation rate
+- Added explicit distinction between statistical sample maturity and current participation reliability.
+- Added `team_available_minutes` to Player Intelligence summaries.
+- Added `participation_rate` to Player Intelligence summaries.
+- Added `effective_confidence` to Player Intelligence summaries.
+- Added Effective Confidence propagation through `PlayerIntelligenceEngine`.
+- Added Effective Confidence metadata propagation through `PlayerStrengthModel`.
+- Added current-gameweek available-minutes support to `PlayerIntelligenceService`.
+- Added completed-fixture minute aggregation by Premier League team.
+- Added support for `finished_provisional` fixtures when determining completed current-gameweek evidence.
+- Added Effective Confidence support to Gameweek decision-making.
+- Added Effective Confidence risk handling to Gameweek Starting XI selection.
+- Added Effective Confidence support to Captain Intelligence.
+- Added confidence-adjusted attacking threat inputs to Captain Intelligence.
+- Added Effective Confidence support to Wildcard reliability evaluation.
+- Added reliability-aware goalkeeper selection to Wildcard optimisation.
+- Added reliability-aware Wildcard bench evaluation.
+- Added FPL-style bench ordering across Gameweek and Wildcard recommendations:
+  - backup goalkeeper in bench slot one
+  - first outfield substitute in bench slot two
+  - second outfield substitute in bench slot three
+  - third outfield substitute in bench slot four
+- Added dedicated Effective Confidence regression and integration coverage.
+
+### Changed
+- Changed early-season confidence handling so decision reliability is no longer represented solely by historical/current-season Sample Confidence.
+- Changed Player Intelligence to distinguish between:
+  - Sample Confidence for statistical performance maturity
+  - Effective Confidence for current FPL decision reliability
+- Changed Player Performance so Sample Confidence remains responsible for regression of performance ratings toward neutral values.
+- Changed Player Strength to continue consuming Sample Confidence-adjusted performance ratings rather than Effective Confidence-adjusted ratings.
+- Changed Effective Confidence to act as a participation and decision-reliability signal rather than redefining underlying Player Strength.
+- Changed live player participation evaluation to compare player minutes against the minutes their team has actually had available.
+- Changed current-gameweek fixture handling so provisionally finished Premier League fixtures can contribute completed-match evidence before the gameweek is fully complete.
+- Changed Gameweek intelligence so players with stronger current participation evidence can receive greater decision confidence without artificially increasing their underlying performance strength.
+- Changed Captain Intelligence to use Effective Confidence when available for decision-risk adjustment.
+- Changed Captain Intelligence attacking inputs to prefer confidence-adjusted performance ratings while retaining safe raw-rating fallbacks.
+- Changed Wildcard optimisation to use reliability-aware confidence for goalkeeper and bench decisions.
+- Changed Wildcard goalkeeper reliability requirements to operate on decision-relevant confidence rather than raw early-season Sample Confidence alone.
+- Changed Wildcard bench reliability penalties to use the appropriate reliability confidence signal.
+- Changed Wildcard and Gameweek bench presentation to match the FPL visual convention with the backup goalkeeper displayed first.
+- Preserved the existing ranking of the three outfield substitutes while shifting their displayed bench positions to two through four.
+- Improved early-season handling of players who have played all or most of their team's available Premier League minutes.
+- Improved handling of teams that have not yet completed a current-gameweek fixture.
+- Improved live-season test stability by replacing brittle assumptions about specific current opponents, fixture ratings and partial-gameweek state with invariant behavioural checks.
+- Improved Player Strength transparency by exposing both Sample Confidence and Effective Confidence metadata without allowing Effective Confidence to alter the Strength calculation directly.
+
+### Fixed
+- Fixed early-season Sample Confidence being too weak on its own to represent the reliability of players who had played all available team minutes.
+- Fixed Effective Confidence initially being applied directly to adjusted performance ratings, which caused early-season participation evidence to influence Player Strength too aggressively.
+- Restored Sample Confidence as the statistical regression signal used by Player Strength.
+- Fixed premium players receiving excessively distorted early-season Strength ratings when Effective Confidence was incorrectly used for performance regression.
+- Fixed live/current-gameweek intelligence failing to distinguish between a player with limited minutes because their team had not yet played and a player with limited minutes despite their team having completed matches.
+- Fixed provisionally completed fixtures being excluded from available-minute calculations.
+- Fixed Wildcard goalkeeper selection failing because raw early-season Sample Confidence could not satisfy meaningful starter-reliability requirements.
+- Fixed Wildcard reliability output using confidence semantics that did not match the optimiser's decision model.
+- Fixed Gameweek and Wildcard bench displays placing the backup goalkeeper in the fourth bench slot instead of the first visual bench slot.
+- Fixed stale regression expectations that required the backup goalkeeper to occupy bench position four.
+- Fixed duplicate Team Fixture Rating calculation in `PlayerIntelligenceService`.
+- Removed temporary premium-player and early-season diagnostic code introduced during Effective Confidence investigation.
+- Removed brittle regression assumptions requiring the current gameweek to remain partially completed.
+- Removed dead duplicate Team Intelligence score extraction logic from `TeamIntelligenceProfilePageTest.php`.
+- Corrected Player Performance documentation so Sample Confidence and Effective Confidence responsibilities match the final model architecture.
+
+### Testing
+- Added `EffectiveConfidenceTest.php` for dedicated Effective Confidence unit coverage.
+- Added validation of the Effective Confidence weighting model using Sample Confidence and current team participation.
+- Added validation of full-participation Effective Confidence behaviour.
+- Added validation of partial-participation Effective Confidence behaviour.
+- Added validation of zero-available-minute and no-evidence behaviour.
+- Added `EffectiveConfidenceServiceIntegrationTest.php` for end-to-end Player Intelligence integration coverage.
+- Added validation of team available-minute aggregation from completed Premier League fixtures.
+- Added validation that participation rate remains consistent with player minutes and team available minutes.
+- Added validation that service-level Effective Confidence matches the underlying Effective Confidence model.
+- Added `CaptainEffectiveConfidenceTest.php` for Captain Intelligence confidence regression coverage.
+- Added validation that Captain Intelligence prefers Effective Confidence when available.
+- Added validation of Captain confidence modifiers across low, medium and high reliability conditions.
+- Added validation of safe Captain Intelligence fallback behaviour when Effective Confidence is unavailable.
+- Added `CaptainConfidenceAdjustedThreatTest.php` for confidence-adjusted attacking-threat coverage.
+- Added validation that Captain Intelligence prefers confidence-adjusted attacking performance ratings.
+- Added validation that raw attacking ratings remain available as safe fallbacks.
+- Added `GameweekEffectiveConfidenceRiskTest.php` for Gameweek decision-risk regression coverage.
+- Added validation that Effective Confidence influences Gameweek risk without redefining underlying Player Strength.
+- Added validation of explicit null Effective Confidence behaviour.
+- Updated `GameweekStartingXITest.php` for FPL-style goalkeeper-first bench ordering.
+- Updated `GameweekStartingXIRealDataTest.php` for goalkeeper-first bench ordering.
+- Updated `PlayerIntelligenceServiceTest.php` for Effective Confidence and Gameweek bench-order integration.
+- Updated `WildcardSquadStructureTest.php` for goalkeeper-first Wildcard bench ordering.
+- Updated `WildcardOptimizerRegressionTest.php` for reliability-aware Wildcard optimisation.
+- Updated `WildcardOptimizerRealDataTest.php` for Effective Confidence integration.
+- Updated `WildcardPageTest.php` for the current Wildcard reliability and Premium Core output.
+- Updated `FixtureRepositoryTest.php` for live/current-gameweek fixture completion behaviour.
+- Updated Captain Intelligence real-data and regression tests for Effective Confidence behaviour.
+- Updated Team Intelligence profile page regression coverage to avoid brittle live-fixture assumptions.
+- Removed temporary diagnostic-only test coverage after the final Effective Confidence architecture was validated.
+- Verified all dedicated Effective Confidence, Captain, Gameweek, Wildcard and Player Intelligence tests pass.
+- Verified the complete `RunAllTests.php` regression suite passes successfully.
+- Verified 82 of 82 test files pass.
+- Verified 2,971 assertions pass with 0 failures and 0 errors.
+
 ## [0.25.0] - Position-Aware Fixture Intelligence
 
 ### Added

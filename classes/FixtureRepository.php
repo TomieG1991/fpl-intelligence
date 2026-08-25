@@ -245,6 +245,7 @@ class FixtureRepository
                     OR away_team_id = :away_team_id
                 )
                 AND finished = 0
+                AND finished_provisional = 0
                 ORDER BY
                     gameweek ASC,
                     kickoff_time ASC,
@@ -293,7 +294,10 @@ class FixtureRepository
             $this->db->query("
                 SELECT *
                 FROM fixtures
-                WHERE finished = 1
+                WHERE (
+                finished = 1
+                OR finished_provisional = 1
+            )
                 ORDER BY
                     gameweek ASC,
                     kickoff_time ASC,
@@ -324,7 +328,10 @@ class FixtureRepository
                     home_team_id = :home_team_id
                     OR away_team_id = :away_team_id
                 )
-                AND finished = 1
+                AND (
+                    finished = 1
+                    OR finished_provisional = 1
+                )
                 ORDER BY
                     gameweek ASC,
                     kickoff_time ASC,

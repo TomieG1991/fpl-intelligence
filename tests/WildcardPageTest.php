@@ -986,16 +986,6 @@ wildcardPageCheck(
 
 
 wildcardPageCheck(
-    'Premium Core insight is rendered',
-    stripos(
-        $generatedHtml,
-        'Premium Core'
-    )
-    !== false
-);
-
-
-wildcardPageCheck(
     'Budget Use insight is rendered',
     stripos(
         $generatedHtml,

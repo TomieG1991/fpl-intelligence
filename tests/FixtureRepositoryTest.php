@@ -482,8 +482,10 @@ foreach (
 
 
     testPass(
-        'Upcoming fixture is unfinished',
+        'Upcoming fixture is not completed or provisionally completed',
         (int) $fixture['finished'] === 0
+        &&
+        (int) $fixture['finished_provisional'] === 0
     );
 }
 
@@ -572,8 +574,10 @@ foreach (
 ) {
 
     testPass(
-        'Finished fixture is marked as finished',
+        'Completed fixture is final or provisionally finished',
         (int) $fixture['finished'] === 1
+        ||
+        (int) $fixture['finished_provisional'] === 1
     );
 }
 
@@ -625,8 +629,10 @@ foreach (
 
 
     testPass(
-        'Finished team fixture is marked finished',
+        'Completed team fixture is final or provisionally finished',
         (int) $fixture['finished'] === 1
+        ||
+        (int) $fixture['finished_provisional'] === 1
     );
 }
 

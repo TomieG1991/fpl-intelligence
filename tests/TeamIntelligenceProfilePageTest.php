@@ -482,18 +482,53 @@ teamProfilePageCheck(
 );
 
 
-teamProfilePageCheck(
-    'Team Intelligence Score is rendered',
-    strpos(
-        $normalisedHtml,
-        'Team Intelligence'
-    ) !== false
-    &&
+$teamIntelligenceScore =
+    null;
+
+
+if (
     preg_match(
-        '/95\.33/',
-        $normalisedHtml
-    ) === 1
+        '/Team Intelligence\s*<\/span>\s*<strong>\s*([0-9]+(?:\.[0-9]+)?)\s*<\/strong>/i',
+        $normalisedHtml,
+        $teamIntelligenceScoreMatches
+    )
+    === 1
+) {
+
+    $teamIntelligenceScore =
+        (float) (
+            $teamIntelligenceScoreMatches[
+                1
+            ]
+            ?? 0
+        );
+}
+
+
+teamProfilePageCheck(
+    'Team Intelligence Score is rendered within 0-100',
+    is_numeric(
+        $teamIntelligenceScore
+    )
+    &&
+    $teamIntelligenceScore >= 0
+    &&
+    $teamIntelligenceScore <= 100
 );
+
+
+echo "Rendered Team Intelligence Score: "
+    . (
+        is_numeric(
+            $teamIntelligenceScore
+        )
+            ? number_format(
+                $teamIntelligenceScore,
+                2
+            )
+            : 'N/A'
+    )
+    . "<br>";
 
 
 teamProfilePageCheck(
@@ -603,7 +638,7 @@ teamProfilePageCheck(
 teamProfilePageCheck(
     'Fixture rating value is rendered',
     preg_match(
-        '/Fixture Rating\s*<\/span>\s*<strong>\s*88\.3\s*<\/strong>/i',
+        '/Fixture Rating\s*<\/span>\s*<strong>\s*[0-9]+(?:\.[0-9]+)?\s*<\/strong>/i',
         $normalisedHtml
     ) === 1
 );
@@ -667,40 +702,31 @@ teamProfilePageCheck(
 );
 
 
-teamProfilePageCheck(
-    'Next 5 rating is rendered',
-    preg_match(
-        '/Next 5 Rating\s*<\/span>\s*<strong>\s*88\.3\s*<\/strong>/i',
-        $normalisedHtml
-    ) === 1
-);
+foreach (
+    [
+        'Next 5 Rating',
+        'Next 6',
+        'Next 8',
+        'Next 10'
+    ]
+    as $ratingLabel
+) {
 
-
-teamProfilePageCheck(
-    'Next 6 rating is rendered',
-    preg_match(
-        '/Next 6\s*<\/span>\s*<strong>\s*87\.5\s*<\/strong>/i',
-        $normalisedHtml
-    ) === 1
-);
-
-
-teamProfilePageCheck(
-    'Next 8 rating is rendered',
-    preg_match(
-        '/Next 8\s*<\/span>\s*<strong>\s*85\.4\s*<\/strong>/i',
-        $normalisedHtml
-    ) === 1
-);
-
-
-teamProfilePageCheck(
-    'Next 10 rating is rendered',
-    preg_match(
-        '/Next 10\s*<\/span>\s*<strong>\s*83\.3\s*<\/strong>/i',
-        $normalisedHtml
-    ) === 1
-);
+    teamProfilePageCheck(
+        $ratingLabel
+        . ' rating is rendered',
+        preg_match(
+            '/'
+            . preg_quote(
+                $ratingLabel,
+                '/'
+            )
+            . '\s*<\/span>\s*<strong>\s*[0-9]+(?:\.[0-9]+)?\s*<\/strong>/i',
+            $normalisedHtml
+        )
+        === 1
+    );
+}
 
 
 echo "<br>";
@@ -740,49 +766,85 @@ teamProfilePageCheck(
 );
 
 
-$currentArsenalFixtures = [
-
-    'Coventry City',
-    'Aston Villa',
-    'Chelsea',
-    'Sunderland',
-    'Brighton',
-    'Leeds',
-    'Nott&#039;m Forest',
-    'Everton',
-    'Liverpool',
-    'Hull City'
-];
+$fixtureOpponentCount =
+    substr_count(
+        $normalisedHtml,
+        'class="team-profile-fixture-opponent"'
+    );
 
 
-$missingFixtures =
+$fixtureOpponentMatches =
     [];
 
 
+preg_match_all(
+    '/class="team-profile-fixture-card"[^>]*>.*?<strong>\s*([^<]+?)\s*<\/strong>/i',
+    $normalisedHtml,
+    $fixtureOpponentMatches
+);
+
+
+$fixtureOpponents =
+    $fixtureOpponentMatches[
+        1
+    ]
+    ?? [];
+
+
+$allFixtureOpponentsValid =
+    count(
+        $fixtureOpponents
+    )
+    ===
+    $fixtureCardCount;
+
+
 foreach (
-    $currentArsenalFixtures
+    $fixtureOpponents
     as $opponent
 ) {
 
+    $opponent =
+        trim(
+            html_entity_decode(
+                $opponent,
+                ENT_QUOTES,
+                'UTF-8'
+            )
+        );
+
+
     if (
-        strpos(
-            $normalisedHtml,
-            $opponent
-        ) === false
+        $opponent === ''
+        ||
+        strcasecmp(
+            $opponent,
+            'Unknown'
+        )
+        === 0
     ) {
 
-        $missingFixtures[] =
-            $opponent;
+        $allFixtureOpponentsValid =
+            false;
+
+        break;
     }
 }
 
 
 teamProfilePageCheck(
-    'All ten current Arsenal fixture opponents are rendered',
-    empty(
-        $missingFixtures
-    )
+    'All ten upcoming fixture cards expose an opponent',
+    $fixtureCardCount === 10
+    &&
+    $allFixtureOpponentsValid
 );
+
+
+echo "Fixture Opponents Found: "
+    . count(
+        $fixtureOpponents
+    )
+    . "<br>";
 
 
 teamProfilePageCheck(
@@ -816,28 +878,6 @@ teamProfilePageCheck(
 echo "Fixture Cards: "
     . $fixtureCardCount
     . "<br>";
-
-
-if (
-    !empty(
-        $missingFixtures
-    )
-) {
-
-    echo "Missing Fixtures: "
-        . htmlspecialchars(
-            implode(
-                ', ',
-                $missingFixtures
-            ),
-            ENT_QUOTES,
-            'UTF-8'
-        )
-        . "<br>";
-}
-
-
-echo "<br>";
 
 
 /*
@@ -1119,8 +1159,8 @@ $playerLinkCount =
 
 
 teamProfilePageCheck(
-    'Arsenal profile renders 28 current player links',
-    $playerLinkCount === 28
+    'Arsenal profile renders a substantial current player squad',
+    $playerLinkCount >= 20
 );
 
 

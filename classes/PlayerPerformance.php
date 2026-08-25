@@ -511,6 +511,143 @@ class PlayerPerformance
             4
         );
     }
+    
+    
+    /**
+     * Calculate effective decision confidence.
+     *
+     * Sample confidence measures how mature the player's
+     * current-season statistical sample is.
+     *
+     * Participation confidence measures how much of the
+     * team's currently available Premier League minutes
+     * the player has actually played.
+     *
+     * These concepts are intentionally kept separate:
+     *
+     * - 40% long-term sample maturity
+     * - 60% current participation reliability
+     *
+     * This allows an established 90-minute GW1 starter to
+     * be treated as more decision-reliable than a substitute,
+     * without pretending that one match represents a mature
+     * statistical sample.
+     *
+     * A null result means the player's team has not yet
+     * produced any current-season participation evidence.
+     */
+    public function calculateEffectiveConfidence(
+        int $minutes,
+        int $availableMinutes
+    ): ?float {
+
+        $minutes =
+            max(
+                0,
+                $minutes
+            );
+
+
+        $availableMinutes =
+            max(
+                0,
+                $availableMinutes
+            );
+
+
+        /*
+         * No team-level playing evidence exists yet.
+         *
+         * Do not classify the player as unreliable merely
+         * because their team has not played.
+         */
+        if (
+            $availableMinutes <= 0
+        ) {
+
+            return null;
+        }
+
+
+        /*
+         * A player's participation cannot exceed the amount
+         * of league football currently available to the team.
+         */
+        $participationMinutes =
+            min(
+                $minutes,
+                $availableMinutes
+            );
+
+
+        /*
+         * Existing season-sample maturity.
+         *
+         * 900 minutes remains full statistical confidence.
+         */
+        $sampleConfidence =
+            $this->calculateSampleConfidence(
+                $minutes
+            );
+
+
+        /*
+         * Current participation reliability.
+         *
+         * Example during GW1:
+         *
+         * 90 / 90 = 100%
+         * 45 / 90 = 50%
+         *  5 / 90 = 5.6%
+         */
+        $participationConfidence =
+            $participationMinutes
+            /
+            $availableMinutes;
+
+
+        $participationConfidence =
+            max(
+                0.0,
+                min(
+                    1.0,
+                    $participationConfidence
+                )
+            );
+
+
+        /*
+         * Blend maturity and participation.
+         *
+         * Participation receives the greater early-season
+         * influence because it distinguishes genuine starters
+         * from substitutes while the league-wide sample is young.
+         */
+        $effectiveConfidence =
+            (
+                $sampleConfidence
+                *
+                0.40
+            )
+            +
+            (
+                $participationConfidence
+                *
+                0.60
+            );
+
+
+        return round(
+            max(
+                0.0,
+                min(
+                    1.0,
+                    $effectiveConfidence
+                )
+            ),
+            4
+        );
+    }
 
 
     /**
@@ -567,13 +704,92 @@ class PlayerPerformance
             2
         );
     }
+    
+    /**
+     * Adjust a performance rating using an explicitly supplied
+     * confidence value.
+     *
+     * Confidence uses the standard internal 0.0-1.0 scale.
+     *
+     * The caller chooses the appropriate confidence signal.
+     * Player Strength currently uses Sample Confidence so
+     * statistical maturity remains separate from Effective
+     * Decision Confidence.
+     */
+    public function applyConfidence(
+        ?float $rating,
+        ?float $confidence
+    ): ?float {
+
+        if ($rating === null) {
+            return null;
+        }
+
+
+        $rating =
+            max(
+                0,
+                min(
+                    100,
+                    $rating
+                )
+            );
+
+
+        if (
+            $confidence === null
+            ||
+            !is_numeric(
+                $confidence
+            )
+        ) {
+
+            return round(
+                $rating,
+                2
+            );
+        }
+
+
+        $confidence =
+            max(
+                0.0,
+                min(
+                    1.0,
+                    (float) $confidence
+                )
+            );
+
+
+        $adjustedRating =
+            50
+            +
+            (
+                ($rating - 50)
+                *
+                $confidence
+            );
+
+
+        return round(
+            max(
+                0,
+                min(
+                    100,
+                    $adjustedRating
+                )
+            ),
+            2
+        );
+    }
 
 
     /**
      * Build the complete player performance model.
      */
     public function buildModel(
-        array $player
+        array $player,
+        ?int $availableMinutes = null
     ): array {
 
         $performance =
@@ -686,45 +902,68 @@ class PlayerPerformance
             );
 
 
+        /*
+         * --------------------------------------------------------
+         * EFFECTIVE DECISION CONFIDENCE
+         * --------------------------------------------------------
+         *
+         * When team-level available minutes are supplied by the
+         * application service, use them to distinguish established
+         * current starters from substitutes during small early-season
+         * samples.
+         *
+         * If that context is unavailable, preserve the existing
+         * sample-confidence behaviour for backwards compatibility.
+         */
+
+        $performance['effective_confidence'] =
+            $availableMinutes !== null
+                ? $this->calculateEffectiveConfidence(
+                    $minutes,
+                    $availableMinutes
+                )
+                : null;
+
+
         $performance['adjusted_goals_rating'] =
-            $this->applySampleConfidence(
+            $this->applyConfidence(
                 $performance['goals_rating'],
-                $minutes
+                $performance['sample_confidence']
             );
 
 
         $performance['adjusted_assists_rating'] =
-            $this->applySampleConfidence(
+            $this->applyConfidence(
                 $performance['assists_rating'],
-                $minutes
+                $performance['sample_confidence']
             );
 
 
         $performance['adjusted_expected_goals_rating'] =
-            $this->applySampleConfidence(
+            $this->applyConfidence(
                 $performance['expected_goals_rating'],
-                $minutes
+                $performance['sample_confidence']
             );
 
 
         $performance['adjusted_expected_assists_rating'] =
-            $this->applySampleConfidence(
+            $this->applyConfidence(
                 $performance['expected_assists_rating'],
-                $minutes
+                $performance['sample_confidence']
             );
 
 
         $performance['adjusted_clean_sheets_rating'] =
-            $this->applySampleConfidence(
+            $this->applyConfidence(
                 $performance['clean_sheets_rating'],
-                $minutes
+                $performance['sample_confidence']
             );
 
 
         $performance['adjusted_bps_rating'] =
-            $this->applySampleConfidence(
+            $this->applyConfidence(
                 $performance['bps_rating'],
-                $minutes
+                $performance['sample_confidence']
             );
 
 

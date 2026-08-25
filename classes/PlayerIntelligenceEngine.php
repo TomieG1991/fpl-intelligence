@@ -50,7 +50,8 @@ class PlayerIntelligenceEngine
      */
     public function analysePlayer(
         array $player,
-        ?float $fixtureRating = null
+        ?float $fixtureRating = null,
+        ?int $availableMinutes = null
     ): array {
 
         /*
@@ -63,7 +64,8 @@ class PlayerIntelligenceEngine
         $performance =
             $this->performance
                 ->buildModel(
-                    $player
+                    $player,
+                    $availableMinutes
                 );
 
 

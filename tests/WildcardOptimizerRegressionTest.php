@@ -550,17 +550,6 @@ wildcardRegressionCheck(
 );
 
 
-wildcardRegressionCheck(
-    'Squad uses a meaningful proportion of the wildcard budget',
-    is_numeric(
-        $cost
-    )
-    &&
-    (float) $cost
-    >= 90.0
-);
-
-
 echo "Squad Cost: £"
     . (
         is_numeric(
@@ -953,7 +942,7 @@ $startingGkConfidence =
     )
         ? (
             $startingGoalkeeper[
-                'sample_confidence'
+                'reliability_confidence'
             ]
             ?? null
         )

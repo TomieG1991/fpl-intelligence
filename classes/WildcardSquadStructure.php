@@ -1048,6 +1048,29 @@ class WildcardSquadStructure
             [];
 
 
+        /*
+         * FPL displays the backup goalkeeper in the first
+         * visual bench slot.
+         */
+        if (
+            $goalkeeper !== null
+        ) {
+
+            $goalkeeper[
+                'bench_order'
+            ] =
+                1;
+
+
+            $bench[] =
+                $goalkeeper;
+        }
+
+
+        /*
+         * Outfield substitutes retain their existing priority order,
+         * but move to visual bench positions 2-4.
+         */
         foreach (
             $outfield
             as $index => $player
@@ -1056,26 +1079,11 @@ class WildcardSquadStructure
             $player[
                 'bench_order'
             ] =
-                $index + 1;
+                $index + 2;
 
 
             $bench[] =
                 $player;
-        }
-
-
-        if (
-            $goalkeeper !== null
-        ) {
-
-            $goalkeeper[
-                'bench_order'
-            ] =
-                4;
-
-
-            $bench[] =
-                $goalkeeper;
         }
 
 

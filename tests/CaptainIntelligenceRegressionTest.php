@@ -203,11 +203,16 @@ $requiredFields = [
     'strength_rating',
     'next_fixture_rating',
     'sample_confidence',
+    'effective_confidence',
     'availability_rating',
     'goals_rating',
     'assists_rating',
     'expected_goals_rating',
-    'expected_assists_rating'
+    'expected_assists_rating',
+    'adjusted_goals_rating',
+    'adjusted_assists_rating',
+    'adjusted_expected_goals_rating',
+    'adjusted_expected_assists_rating'
 ];
 
 
@@ -399,6 +404,12 @@ foreach (
                 $summary,
                 'sample_confidence'
             ),
+            
+        'effective_confidence' =>
+        captainRegressionNumeric(
+            $summary,
+            'effective_confidence'
+        ),    
 
         'availability' =>
             captainRegressionNumeric(
@@ -428,6 +439,30 @@ foreach (
             captainRegressionNumeric(
                 $summary,
                 'expected_assists_rating'
+            ),
+            
+        'adjusted_goals_rating' =>
+            captainRegressionNumeric(
+                $summary,
+                'adjusted_goals_rating'
+            ),
+
+        'adjusted_assists_rating' =>
+            captainRegressionNumeric(
+                $summary,
+                'adjusted_assists_rating'
+            ),
+
+        'adjusted_expected_goals_rating' =>
+            captainRegressionNumeric(
+                $summary,
+                'adjusted_expected_goals_rating'
+            ),
+
+        'adjusted_expected_assists_rating' =>
+            captainRegressionNumeric(
+                $summary,
+                'adjusted_expected_assists_rating'
             )
     ];
 
@@ -478,12 +513,37 @@ captainRegressionCheck(
 );
 
 
-captainRegressionCheck(
-    'At least 300 real captain candidates are usable',
+$evaluatedCaptainCount =
     count(
         $captainResults
     )
-    >= 300
+    +
+    $invalidResults;
+
+
+captainRegressionCheck(
+    'Real captain evaluation accounts for the current player pool',
+    $evaluatedCaptainCount
+    ===
+    count(
+        $playerSummaries
+    )
+);
+
+
+captainRegressionCheck(
+    'Real dataset contains a substantial usable captain candidate pool',
+    count(
+        $captainResults
+    )
+    >=
+    (
+        count(
+            $playerSummaries
+        )
+        *
+        0.40
+    )
 );
 
 

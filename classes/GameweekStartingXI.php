@@ -882,14 +882,53 @@ class GameweekStartingXI
             );
 
 
-        $confidence =
-            $this->normalisePercentage(
+        /*
+         * --------------------------------------------------------
+         * DECISION CONFIDENCE
+         * --------------------------------------------------------
+         *
+         * Prefer Effective Confidence for immediate Gameweek
+         * decisions.
+         *
+         * Explicit null means the team has not completed a current-
+         * season match yet. In that situation, do not punish the
+         * player as though they had demonstrated poor participation.
+         *
+         * Older callers without Effective Confidence retain the
+         * original sample-confidence behaviour.
+         */
+
+        if (
+            array_key_exists(
+                'effective_confidence',
+                $player
+            )
+        ) {
+
+            $confidence =
                 $player[
-                    'sample_confidence'
+                    'effective_confidence'
                 ]
-                ?? 0.0,
-                0.0
-            );
+                !== null
+                    ? $this->normalisePercentage(
+                        $player[
+                            'effective_confidence'
+                        ],
+                        50.0
+                    )
+                    : 50.0;
+
+        } else {
+
+            $confidence =
+                $this->normalisePercentage(
+                    $player[
+                        'sample_confidence'
+                    ]
+                    ?? 0.0,
+                    0.0
+                );
+        }
 
 
         /*
@@ -1305,6 +1344,29 @@ class GameweekStartingXI
             [];
 
 
+        /*
+         * Match the FPL visual bench layout:
+         * backup goalkeeper first, followed by the three
+         * ordered outfield substitutes.
+         */
+        if (
+            $goalkeeper !== null
+        ) {
+
+            $goalkeeper[
+                'bench_order'
+            ] =
+                1;
+
+
+            $bench[] =
+                $goalkeeper;
+        }
+
+
+        /*
+         * Preserve the existing outfield substitution priority.
+         */
         foreach (
             $outfieldBench
             as $index => $player
@@ -1313,31 +1375,11 @@ class GameweekStartingXI
             $player[
                 'bench_order'
             ] =
-                $index + 1;
+                $index + 2;
 
 
             $bench[] =
                 $player;
-        }
-
-
-        /*
-         * Backup goalkeeper is always returned after the three
-         * ordered outfield substitutes.
-         */
-
-        if (
-            $goalkeeper !== null
-        ) {
-
-            $goalkeeper[
-                'bench_order'
-            ] =
-                4;
-
-
-            $bench[] =
-                $goalkeeper;
         }
 
 

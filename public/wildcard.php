@@ -837,9 +837,19 @@ if (
 
                             $confidence =
                                 $player[
-                                    'sample_confidence'
+                                    'reliability_confidence'
                                 ]
-                                ?? null;
+                                ?? (
+                                    $player[
+                                        'effective_confidence'
+                                    ]
+                                    ?? (
+                                        $player[
+                                            'sample_confidence'
+                                        ]
+                                        ?? null
+                                    )
+                                );
 
 
                             $isLowConfidence =
@@ -963,7 +973,7 @@ if (
                                     <div>
 
                                         <span>
-                                            Confidence
+                                            Reliability Confidence
                                         </span>
 
                                         <strong>
@@ -1298,9 +1308,19 @@ if (
                         $gkConfidence =
                             (float) (
                                 $startingGk[
-                                    'sample_confidence'
+                                    'reliability_confidence'
                                 ]
-                                ?? 0
+                                ?? (
+                                    $startingGk[
+                                        'effective_confidence'
+                                    ]
+                                    ?? (
+                                        $startingGk[
+                                            'sample_confidence'
+                                        ]
+                                        ?? 0
+                                    )
+                                )
                             );
 
 
@@ -1438,9 +1458,19 @@ if (
 
                         $confidence =
                             $player[
-                                'sample_confidence'
+                                'reliability_confidence'
                             ]
-                            ?? null;
+                            ?? (
+                                $player[
+                                    'effective_confidence'
+                                ]
+                                ?? (
+                                    $player[
+                                        'sample_confidence'
+                                    ]
+                                    ?? null
+                                )
+                            );
 
 
                         if (
@@ -1486,7 +1516,7 @@ if (
                                     ', ',
                                     $lowConfidenceBench
                                 )
-                                . ' currently carry low sample confidence. They remain legal budget enablers but reduce the reliability-adjusted bench score.'
+                                . ' currently carry low reliability confidence. They remain legal budget enablers but reduce the reliability-adjusted bench score.'
                         ];
 
                     } else {

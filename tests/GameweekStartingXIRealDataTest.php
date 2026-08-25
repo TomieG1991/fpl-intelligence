@@ -1125,17 +1125,26 @@ gameweekRealCheck(
 
 
 gameweekRealCheck(
-    'Backup goalkeeper is Bench 4',
+    'Backup goalkeeper is Bench 1',
+    isset(
+        $bench[0]
+    )
+    &&
     (
-        $bench[
-            3
-        ][
+        $bench[0][
             'position'
         ]
         ?? null
     )
-    ===
-    'GK'
+    === 'GK'
+    &&
+    (
+        $bench[0][
+            'bench_order'
+        ]
+        ?? null
+    )
+    === 1
 );
 
 

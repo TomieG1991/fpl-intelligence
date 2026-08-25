@@ -4740,17 +4740,26 @@ testPass(
 
 
     testPass(
-        'Gameweek bench four is the backup goalkeeper',
+        'Gameweek bench one is the backup goalkeeper',
+        isset(
+            $gameweekBench[0]
+        )
+        &&
         (
-            $gameweekBench[
-                3
-            ][
+            $gameweekBench[0][
                 'position'
             ]
             ?? null
         )
-        ===
-        'GK'
+        === 'GK'
+        &&
+        (
+            $gameweekBench[0][
+                'bench_order'
+            ]
+            ?? null
+        )
+        === 1
     );
 
 

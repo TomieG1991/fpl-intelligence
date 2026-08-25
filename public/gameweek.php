@@ -738,6 +738,28 @@ function buildGameweekPreviewPlayer(
                 'sample_confidence'
             ]
             ?? null,
+            
+        'effective_confidence' =>
+            array_key_exists(
+                'effective_confidence',
+                $summary
+            )
+                ? $summary[
+                    'effective_confidence'
+                ]
+                : null,
+
+        'team_available_minutes' =>
+            $summary[
+                'team_available_minutes'
+            ]
+            ?? null,
+
+        'participation_rate' =>
+            $summary[
+                'participation_rate'
+            ]
+            ?? null,
 
         'squad_position' =>
             $squadPosition,

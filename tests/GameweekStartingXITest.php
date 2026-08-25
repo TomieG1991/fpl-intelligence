@@ -952,17 +952,59 @@ gameweekStartingXICheck(
 
 
 gameweekStartingXICheck(
-    'Bench four is the backup goalkeeper',
+    'Bench one is the backup goalkeeper',
+    isset(
+        $bench[0]
+    )
+    &&
     (
-        $bench[
-            3
-        ][
+        $bench[0][
             'position'
         ]
         ?? null
     )
-    ===
-    'GK'
+    === 'GK'
+    &&
+    (
+        $bench[0][
+            'bench_order'
+        ]
+        ?? null
+    )
+    === 1
+);
+
+gameweekStartingXICheck(
+    'Outfield substitutes occupy bench positions two to four',
+    isset(
+        $bench[1],
+        $bench[2],
+        $bench[3]
+    )
+    &&
+    (
+        $bench[1][
+            'position'
+        ]
+        ?? null
+    )
+    !== 'GK'
+    &&
+    (
+        $bench[2][
+            'position'
+        ]
+        ?? null
+    )
+    !== 'GK'
+    &&
+    (
+        $bench[3][
+            'position'
+        ]
+        ?? null
+    )
+    !== 'GK'
 );
 
 

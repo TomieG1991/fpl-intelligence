@@ -184,6 +184,127 @@ class PlayerIntelligenceService
                 (int) $team['id']
             ] = $team;
         }
+        
+        
+        /*
+         * --------------------------------------------------------
+         * EFFECTIVE CONFIDENCE SUPPORT
+         * --------------------------------------------------------
+         *
+         * Build the amount of completed Premier League football
+         * currently available to every team.
+         *
+         * FixtureRepository treats both:
+         *
+         * - finished = 1
+         * - finished_provisional = 1
+         *
+         * as completed match evidence.
+         *
+         * Each completed fixture contributes 90 available minutes
+         * to both participating teams.
+         */
+
+        $teamAvailableMinutes =
+            [];
+
+
+        /*
+         * Initialise every current Premier League team at zero so
+         * clubs that have not yet completed a match remain explicit.
+         */
+        foreach (
+            $teams
+            as $team
+        ) {
+
+            $teamId =
+                (int) (
+                    $team[
+                        'id'
+                    ]
+                    ?? 0
+                );
+
+
+            if (
+                $teamId <= 0
+            ) {
+
+                continue;
+            }
+
+
+            $teamAvailableMinutes[
+                $teamId
+            ] =
+                0;
+        }
+
+
+        /*
+         * A single completed-fixture query is preferable to running
+         * one query for every player or every club.
+         */
+        $completedFixtures =
+            $this->fixtureRepository
+                ->getFinishedFixtures();
+
+
+        foreach (
+            $completedFixtures
+            as $completedFixture
+        ) {
+
+            $homeTeamId =
+                (int) (
+                    $completedFixture[
+                        'home_team_id'
+                    ]
+                    ?? 0
+                );
+
+
+            $awayTeamId =
+                (int) (
+                    $completedFixture[
+                        'away_team_id'
+                    ]
+                    ?? 0
+                );
+
+
+            if (
+                $homeTeamId > 0
+                &&
+                array_key_exists(
+                    $homeTeamId,
+                    $teamAvailableMinutes
+                )
+            ) {
+
+                $teamAvailableMinutes[
+                    $homeTeamId
+                ] +=
+                    90;
+            }
+
+
+            if (
+                $awayTeamId > 0
+                &&
+                array_key_exists(
+                    $awayTeamId,
+                    $teamAvailableMinutes
+                )
+            ) {
+
+                $teamAvailableMinutes[
+                    $awayTeamId
+                ] +=
+                    90;
+            }
+        }
 
 
         /*
@@ -418,6 +539,56 @@ class PlayerIntelligenceService
                     $player['team_id']
                     ?? 0
                 );
+                
+            
+            /*
+             * --------------------------------------------------------
+             * PLAYER EFFECTIVE CONFIDENCE
+             * --------------------------------------------------------
+             */
+
+            $playerMinutes =
+                max(
+                    0,
+                    (int) (
+                        $player[
+                            'minutes'
+                        ]
+                        ?? 0
+                    )
+                );
+
+
+            $availableMinutes =
+                (int) (
+                    $teamAvailableMinutes[
+                        $teamId
+                    ]
+                    ?? 0
+                );
+
+
+            /*
+             * Participation rate is deliberately null when the team has
+             * not completed a league match yet.
+             *
+             * This distinguishes:
+             *
+             * 0 / 0  → no evidence
+             *
+             * from:
+             *
+             * 0 / 90 → player had available team minutes but played none.
+             */
+            $participationRate =
+                $availableMinutes > 0
+                    ? min(
+                        1.0,
+                        $playerMinutes
+                        /
+                        $availableMinutes
+                    )
+                    : null;
 
 
             $fixtureRating =
@@ -521,13 +692,21 @@ class PlayerIntelligenceService
                     $this->playerEngine
                         ->analysePlayer(
                             $player,
-                            $fixtureRating
+                            $fixtureRating,
+                            $availableMinutes
                         );
 
 
                 $summary =
                     $profile['summary']
                     ?? [];
+
+
+                $effectiveConfidence =
+                    $profile[
+                        'performance'
+                    ]['effective_confidence']
+                    ?? null;
 
                 /*
                  * Preserve the original team-level immediate fixture
@@ -622,6 +801,39 @@ class PlayerIntelligenceService
                         'strength'
                     ]['sample_confidence']
                     ?? null;
+                    
+                    
+                /*
+                 * --------------------------------------------------------
+                 * EFFECTIVE DECISION CONFIDENCE
+                 * --------------------------------------------------------
+                 *
+                 * sample_confidence:
+                 *     maturity of the player's statistical sample
+                 *
+                 * effective_confidence:
+                 *     decision reliability after also considering how much
+                 *     of the team's available football the player has played
+                 *
+                 * Both remain available because they answer different
+                 * questions.
+                 */
+
+                $summary['effective_confidence'] =
+                    $effectiveConfidence;
+
+
+                $summary['team_available_minutes'] =
+                    $availableMinutes;
+
+
+                $summary['participation_rate'] =
+                    $participationRate !== null
+                        ? round(
+                            $participationRate,
+                            4
+                        )
+                        : null;
 
 
                 /*
@@ -660,6 +872,46 @@ class PlayerIntelligenceService
                     $profile[
                         'performance'
                     ]['expected_assists_rating']
+                    ?? null;
+                    
+                /*
+                 * --------------------------------------------------------
+                 * CONFIDENCE-ADJUSTED ATTACKING RATINGS
+                 * --------------------------------------------------------
+                 *
+                 * Preserve the sample-adjusted performance ratings already
+                 * produced by PlayerPerformance.
+                 *
+                 * These are the appropriate inputs for decision models such
+                 * as Captain Intelligence because tiny current-season samples
+                 * have already been regressed toward the neutral rating of 50.
+                 */
+
+                $summary['adjusted_goals_rating'] =
+                    $profile[
+                        'performance'
+                    ]['adjusted_goals_rating']
+                    ?? null;
+
+
+                $summary['adjusted_assists_rating'] =
+                    $profile[
+                        'performance'
+                    ]['adjusted_assists_rating']
+                    ?? null;
+
+
+                $summary['adjusted_expected_goals_rating'] =
+                    $profile[
+                        'performance'
+                    ]['adjusted_expected_goals_rating']
+                    ?? null;
+
+
+                $summary['adjusted_expected_assists_rating'] =
+                    $profile[
+                        'performance'
+                    ]['adjusted_expected_assists_rating']
                     ?? null;
 
 
@@ -2775,6 +3027,61 @@ class PlayerIntelligenceService
                 ->getAll();
 
 
+        /*
+         * --------------------------------------------------------
+         * EFFECTIVE CONFIDENCE SUPPORT
+         * --------------------------------------------------------
+         *
+         * Determine how much completed Premier League football
+         * is currently available to this player's team.
+         *
+         * Each completed fixture contributes 90 available minutes.
+         */
+
+        $availableMinutes =
+            0;
+
+
+        $completedFixtures =
+            $this->fixtureRepository
+                ->getFinishedFixtures();
+
+
+        foreach (
+            $completedFixtures
+            as $completedFixture
+        ) {
+
+            $homeTeamId =
+                (int) (
+                    $completedFixture[
+                        'home_team_id'
+                    ]
+                    ?? 0
+                );
+
+
+            $awayTeamId =
+                (int) (
+                    $completedFixture[
+                        'away_team_id'
+                    ]
+                    ?? 0
+                );
+
+
+            if (
+                $homeTeamId === $teamId
+                ||
+                $awayTeamId === $teamId
+            ) {
+
+                $availableMinutes +=
+                    90;
+            }
+        }
+
+
         $teamFixtureRatings =
             $this->buildTeamFixtureRatings(
                 $teams,
@@ -2797,7 +3104,8 @@ class PlayerIntelligenceService
             $this->playerEngine
                 ->analysePlayer(
                     $player,
-                    $fixtureRating
+                    $fixtureRating,
+                    $availableMinutes
                 );
 
 
@@ -4319,6 +4627,24 @@ class PlayerIntelligenceService
                     'performance'
                 ]['sample_confidence']
                 ?? null,
+                
+            'effective_confidence' =>
+                $profile[
+                    'summary'
+                ]['effective_confidence']
+                ?? null,
+
+            'team_available_minutes' =>
+                $profile[
+                    'summary'
+                ]['team_available_minutes']
+                ?? null,
+
+            'participation_rate' =>
+                $profile[
+                    'summary'
+                ]['participation_rate']
+                ?? null,
 
             'verdict' =>
                 $profile[
@@ -5094,6 +5420,77 @@ class PlayerIntelligenceService
                 ]
                 ?? $squadPlayer[
                     'sample_confidence'
+                ]
+                ?? null;
+                
+            /*
+             * ----------------------------------------------------
+             * EFFECTIVE DECISION CONFIDENCE
+             * ----------------------------------------------------
+             *
+             * Preserve the distinction between:
+             *
+             * - numeric Effective Confidence
+             * - explicit null when the team has not completed a match
+             *
+             * array_key_exists() is important here because null is a
+             * meaningful state rather than simply a missing value.
+             */
+
+            if (
+                is_array(
+                    $summary
+                )
+                &&
+                array_key_exists(
+                    'effective_confidence',
+                    $summary
+                )
+            ) {
+
+                $gameweekPlayer[
+                    'effective_confidence'
+                ] =
+                    $summary[
+                        'effective_confidence'
+                    ];
+
+            } elseif (
+                array_key_exists(
+                    'effective_confidence',
+                    $squadPlayer
+                )
+            ) {
+
+                $gameweekPlayer[
+                    'effective_confidence'
+                ] =
+                    $squadPlayer[
+                        'effective_confidence'
+                    ];
+            }
+
+
+            $gameweekPlayer[
+                'team_available_minutes'
+            ] =
+                $summary[
+                    'team_available_minutes'
+                ]
+                ?? $squadPlayer[
+                    'team_available_minutes'
+                ]
+                ?? null;
+
+
+            $gameweekPlayer[
+                'participation_rate'
+            ] =
+                $summary[
+                    'participation_rate'
+                ]
+                ?? $squadPlayer[
+                    'participation_rate'
                 ]
                 ?? null;
 

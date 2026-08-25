@@ -778,11 +778,51 @@ foreach (
                 $player,
                 $expectedAssistsKeys
             ),
+            
+        'adjusted_goals_rating' =>
+            captainRealFirstNumeric(
+                $player,
+                [
+                    'adjusted_goals_rating'
+                ]
+            ),
+
+        'adjusted_assists_rating' =>
+            captainRealFirstNumeric(
+                $player,
+                [
+                    'adjusted_assists_rating'
+                ]
+            ),
+
+        'adjusted_expected_goals_rating' =>
+            captainRealFirstNumeric(
+                $player,
+                [
+                    'adjusted_expected_goals_rating'
+                ]
+            ),
+
+        'adjusted_expected_assists_rating' =>
+            captainRealFirstNumeric(
+                $player,
+                [
+                    'adjusted_expected_assists_rating'
+                ]
+            ),
 
         'sample_confidence' =>
             captainRealFirstNumeric(
                 $player,
                 $confidenceKeys
+            ),
+            
+        'effective_confidence' =>
+            captainRealFirstNumeric(
+                $player,
+                [
+                    'effective_confidence'
+                ]
             ),
 
         'availability' =>

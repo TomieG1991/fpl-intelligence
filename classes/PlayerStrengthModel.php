@@ -325,6 +325,10 @@ class PlayerStrengthModel
                 $model['sample_confidence']
                 ?? null,
 
+            'effective_confidence' =>
+                $model['effective_confidence']
+                ?? null,
+
             'adjusted_goals_rating' =>
                 $model['adjusted_goals_rating']
                 ?? null,

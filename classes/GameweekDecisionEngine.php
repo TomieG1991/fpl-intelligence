@@ -548,24 +548,67 @@ class GameweekDecisionEngine
             );
 
 
-        $confidence =
-            $this->normalisePercentage(
+        /*
+         * --------------------------------------------------------
+         * DECISION RELIABILITY CONFIDENCE
+         * --------------------------------------------------------
+         *
+         * Effective Confidence is the preferred squad-risk signal.
+         *
+         * Important distinction:
+         *
+         * effective_confidence absent
+         *     → legacy caller, fall back to sample confidence
+         *
+         * effective_confidence numeric
+         *     → use participation-aware decision confidence
+         *
+         * effective_confidence explicitly null
+         *     → team has no completed-match participation evidence;
+         *       do not manufacture a confidence risk from the young
+         *       season sample alone
+         */
+
+        if (
+            array_key_exists(
+                'effective_confidence',
+                $player
+            )
+        ) {
+
+            $confidence =
                 $player[
-                    'sample_confidence'
+                    'effective_confidence'
                 ]
-                ??
-                $player[
-                    'confidence'
-                ]
-                ??
-                $player[
-                    'components'
-                ][
-                    'confidence'
-                ]
-                ??
-                null
-            );
+                !== null
+                    ? $this->normalisePercentage(
+                        $player[
+                            'effective_confidence'
+                        ]
+                    )
+                    : null;
+
+        } else {
+
+            $confidence =
+                $this->normalisePercentage(
+                    $player[
+                        'sample_confidence'
+                    ]
+                    ??
+                    $player[
+                        'confidence'
+                    ]
+                    ??
+                    $player[
+                        'components'
+                    ][
+                        'confidence'
+                    ]
+                    ??
+                    null
+                );
+        }
 
 
         /*
@@ -717,7 +760,7 @@ class GameweekDecisionEngine
 
                 'message' =>
                     $name
-                    . ' has very low sample confidence.'
+                    . ' has very low decision reliability.'
             ];
 
         } elseif (
@@ -750,7 +793,7 @@ class GameweekDecisionEngine
 
                 'message' =>
                     $name
-                    . ' has limited sample confidence.'
+                    . ' has limited decision reliability.'
             ];
         }
     }

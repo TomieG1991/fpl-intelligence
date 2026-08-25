@@ -491,6 +491,83 @@ foreach (
 
 /*
  * ============================================================
+ * SCENARIO J
+ * Confidence metadata propagation
+ * ============================================================
+ */
+
+echo "\n============================================\n";
+echo "Scenario J: Confidence Metadata\n";
+echo "============================================\n";
+
+
+$confidencePlayer =
+    $forward;
+
+
+$confidencePlayer[
+    'sample_confidence'
+] =
+    0.25;
+
+
+$confidencePlayer[
+    'effective_confidence'
+] =
+    0.70;
+
+
+$confidenceModel =
+    $strengthModel
+        ->buildModel(
+            $confidencePlayer
+        );
+
+
+testPass(
+    'Strength model exposes Sample Confidence',
+    array_key_exists(
+        'sample_confidence',
+        $confidenceModel
+    )
+);
+
+
+testPass(
+    'Strength model exposes Effective Confidence',
+    array_key_exists(
+        'effective_confidence',
+        $confidenceModel
+    )
+);
+
+
+testPass(
+    'Strength model preserves Sample Confidence',
+    (
+        $confidenceModel[
+            'sample_confidence'
+        ]
+        ?? null
+    )
+    === 0.25
+);
+
+
+testPass(
+    'Strength model preserves Effective Confidence',
+    (
+        $confidenceModel[
+            'effective_confidence'
+        ]
+        ?? null
+    )
+    === 0.70
+);
+
+
+/*
+ * ============================================================
  * FRONT-END FRIENDLY OUTPUT
  * ============================================================
  */

@@ -1997,7 +1997,7 @@ class WildcardOptimizer
                     (
                         (float) (
                             $player[
-                                'sample_confidence'
+                                'reliability_confidence'
                             ]
                             ?? 0
                         )
@@ -2335,7 +2335,7 @@ class WildcardOptimizer
 
         $confidence =
             $player[
-                'sample_confidence'
+                'reliability_confidence'
             ]
             ?? null;
 
@@ -2953,7 +2953,7 @@ class WildcardOptimizer
 
             $confidence =
                 $player[
-                    'sample_confidence'
+                    'reliability_confidence'
                 ]
                 ?? null;
 
@@ -3046,7 +3046,7 @@ class WildcardOptimizer
 
         $confidence =
             $player[
-                'sample_confidence'
+                'reliability_confidence'
             ]
             ?? null;
 
@@ -3299,6 +3299,27 @@ class WildcardOptimizer
                         'sample_confidence'
                     ]
                     ?? null
+                ),
+
+            'effective_confidence' =>
+                $this->normalisePercentage(
+                    $player[
+                        'effective_confidence'
+                    ]
+                    ?? null
+                ),
+
+            'reliability_confidence' =>
+                $this->normalisePercentage(
+                    $player[
+                        'effective_confidence'
+                    ]
+                    ?? (
+                        $player[
+                            'sample_confidence'
+                        ]
+                        ?? null
+                    )
                 )
         ];
     }
@@ -3464,8 +3485,9 @@ class WildcardOptimizer
 
         $confidence =
             $player[
-                'sample_confidence'
-            ];
+                'reliability_confidence'
+            ]
+            ?? null;
 
 
         if ($confidence !== null) {
@@ -3666,7 +3688,7 @@ class WildcardOptimizer
 
         $confidence =
             $player[
-                'sample_confidence'
+                'reliability_confidence'
             ]
             ?? null;
 

@@ -585,28 +585,26 @@ wildcardStructureTest(
 
 
 wildcardStructureTest(
-    'Backup goalkeeper is fourth bench slot',
+    'Backup goalkeeper is first bench slot',
     isset(
-        $bench[3]
+        $bench[0]
     )
     &&
     (
-        $bench[3][
+        $bench[0][
             'position'
         ]
         ?? null
     )
-    ===
-    'GK'
+    === 'GK'
     &&
     (
-        $bench[3][
+        $bench[0][
             'bench_order'
         ]
         ?? null
     )
-    ===
-    4
+    === 1
 );
 
 
