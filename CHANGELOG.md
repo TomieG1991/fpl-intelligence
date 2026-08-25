@@ -6,6 +6,263 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.27.0] - Historical Gameweek & Fixture Intelligence
+
+### Added
+- Added the historical data foundation for preserving FPL gameweek and player performance data across the season.
+- Added the `gameweeks` database table for storing all 38 official FPL gameweeks.
+- Added persistent gameweek identity using the official FPL gameweek ID.
+- Added gameweek deadline storage.
+- Added gameweek completion and data-check state.
+- Added previous, current and next gameweek state flags.
+- Added database uniqueness protection for official FPL gameweek IDs.
+- Added `GameweekRepository.php` for accessing persisted gameweek data.
+- Added repository support for retrieving gameweeks by official FPL gameweek ID.
+- Added repository lookups for previous, current and next gameweeks.
+- Added live FPL gameweek import support to the main FPL data updater.
+- Added import of all 38 official FPL gameweeks from the FPL bootstrap API.
+- Added idempotent gameweek importing so repeated FPL data updates do not create duplicate gameweeks.
+
+- Added the `player_gameweek_snapshots` database table for preserving player bootstrap state by gameweek.
+- Added historical player snapshot identity linking each snapshot to its player, team and gameweek.
+- Added persistence of current player state so later FPL bootstrap updates do not destroy the state that existed during an earlier gameweek.
+- Added current-gameweek player snapshot importing to the FPL data updater.
+- Added complete current-player snapshot coverage during normal FPL data updates.
+- Added idempotent player snapshot persistence so repeated updater runs update the existing player/gameweek snapshot rather than creating duplicates.
+- Added snapshot foreign-key protection for players, teams and gameweeks.
+- Added historical snapshot support for player identity, team, position and core FPL state.
+
+- Added the `player_fixture_history` database table for preserving official per-fixture FPL player performance.
+- Added historical fixture records linked to:
+  - local gameweek
+  - local player
+  - official FPL player ID
+  - local fixture
+  - official FPL fixture ID
+  - historical team
+  - historical opponent
+- Added player/fixture uniqueness protection so each player can have only one stored record for a particular fixture.
+- Added database structure that safely supports normal, blank and double gameweeks by using player + fixture rather than player + gameweek as the historical uniqueness contract.
+- Added historical home/away state.
+- Added historical total points.
+- Added historical minutes and starts.
+- Added historical goals and assists.
+- Added historical expected goals.
+- Added historical expected assists.
+- Added historical expected goal involvements.
+- Added historical clean sheets and goals conceded.
+- Added historical expected goals conceded.
+- Added saves and penalties saved.
+- Added clearances, blocks and interceptions.
+- Added recoveries and tackles.
+- Added defensive contribution.
+- Added own goals and penalties missed.
+- Added yellow and red cards.
+- Added bonus and BPS.
+- Added influence, creativity, threat and ICT Index.
+- Added historical player price.
+- Added historical selection and transfer data.
+
+- Added `PlayerFixtureHistoryRepository.php` for persistent player fixture-history access.
+- Added fixture-history upsert support.
+- Added fixture-history lookup by player and fixture.
+- Added fixture-history count support.
+- Added safe parameter handling for repository queries.
+
+- Added live FPL player-summary API support.
+- Added retrieval of official player `element-summary` data.
+- Added access to:
+  - upcoming player fixtures
+  - current-season fixture history
+  - previous-season history
+- Added validation preventing invalid zero or negative FPL player IDs from being requested.
+- Added support for the current FPL player-summary response structure.
+
+- Added `updatePlayerFixtureHistory.php` as the dedicated historical fixture-performance importer.
+- Added live per-player fixture-history importing from the official FPL player-summary endpoint.
+- Added local gameweek resolution from official FPL history records.
+- Added local fixture resolution from official FPL fixture IDs.
+- Added historical team resolution from the actual fixture rather than relying on the player's current team.
+- Added historical opponent resolution from the actual fixture.
+- Added validation against the official FPL opponent identity.
+- Added historical home/away resolution.
+- Added FPL price normalisation from tenths to pounds.
+- Added fixture-history upserting so historical imports can be safely rerun.
+- Added preservation of legitimate zero-minute history records as known historical evidence rather than treating them as missing data.
+
+- Added controlled fixture-history batch importing using `limit` and `offset`.
+- Added resumable fixture-history importing so interrupted imports can continue from a later player offset.
+- Added full-player-pool import mode.
+- Added eligible-player counting before historical imports.
+- Added per-player progress output.
+- Added import mode diagnostics.
+- Added API request throttling between player-summary requests.
+- Added request throttling after failed API calls before processing the next player.
+- Added import summaries covering:
+  - players selected
+  - players processed
+  - players failed
+  - history rows found
+  - history rows imported
+  - history rows skipped
+  - total stored history rows
+  - import mode
+
+### Changed
+- Extended the database from current-state FPL storage into a historical gameweek-aware data model.
+- Changed the FPL data update pipeline so official gameweek metadata is persisted before current player state is processed.
+- Extended the main updater to preserve current-gameweek player snapshots.
+- Preserved current `players` records as the application's live player state while introducing separate historical snapshot storage.
+- Separated player fixture-history importing from the normal bootstrap updater because fixture history requires individual FPL player-summary requests.
+- Kept the historical fixture importer independently resumable rather than requiring hundreds of live player-summary requests during every standard FPL data update.
+- Changed historical player performance storage to use the actual fixture team context rather than assuming the player's current team is historically correct.
+- Changed historical uniqueness to player + fixture so Double Gameweeks can safely contain multiple records for the same player and gameweek.
+- Preserved zero-minute fixture records because an official FPL history row containing zero minutes represents known evidence rather than unavailable data.
+- Added safe API throttling to reduce back-to-back requests when importing large player pools.
+- Retained manual batch controls alongside full import mode for diagnostics and recovery.
+
+- Updated Team Intelligence form rendering to support structured recent-form records produced by `TeamPerformance`.
+- Changed Team Intelligence page form formatting to extract the `result` value from structured match records.
+- Preserved backwards compatibility with legacy string-based recent-form values.
+- Updated both the league-wide Team Intelligence page and individual Team Intelligence profile page to safely render structured W/D/L form data.
+- Changed the Team Intelligence profile regression test so fixture classifications are validated against supported classification states rather than permanently requiring Arsenal to have an `Excellent` fixture classification.
+- Made the Team Intelligence profile test data-aware so legitimate fixture-rating changes after completed Premier League matches do not create false regression failures.
+
+### Fixed
+- Fixed the historical database schema being incomplete compared with the live development database.
+- Fixed missing persistent gameweek history that would otherwise be lost as the FPL API moves from one gameweek to the next.
+- Fixed current player bootstrap updates having no historical snapshot layer.
+- Fixed the inability to reconstruct a player's state from an earlier gameweek after current FPL data changes.
+- Fixed the lack of persistent official per-fixture player performance history.
+- Fixed historical player records potentially using a player's current team instead of the team represented by the historical fixture.
+- Fixed historical opponent resolution by deriving team/opponent context from the stored fixture and validating it against FPL history data.
+- Fixed fixture-history repository parameter binding that could produce `SQLSTATE[HY093]: Invalid parameter number`.
+- Fixed fixture-history reruns potentially requiring manual duplicate management by introducing idempotent player/fixture upserts.
+- Prevented repeated gameweek imports from creating duplicate gameweek records.
+- Prevented repeated current-gameweek snapshot imports from creating duplicate player snapshots.
+- Prevented repeated fixture-history imports from creating duplicate player/fixture history rows.
+- Prevented blank and double gameweeks from being incorrectly constrained by player/gameweek uniqueness.
+- Prevented legitimate zero-minute player appearances from being interpreted as missing historical evidence.
+- Prevented invalid FPL player IDs from reaching the live player-summary API.
+- Prevented failed live API requests from bypassing request throttling before the next player request.
+
+- Fixed `Array to string conversion` PHP warnings on Team Intelligence pages after completed Premier League form data became available.
+- Fixed `teams.php` attempting to directly implode structured recent-form arrays.
+- Fixed `team.php` attempting to directly implode structured recent-form arrays.
+- Fixed Team Intelligence page rendering that worked with empty preseason form data but produced warnings once GW1 performance records existed.
+- Fixed a stale Team Intelligence profile regression assertion that permanently expected Arsenal's fixture classification to be `Excellent`.
+- Updated fixture-classification regression coverage to accept the current supported classification while still validating the rendered CSS class and label.
+- Confirmed Arsenal's current post-GW1 fixture classification renders correctly as `Good`.
+
+### Historical Data Validation
+- Imported all 38 official FPL gameweeks.
+- Confirmed official gameweek IDs span GW1 through GW38.
+- Confirmed gameweek deadlines are stored chronologically.
+- Confirmed current and next gameweek state is imported correctly.
+- Confirmed the absence of a previous gameweek is safely handled when the FPL API does not currently expose one.
+- Confirmed repeated gameweek imports preserve exactly 38 rows.
+
+- Imported 610 current-gameweek player snapshots.
+- Confirmed snapshot coverage matches the complete current player dataset.
+- Confirmed all 610 player snapshots remain unique after repeated updater runs.
+- Confirmed snapshot player, team and gameweek foreign-key consistency.
+- Confirmed snapshot FPL player identities match current player records.
+- Confirmed snapshot team and position values match the captured current player state.
+
+- Imported complete GW1 player fixture history for all 610 current players.
+- Confirmed GW1 contains 610 stored fixture-history rows.
+- Confirmed GW1 history represents 610 unique players.
+- Confirmed GW1 history represents all 10 Premier League fixtures.
+- Confirmed zero duplicate player/fixture history rows.
+- Confirmed repeated fixture-history batches update existing rows rather than creating duplicates.
+- Confirmed fixture-history importing works across small 5-player, 25-player and 100-player controlled batches.
+- Confirmed all remaining GW1 player history can be imported through resumable batch processing.
+- Confirmed real playing and non-playing records are both preserved, including zero-minute players.
+- Confirmed historical player price values are correctly normalised and persisted.
+
+### Testing
+- Added `HistoricalSchemaTest.php` for historical database schema regression coverage.
+- Added validation of historical table existence and structure.
+- Added validation of historical foreign-key relationships.
+- Added validation of historical uniqueness contracts.
+
+- Added `GameweekIntegrationTest.php`.
+- Added validation that exactly 38 FPL gameweeks are stored.
+- Added validation that stored FPL gameweek IDs are unique.
+- Added validation that stored gameweeks span GW1 to GW38.
+- Added validation of gameweek names and deadlines.
+- Added validation of previous, current and next state flags.
+- Added validation that gameweek state flags are mutually exclusive.
+- Added validation of finished and data-checked state.
+- Added repository state-lookup validation.
+- Added chronological deadline validation.
+- Added database uniqueness validation.
+- Added GW1 and GW38 identity lookup validation.
+- Added repeated-import idempotency validation.
+
+- Added player gameweek snapshot integration coverage.
+- Added validation that the current FPL gameweek can be resolved locally.
+- Added validation that snapshot count matches the current player count.
+- Added snapshot uniqueness validation.
+- Added snapshot foreign-key consistency validation.
+- Added FPL player identity consistency validation.
+- Added snapshot team and position consistency validation.
+- Added core snapshot data-integrity validation.
+- Added current-state parity validation.
+- Added snapshot gameweek-distribution validation.
+- Added repeated snapshot-import idempotency validation.
+
+- Added `FPLApiPlayerSummaryTest.php`.
+- Added live real-player player-summary API validation.
+- Added response contract validation for `fixtures`, `history` and `history_past`.
+- Added upcoming fixture contract validation.
+- Added current-season history contract validation.
+- Added previous-season history contract validation.
+- Added invalid-player protection coverage.
+- Added live player-summary performance coverage.
+
+- Added `PlayerFixtureHistoryRepositoryTest.php`.
+- Added fixture-history repository persistence coverage.
+- Added retrieval coverage.
+- Added uniqueness and upsert coverage.
+- Added fixture-history count validation.
+
+- Added single-player real fixture-history import testing using Raya.
+- Added live current-season history validation.
+- Added local gameweek resolution validation.
+- Added local fixture resolution validation.
+- Added historical team and opponent resolution validation.
+- Added official FPL opponent cross-validation.
+- Added historical record construction validation.
+- Added price-normalisation validation.
+- Added real fixture-history persistence validation.
+- Added stored-data validation.
+- Added live idempotency validation.
+
+- Added `PlayerFixtureHistoryImportIntegrationTest.php`.
+- Added validation that imported fixture history exists.
+- Added gameweek-distribution validation.
+- Added player/fixture uniqueness validation.
+- Added player, gameweek, fixture, team and opponent foreign-key validation.
+- Added FPL player and fixture identity validation.
+- Added gameweek/fixture consistency validation.
+- Added historical home/away team-context validation.
+- Added core historical data-integrity validation.
+- Added explicit normal, blank and Double Gameweek structural safety coverage.
+- Added validation that the database uniqueness contract uses player + fixture.
+- Added current import coverage validation without hard-coding a permanent GW1 player count.
+- Added zero-minute historical record coverage.
+- Added fixture-history database performance validation.
+
+- Updated `TeamsPageTest.php` coverage for live completed-match Team Intelligence rendering.
+- Updated `TeamIntelligenceProfilePageTest.php` to validate supported fixture classifications rather than a stale fixed classification.
+- Added regression protection against PHP warnings caused by structured recent-form records.
+- Confirmed Arsenal's current rendered fixture classification is `Good`.
+- Verified `PlayerFixtureHistoryImportIntegrationTest.php` passes successfully.
+- Verified `TeamsPageTest.php` passes successfully after the post-GW1 rendering fix.
+- Verified `TeamIntelligenceProfilePageTest.php` passes successfully after the post-GW1 rendering fix.
+- Verified the complete `RunAllTests.php` project regression suite passes successfully.
+
 ## [0.26.0] - Effective Confidence & Live Gameweek Intelligence
 
 ### Added

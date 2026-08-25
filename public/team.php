@@ -263,12 +263,80 @@ function teamProfileForm(
     }
 
 
-    return implode(
-        '',
+    $results =
+        [];
+
+
+    foreach (
         array_slice(
             $form,
             -5
         )
+        as $entry
+    ) {
+
+        /*
+         * Current TeamPerformance output stores each
+         * result as a structured match record.
+         *
+         * Retain support for legacy string form values
+         * so this helper remains backwards-compatible.
+         */
+        $result =
+            is_array(
+                $entry
+            )
+                ? (
+                    $entry[
+                        'result'
+                    ]
+                    ?? null
+                )
+                : $entry;
+
+
+        $result =
+            strtoupper(
+                trim(
+                    (string) $result
+                )
+            );
+
+
+        if (
+            !in_array(
+                $result,
+                [
+                    'W',
+                    'D',
+                    'L'
+                ],
+                true
+            )
+        ) {
+
+            continue;
+        }
+
+
+        $results[] =
+            $result;
+    }
+
+
+    if (
+        empty(
+            $results
+        )
+    ) {
+
+        return '—';
+    }
+
+
+    return implode(
+        '',
+        $results
     );
 }
 

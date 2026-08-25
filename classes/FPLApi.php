@@ -56,6 +56,33 @@ class FPLApi
             'fixtures/'
         );
     }
+    
+    /**
+     * Return the detailed FPL summary for one player.
+     *
+     * Includes:
+     * - upcoming fixtures
+     * - current-season fixture history
+     * - previous-season history
+     */
+    public function getPlayerSummary(
+        int $fplPlayerId
+    ): array {
+
+        if ($fplPlayerId <= 0) {
+
+            throw new InvalidArgumentException(
+                'FPL player ID must be greater than zero'
+            );
+        }
+
+
+        return $this->request(
+            'element-summary/'
+            . $fplPlayerId
+            . '/'
+        );
+    }
 
 
     /**

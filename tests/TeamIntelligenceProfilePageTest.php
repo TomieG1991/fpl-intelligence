@@ -688,18 +688,110 @@ teamProfilePageCheck(
 );
 
 
-teamProfilePageCheck(
-    'Excellent fixture classification is rendered',
-    strpos(
-        $normalisedHtml,
-        'team-fixture-badge-excellent'
-    ) !== false
-    &&
+$fixtureClassification =
+    null;
+
+
+if (
     preg_match(
-        '/>\s*Excellent\s*<\/span>/i',
-        $normalisedHtml
-    ) === 1
+        '/class="team-fixture-badge team-fixture-badge-([a-z-]+)"[^>]*>\s*([^<]+)\s*<\/span>/i',
+        $normalisedHtml,
+        $fixtureClassificationMatches
+    )
+    === 1
+) {
+
+    $fixtureClassification = [
+
+        'class' =>
+            strtolower(
+                trim(
+                    (string) (
+                        $fixtureClassificationMatches[
+                            1
+                        ]
+                        ?? ''
+                    )
+                )
+            ),
+
+        'label' =>
+            strtolower(
+                trim(
+                    (string) (
+                        $fixtureClassificationMatches[
+                            2
+                        ]
+                        ?? ''
+                    )
+                )
+            )
+    ];
+}
+
+
+$supportedFixtureClassifications = [
+
+    'excellent' =>
+        'excellent',
+
+    'good' =>
+        'good',
+
+    'average' =>
+        'average',
+
+    'difficult' =>
+        'difficult',
+
+    'very-difficult' =>
+        'very difficult'
+];
+
+
+teamProfilePageCheck(
+    'Supported fixture classification is rendered',
+    is_array(
+        $fixtureClassification
+    )
+    &&
+    isset(
+        $supportedFixtureClassifications[
+            $fixtureClassification[
+                'class'
+            ]
+        ]
+    )
+    &&
+    $supportedFixtureClassifications[
+        $fixtureClassification[
+            'class'
+        ]
+    ]
+    ===
+    $fixtureClassification[
+        'label'
+    ]
 );
+
+
+echo "Rendered Fixture Classification: "
+    . (
+        is_array(
+            $fixtureClassification
+        )
+            ? htmlspecialchars(
+                ucwords(
+                    $fixtureClassification[
+                        'label'
+                    ]
+                ),
+                ENT_QUOTES,
+                'UTF-8'
+            )
+            : 'N/A'
+    )
+    . "<br>";
 
 
 foreach (
