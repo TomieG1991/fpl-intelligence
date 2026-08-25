@@ -115,6 +115,35 @@ function profileDisplayRating(
     );
 }
 
+function profileDisplayPercent(
+    mixed $value
+): string {
+
+    if (
+        $value === null
+        ||
+        !is_numeric(
+            $value
+        )
+    ) {
+
+        return '—';
+    }
+
+
+    return number_format(
+        max(
+            0,
+            min(
+                100,
+                (float) $value
+            )
+        ),
+        1
+    )
+    . '%';
+}
+
 
 function profileDisplayPrice(
     mixed $price
@@ -465,6 +494,85 @@ $summaryNextFive =
     $fixtureProfile[
         'rolling_averages'
     ]['next_5']
+    ?? null; 
+
+/*
+ * ============================================================
+ * PLAYER FORM INTELLIGENCE
+ * ============================================================
+ *
+ * Historical Form Intelligence is currently diagnostic only.
+ *
+ * These values do not yet alter the main Player Intelligence
+ * Score or downstream FPL recommendations.
+ */
+
+$formRating =
+    $profileSummary[
+        'form_rating'
+    ]
+    ?? null;
+
+
+$performanceRating =
+    $profileSummary[
+        'performance_rating'
+    ]
+    ?? null;
+
+
+$formTrend =
+    $profileSummary[
+        'form_trend'
+    ]
+    ?? 'Insufficient Data';
+
+
+$formParticipationTrend =
+    $profileSummary[
+        'participation_trend'
+    ]
+    ?? 'Insufficient Data';
+
+
+$formMinutesTrend =
+    $profileSummary[
+        'minutes_trend'
+    ]
+    ?? 'Insufficient Data';
+
+
+$formFixtureSampleSize =
+    (int) (
+        $profileSummary[
+            'form_fixture_sample_size'
+        ]
+        ?? 0
+    );
+
+
+$formAppearanceSampleSize =
+    (int) (
+        $profileSummary[
+            'form_appearance_sample_size'
+        ]
+        ?? 0
+    );
+
+
+$formZeroMinuteRows =
+    (int) (
+        $profileSummary[
+            'form_zero_minute_rows'
+        ]
+        ?? 0
+    );
+
+
+$formParticipationRate =
+    $profileSummary[
+        'form_participation_rate'
+    ]
     ?? null;    
 
 $activeNav = 'players';
@@ -1142,6 +1250,315 @@ $activeNav = 'players';
 
                         </article>
 
+
+                    </section>
+                    
+                    
+                    <!-- ======================================
+                         RECENT FORM INTELLIGENCE
+                         ====================================== -->
+
+                    <section
+                        class="dashboard-card player-form-card"
+                        data-player-form-intelligence
+                    >
+
+                        <div class="card-header">
+
+                            <div>
+
+                                <p class="card-kicker">
+                                    Historical Intelligence
+                                </p>
+
+                                <h2>
+                                    Recent Form
+                                </h2>
+
+                            </div>
+
+                        </div>
+
+
+                        <p class="assessment-summary">
+
+                            Recent Form uses stored per-fixture FPL history
+                            to separate overall recent form, on-pitch
+                            performance and playing-time direction.
+
+                        </p>
+
+
+                        <!-- ==================================
+                             FORM RATINGS
+                             ================================== -->
+
+                        <div class="player-form-rating-grid">
+
+                            <div
+                                class="player-form-rating-card"
+                                data-form-rating
+                            >
+
+                                <span class="player-form-rating-label">
+                                    Form Rating
+                                </span>
+
+                                <strong class="<?= profileRatingClass(
+                                    $formRating
+                                ); ?>">
+
+                                    <?= profileDisplayRating(
+                                        $formRating
+                                    ); ?>
+
+                                </strong>
+
+                                <div class="player-form-rating-bar">
+
+                                    <span
+                                        style="width: <?= is_numeric(
+                                            $formRating
+                                        )
+                                            ? min(
+                                                100,
+                                                max(
+                                                    0,
+                                                    (float) $formRating
+                                                )
+                                            )
+                                            : 0; ?>%;"
+                                    ></span>
+
+                                </div>
+
+                                <small>
+                                    Holistic recent form
+                                </small>
+
+                            </div>
+
+
+                            <div
+                                class="player-form-rating-card"
+                                data-performance-rating
+                            >
+
+                                <span class="player-form-rating-label">
+                                    Performance Rating
+                                </span>
+
+                                <strong class="<?= profileRatingClass(
+                                    $performanceRating
+                                ); ?>">
+
+                                    <?= profileDisplayRating(
+                                        $performanceRating
+                                    ); ?>
+
+                                </strong>
+
+                                <div class="player-form-rating-bar">
+
+                                    <span
+                                        style="width: <?= is_numeric(
+                                            $performanceRating
+                                        )
+                                            ? min(
+                                                100,
+                                                max(
+                                                    0,
+                                                    (float) $performanceRating
+                                                )
+                                            )
+                                            : 0; ?>%;"
+                                    ></span>
+
+                                </div>
+
+                                <small>
+                                    On-pitch performance
+                                </small>
+
+                            </div>
+
+
+                            <div
+                                class="player-form-rating-card"
+                                data-form-participation-rate
+                            >
+
+                                <span class="player-form-rating-label">
+                                    Participation
+                                </span>
+
+                                <strong>
+
+                                    <?= profileDisplayPercent(
+                                        $formParticipationRate
+                                    ); ?>
+
+                                </strong>
+
+                                <div class="player-form-rating-bar">
+
+                                    <span
+                                        style="width: <?= is_numeric(
+                                            $formParticipationRate
+                                        )
+                                            ? min(
+                                                100,
+                                                max(
+                                                    0,
+                                                    (float) $formParticipationRate
+                                                )
+                                            )
+                                            : 0; ?>%;"
+                                    ></span>
+
+                                </div>
+
+                                <small>
+                                    Recent fixture involvement
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ==================================
+                             FORM TRENDS
+                             ================================== -->
+
+                        <div class="assessment-component-grid">
+
+                            <div
+                                class="assessment-component"
+                                data-form-trend
+                            >
+
+                                <span>
+                                    Performance Trend
+                                </span>
+
+                                <strong>
+
+                                    <?= htmlspecialchars(
+                                        $formTrend,
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    ); ?>
+
+                                </strong>
+
+                            </div>
+
+
+                            <div
+                                class="assessment-component"
+                                data-participation-trend
+                            >
+
+                                <span>
+                                    Participation Trend
+                                </span>
+
+                                <strong>
+
+                                    <?= htmlspecialchars(
+                                        $formParticipationTrend,
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    ); ?>
+
+                                </strong>
+
+                            </div>
+
+
+                            <div
+                                class="assessment-component"
+                                data-minutes-trend
+                            >
+
+                                <span>
+                                    Minutes Trend
+                                </span>
+
+                                <strong>
+
+                                    <?= htmlspecialchars(
+                                        $formMinutesTrend,
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    ); ?>
+
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ==================================
+                             HISTORICAL SAMPLE
+                             ================================== -->
+
+                        <div class="player-summary-footer">
+
+                            <span>
+                                Historical Sample
+                            </span>
+
+
+                            <strong data-form-fixture-sample>
+
+                                <?= number_format(
+                                    $formFixtureSampleSize
+                                ); ?>
+
+                            </strong>
+
+                            <span>
+                                recent fixtures
+                            </span>
+
+
+                            <strong data-form-appearance-sample>
+
+                                <?= number_format(
+                                    $formAppearanceSampleSize
+                                ); ?>
+
+                            </strong>
+
+                            <span>
+                                appearances
+                            </span>
+
+
+                            <?php if (
+                                $formZeroMinuteRows > 0
+                            ): ?>
+
+                                <strong data-form-zero-minute-rows>
+
+                                    <?= number_format(
+                                        $formZeroMinuteRows
+                                    ); ?>
+
+                                </strong>
+
+                                <span>
+                                    zero-minute fixture<?= $formZeroMinuteRows === 1
+                                        ? ''
+                                        : 's'; ?>
+                                </span>
+
+                            <?php endif; ?>
+
+                        </div>
 
                     </section>
                     

@@ -740,6 +740,221 @@ class PlayerFixtureHistoryRepository
                 PDO::FETCH_ASSOC
             );
     }
+    
+    
+    /**
+     * Return a player's most recent fixture-history rows.
+     *
+     * Zero-minute rows are intentionally included because an
+     * official FPL history row with zero minutes is known
+     * participation evidence rather than missing data.
+     *
+     * The database query selects the newest rows first so LIMIT
+     * applies to the correct end of the history. The result is
+     * then reversed before returning so consumers receive the
+     * selected window in chronological order.
+     *
+     * This also remains safe for Double Gameweeks because fixture
+     * kickoff time is used inside each gameweek.
+     */
+    public function getRecentByPlayerId(
+        int $playerId,
+        int $limit = 5
+    ): array {
+
+        if (
+            $playerId <= 0
+            ||
+            $limit <= 0
+        ) {
+
+            return [];
+        }
+
+
+        /*
+         * Protect callers from accidentally requesting an
+         * unnecessarily large history window.
+         *
+         * Current form models only require short rolling periods,
+         * but allowing up to 20 fixtures leaves room for future
+         * diagnostics and comparisons.
+         */
+        $limit =
+            min(
+                20,
+                $limit
+            );
+
+
+        $statement =
+            $this->db
+                ->prepare(
+                    "
+                    SELECT
+                        pfh.*
+                    FROM
+                        player_fixture_history pfh
+                    INNER JOIN
+                        gameweeks g
+                            ON g.id = pfh.gameweek_id
+                    INNER JOIN
+                        fixtures f
+                            ON f.id = pfh.fixture_id
+                    WHERE
+                        pfh.player_id = :player_id
+                    ORDER BY
+                        g.fpl_gameweek_id DESC,
+                        f.kickoff_time DESC,
+                        pfh.id DESC
+                    LIMIT :history_limit
+                    "
+                );
+
+
+        $statement
+            ->bindValue(
+                ':player_id',
+                $playerId,
+                PDO::PARAM_INT
+            );
+
+
+        $statement
+            ->bindValue(
+                ':history_limit',
+                $limit,
+                PDO::PARAM_INT
+            );
+
+
+        $statement
+            ->execute();
+
+
+        $rows =
+            $statement
+                ->fetchAll(
+                    PDO::FETCH_ASSOC
+                );
+
+
+        /*
+         * Consumers of form data should receive the selected
+         * history window from oldest to newest.
+         *
+         * Example:
+         *
+         * requested last three:
+         * GW3, GW4, GW5
+         *
+         * returned:
+         * GW3 → GW4 → GW5
+         */
+        return array_reverse(
+            $rows
+        );
+    }
+
+
+    /**
+     * Return a player's most recent appearances.
+     *
+     * Unlike getRecentByPlayerId(), this deliberately excludes
+     * zero-minute fixture-history rows.
+     *
+     * This method represents recent on-pitch performance samples,
+     * whereas getRecentByPlayerId() represents recent team-fixture
+     * participation history.
+     *
+     * The distinction is important for Player Form:
+     *
+     * zero minutes
+     *     = participation/minutes evidence
+     *
+     * minutes > 0
+     *     = actual performance evidence
+     */
+    public function getRecentAppearancesByPlayerId(
+        int $playerId,
+        int $limit = 5
+    ): array {
+
+        if (
+            $playerId <= 0
+            ||
+            $limit <= 0
+        ) {
+
+            return [];
+        }
+
+
+        $limit =
+            min(
+                20,
+                $limit
+            );
+
+
+        $statement =
+            $this->db
+                ->prepare(
+                    "
+                    SELECT
+                        pfh.*
+                    FROM
+                        player_fixture_history pfh
+                    INNER JOIN
+                        gameweeks g
+                            ON g.id = pfh.gameweek_id
+                    INNER JOIN
+                        fixtures f
+                            ON f.id = pfh.fixture_id
+                    WHERE
+                        pfh.player_id = :player_id
+                        AND
+                        pfh.minutes > 0
+                    ORDER BY
+                        g.fpl_gameweek_id DESC,
+                        f.kickoff_time DESC,
+                        pfh.id DESC
+                    LIMIT :history_limit
+                    "
+                );
+
+
+        $statement
+            ->bindValue(
+                ':player_id',
+                $playerId,
+                PDO::PARAM_INT
+            );
+
+
+        $statement
+            ->bindValue(
+                ':history_limit',
+                $limit,
+                PDO::PARAM_INT
+            );
+
+
+        $statement
+            ->execute();
+
+
+        $rows =
+            $statement
+                ->fetchAll(
+                    PDO::FETCH_ASSOC
+                );
+
+
+        return array_reverse(
+            $rows
+        );
+    }
 
 
     /**

@@ -5590,6 +5590,389 @@ testPass(
             ?? 'N/A'
         )
         . "<br>";
+        
+        
+    /*
+     * ============================================================
+     * SCENARIO T
+     * PLAYER FORM INTELLIGENCE
+     * ============================================================
+     */
+
+    echo "============================================<br>";
+    echo "Scenario T: Player Form Intelligence<br>";
+    echo "============================================<br>";
+
+
+    $allFormFieldsPresent =
+        true;
+
+
+    $allFormRatingsValid =
+        true;
+
+
+    $allPerformanceRatingsValid =
+        true;
+
+
+    $allTrendLabelsValid =
+        true;
+
+
+    $allSampleCountsValid =
+        true;
+
+
+    $allParticipationRatesValid =
+        true;
+
+
+    $trendLabels = [
+        'Improving',
+        'Stable',
+        'Declining',
+        'Insufficient Data'
+    ];
+
+
+    foreach (
+        $summaries
+        as $summary
+    ) {
+
+        foreach (
+            [
+                'form_rating',
+                'performance_rating',
+                'form_trend',
+                'participation_trend',
+                'minutes_trend',
+                'form_fixture_sample_size',
+                'form_appearance_sample_size',
+                'form_zero_minute_rows',
+                'form_participation_rate',
+                'form_difference',
+                'participation_difference',
+                'minutes_difference'
+            ]
+            as $field
+        ) {
+
+            if (
+                !array_key_exists(
+                    $field,
+                    $summary
+                )
+            ) {
+
+                $allFormFieldsPresent =
+                    false;
+
+                break 2;
+            }
+        }
+
+
+        /*
+         * --------------------------------------------------------
+         * FORM RATING
+         * --------------------------------------------------------
+         */
+
+        $formRating =
+            $summary[
+                'form_rating'
+            ]
+            ?? null;
+
+
+        if (
+            $formRating !== null
+            &&
+            (
+                !is_numeric(
+                    $formRating
+                )
+                ||
+                (float) $formRating < 0
+                ||
+                (float) $formRating > 100
+            )
+        ) {
+
+            $allFormRatingsValid =
+                false;
+        }
+
+
+        /*
+         * --------------------------------------------------------
+         * PERFORMANCE RATING
+         * --------------------------------------------------------
+         */
+
+        $performanceRating =
+            $summary[
+                'performance_rating'
+            ]
+            ?? null;
+
+
+        if (
+            $performanceRating !== null
+            &&
+            (
+                !is_numeric(
+                    $performanceRating
+                )
+                ||
+                (float) $performanceRating < 0
+                ||
+                (float) $performanceRating > 100
+            )
+        ) {
+
+            $allPerformanceRatingsValid =
+                false;
+        }
+
+
+        /*
+         * --------------------------------------------------------
+         * TREND LABELS
+         * --------------------------------------------------------
+         */
+
+        foreach (
+            [
+                'form_trend',
+                'participation_trend',
+                'minutes_trend'
+            ]
+            as $trendField
+        ) {
+
+            if (
+                !in_array(
+                    (
+                        $summary[
+                            $trendField
+                        ]
+                        ?? null
+                    ),
+                    $trendLabels,
+                    true
+                )
+            ) {
+
+                $allTrendLabelsValid =
+                    false;
+            }
+        }
+
+
+        /*
+         * --------------------------------------------------------
+         * SAMPLE COUNTS
+         * --------------------------------------------------------
+         */
+
+        foreach (
+            [
+                'form_fixture_sample_size',
+                'form_appearance_sample_size',
+                'form_zero_minute_rows'
+            ]
+            as $sampleField
+        ) {
+
+            $sampleValue =
+                $summary[
+                    $sampleField
+                ]
+                ?? null;
+
+
+            if (
+                !is_numeric(
+                    $sampleValue
+                )
+                ||
+                (int) $sampleValue < 0
+            ) {
+
+                $allSampleCountsValid =
+                    false;
+            }
+        }
+
+
+        /*
+         * --------------------------------------------------------
+         * PARTICIPATION RATE
+         * --------------------------------------------------------
+         */
+
+        $formParticipationRate =
+            $summary[
+                'form_participation_rate'
+            ]
+            ?? null;
+
+
+        if (
+            $formParticipationRate !== null
+            &&
+            (
+                !is_numeric(
+                    $formParticipationRate
+                )
+                ||
+                (float) $formParticipationRate < 0
+                ||
+                (float) $formParticipationRate > 100
+            )
+        ) {
+
+            $allParticipationRatesValid =
+                false;
+        }
+    }
+
+
+    testPass(
+        'All Player Intelligence summaries expose Form Intelligence fields',
+        $allFormFieldsPresent
+    );
+
+
+    testPass(
+        'All available Form Ratings remain between 0 and 100',
+        $allFormRatingsValid
+    );
+
+
+    testPass(
+        'All available Performance Ratings remain between 0 and 100',
+        $allPerformanceRatingsValid
+    );
+
+
+    testPass(
+        'All Form Intelligence trend labels use supported states',
+        $allTrendLabelsValid
+    );
+
+
+    testPass(
+        'All Form Intelligence sample counts are non-negative',
+        $allSampleCountsValid
+    );
+
+
+    testPass(
+        'All available Form participation rates remain between 0 and 100',
+        $allParticipationRatesValid
+    );
+
+
+    /*
+     * ============================================================
+     * CURRENT EARLY-SEASON TREND CONTRACT
+     * ============================================================
+     *
+     * Current real historical data contains only GW1.
+     *
+     * A player with fewer than five stored fixture-history rows
+     * must not claim a full Form Trend yet.
+     */
+
+    $currentTrendStateValid =
+        true;
+
+
+    foreach (
+        $summaries
+        as $summary
+    ) {
+
+        $fixtureSampleSize =
+            (int) (
+                $summary[
+                    'form_fixture_sample_size'
+                ]
+                ?? 0
+            );
+
+
+        if (
+            $fixtureSampleSize < 5
+        ) {
+
+            if (
+                (
+                    $summary[
+                        'form_trend'
+                    ]
+                    ?? null
+                )
+                !==
+                'Insufficient Data'
+            ) {
+
+                $currentTrendStateValid =
+                    false;
+
+                break;
+            }
+
+
+            if (
+                (
+                    $summary[
+                        'participation_trend'
+                    ]
+                    ?? null
+                )
+                !==
+                'Insufficient Data'
+            ) {
+
+                $currentTrendStateValid =
+                    false;
+
+                break;
+            }
+
+
+            if (
+                (
+                    $summary[
+                        'minutes_trend'
+                    ]
+                    ?? null
+                )
+                !==
+                'Insufficient Data'
+            ) {
+
+                $currentTrendStateValid =
+                    false;
+
+                break;
+            }
+        }
+    }
+
+
+    testPass(
+        'Current early-season Form trends remain Insufficient Data where history is incomplete',
+        $currentTrendStateValid
+    );
+
+
+    echo "<br>";
 
 
     /*

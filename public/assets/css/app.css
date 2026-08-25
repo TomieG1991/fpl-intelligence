@@ -10035,3 +10035,368 @@ a {
     font-weight: 700;
     color: #ffffff;
 }
+
+/*
+ * ============================================================
+ * PLAYER FORM INTELLIGENCE
+ * ============================================================
+ */
+
+[data-player-form-intelligence] {
+    margin-top:
+        20px;
+}
+
+
+/*
+ * Header / explanation.
+ */
+[data-player-form-intelligence] .card-header {
+    margin-bottom:
+        10px;
+}
+
+
+[data-player-form-intelligence] .assessment-summary {
+    max-width:
+        760px;
+
+    margin:
+        0
+        0
+        20px;
+
+    color:
+        #929fb3;
+
+    font-size:
+        12px;
+
+    line-height:
+        1.6;
+}
+
+
+/*
+ * ============================================================
+ * HEADLINE FORM RATINGS
+ * ============================================================
+ */
+
+[data-player-form-intelligence] .player-form-rating-grid {
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap:
+        14px;
+
+    margin-bottom:
+        18px;
+}
+
+
+[data-player-form-intelligence] .player-form-rating-card {
+    min-width:
+        0;
+
+    padding:
+        16px;
+
+    background:
+        #182033;
+
+    border:
+        1px solid #34405a;
+
+    border-radius:
+        9px;
+}
+
+
+[data-player-form-intelligence] .player-form-rating-label {
+    display:
+        block;
+
+    margin-bottom:
+        8px;
+
+    color:
+        #9eabc0;
+
+    font-size:
+        10px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        0.06em;
+
+    text-transform:
+        uppercase;
+}
+
+
+[data-player-form-intelligence] .player-form-rating-card strong {
+    display:
+        block;
+
+    margin-bottom:
+        10px;
+
+    font-size:
+        24px;
+
+    font-weight:
+        750;
+
+    line-height:
+        1;
+}
+
+
+[data-player-form-intelligence] .player-form-rating-card small {
+    display:
+        block;
+
+    margin-top:
+        8px;
+
+    color:
+        #77849a;
+
+    font-size:
+        10px;
+}
+
+
+/*
+ * Rating progress bars.
+ */
+[data-player-form-intelligence] .player-form-rating-bar {
+    width:
+        100%;
+
+    height:
+        5px;
+
+    overflow:
+        hidden;
+
+    background:
+        #101624;
+
+    border-radius:
+        999px;
+}
+
+
+[data-player-form-intelligence] .player-form-rating-bar span {
+    display:
+        block;
+
+    height:
+        100%;
+
+    border-radius:
+        inherit;
+
+    background:
+        #8b79ff;
+}
+
+
+/*
+ * ============================================================
+ * FORM TRENDS
+ * ============================================================
+ */
+
+[data-player-form-intelligence] .assessment-component-grid {
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap:
+        14px;
+
+    margin:
+        0
+        0
+        18px;
+}
+
+
+[data-player-form-intelligence] .assessment-component {
+    min-width:
+        0;
+
+    padding:
+        14px
+        16px;
+
+    background:
+        #161e30;
+
+    border:
+        1px solid #303c54;
+
+    border-radius:
+        8px;
+}
+
+
+[data-player-form-intelligence] .assessment-component span {
+    display:
+        block;
+
+    margin-bottom:
+        7px;
+
+    color:
+        #8794a9;
+
+    font-size:
+        10px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        0.05em;
+
+    text-transform:
+        uppercase;
+}
+
+
+[data-player-form-intelligence] .assessment-component strong {
+    color:
+        #e9edf5;
+
+    font-size:
+        12px;
+
+    font-weight:
+        650;
+}
+
+
+/*
+ * Insufficient Data is deliberately quieter than an actual
+ * improving / stable / declining trend.
+ */
+[data-player-form-intelligence]
+.assessment-component strong {
+    line-height:
+        1.35;
+}
+
+
+/*
+ * ============================================================
+ * HISTORICAL SAMPLE
+ * ============================================================
+ */
+
+[data-player-form-intelligence] .player-summary-footer {
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    flex-wrap:
+        wrap;
+
+    gap:
+        7px;
+
+    min-height:
+        auto;
+
+    margin-top:
+        0;
+
+    padding:
+        11px
+        14px;
+
+    background:
+        #141c2d;
+
+    border:
+        1px solid #2c3850;
+
+    border-radius:
+        8px;
+
+    color:
+        #8290a5;
+
+    font-size:
+        10px;
+}
+
+
+[data-player-form-intelligence] .player-summary-footer > span:first-child {
+    margin-right:
+        5px;
+
+    color:
+        #a99fff;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        0.05em;
+
+    text-transform:
+        uppercase;
+}
+
+
+[data-player-form-intelligence] .player-summary-footer strong {
+    color:
+        #f1f4fa;
+
+    font-size:
+        11px;
+}
+
+
+/*
+ * Add gentle separation between individual sample statistics.
+ */
+[data-player-form-intelligence]
+.player-summary-footer strong:not(:first-of-type) {
+    margin-left:
+        10px;
+}
+
+
+/*
+ * ============================================================
+ * RESPONSIVE PLAYER FORM
+ * ============================================================
+ */
+
+@media (
+    max-width: 900px
+) {
+
+    [data-player-form-intelligence]
+    .player-form-rating-grid,
+
+    [data-player-form-intelligence]
+    .assessment-component-grid {
+        grid-template-columns:
+            1fr;
+    }
+}

@@ -7,6 +7,14 @@ class PlayerIntelligenceService
     private TeamRepository $teamRepository;
 
     private FixtureRepository $fixtureRepository;
+    
+    private PlayerFixtureHistoryRepository $playerFixtureHistoryRepository;
+
+    private PlayerFormHistory $playerFormHistory;
+
+    private PlayerForm $playerForm;
+
+    private PlayerFormTrend $playerFormTrend;
 
     private PlayerIntelligenceEngine $playerEngine;
 
@@ -67,6 +75,29 @@ class PlayerIntelligenceService
         $this->fixtureRepository =
             new FixtureRepository(
                 $db
+            );
+            
+        $this->playerFixtureHistoryRepository =
+            new PlayerFixtureHistoryRepository(
+                $db
+            );
+
+
+        $this->playerFormHistory =
+            new PlayerFormHistory(
+                $this->playerFixtureHistoryRepository
+            );
+
+
+        $this->playerForm =
+            new PlayerForm(
+                $this->playerFormHistory
+            );
+
+
+        $this->playerFormTrend =
+            new PlayerFormTrend(
+                $this->playerForm
             );
 
 
@@ -540,6 +571,14 @@ class PlayerIntelligenceService
                     ?? 0
                 );
                 
+            $playerId =
+                (int) (
+                    $player[
+                        'id'
+                    ]
+                    ?? 0
+                );
+                
             
             /*
              * --------------------------------------------------------
@@ -619,6 +658,39 @@ class PlayerIntelligenceService
                         )
                     )
                 );
+                
+            /*
+             * --------------------------------------------------------
+             * PLAYER FORM INTELLIGENCE
+             * --------------------------------------------------------
+             *
+             * Historical Form Intelligence is exposed as diagnostics
+             * only at this stage.
+             *
+             * It does not yet alter:
+             *
+             * - Player Strength
+             * - Player Intelligence Score
+             * - Transfer Intelligence
+             * - Wildcard Intelligence
+             * - Captain Intelligence
+             * - Gameweek Intelligence
+             */
+
+            $formModel =
+                $this->playerForm
+                    ->buildModel(
+                        $playerId,
+                        $position
+                    );
+
+
+            $formTrendModel =
+                $this->playerFormTrend
+                    ->buildModel(
+                        $playerId,
+                        $position
+                    );
 
 
             $nextOpponentId =
@@ -746,6 +818,106 @@ class PlayerIntelligenceService
 
                 $summary['next_opponent_defence_rating'] =
                     $opponentDefenceRating;
+                    
+                /*
+                 * --------------------------------------------------------
+                 * HISTORICAL PLAYER FORM
+                 * --------------------------------------------------------
+                 *
+                 * These fields are currently diagnostic outputs only.
+                 *
+                 * They intentionally do not alter the existing Player
+                 * Intelligence Score yet.
+                 */
+
+                $summary['form_rating'] =
+                    $formModel[
+                        'form_rating'
+                    ]
+                    ?? null;
+
+
+                $summary['performance_rating'] =
+                    $formModel[
+                        'performance_rating'
+                    ]
+                    ?? null;
+
+
+                $summary['form_trend'] =
+                    $formTrendModel[
+                        'form_trend'
+                    ]
+                    ?? 'Insufficient Data';
+
+
+                $summary['participation_trend'] =
+                    $formTrendModel[
+                        'participation_trend'
+                    ]
+                    ?? 'Insufficient Data';
+
+
+                $summary['minutes_trend'] =
+                    $formTrendModel[
+                        'minutes_trend'
+                    ]
+                    ?? 'Insufficient Data';
+
+
+                $summary['form_fixture_sample_size'] =
+                    (int) (
+                        $formModel[
+                            'fixture_sample_size'
+                        ]
+                        ?? 0
+                    );
+
+
+                $summary['form_appearance_sample_size'] =
+                    (int) (
+                        $formModel[
+                            'appearance_sample_size'
+                        ]
+                        ?? 0
+                    );
+
+
+                $summary['form_zero_minute_rows'] =
+                    (int) (
+                        $formModel[
+                            'zero_minute_rows'
+                        ]
+                        ?? 0
+                    );
+
+
+                $summary['form_participation_rate'] =
+                    $formModel[
+                        'participation_rate'
+                    ]
+                    ?? null;
+
+
+                $summary['form_difference'] =
+                    $formTrendModel[
+                        'form_difference'
+                    ]
+                    ?? null;
+
+
+                $summary['participation_difference'] =
+                    $formTrendModel[
+                        'participation_difference'
+                    ]
+                    ?? null;
+
+
+                $summary['minutes_difference'] =
+                    $formTrendModel[
+                        'minutes_difference'
+                    ]
+                    ?? null;
 
                 /*
                  * Preserve useful explorer data that does
@@ -3107,6 +3279,148 @@ class PlayerIntelligenceService
                     $fixtureRating,
                     $availableMinutes
                 );
+                
+        /*
+         * --------------------------------------------------------
+         * HISTORICAL PLAYER FORM
+         * --------------------------------------------------------
+         *
+         * Complete player profiles are built independently from the
+         * lightweight all-player summary collection.
+         *
+         * Form Intelligence must therefore also be attached here so
+         * player.php receives the same historical diagnostics.
+         */
+
+        $position =
+            strtoupper(
+                trim(
+                    (string) (
+                        $player[
+                            'position'
+                        ]
+                        ?? ''
+                    )
+                )
+            );
+
+
+        $formModel =
+            $this->playerForm
+                ->buildModel(
+                    $playerId,
+                    $position
+                );
+
+
+        $formTrendModel =
+            $this->playerFormTrend
+                ->buildModel(
+                    $playerId,
+                    $position
+                );
+
+
+        /*
+         * Start from the Player Intelligence Engine summary and add
+         * the historical Form Intelligence diagnostics.
+         */
+
+        $profileSummary =
+            $profile[
+                'summary'
+            ]
+            ?? [];
+
+
+        $profileSummary['form_rating'] =
+            $formModel[
+                'form_rating'
+            ]
+            ?? null;
+
+
+        $profileSummary['performance_rating'] =
+            $formModel[
+                'performance_rating'
+            ]
+            ?? null;
+
+
+        $profileSummary['form_trend'] =
+            $formTrendModel[
+                'form_trend'
+            ]
+            ?? 'Insufficient Data';
+
+
+        $profileSummary['participation_trend'] =
+            $formTrendModel[
+                'participation_trend'
+            ]
+            ?? 'Insufficient Data';
+
+
+        $profileSummary['minutes_trend'] =
+            $formTrendModel[
+                'minutes_trend'
+            ]
+            ?? 'Insufficient Data';
+
+
+        $profileSummary['form_fixture_sample_size'] =
+            (int) (
+                $formModel[
+                    'fixture_sample_size'
+                ]
+                ?? 0
+            );
+
+
+        $profileSummary['form_appearance_sample_size'] =
+            (int) (
+                $formModel[
+                    'appearance_sample_size'
+                ]
+                ?? 0
+            );
+
+
+        $profileSummary['form_zero_minute_rows'] =
+            (int) (
+                $formModel[
+                    'zero_minute_rows'
+                ]
+                ?? 0
+            );
+
+
+        $profileSummary['form_participation_rate'] =
+            $formModel[
+                'participation_rate'
+            ]
+            ?? null;
+
+
+        $profileSummary['form_difference'] =
+            $formTrendModel[
+                'form_difference'
+            ]
+            ?? null;
+
+
+        $profileSummary['participation_difference'] =
+            $formTrendModel[
+                'participation_difference'
+            ]
+            ?? null;
+
+
+        $profileSummary['minutes_difference'] =
+            $formTrendModel[
+                'minutes_difference'
+            ]
+            ?? null;
 
 
         /*
@@ -3254,7 +3568,7 @@ class PlayerIntelligenceService
                 $profile['intelligence'],
 
             'summary' =>
-                $profile['summary'],
+                $profileSummary,
 
             'fixtures' => [
 

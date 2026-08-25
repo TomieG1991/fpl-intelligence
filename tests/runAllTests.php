@@ -12,6 +12,24 @@
 
 declare(strict_types=1);
 
+/*
+ * ============================================================
+ * TEST SUITE EXECUTION TIME
+ * ============================================================
+ *
+ * The complete regression suite intentionally executes every
+ * test in its own PHP process and can legitimately take longer
+ * than the normal Apache PHP execution limit.
+ *
+ * Individual tests retain their own performance assertions.
+ * The parent suite runner therefore must not terminate simply
+ * because the complete project suite exceeds 120 seconds.
+ */
+
+set_time_limit(
+    0
+);
+
 
 /*
  * ============================================================

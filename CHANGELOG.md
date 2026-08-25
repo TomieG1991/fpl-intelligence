@@ -6,6 +6,276 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.28.0] - Player Form Intelligence
+
+### Added
+- Added the first historical Player Form Intelligence layer built from persisted per-fixture FPL player history.
+- Added `PlayerForm.php` for calculating recent player form from official stored fixture-performance evidence.
+- Added position-aware Player Form modelling for goalkeepers, defenders, midfielders and forwards.
+- Added bounded 0-100 Form Ratings.
+- Added separate Performance Ratings so on-pitch performance can be evaluated independently from playing-time security.
+- Added recent fixture sample tracking.
+- Added recent appearance sample tracking.
+- Added explicit zero-minute fixture tracking.
+- Added participation-rate modelling across the recent fixture window.
+
+- Added raw recent-form metrics including:
+  - total points
+  - total minutes
+  - points per appearance
+  - average appearance minutes
+  - expected goals per 90
+  - expected assists per 90
+  - expected goal involvements per 90
+  - BPS per 90
+  - clean-sheet rate
+  - expected goals conceded per 90
+
+- Added Player Form component ratings including:
+  - Points Rating
+  - Minutes Rating
+  - Expected Goal Involvement Rating
+  - BPS Rating
+  - Defensive Rating
+- Added position-aware Form weighting so different player positions are assessed using metrics appropriate to their role.
+- Added defensive weighting for goalkeepers and defenders.
+- Added attacking expected-goal-involvement weighting for midfielders and forwards.
+- Added stronger expected-goal-involvement weighting for forwards than midfielders.
+- Added participation-sensitive Minutes Rating using the complete recent fixture window.
+- Added preservation of zero-minute fixture evidence when evaluating playing-time security.
+
+- Added recency weighting to Player Form calculations.
+- Added greater weighting for more recent fixtures while retaining useful evidence from older fixtures in the recent sample.
+- Added recency-weighted performance metrics.
+- Added recency-weighted participation and minutes evidence.
+- Added safe handling of incomplete historical samples.
+
+- Added `PlayerFormTrend.php` for comparing short-term and longer-term player form.
+- Added short-window and long-window Form analysis.
+- Added Form Trend classification states:
+  - Improving
+  - Stable
+  - Declining
+  - Insufficient Data
+- Added Participation Trend analysis.
+- Added Minutes Trend analysis.
+- Added independent trend differences for:
+  - performance form
+  - participation
+  - minutes
+- Added explicit trend sample contracts so early-season data cannot create misleading trend classifications.
+- Added minimum difference thresholds before Form, Participation or Minutes trends are classified as Improving or Declining.
+
+- Added separation between holistic Form Rating and on-pitch Performance Rating.
+- Added Performance Rating calculations that exclude playing-time security from the performance comparison.
+- Added independent performance-trend modelling so a player's reduced minutes do not automatically classify their on-pitch performance as declining.
+- Added support for identifying cases where performance remains stable while participation or minutes decline.
+
+- Added Player Form Intelligence fields to `PlayerIntelligenceService.php`.
+- Added Form Rating to Player Intelligence summaries.
+- Added Performance Rating to Player Intelligence summaries.
+- Added Form Trend to Player Intelligence summaries.
+- Added Participation Trend to Player Intelligence summaries.
+- Added Minutes Trend to Player Intelligence summaries.
+- Added Form fixture sample size to Player Intelligence summaries.
+- Added Form appearance sample size to Player Intelligence summaries.
+- Added zero-minute sample counts to Player Intelligence summaries.
+- Added Form participation rate to Player Intelligence summaries.
+- Added Form, participation and minutes trend differences to Player Intelligence diagnostics.
+- Added Player Form Intelligence to individual player-profile service responses.
+- Added consistent Form Intelligence output across bulk player summaries and individual player profiles.
+
+- Added request-level Player Form caching to reduce repeated historical calculations across large Player Intelligence operations.
+- Added request-level Player Form Trend caching.
+- Added reuse of calculated historical Form models when the same player is evaluated repeatedly during a request.
+- Added performance protection for Player Intelligence operations that analyse large portions of the current 610-player dataset.
+
+- Added a new Historical Intelligence section to the Player Intelligence profile page.
+- Added a dedicated Recent Form dashboard card.
+- Added front-end display of:
+  - Form Rating
+  - Performance Rating
+  - Participation
+  - Performance Trend
+  - Participation Trend
+  - Minutes Trend
+  - recent fixture sample
+  - recent appearance sample
+  - zero-minute fixture sample where applicable
+- Added visual 0-100 progress bars for Form Rating and Performance Rating.
+- Added visual participation progress.
+- Added explanatory context distinguishing holistic recent form from on-pitch performance.
+- Added a Historical Sample diagnostic strip.
+- Added responsive Recent Form layout support.
+- Added Recent Form styling scoped specifically to the Player Form Intelligence component so existing Player Profile components are unaffected.
+
+### Changed
+- Changed Player Form calculations to use persisted official per-fixture history rather than relying only on the current FPL bootstrap state.
+- Changed recent-form evaluation to distinguish known zero-minute fixtures from missing historical evidence.
+- Changed Minutes Rating to use the complete recent fixture window rather than appearances only.
+- Changed on-pitch performance averages to exclude zero-minute fixtures where appropriate while retaining those fixtures for participation analysis.
+- Changed Player Form to use position-aware weighting instead of applying one generic performance formula to every position.
+- Changed attacking Form evaluation to use expected goal involvement per 90 where appropriate.
+- Changed defensive Form evaluation to incorporate clean-sheet and expected-goals-conceded evidence where appropriate.
+- Changed recent-form metrics to favour newer historical evidence through recency weighting.
+
+- Changed Form Trend modelling so holistic playing-time changes do not incorrectly determine the player's performance direction.
+- Changed the primary Form Trend comparison to use performance-only ratings.
+- Separated performance direction from Participation Trend and Minutes Trend.
+- Changed trend classifications to require sufficient historical evidence before claiming Improving, Stable or Declining form.
+- Changed early-season trend output to `Insufficient Data` when the available historical window is incomplete.
+- Preserved independent participation and minutes trends even when on-pitch performance remains stable.
+
+- Extended Player Intelligence summaries with historical Form Intelligence diagnostics without yet allowing Form to alter the main Player Intelligence Score.
+- Kept Form Intelligence diagnostic-only during the initial integration stage.
+- Preserved existing Player Intelligence scoring, transfer, captaincy, squad and Wildcard behaviour while exposing the new historical evidence for validation.
+- Extended individual Player Intelligence profiles with the same Form Intelligence contract used by bulk Player Intelligence summaries.
+
+- Optimised Player Intelligence historical calculations after the additional Form layer increased complete-suite runtime.
+- Reduced repeated Player Form and Form Trend calculations within the same request.
+- Reduced complete regression-suite runtime from approximately 255 seconds to approximately 134 seconds while preserving identical tested behaviour.
+- Reduced `PlayerIntelligenceServiceTest.php` runtime from approximately 55 seconds to approximately 18 seconds.
+
+- Updated the Player Profile layout so Recent Form appears between Core Ratings and FPL Assessment.
+- Changed Recent Form presentation from generic summary cells to dedicated full-width intelligence cards.
+- Changed the trend layout to use three evenly distributed trend cards.
+- Changed the Historical Sample display to a dedicated diagnostic footer.
+- Kept all Recent Form styling isolated from existing Player Profile components.
+
+### Fixed
+- Fixed Player Form averages potentially allowing zero-minute fixtures to contaminate on-pitch performance calculations.
+- Fixed zero-minute historical records being unsuitable for participation modelling when only appearance-based averages were considered.
+- Fixed Minutes Rating not fully reflecting a player losing their place in the team.
+- Fixed recent Form calculations treating all historical fixtures with equal importance despite more recent performances being more relevant.
+
+- Fixed Form Trend potentially being classified as Declining solely because a player's recent minutes or participation had fallen.
+- Fixed playing-time security and on-pitch performance being coupled too tightly in trend analysis.
+- Fixed strong recent performance being obscured by declining participation.
+- Fixed trend classification potentially making claims from insufficient early-season evidence.
+- Prevented GW1-only historical data from being classified as a meaningful Improving, Stable or Declining trend.
+
+- Fixed individual Player Intelligence profiles initially receiving default/null Form Intelligence values even though bulk Player Intelligence summaries contained valid Form data.
+- Fixed `getPlayerProfile()` not attaching Player Form and Player Form Trend diagnostics to the profile summary.
+- Unified Form Intelligence data between `getAllPlayerSummaries()` and `getPlayerProfile()`.
+- Fixed the Player Profile Recent Form section initially rendering:
+  - unavailable Form Rating
+  - unavailable Performance Rating
+  - unavailable Participation
+  - zero recent fixtures
+  - zero appearances
+  despite valid stored fixture history being available.
+- Confirmed real Player Profile Form Intelligence now resolves against persisted fixture-history data.
+
+- Fixed excessive repeated historical Form calculations during large Player Intelligence operations.
+- Prevented the expanded historical intelligence layer from causing the complete test runner to exceed its previous execution-time allowance.
+- Improved complete-suite performance while preserving all existing application behaviour and regression coverage.
+
+### Current Real-Data Validation
+- Confirmed Player Form operates against the complete persisted GW1 fixture-history dataset.
+- Confirmed the historical fixture-history table remains at 610 GW1 records after Player Form development and repeated test execution.
+- Confirmed Player Form development does not mutate or duplicate stored fixture-history records.
+- Confirmed zero-minute fixture history remains available as legitimate participation evidence.
+- Confirmed early-season Form Trend correctly reports `Insufficient Data` with only GW1 historical evidence available.
+
+- Confirmed Raya's real Player Intelligence profile resolves historical Form Intelligence from stored GW1 fixture history.
+- Confirmed Raya currently exposes:
+  - Form Rating: 81.4
+  - Performance Rating: 75.2
+  - Participation: 100.0%
+  - Performance Trend: Insufficient Data
+  - Participation Trend: Insufficient Data
+  - Minutes Trend: Insufficient Data
+  - Historical fixture sample: 1
+  - Historical appearance sample: 1
+- Confirmed Player Form Intelligence is visible on the live local Player Profile UI.
+- Confirmed the Recent Form UI renders correctly within the existing Player Intelligence design system.
+
+### Testing
+- Added `PlayerFormTest.php`.
+- Added validation of the Player Form model structure.
+- Added validation that Form Ratings remain within the 0-100 intelligence scale.
+- Added controlled historical fixture-sample coverage.
+- Added appearance-count validation.
+- Added zero-minute fixture validation.
+- Added participation-rate validation.
+- Added raw Form metric validation.
+- Added points-per-appearance validation.
+- Added average-appearance-minutes validation.
+- Added BPS-per-90 validation.
+- Added goalkeeper clean-sheet-rate validation.
+- Added Form component-rating validation.
+- Added position-aware weighting validation.
+- Added goalkeeper defensive-weighting validation.
+- Added midfielder attacking-weighting validation.
+- Added forward expected-goal-involvement weighting validation.
+- Added validation that midfielder and forward weighting differs appropriately.
+- Added participation-effect validation.
+- Added validation that zero-minute history prevents an incorrectly perfect Minutes Rating.
+- Added position-aware output validation.
+- Added invalid-player handling coverage.
+- Added component rating-bound validation.
+
+- Added `PlayerFormRecencyWeightingTest.php`.
+- Added controlled recency-weighting regression coverage.
+- Added validation that newer historical performances receive greater influence than older performances.
+- Added validation that recency weighting preserves bounded Form outputs.
+- Added protection against regressions back to equally weighted historical Form calculations.
+
+- Added Performance Rating regression coverage.
+- Added validation that holistic Form Rating and performance-only rating can differ.
+- Added validation that performance calculations remain independent from participation where required.
+- Added controlled reduced-minutes scenarios.
+
+- Added `PlayerFormTrendTest.php`.
+- Added Form Trend model-structure validation.
+- Added short-window and long-window rating validation.
+- Added controlled Improving Form classification coverage.
+- Added Stable Form classification coverage.
+- Added Declining Form threshold coverage.
+- Added exact trend-threshold boundary validation.
+- Added insufficient-data classification coverage.
+- Added Participation Trend validation.
+- Added Minutes Trend validation.
+- Added trend sample-contract validation.
+- Added controlled declining-participation scenarios with strong on-pitch performance.
+- Added regression protection ensuring falling minutes do not automatically produce Declining performance form.
+- Added validation that performance, participation and minutes trends remain independently classifiable.
+- Added current real early-season data validation.
+- Confirmed GW1-only Form, Participation and Minutes trends correctly report `Insufficient Data`.
+
+- Extended `PlayerIntelligenceServiceTest.php` with Player Form Intelligence regression coverage.
+- Added validation that all Player Intelligence summaries expose Form Intelligence fields.
+- Added validation that all available Form Ratings remain between 0 and 100.
+- Added validation that all available Performance Ratings remain between 0 and 100.
+- Added validation that all Form Intelligence trend labels use supported states.
+- Added validation that Form sample counts remain non-negative.
+- Added validation that available Form participation rates remain between 0 and 100.
+- Added validation that current early-season Form trends remain `Insufficient Data` where historical evidence is incomplete.
+- Confirmed the expanded Player Intelligence Service test passes all 402 assertions.
+
+- Added `PlayerFormProfilePageTest.php`.
+- Added Player Profile request validation for Form Intelligence.
+- Added Recent Form section rendering validation.
+- Added Historical Intelligence heading and explanation validation.
+- Added Form Rating rendering validation.
+- Added Performance Rating rendering validation.
+- Added participation rendering validation.
+- Added Performance Trend rendering validation.
+- Added Participation Trend rendering validation.
+- Added Minutes Trend rendering validation.
+- Added early-season insufficient-data validation.
+- Added historical fixture-sample rendering validation.
+- Added historical appearance-sample rendering validation.
+- Added PHP error detection for the new profile integration.
+- Added Player Form profile-page performance validation.
+
+- Re-ran the complete project regression suite after Player Form Intelligence integration.
+- Confirmed all targeted Player Form tests pass.
+- Confirmed `PlayerIntelligenceServiceTest.php` passes.
+- Confirmed `PlayerFormProfilePageTest.php` passes.
+- Confirmed the complete `RunAllTests.php` suite passes with zero test-file failures and zero test-file errors.
+- Confirmed the optimised complete suite executes in approximately 134 seconds.
+
 ## [0.27.0] - Historical Gameweek & Fixture Intelligence
 
 ### Added
