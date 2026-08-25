@@ -42,7 +42,7 @@ The system should remain explainable, testable and robust throughout:
 
 Current stable release:
 
-**v0.26.0 — Effective Confidence & Live Gameweek Intelligence**
+**v0.27.0 — Historical Gameweek & Fixture Intelligence**
 
 GitHub `main` is the authoritative code baseline after every completed commit.
 
@@ -71,6 +71,133 @@ The application currently stores and updates:
 - fixture scores
 - finished status
 - provisionally finished status
+- official FPL gameweeks
+- gameweek deadlines
+- previous/current/next gameweek state
+- player gameweek snapshots
+- historical player price
+- historical ownership
+- historical availability state
+- per-fixture player history
+- per-fixture minutes
+- per-fixture starts
+- per-fixture FPL points
+- per-fixture goals
+- per-fixture assists
+- per-fixture clean sheets
+- per-fixture BPS
+- per-fixture expected goals
+- per-fixture expected assists
+- per-fixture expected goal involvements
+- per-fixture expected goals conceded
+- historical fixture team/opponent context
+- historical transfer and selection data
+
+## Historical Data Foundation
+
+Historical storage is now available independently of the live `players` table.
+
+The historical architecture includes:
+
+- `gameweeks`
+- `player_gameweek_snapshots`
+- `player_fixture_history`
+
+### Gameweek History
+
+All 38 official FPL gameweeks are persisted with:
+
+- official FPL gameweek ID
+- name
+- deadline
+- finished state
+- data-checked state
+- previous/current/next state
+
+Gameweek importing is idempotent.
+
+### Player Gameweek Snapshots
+
+The current FPL bootstrap state is preserved by gameweek.
+
+Snapshots retain appropriate player state such as:
+
+- player identity
+- team
+- position
+- price
+- ownership
+- availability
+- minutes
+- goals
+- assists
+- clean sheets
+- bonus
+- BPS
+- expected goals
+- expected assists
+- expected goal involvements
+
+Snapshot importing is idempotent.
+
+### Player Fixture History
+
+Official per-fixture player history is persisted from the FPL player-summary API.
+
+Fixture-history records preserve:
+
+- player
+- gameweek
+- fixture
+- historical team
+- historical opponent
+- home/away state
+- total points
+- minutes
+- starts
+- goals
+- assists
+- expected goals
+- expected assists
+- expected goal involvements
+- clean sheets
+- goals conceded
+- expected goals conceded
+- saves
+- defensive contribution metrics
+- bonus
+- BPS
+- influence
+- creativity
+- threat
+- ICT Index
+- price
+- selected count
+- transfer activity
+
+Historical fixture uniqueness is based on:
+
+`player_id + fixture_id`
+
+This is intentional so the application can safely support:
+
+- normal gameweeks
+- blank gameweeks
+- double gameweeks
+
+Historical fixture importing is:
+
+- idempotent
+- resumable
+- batchable
+- API-throttled
+
+The historical tables currently preserve evidence but do not yet directly alter
+Player Intelligence, Transfer Intelligence, Wildcard Intelligence, Captain
+Intelligence or Gameweek Intelligence.
+
+Historical evidence will begin influencing intelligence models from v0.28.0
+onwards.
 
 
 ## Current Intelligence Systems
@@ -293,89 +420,125 @@ goalkeeper position.
 # Development Roadmap
 
 
-## v0.27.0 — Historical Gameweek Data Foundation
+## v0.27.0 — Historical Gameweek & Fixture Intelligence
+
+### Status
+
+**COMPLETE**
 
 ### Goal
 
-Stop relying exclusively on the latest cumulative FPL player state and begin
-building permanent historical data.
+Stop relying exclusively on the latest cumulative FPL player state and build a
+permanent historical data foundation.
 
-This is the highest priority next milestone.
+### Delivered
 
-### Why
+Added persistent gameweek storage using official FPL gameweek identity.
 
-The current `players` table represents the latest FPL state.
-
-When FPL data is updated, previous states are overwritten.
-
-Historical snapshots are required for:
-
-- recent form
-- trends
-- price movement
-- ownership movement
-- gameweek-specific performance
-- model calibration
-- backtesting
-- multi-gameweek analysis
-
-### Planned Work
-
-Add persistent gameweek history.
-
-Potential tables:
+Added:
 
 - `gameweeks`
-- `player_gameweek_history`
-- `team_gameweek_history`
+- `GameweekRepository`
+- complete 38-gameweek importing
+- previous/current/next gameweek state
+- idempotent gameweek persistence
 
-Player snapshots should preserve appropriate fields such as:
+Added player gameweek snapshots using:
 
-- player ID
-- gameweek
-- team
+- `player_gameweek_snapshots`
+- `PlayerGameweekSnapshotRepository`
+- current-gameweek snapshot importing
+- player/team/position identity preservation
+- historical price and ownership state
+- idempotent snapshot persistence
+
+Added official per-fixture player history using:
+
+- `player_fixture_history`
+- `PlayerFixtureHistoryRepository`
+- live FPL `element-summary` history
+- historical team resolution
+- historical opponent resolution
+- player + fixture uniqueness
+- Double Gameweek-safe storage
+
+Added dedicated historical fixture importing through:
+
+- `updatePlayerFixtureHistory.php`
+- batch mode
+- offset/resume support
+- full-pool mode
+- request throttling
+- idempotent upserts
+
+### Historical Import Validation
+
+Completed GW1 historical import with:
+
+- 610 player fixture-history rows
+- 610 unique players
+- all 10 Premier League GW1 fixtures represented
+- zero duplicate player/fixture rows
+
+Player gameweek snapshot import currently preserves the complete current player
+pool for the active FPL gameweek.
+
+### Architecture Decision
+
+Official per-fixture FPL history is preferred for match-level performance
+analysis where available.
+
+This avoids relying solely on differences between cumulative bootstrap
+snapshots.
+
+Gameweek snapshots still remain valuable for preserving:
+
 - price
 - ownership
-- minutes
-- goals
-- assists
-- clean sheets
-- bonus
-- BPS
-- expected goals
-- expected assists
-- expected goal involvements
 - availability
-- timestamp
+- player state
+- market state
 
-Where the FPL API supplies cumulative values, calculate safe gameweek deltas
-between snapshots where required.
+### Important Behaviour
 
-Add repositories/services for historical retrieval.
+Historical storage is currently a data foundation only.
 
-Integrate snapshot creation into the FPL update workflow.
+It does not yet directly alter:
 
-Snapshots must be idempotent:
-running an updater twice must not create duplicate gameweek records.
+- Player Strength
+- Sample Confidence
+- Effective Confidence
+- Player Intelligence
+- Transfer Intelligence
+- Wildcard Intelligence
+- Captain Intelligence
+- Gameweek Intelligence
+
+Historical evidence will begin feeding new intelligence models from v0.28.0.
 
 ### Testing
 
-Add tests covering:
+Added regression and integration coverage for:
 
-- snapshot insertion
+- historical schema
+- gameweek importing
+- snapshot importing
 - duplicate protection
+- player-summary API structure
+- fixture-history repository behaviour
+- real single-player fixture-history import
+- complete fixture-history integration
 - gameweek identity
-- player history retrieval
-- cumulative-to-gameweek delta calculations
-- missing previous snapshot handling
-- promoted/removed player handling
-- performance
+- player identity
+- fixture identity
+- historical team context
+- historical opponent context
+- blank/double-gameweek-safe uniqueness
+- zero-minute history preservation
+- import idempotency
+- import performance
 
-### Complete When
-
-Historical player state survives later FPL updates and can be queried by
-gameweek.
-
+The complete project regression suite passes with v0.27.0 integrated.
 
 ---
 
@@ -391,14 +554,21 @@ Add recent-form intelligence rather than relying primarily on season totals.
 
 ### Planned Work
 
-Build rolling player form over configurable periods such as:
+Build recent player form from official per-fixture history rather than relying
+on cumulative season totals.
 
-- last 3 gameweeks
-- last 5 gameweeks
+Add historical retrieval for configurable windows such as:
 
-Evaluate trends in:
+- last 3 fixtures
+- last 5 fixtures
+- last 3 appearances
+- last 5 appearances
+
+Evaluate recent performance in:
 
 - minutes
+- starts
+- total points
 - goals
 - assists
 - expected goals
@@ -406,25 +576,60 @@ Evaluate trends in:
 - expected goal involvements
 - BPS
 - clean sheets where appropriate
+- expected goals conceded where appropriate
 
-Add recency weighting so recent gameweeks can carry more value than older
-gameweeks without allowing one match to dominate the model.
+Separate recent performance quality from recent participation.
+
+A zero-minute official history row is known evidence and must not simply be
+discarded.
+
+Form Intelligence should distinguish between:
+
+- performance form
+- minutes/participation trend
+- underlying statistical trend
+
+Add recency weighting so recent fixtures carry somewhat more influence than
+older fixtures without allowing one exceptional match to dominate.
 
 Add:
 
 - Form Rating
 - Form Trend
+- Participation Trend
 - improving / stable / declining classification
+- recent form sample size
+- recent form explanation
 
-Integrate form into Player Intelligence conservatively.
+Form must remain position-aware where appropriate.
 
-Display recent form on player profiles.
+Integrate Form Intelligence into Player Intelligence conservatively only after
+the standalone model is validated.
+
+Display recent form and trend information on player profiles.
 
 ### Important Rule
 
 Form must complement underlying Player Strength.
 
 It must not replace the existing Sample Confidence architecture.
+
+### Confidence Separation
+
+Form Intelligence must not replace either confidence model.
+
+The concepts remain:
+
+Sample Confidence
+→ statistical sample maturity
+
+Effective Confidence
+→ current decision reliability
+
+Form Intelligence
+→ recent performance direction
+
+These must remain independently explainable.
 
 
 ---
