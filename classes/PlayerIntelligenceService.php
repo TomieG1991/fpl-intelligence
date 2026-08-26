@@ -3498,6 +3498,224 @@ class PlayerIntelligenceService
                     $playerId,
                     $position
                 );
+                
+                
+        /*
+         * --------------------------------------------------------
+         * EXPECTED POINTS INTELLIGENCE
+         * --------------------------------------------------------
+         *
+         * Complete player profiles are built independently from
+         * getAllPlayerSummaries(), so Expected Points must also be
+         * calculated here for player.php.
+         */
+
+        $teamNextFixtureRatings =
+            $this->buildTeamNextFixtureRatings(
+                $teams,
+                $fixtures
+            );
+
+
+        $nextFixtureRating =
+            $teamNextFixtureRatings[
+                $teamId
+            ]
+            ?? null;
+
+
+        $nextOpponentId =
+            null;
+
+
+        $opponentAttackRating =
+            null;
+
+
+        $opponentDefenceRating =
+            null;
+
+
+        /*
+         * Resolve the player's immediate opponent.
+         */
+        $upcomingNextFixture =
+            $teamId > 0
+                ? $this->fixtureRepository
+                    ->getUpcomingForTeam(
+                        $teamId,
+                        1
+                    )
+                : [];
+
+
+        $nextFixture =
+            $upcomingNextFixture[
+                0
+            ]
+            ?? null;
+
+
+        if (
+            is_array(
+                $nextFixture
+            )
+        ) {
+
+            $homeTeamId =
+                (int) (
+                    $nextFixture[
+                        'home_team_id'
+                    ]
+                    ?? 0
+                );
+
+
+            $awayTeamId =
+                (int) (
+                    $nextFixture[
+                        'away_team_id'
+                    ]
+                    ?? 0
+                );
+
+
+            if (
+                $homeTeamId === $teamId
+            ) {
+
+                $nextOpponentId =
+                    $awayTeamId > 0
+                        ? $awayTeamId
+                        : null;
+
+            } elseif (
+                $awayTeamId === $teamId
+            ) {
+
+                $nextOpponentId =
+                    $homeTeamId > 0
+                        ? $homeTeamId
+                        : null;
+            }
+        }
+
+
+        /*
+         * Reuse current Team Intelligence Attack / Defence ratings.
+         */
+        $teamIntelligenceSummaries =
+            $this->getAllTeamIntelligenceSummaries();
+
+
+        foreach (
+            $teamIntelligenceSummaries
+            as $teamSummary
+        ) {
+
+            $summaryTeamId =
+                (int) (
+                    $teamSummary[
+                        'team_id'
+                    ]
+                    ?? 0
+                );
+
+
+            if (
+                $summaryTeamId !==
+                $nextOpponentId
+            ) {
+
+                continue;
+            }
+
+
+            $opponentAttackRating =
+                isset(
+                    $teamSummary[
+                        'attack_rating'
+                    ]
+                )
+                &&
+                is_numeric(
+                    $teamSummary[
+                        'attack_rating'
+                    ]
+                )
+                    ? (float) $teamSummary[
+                        'attack_rating'
+                    ]
+                    : null;
+
+
+            $opponentDefenceRating =
+                isset(
+                    $teamSummary[
+                        'defence_rating'
+                    ]
+                )
+                &&
+                is_numeric(
+                    $teamSummary[
+                        'defence_rating'
+                    ]
+                )
+                    ? (float) $teamSummary[
+                        'defence_rating'
+                    ]
+                    : null;
+
+
+            break;
+        }
+
+
+        /*
+         * Build immediate position-aware fixture opportunity.
+         */
+        $positionAwareFixtureRating =
+            $nextFixtureRating !== null
+            &&
+            is_numeric(
+                $nextFixtureRating
+            )
+                ? $this->fixtureIntelligence
+                    ->calculatePositionAwareOpportunity(
+                        (float) $nextFixtureRating,
+                        $position,
+                        $opponentAttackRating,
+                        $opponentDefenceRating
+                    )
+                : null;
+
+
+        $expectedPointsModel =
+            null;
+
+
+        if (
+            $nextFixtureRating !== null
+            &&
+            is_numeric(
+                $nextFixtureRating
+            )
+        ) {
+
+            $expectedPointsModel =
+                $this->playerExpectedPoints
+                    ->project(
+                        $player,
+                        $formModel,
+                        [
+                            'fixture_opportunity' =>
+                                $positionAwareFixtureRating,
+
+                            'opponent_attack_rating' =>
+                                $opponentAttackRating
+                        ]
+                    );
+        }
 
 
         /*
@@ -3600,6 +3818,76 @@ class PlayerIntelligenceService
                 'minutes_difference'
             ]
             ?? null;
+            
+        /*
+         * --------------------------------------------------------
+         * EXPECTED POINTS OUTPUTS
+         * --------------------------------------------------------
+         */
+
+        $profileSummary['projected_points'] =
+            $expectedPointsModel[
+                'projected_points'
+            ]
+            ?? null;
+
+
+        $profileSummary['projected_minutes'] =
+            $expectedPointsModel[
+                'projected_minutes'
+            ]
+            ?? null;
+
+
+        $profileSummary['projection_confidence'] =
+            $expectedPointsModel[
+                'projection_confidence'
+            ]
+            ?? null;
+
+
+        $profileSummary['projection_confidence_percent'] =
+            $expectedPointsModel[
+                'projection_confidence_percent'
+            ]
+            ?? null;
+
+
+        $profileSummary['projection_confidence_label'] =
+            $expectedPointsModel[
+                'projection_confidence_label'
+            ]
+            ?? null;
+
+
+        $profileSummary['projected_points_components'] =
+            $expectedPointsModel[
+                'components'
+            ]
+            ?? [];
+
+
+        $profileSummary['projected_points_inputs'] =
+            $expectedPointsModel[
+                'inputs'
+            ]
+            ?? [];
+
+
+        $profileSummary['has_projected_points'] =
+            $expectedPointsModel !== null
+            &&
+            isset(
+                $expectedPointsModel[
+                    'projected_points'
+                ]
+            )
+            &&
+            is_numeric(
+                $expectedPointsModel[
+                    'projected_points'
+                ]
+            );
 
 
         /*

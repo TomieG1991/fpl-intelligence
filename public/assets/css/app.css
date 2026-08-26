@@ -10400,3 +10400,287 @@ a {
             1fr;
     }
 }
+
+/*
+ * ============================================================
+ * EXPECTED POINTS INTELLIGENCE
+ * ============================================================
+ */
+
+[data-player-expected-points] .player-form-rating-grid {
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap:
+        14px;
+
+    margin-bottom:
+        22px;
+}
+
+
+[data-player-expected-points] .player-form-rating-card {
+    min-width:
+        0;
+
+    padding:
+        18px;
+
+    background:
+        #182033;
+
+    border:
+        1px solid #34405a;
+
+    border-radius:
+        9px;
+}
+
+
+[data-player-expected-points] .player-form-rating-label {
+    display:
+        block;
+
+    margin-bottom:
+        8px;
+
+    color:
+        #8f9bb0;
+
+    font-size:
+        10px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        0.06em;
+
+    text-transform:
+        uppercase;
+}
+
+
+[data-player-expected-points] .player-form-rating-card strong {
+    display:
+        block;
+
+    margin-bottom:
+        8px;
+
+    color:
+        #f4f6fb;
+
+    font-size:
+        26px;
+
+    font-weight:
+        750;
+
+    line-height:
+        1;
+}
+
+
+[data-player-expected-points] .player-form-rating-card:first-child strong {
+    color:
+        #f4e85d;
+
+    font-size:
+        32px;
+}
+
+
+[data-player-expected-points] .player-form-rating-card small {
+    display:
+        block;
+
+    color:
+        #7f8da4;
+
+    font-size:
+        10px;
+
+    line-height:
+        1.5;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * EXPECTED OUTCOMES
+ * ------------------------------------------------------------
+ */
+
+[data-player-expected-points] .performance-section-heading {
+    margin-top:
+        20px;
+
+    margin-bottom:
+        12px;
+
+    padding-top:
+        18px;
+
+    border-top:
+        1px solid #303b51;
+}
+
+
+[data-player-expected-points] .performance-section-heading h3 {
+    margin:
+        3px
+        0
+        0;
+
+    color:
+        #f2f5fa;
+
+    font-size:
+        14px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * COMPONENT BREAKDOWN
+ * ------------------------------------------------------------
+ */
+
+[data-player-expected-points] .assessment-component-grid {
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap:
+        10px;
+}
+
+
+[data-player-expected-points] .assessment-component {
+    min-width:
+        0;
+
+    padding:
+        13px;
+
+    background:
+        #182033;
+
+    border:
+        1px solid #34405a;
+
+    border-radius:
+        8px;
+}
+
+
+[data-player-expected-points] .assessment-component span {
+    display:
+        block;
+
+    margin-bottom:
+        7px;
+
+    color:
+        #8491a7;
+
+    font-size:
+        9px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        0.05em;
+
+    text-transform:
+        uppercase;
+}
+
+
+[data-player-expected-points] .assessment-component strong {
+    display:
+        block;
+
+    color:
+        #f3f5fa;
+
+    font-size:
+        14px;
+
+    font-weight:
+        700;
+}
+
+
+/*
+ * Negative Expected Points components.
+ */
+[data-player-expected-points]
+.projected-component-negative strong {
+    color:
+        #ef7a83;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * PROJECTION FOOTER
+ * ------------------------------------------------------------
+ */
+
+[data-player-expected-points] .player-summary-footer {
+    margin-top:
+        18px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * RESPONSIVE
+ * ------------------------------------------------------------
+ */
+
+@media (
+    max-width: 1100px
+) {
+
+    [data-player-expected-points]
+    .assessment-component-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+}
+
+
+@media (
+    max-width: 900px
+) {
+
+    [data-player-expected-points]
+    .player-form-rating-grid,
+
+    [data-player-expected-points]
+    .assessment-component-grid {
+        grid-template-columns:
+            1fr;
+    }
+    
+    [data-player-expected-points]
+    .projected-outcomes-grid {
+        grid-template-columns:
+            1fr;
+    }
+}
+
+[data-player-expected-points]
+.projected-outcomes-grid {
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+}

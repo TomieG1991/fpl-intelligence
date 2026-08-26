@@ -6,7 +6,7 @@ The project follows a sprint-based development process.
 
 ---
 
-## [0.28.0] - In progress
+## [0.29.0] - Expected Points Intelligence
 
 ### Added
 
@@ -25,6 +25,11 @@ The project follows a sprint-based development process.
 - Added real-data Expected Points, goalkeeper saves, defensive contributions and bonus diagnostics.
 - Added baseline/calibration analysis tools for defensive contributions and bonus points.
 - Expanded Expected Points regression coverage across Player Intelligence and downstream application services.
+- Added expected goals-conceded deductions for goalkeepers and defenders using recency-weighted xGC evidence, early-season position regression, projected minutes and opponent Attack Rating.
+- Added probabilistic goals-conceded scoring using a Poisson model to reflect the FPL rule of -1 point for every two goals conceded.
+- Added real-data goals-conceded diagnostics covering low-risk and high-risk defensive projections.
+- Added Projected Points presentation to the Player Profile, including Projected Minutes, Projection Confidence, expected goals, expected assists, clean-sheet probability and the full explainable FPL points breakdown.
+
 
 ### Changed
 
@@ -33,12 +38,25 @@ The project follows a sprint-based development process.
 - Added early-season regression so limited fixture history is pulled toward position-level baselines rather than overfitting individual GW1 performances.
 - Updated Expected Points component totals to include modelled saves, defensive contributions and bonus.
 - Calibrated Expected Bonus as a probabilistic expectation rather than treating projected BPS as a deterministic realised BPS score.
+- Updated complete Player Profiles to calculate and expose the same Expected Points contract already available in all-player summaries.
+- Removed the zero floor from Projected Points so legitimate negative expected scoring remains representable.
+- Kept Effective Confidence separate from Projected Points rather than multiplying it into the projection and double-counting playing-time uncertainty.
+- Refined the Expected Points player-profile layout for clearer headline projections and component explainability.
+
+### Deferred
+
+- Deferred goalkeeper penalty-save modelling because complete GW1 2026/27 data contains no penalty saves and does not yet support a reliable empirical prior.
+- Deferred yellow cards, red cards, own goals and penalties missed to a later calibration/backtesting milestone because current early-season evidence is too sparse for stable modelling.
 
 ### Validation
 
 - Complete regression suite passes with 108 of 108 test files.
 - 3,845 of 3,845 assertions pass with zero failures and zero test errors.
 - Real-data validation confirms conservative early-season Expected Points behaviour, including modelled goalkeeper saves, defensive contributions and bonus.
+- Complete regression suite passes with 110 of 110 test files.
+- 3,924 of 3,924 assertions pass.
+- Zero test failures and zero execution errors.
+- Real-data validation confirms goals-conceded deductions integrate correctly into final Projected Points.
 
 ## [0.28.0] - Player Form Intelligence
 

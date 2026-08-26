@@ -757,6 +757,18 @@ if (
             2
         )
         . "%<br><br>";
+        
+    echo "Goals Conceded: "
+        . number_format(
+            (float) (
+                $components[
+                    'goals_conceded'
+                ]
+                ?? 0
+            ),
+            2
+        )
+        . "<br>";
 
 
     echo "Appearance: "
@@ -914,6 +926,160 @@ if (
             2
         )
         . "%<br>";
+        
+    $goalsConcededEvidence =
+        $inputs[
+            'evidence'
+        ][
+            'goals_conceded'
+        ]
+        ?? [];
+
+
+    echo "<br>";
+
+    echo "Goals Conceded Model Status: "
+        . (
+            $goalsConcededEvidence[
+                'status'
+            ]
+            ?? 'Unavailable'
+        )
+        . "<br>";
+
+
+    echo "Raw xGC / 90: "
+        . (
+            isset(
+                $goalsConcededEvidence[
+                    'raw_xgc_per_90'
+                ]
+            )
+                ? number_format(
+                    (float) $goalsConcededEvidence[
+                        'raw_xgc_per_90'
+                    ],
+                    2
+                )
+                : 'Unavailable'
+        )
+        . "<br>";
+
+
+    echo "Position xGC Baseline: "
+        . (
+            isset(
+                $goalsConcededEvidence[
+                    'position_baseline'
+                ]
+            )
+                ? number_format(
+                    (float) $goalsConcededEvidence[
+                        'position_baseline'
+                    ],
+                    2
+                )
+                : 'Unavailable'
+        )
+        . "<br>";
+
+
+    echo "xGC Appearance Sample: "
+        . (
+            $goalsConcededEvidence[
+                'appearance_sample_size'
+            ]
+            ?? 0
+        )
+        . "<br>";
+
+
+    echo "xGC Sample Confidence: "
+        . number_format(
+            (float) (
+                $goalsConcededEvidence[
+                    'sample_confidence_percent'
+                ]
+                ?? 0
+            ),
+            2
+        )
+        . "%<br>";
+
+
+    echo "Regressed xGC / 90: "
+        . (
+            isset(
+                $goalsConcededEvidence[
+                    'regressed_xgc_per_90'
+                ]
+            )
+                ? number_format(
+                    (float) $goalsConcededEvidence[
+                        'regressed_xgc_per_90'
+                    ],
+                    2
+                )
+                : 'Unavailable'
+        )
+        . "<br>";
+
+
+    echo "Opponent Attack Rating: "
+        . (
+            isset(
+                $goalsConcededEvidence[
+                    'opponent_attack_rating'
+                ]
+            )
+                ? number_format(
+                    (float) $goalsConcededEvidence[
+                        'opponent_attack_rating'
+                    ],
+                    2
+                )
+                : 'Unavailable'
+        )
+        . "<br>";
+
+
+    echo "Goals Conceded Fixture Multiplier: "
+        . number_format(
+            (float) (
+                $goalsConcededEvidence[
+                    'fixture_multiplier'
+                ]
+                ?? 1
+            ),
+            3
+        )
+        . "<br>";
+
+
+    echo "Projected xGC: "
+        . number_format(
+            (float) (
+                $goalsConcededEvidence[
+                    'projected_xgc'
+                ]
+                ?? 0
+            ),
+            2
+        )
+        . "<br>";
+
+
+    echo "Expected Goals-Conceded Deduction: "
+        . number_format(
+            (float) (
+                $goalsConcededEvidence[
+                    'expected_points'
+                ]
+                ?? 0
+            ),
+            2
+        )
+        . "<br>";
 
 
     echo "Regressed BPS / 90: "

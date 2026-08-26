@@ -91,6 +91,15 @@ class ExpectedPoints
                 0,
                 100
             );
+            
+            
+        $expectedGoalsConcededPoints =
+            $this->nonPositive(
+                $inputs[
+                    'expected_goals_conceded_points'
+                ]
+                ?? 0
+            );
 
 
         $expectedSaves =
@@ -210,6 +219,32 @@ class ExpectedPoints
             $cleanSheetEligibility
             *
             $cleanSheetPointsPerCleanSheet;
+            
+            
+        /*
+         * --------------------------------------------------------
+         * GOALS CONCEDED
+         * --------------------------------------------------------
+         *
+         * Goalkeepers and defenders lose one point for every two
+         * goals conceded.
+         *
+         * The upstream ExpectedGoalsConceded model has already
+         * converted projected xGC into a probabilistic expected
+         * FPL deduction.
+         */
+
+        $goalsConcededPoints =
+            in_array(
+                $position,
+                [
+                    'GK',
+                    'DEF'
+                ],
+                true
+            )
+                ? $expectedGoalsConcededPoints
+                : 0.0;
 
 
         /*
@@ -276,6 +311,8 @@ class ExpectedPoints
             +
             $cleanSheetPoints
             +
+            $goalsConcededPoints
+            +
             $savePoints
             +
             $bonusPoints
@@ -290,10 +327,7 @@ class ExpectedPoints
 
             'projected_points' =>
                 round(
-                    max(
-                        0.0,
-                        $projectedPoints
-                    ),
+                    $projectedPoints,
                     2
                 ),
 
@@ -326,6 +360,12 @@ class ExpectedPoints
                 'clean_sheet' =>
                     round(
                         $cleanSheetPoints,
+                        2
+                    ),
+                    
+                'goals_conceded' =>
+                    round(
+                        $goalsConcededPoints,
                         2
                     ),
 
@@ -384,7 +424,13 @@ class ExpectedPoints
                     round(
                         $expectedDefensiveContributionPoints,
                         2
-                    )
+                    ),
+                    
+                'expected_goals_conceded_points' =>
+                    round(
+                        $expectedGoalsConcededPoints,
+                        4
+                    ),
             ]
         ];
     }
@@ -585,7 +631,10 @@ class ExpectedPoints
                     0.0,
 
                 'defensive_contributions' =>
-                    0.0
+                    0.0,
+                
+                'goals_conceded' =>
+                    0.0,    
             ],
 
             'inputs' =>
@@ -612,6 +661,31 @@ class ExpectedPoints
 
 
         return max(
+            0.0,
+            (float) $value
+        );
+    }
+    
+    /**
+     * Convert a value to a non-positive float.
+     *
+     * Used for projected FPL deductions.
+     */
+    private function nonPositive(
+        mixed $value
+    ): float {
+
+        if (
+            !is_numeric(
+                $value
+            )
+        ) {
+
+            return 0.0;
+        }
+
+
+        return min(
             0.0,
             (float) $value
         );

@@ -8,6 +8,9 @@ class ExpectedPointsInputs
 
         private ExpectedBonus
             $expectedBonus;
+            
+        private ExpectedGoalsConceded
+            $expectedGoalsConceded;
 
     /**
      * Initialise Expected Points input modelling.
@@ -16,21 +19,32 @@ class ExpectedPointsInputs
      * tests using new ExpectedPointsInputs() continue to work.
      */
      
-    public function __construct(
-        ?ExpectedDefensiveContributions
-            $expectedDefensiveContributions = null
-    ) {
+   public function __construct(
+    ?ExpectedDefensiveContributions
+        $expectedDefensiveContributions = null,
+    ?ExpectedBonus
+        $expectedBonus = null,
+    ?ExpectedGoalsConceded
+        $expectedGoalsConceded = null
+) {
 
-        $this->expectedDefensiveContributions =
-            $expectedDefensiveContributions
-            ??
-            new ExpectedDefensiveContributions();
-            
-        $this->expectedBonus =
-            $expectedBonus
-            ??
-            new ExpectedBonus();
-    }
+    $this->expectedDefensiveContributions =
+        $expectedDefensiveContributions
+        ??
+        new ExpectedDefensiveContributions();
+
+
+    $this->expectedBonus =
+        $expectedBonus
+        ??
+        new ExpectedBonus();
+
+
+    $this->expectedGoalsConceded =
+        $expectedGoalsConceded
+        ??
+        new ExpectedGoalsConceded();
+}
     
     /**
      * Build the inputs consumed by ExpectedPoints.
@@ -310,22 +324,46 @@ class ExpectedPointsInputs
                 )
             );
 
-
         /*
          * ========================================================
-         * FUTURE SPECIALIST COMPONENTS
+         * GOALS-CONCEDED EXPECTATION
          * ========================================================
          *
-         * These are intentionally zero for the first Expected
-         * Points input model.
+         * Goalkeepers and defenders lose one FPL point for every
+         * two goals conceded.
          *
-         * We will introduce them only when dedicated evidence
-         * models exist:
+         * The dedicated model uses:
          *
-         * - goalkeeper save projection
-         * - 2026/27 bonus projection
-         * - defensive-contribution threshold projection
+         * - recency-weighted xGC / 90
+         * - position baseline regression
+         * - projected minutes
+         * - opponent Attack Rating
+         * - probabilistic Poisson scoring
          */
+
+        $goalsConcededModel =
+            $this->expectedGoalsConceded
+                ->calculate(
+                    $position,
+                    $projectedMinutes,
+                    $form,
+                    [
+                        'opponent_attack_rating' =>
+                            $opponentAttackRating
+                    ]
+                );
+
+
+        $expectedGoalsConcededPoints =
+            min(
+                0.0,
+                (float) (
+                    $goalsConcededModel[
+                        'expected_points'
+                    ]
+                    ?? 0
+                )
+            );
 
         /*
          * ========================================================
@@ -500,6 +538,12 @@ class ExpectedPointsInputs
                     $cleanSheetProbability,
                     2
                 ),
+                
+            'expected_goals_conceded_points' =>
+                round(
+                    $expectedGoalsConcededPoints,
+                    4
+                ),
 
             'expected_saves' =>
                 $expectedSaves,
@@ -560,6 +604,9 @@ class ExpectedPointsInputs
                 'defensive_contributions' =>
                     $defensiveContributionModel,
                     
+                'goals_conceded' =>
+                    $goalsConcededModel,
+                    
                 'bonus' =>
                     $bonusModel,
             ],
@@ -594,9 +641,15 @@ class ExpectedPointsInputs
                     $defensiveContributionModel[
                         'status'
                     ]
-                    ?? 'Insufficient Data'
-                            ]
-                        ];
+                    ?? 'Insufficient Data',
+                    
+                'goals_conceded' =>
+                    $goalsConcededModel[
+                        'status'
+                    ]
+                    ?? 'Insufficient Data',
+            ]
+        ];
     }
 
 

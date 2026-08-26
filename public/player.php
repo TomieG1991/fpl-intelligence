@@ -573,6 +573,86 @@ $formParticipationRate =
     $profileSummary[
         'form_participation_rate'
     ]
+    ?? null;
+
+/*
+ * ============================================================
+ * EXPECTED POINTS INTELLIGENCE
+ * ============================================================
+ */
+
+$projectedPoints =
+    $profileSummary[
+        'projected_points'
+    ]
+    ?? null;
+
+
+$projectedMinutes =
+    $profileSummary[
+        'projected_minutes'
+    ]
+    ?? null;
+
+
+$projectionConfidencePercent =
+    $profileSummary[
+        'projection_confidence_percent'
+    ]
+    ?? null;
+
+
+$projectionConfidenceLabel =
+    $profileSummary[
+        'projection_confidence_label'
+    ]
+    ?? 'Unavailable';
+
+
+$projectedPointsComponents =
+    is_array(
+        $profileSummary[
+            'projected_points_components'
+        ]
+        ?? null
+    )
+        ? $profileSummary[
+            'projected_points_components'
+        ]
+        : [];
+
+
+$projectedPointsInputs =
+    is_array(
+        $profileSummary[
+            'projected_points_inputs'
+        ]
+        ?? null
+    )
+        ? $profileSummary[
+            'projected_points_inputs'
+        ]
+        : [];
+
+
+$projectedCleanSheetProbability =
+    $projectedPointsInputs[
+        'clean_sheet_probability'
+    ]
+    ?? null;
+
+
+$projectedExpectedGoals =
+    $projectedPointsInputs[
+        'expected_goals'
+    ]
+    ?? null;
+
+
+$projectedExpectedAssists =
+    $projectedPointsInputs[
+        'expected_assists'
+    ]
     ?? null;    
 
 $activeNav = 'players';
@@ -1250,6 +1330,344 @@ $activeNav = 'players';
 
                         </article>
 
+                    </section>
+                    
+                    <!-- ======================================
+                         EXPECTED POINTS INTELLIGENCE
+                         ====================================== -->
+
+                    <section
+                        class="dashboard-card player-expected-points-card"
+                        data-player-expected-points
+                    >
+
+                        <div class="card-header">
+
+                            <div>
+
+                                <p class="card-kicker">
+                                    Next Gameweek Intelligence
+                                </p>
+
+                                <h2>
+                                    Projected Points
+                                </h2>
+
+                            </div>
+
+
+                            <span class="card-badge">
+
+                                <?= htmlspecialchars(
+                                    $projectionConfidenceLabel,
+                                    ENT_QUOTES,
+                                    'UTF-8'
+                                ); ?>
+
+                                Confidence
+
+                            </span>
+
+                        </div>
+
+
+                        <p class="assessment-summary">
+
+                            Projected Points estimates the player's expected FPL return
+                            for the next fixture using projected minutes, recent
+                            performance, fixture context and position-specific FPL
+                            scoring.
+
+                        </p>
+
+
+                        <!-- ==================================
+                             PRIMARY PROJECTION
+                             ================================== -->
+
+                        <div class="player-form-rating-grid">
+
+                            <div class="player-form-rating-card">
+
+                                <span class="player-form-rating-label">
+                                    Projected Points
+                                </span>
+
+                                <strong>
+
+                                    <?= profileDisplayNumber(
+                                        $projectedPoints,
+                                        2
+                                    ); ?>
+
+                                </strong>
+
+                                <small>
+                                    Expected FPL points
+                                </small>
+
+                            </div>
+
+
+                            <div class="player-form-rating-card">
+
+                                <span class="player-form-rating-label">
+                                    Projected Minutes
+                                </span>
+
+                                <strong>
+
+                                    <?= profileDisplayNumber(
+                                        $projectedMinutes,
+                                        0
+                                    ); ?>
+
+                                </strong>
+
+                                <small>
+                                    Expected playing time
+                                </small>
+
+                            </div>
+
+
+                            <div class="player-form-rating-card">
+
+                                <span class="player-form-rating-label">
+                                    Projection Confidence
+                                </span>
+
+                                <strong>
+
+                                    <?= profileDisplayPercent(
+                                        $projectionConfidencePercent
+                                    ); ?>
+
+                                </strong>
+
+                                <small>
+
+                                    <?= htmlspecialchars(
+                                        $projectionConfidenceLabel,
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    ); ?>
+
+                                    evidence confidence
+
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ==================================
+                             EXPECTED OUTCOMES
+                             ================================== -->
+
+                        <div class="performance-section-heading">
+
+                            <div>
+
+                                <p class="card-kicker">
+                                    Projection Inputs
+                                </p>
+
+                                <h3>
+                                    Expected Outcomes
+                                </h3>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="assessment-component-grid projected-outcomes-grid">
+
+                            <div class="assessment-component">
+
+                                <span>
+                                    Expected Goals
+                                </span>
+
+                                <strong>
+
+                                    <?= profileDisplayNumber(
+                                        $projectedExpectedGoals,
+                                        2
+                                    ); ?>
+
+                                </strong>
+
+                            </div>
+
+
+                            <div class="assessment-component">
+
+                                <span>
+                                    Expected Assists
+                                </span>
+
+                                <strong>
+
+                                    <?= profileDisplayNumber(
+                                        $projectedExpectedAssists,
+                                        2
+                                    ); ?>
+
+                                </strong>
+
+                            </div>
+
+
+                            <div class="assessment-component">
+
+                                <span>
+                                    Clean Sheet Probability
+                                </span>
+
+                                <strong>
+
+                                    <?= profileDisplayPercent(
+                                        $projectedCleanSheetProbability
+                                    ); ?>
+
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ==================================
+                             FPL POINTS BREAKDOWN
+                             ================================== -->
+
+                        <div class="performance-section-heading">
+
+                            <div>
+
+                                <p class="card-kicker">
+                                    Explainability
+                                </p>
+
+                                <h3>
+                                    Points Breakdown
+                                </h3>
+
+                            </div>
+
+                        </div>
+
+
+                        <?php
+
+                        $projectedComponentLabels = [
+
+                            'appearance' =>
+                                'Appearance',
+
+                            'goals' =>
+                                'Goals',
+
+                            'assists' =>
+                                'Assists',
+
+                            'clean_sheet' =>
+                                'Clean Sheet',
+
+                            'goals_conceded' =>
+                                'Goals Conceded',
+
+                            'saves' =>
+                                'Saves',
+
+                            'bonus' =>
+                                'Bonus',
+
+                            'defensive_contributions' =>
+                                'Defensive Contributions'
+                        ];
+
+                        ?>
+
+
+                        <div class="assessment-component-grid">
+
+                            <?php foreach (
+                                $projectedComponentLabels
+                                as $componentKey => $componentLabel
+                            ): ?>
+
+                                <div
+                                    class="assessment-component<?= $componentKey === 'goals_conceded'
+                                        ? ' projected-component-negative'
+                                        : ''; ?>"
+                                >
+
+                                    <span>
+
+                                        <?= htmlspecialchars(
+                                            $componentLabel,
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ); ?>
+
+                                    </span>
+
+                                    <strong>
+
+                                        <?= profileDisplayNumber(
+                                            $projectedPointsComponents[
+                                                $componentKey
+                                            ]
+                                            ?? 0,
+                                            2
+                                        ); ?>
+
+                                    </strong>
+
+                                </div>
+
+                            <?php endforeach; ?>
+
+                        </div>
+
+
+                        <div class="player-summary-footer">
+
+                            <span>
+                                Projection
+                            </span>
+
+                            <strong>
+
+                                <?= profileDisplayNumber(
+                                    $projectedPoints,
+                                    2
+                                ); ?>
+
+                            </strong>
+
+                            <span>
+                                points over
+                            </span>
+
+                            <strong>
+
+                                <?= profileDisplayNumber(
+                                    $projectedMinutes,
+                                    0
+                                ); ?>
+
+                            </strong>
+
+                            <span>
+                                expected minutes
+                            </span>
+
+                        </div>
 
                     </section>
                     

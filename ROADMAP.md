@@ -789,7 +789,7 @@ These must remain independently explainable.
 
 ### Status
 
-**IN DEVELOPMENT**
+**COMPLETE**
 
 ### Dependency
 
@@ -997,27 +997,78 @@ The current complete regression suite passes with:
 - 3,845 assertions passed
 - 0 assertions failed
 
-### Remaining Before v0.29.0 Completion
+### Deferred Scoring Events
 
-Audit the relationship between:
+The following rare-event FPL scoring components are intentionally deferred
+from v0.29.0 because the available early-season evidence is insufficient for
+stable player-level modelling:
 
+- goalkeeper penalty saves
+- yellow cards
+- red cards
+- own goals
+- penalties missed
+
+These events are persisted in historical fixture data and can be introduced
+later through a dedicated calibration/backtesting milestone once a meaningful
+season sample is available.
+
+### Completion Notes
+
+v0.29.0 now delivers an explainable next-gameweek FPL Expected Points model
+covering the primary recurring scoring routes and deductions.
+
+The final model includes:
+
+- projected minutes
+- projection confidence
+- expected goals
+- expected assists
+- clean-sheet probability
+- appearance points
+- goal points
+- assist points
+- clean-sheet points
+- goalkeeper save points
+- goals-conceded deductions
+- defensive-contribution points
+- expected bonus points
+- fixture and opponent context
+- early-season sample regression
+- component-level explainability
+- player-profile presentation
+
+Sample Confidence, Effective Confidence, Projection Confidence and Form
+Intelligence remain intentionally separate concepts.
+
+Effective Confidence is retained as a downstream decision-reliability measure
+rather than being multiplied directly into Projected Points.
+
+This avoids double-penalising playing-time uncertainty while preserving
+confidence information for later transfer, captain, wildcard and gameweek
+decision models.
+
+### Final Validation
+
+The complete regression suite passes with:
+
+- 110 test files
+- 110 test files passed
+- 0 test files failed
+- 0 test files with errors
+- 3,924 assertions passed
+- 0 assertions failed
+
+The Expected Points model is now integrated into Player Intelligence and
+displayed on the player profile with:
+
+- Projected Points
+- Projected Minutes
 - Projection Confidence
-- Sample Confidence
-- Effective Confidence
-- recent Form evidence
+- expected outcome inputs
+- explainable FPL scoring breakdown
 
-Ensure the existing confidence architecture remains semantically separate and
-that Expected Points uses reliability evidence intentionally rather than
-duplicating or collapsing confidence concepts.
-
-Audit official negative FPL scoring events and decide whether they should be
-modelled directly in v0.29.0 or explicitly deferred to a later calibration
-milestone.
-
-Complete the final Expected Points player-profile presentation and
-explainability review.
-
-Run final regression validation after the remaining integration work.
+v0.29.0 is complete.
 
 ### Important Rules
 
@@ -1526,15 +1577,15 @@ Before each release:
 
 # Current Next Action
 
-**NEXT: Complete v0.29.0 — FPL Expected Points Intelligence**
+**NEXT: v0.30.0 — Multi-Gameweek Planning Intelligence**
 
-The core Expected Points projection engine is now implemented.
+Use the completed v0.29.0 Expected Points foundation to extend player and squad
+decision-making beyond a single upcoming fixture.
 
-Before completing v0.29.0:
+The next milestone should focus on:
 
-1. audit Projection Confidence, Sample Confidence and Effective Confidence usage
-2. confirm how recent Form evidence influences Expected Points
-3. audit negative FPL scoring events and decide whether they belong in v0.29.0
-4. complete the final player-profile Expected Points presentation
-5. run the complete regression suite
-6. update the stable baseline to v0.29.0
+1. multi-gameweek projected points
+2. fixture-run aggregation
+3. transfer timing over several gameweeks
+4. squad planning horizons
+5. explainable short-term versus medium-term trade-offs
