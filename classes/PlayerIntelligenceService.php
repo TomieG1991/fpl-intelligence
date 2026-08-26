@@ -25,6 +25,8 @@ class PlayerIntelligenceService
     private ProjectionConfidence $projectionConfidence;
 
     private PlayerExpectedPoints $playerExpectedPoints;
+    
+    private MultiGameweekExpectedPoints $multiGameweekExpectedPoints;
 
     private PlayerIntelligenceEngine $playerEngine;
 
@@ -138,6 +140,11 @@ class PlayerIntelligenceService
                 $this->expectedPointsInputs,
                 $this->expectedPoints,
                 $this->projectionConfidence
+            );
+            
+        $this->multiGameweekExpectedPoints =
+            new MultiGameweekExpectedPoints(
+                $this->playerExpectedPoints
             );
 
 
@@ -3311,6 +3318,988 @@ class PlayerIntelligenceService
     }
     
     /**
+     * Build fixture-specific Expected Points for one player across
+     * the requested upcoming planning horizon.
+     *
+     * This deliberately operates on one player at a time rather
+     * than extending getAllPlayerSummaries(), because calculating
+     * several future projections for every player would multiply
+     * the cost of the existing bulk intelligence pipeline.
+     *
+     * Each fixture:
+     *
+     * - uses the current player Form model
+     * - uses the current Expected Minutes model
+     * - receives its own fixture opportunity
+     * - receives its own opponent Attack / Defence ratings
+     * - is projected through PlayerExpectedPoints
+     *
+     * MultiGameweekExpectedPoints then owns fixture ordering,
+     * gameweek grouping and horizon aggregation.
+     */
+    public function getPlayerMultiGameweekExpectedPoints(
+        int $playerId,
+        int $fixtureLimit = 6
+    ): array {
+
+        /*
+         * ========================================================
+         * VALIDATE REQUEST
+         * ========================================================
+         */
+
+        if (
+            $playerId <= 0
+            ||
+            $fixtureLimit <= 0
+        ) {
+
+            return [
+
+                'status' =>
+                    'Unavailable',
+
+                'player_id' =>
+                    $playerId > 0
+                        ? $playerId
+                        : null,
+
+                'team_id' =>
+                    null,
+
+                'position' =>
+                    null,
+
+                'fixtures' =>
+                    [],
+
+                'gameweeks' =>
+                    [],
+
+                'next_3' =>
+                    null,
+
+                'next_5' =>
+                    null,
+
+                'next_6' =>
+                    null
+            ];
+        }
+
+
+        /*
+         * ========================================================
+         * LOAD PLAYER
+         * ========================================================
+         */
+
+        $player =
+            $this->playerRepository
+                ->getById(
+                    $playerId
+                );
+
+
+        if (
+            !is_array(
+                $player
+            )
+        ) {
+
+            return [
+
+                'status' =>
+                    'Unavailable',
+
+                'player_id' =>
+                    $playerId,
+
+                'team_id' =>
+                    null,
+
+                'position' =>
+                    null,
+
+                'fixtures' =>
+                    [],
+
+                'gameweeks' =>
+                    [],
+
+                'next_3' =>
+                    null,
+
+                'next_5' =>
+                    null,
+
+                'next_6' =>
+                    null
+            ];
+        }
+
+
+        $teamId =
+            (int) (
+                $player[
+                    'team_id'
+                ]
+                ?? 0
+            );
+
+
+        $position =
+            strtoupper(
+                trim(
+                    (string) (
+                        $player[
+                            'position'
+                        ]
+                        ?? ''
+                    )
+                )
+            );
+
+
+        if (
+            $teamId <= 0
+            ||
+            !in_array(
+                $position,
+                [
+                    'GK',
+                    'DEF',
+                    'MID',
+                    'FWD'
+                ],
+                true
+            )
+        ) {
+
+            return [
+
+                'status' =>
+                    'Unavailable',
+
+                'player_id' =>
+                    $playerId,
+
+                'team_id' =>
+                    $teamId > 0
+                        ? $teamId
+                        : null,
+
+                'position' =>
+                    $position !== ''
+                        ? $position
+                        : null,
+
+                'fixtures' =>
+                    [],
+
+                'gameweeks' =>
+                    [],
+
+                'next_3' =>
+                    null,
+
+                'next_5' =>
+                    null,
+
+                'next_6' =>
+                    null
+            ];
+        }
+
+
+        /*
+         * ========================================================
+         * LOAD CURRENT FORM
+         * ========================================================
+         */
+
+        $formModel =
+            $this->playerForm
+                ->buildModel(
+                    $playerId,
+                    $position
+                );
+
+
+        /*
+         * ========================================================
+         * LOAD TEAM / FIXTURE DATA
+         * ========================================================
+         */
+
+        $teams =
+            $this->teamRepository
+                ->getAll();
+
+
+        $teamNameLookup =
+            [];
+
+
+        foreach (
+            $teams
+            as $teamRow
+        ) {
+
+            $lookupTeamId =
+                (int) (
+                    $teamRow[
+                        'id'
+                    ]
+                    ?? 0
+                );
+
+
+            $lookupTeamName =
+                trim(
+                    (string) (
+                        $teamRow[
+                            'name'
+                        ]
+                        ?? ''
+                    )
+                );
+
+
+            if (
+                $lookupTeamId <= 0
+                ||
+                $lookupTeamName === ''
+            ) {
+
+                continue;
+            }
+
+
+            $teamNameLookup[
+                $lookupTeamId
+            ] =
+                $lookupTeamName;
+        }
+
+
+        $fixtures =
+            $this->fixtureRepository
+                ->getAll();
+
+        $fixtures =
+            $this->fixtureRepository
+                ->getAll();
+
+
+        $upcomingFixtures =
+            $this->fixtureRepository
+                ->getUpcomingForTeam(
+                    $teamId,
+                    $fixtureLimit
+                );
+
+
+        if (
+            empty(
+                $upcomingFixtures
+            )
+        ) {
+
+            return [
+
+                'status' =>
+                    'Unavailable',
+
+                'player_id' =>
+                    $playerId,
+
+                'team_id' =>
+                    $teamId,
+
+                'position' =>
+                    $position,
+
+                'fixtures' =>
+                    [],
+
+                'gameweeks' =>
+                    [],
+
+                'next_3' =>
+                    null,
+
+                'next_5' =>
+                    null,
+
+                'next_6' =>
+                    null
+            ];
+        }
+
+
+        /*
+         * ========================================================
+         * CURRENT TEAM STRENGTH MODELS
+         * ========================================================
+         *
+         * This mirrors the established Fixture Intelligence
+         * pipeline used elsewhere in PlayerIntelligenceService.
+         */
+
+        $teamBaselines =
+            $this->teamStrength
+                ->calculateTeamStrengths(
+                    $teams
+                );
+
+
+        $completeTeamModels =
+            [];
+
+
+        $teamAttackDefenceLookup =
+            [];
+
+
+        foreach (
+            $teamBaselines
+            as $currentTeamId => $baseline
+        ) {
+
+            $currentTeamId =
+                (int) $currentTeamId;
+
+
+            $performance =
+                $this->teamPerformance
+                    ->analyse(
+                        $fixtures,
+                        $currentTeamId
+                    );
+
+
+            $completeTeamModels[
+                $currentTeamId
+            ] =
+                $this->teamStrengthModel
+                    ->buildTeamModel(
+                        $baseline,
+                        $performance,
+                        $this->teamPerformance
+                    );
+
+
+            /*
+             * Reuse the existing TeamPerformance rating methods
+             * rather than creating another opponent-strength model.
+             */
+            $teamAttackDefenceLookup[
+                $currentTeamId
+            ] = [
+
+                'attack_rating' =>
+                    $this->teamPerformance
+                        ->calculateAttackRating(
+                            $performance
+                        ),
+
+                'defence_rating' =>
+                    $this->teamPerformance
+                        ->calculateDefenceRating(
+                            $performance
+                        )
+            ];
+        }
+
+
+        /*
+         * ========================================================
+         * BUILD FIXTURE-SPECIFIC CONTEXT
+         * ========================================================
+         */
+
+        $fixtureContexts =
+            [];
+
+
+        $fixtureMetadata =
+            [];
+
+
+        foreach (
+            $upcomingFixtures
+            as $fixture
+        ) {
+
+            $fixtureId =
+                (int) (
+                    $fixture[
+                        'id'
+                    ]
+                    ?? 0
+                );
+
+
+            if (
+                $fixtureId <= 0
+            ) {
+
+                continue;
+            }
+
+
+            $homeTeamId =
+                (int) (
+                    $fixture[
+                        'home_team_id'
+                    ]
+                    ?? 0
+                );
+
+
+            $awayTeamId =
+                (int) (
+                    $fixture[
+                        'away_team_id'
+                    ]
+                    ?? 0
+                );
+
+
+            $isHome =
+                null;
+
+
+            $opponentTeamId =
+                null;
+
+
+            if (
+                $homeTeamId ===
+                $teamId
+            ) {
+
+                $isHome =
+                    true;
+
+
+                $opponentTeamId =
+                    $awayTeamId > 0
+                        ? $awayTeamId
+                        : null;
+
+            } elseif (
+                $awayTeamId ===
+                $teamId
+            ) {
+
+                $isHome =
+                    false;
+
+
+                $opponentTeamId =
+                    $homeTeamId > 0
+                        ? $homeTeamId
+                        : null;
+            }
+
+
+            if (
+                $opponentTeamId === null
+            ) {
+
+                continue;
+            }
+
+
+            /*
+             * Analyse this exact fixture through the established
+             * Fixture Intelligence model.
+             */
+            $fixtureAnalysis =
+                $this->fixtureIntelligence
+                    ->analyseFixtureRun(
+                        [
+                            $fixture
+                        ],
+                        $completeTeamModels,
+                        $teamId
+                    );
+
+
+            $analysedFixture =
+                $fixtureAnalysis[
+                    0
+                ]
+                ?? null;
+
+
+            if (
+                !is_array(
+                    $analysedFixture
+                )
+                ||
+                !isset(
+                    $analysedFixture[
+                        'opportunity_score'
+                    ]
+                )
+                ||
+                !is_numeric(
+                    $analysedFixture[
+                        'opportunity_score'
+                    ]
+                )
+            ) {
+
+                /*
+                 * Missing real fixture evidence remains explicit.
+                 * Do not manufacture a neutral fixture.
+                 */
+                continue;
+            }
+
+
+            $baseFixtureOpportunity =
+                (float) $analysedFixture[
+                    'opportunity_score'
+                ];
+
+
+            $opponentAttackRating =
+                isset(
+                    $teamAttackDefenceLookup[
+                        $opponentTeamId
+                    ][
+                        'attack_rating'
+                    ]
+                )
+                &&
+                is_numeric(
+                    $teamAttackDefenceLookup[
+                        $opponentTeamId
+                    ][
+                        'attack_rating'
+                    ]
+                )
+                    ? (float) $teamAttackDefenceLookup[
+                        $opponentTeamId
+                    ][
+                        'attack_rating'
+                    ]
+                    : null;
+
+
+            $opponentDefenceRating =
+                isset(
+                    $teamAttackDefenceLookup[
+                        $opponentTeamId
+                    ][
+                        'defence_rating'
+                    ]
+                )
+                &&
+                is_numeric(
+                    $teamAttackDefenceLookup[
+                        $opponentTeamId
+                    ][
+                        'defence_rating'
+                    ]
+                )
+                    ? (float) $teamAttackDefenceLookup[
+                        $opponentTeamId
+                    ][
+                        'defence_rating'
+                    ]
+                    : null;
+
+
+            /*
+             * Apply the same position-aware fixture adjustment used
+             * by immediate Expected Points.
+             */
+            $positionAwareFixtureOpportunity =
+                $this->fixtureIntelligence
+                    ->calculatePositionAwareOpportunity(
+                        $baseFixtureOpportunity,
+                        $position,
+                        $opponentAttackRating,
+                        $opponentDefenceRating
+                    );
+
+
+            $contextKey =
+                'fixture:'
+                . $fixtureId;
+
+
+            $fixtureContexts[
+                $contextKey
+            ] = [
+
+                'fixture_opportunity' =>
+                    $positionAwareFixtureOpportunity,
+
+                'opponent_attack_rating' =>
+                    $opponentAttackRating
+            ];
+
+
+            $fixtureMetadata[
+                $fixtureId
+            ] = [
+
+                'opponent_team_id' =>
+                    $opponentTeamId,
+
+                'opponent_name' =>
+                    (
+                        $opponentTeamId !== null
+                        &&
+                        array_key_exists(
+                            $opponentTeamId,
+                            $teamNameLookup
+                        )
+                    )
+                        ? $teamNameLookup[
+                            $opponentTeamId
+                        ]
+                        : null,
+
+                'is_home' =>
+                    (bool) $isHome,
+
+                'base_fixture_opportunity' =>
+                    round(
+                        $baseFixtureOpportunity,
+                        2
+                    ),
+
+                'fixture_opportunity' =>
+                    round(
+                        $positionAwareFixtureOpportunity,
+                        2
+                    ),
+
+                'opponent_attack_rating' =>
+                    $opponentAttackRating,
+
+                'opponent_defence_rating' =>
+                    $opponentDefenceRating
+            ];
+        }
+
+
+        /*
+         * ========================================================
+         * MULTI-GAMEWEEK EXPECTED POINTS
+         * ========================================================
+         */
+
+        $multiGameweekModel =
+            $this->multiGameweekExpectedPoints
+                ->projectFixtures(
+                    $player,
+                    $formModel,
+                    $upcomingFixtures,
+                    $fixtureContexts
+                );
+
+
+        /*
+         * ========================================================
+         * SERVICE-FACING FIXTURE CONTRACT
+         * ========================================================
+         *
+         * MultiGameweekExpectedPoints owns projection mathematics
+         * and aggregation.
+         *
+         * This service layer adds real opponent and fixture metadata
+         * around each projection.
+         */
+
+        $serviceFixtures =
+            [];
+
+
+        foreach (
+            $multiGameweekModel[
+                'fixtures'
+            ]
+            ?? []
+            as $fixtureProjection
+        ) {
+
+            $fixtureId =
+                (int) (
+                    $fixtureProjection[
+                        'fixture_id'
+                    ]
+                    ?? 0
+                );
+
+
+            $metadata =
+                $fixtureMetadata[
+                    $fixtureId
+                ]
+                ?? [];
+                
+
+            $projectionAvailable =
+                (
+                    $fixtureProjection[
+                        'status'
+                    ]
+                    ?? null
+                )
+                ===
+                'Projected';
+
+
+            $serviceFixtures[] = [
+
+                'fixture_id' =>
+                    $fixtureId > 0
+                        ? $fixtureId
+                        : null,
+
+                'fpl_fixture_id' =>
+                    $fixtureProjection[
+                        'fpl_fixture_id'
+                    ]
+                    ?? null,
+
+                'gameweek' =>
+                    $fixtureProjection[
+                        'gameweek'
+                    ]
+                    ?? null,
+
+                'kickoff_time' =>
+                    $fixtureProjection[
+                        'kickoff_time'
+                    ]
+                    ?? null,
+
+                'opponent_team_id' =>
+                    $metadata[
+                        'opponent_team_id'
+                    ]
+                    ?? null,
+
+                'opponent_name' =>
+                    $metadata[
+                        'opponent_name'
+                    ]
+                    ?? null,
+
+                'is_home' =>
+                    $metadata[
+                        'is_home'
+                    ]
+                    ?? null,
+
+                'base_fixture_opportunity' =>
+                    $metadata[
+                        'base_fixture_opportunity'
+                    ]
+                    ?? null,
+
+                'fixture_opportunity' =>
+                    $metadata[
+                        'fixture_opportunity'
+                    ]
+                    ?? null,
+
+                'opponent_attack_rating' =>
+                    $metadata[
+                        'opponent_attack_rating'
+                    ]
+                    ?? null,
+
+                'opponent_defence_rating' =>
+                    $metadata[
+                        'opponent_defence_rating'
+                    ]
+                    ?? null,
+
+                'projection' =>
+                    $projectionAvailable
+                        ? [
+
+                            'status' =>
+                                'Projected',
+
+                            'projected_points' =>
+                                $fixtureProjection[
+                                    'projected_points'
+                                ]
+                                ?? null,
+
+                            'projected_minutes' =>
+                                $fixtureProjection[
+                                    'projected_minutes'
+                                ]
+                                ?? null,
+
+                            'projection_confidence_percent' =>
+                                $fixtureProjection[
+                                    'projection_confidence_percent'
+                                ]
+                                ?? null,
+
+                            'projection_confidence_label' =>
+                                $fixtureProjection[
+                                    'projection_confidence_label'
+                                ]
+                                ?? null,
+
+                            'components' =>
+                                $fixtureProjection[
+                                    'components'
+                                ]
+                                ?? [],
+
+                            'inputs' =>
+                                $fixtureProjection[
+                                    'inputs'
+                                ]
+                                ?? []
+                        ]
+                        : [
+
+                            'status' =>
+                                $fixtureProjection[
+                                    'status'
+                                ]
+                                ?? 'Unavailable',
+
+                            'projected_points' =>
+                                null,
+
+                            'projected_minutes' =>
+                                null,
+
+                            'projection_confidence_percent' =>
+                                null,
+
+                            'projection_confidence_label' =>
+                                null,
+
+                            'components' =>
+                                [],
+
+                            'inputs' =>
+                                []
+                        ]
+            ];
+        }
+
+
+        /*
+         * ========================================================
+         * FINAL CONTRACT
+         * ========================================================
+         */
+
+        $totals =
+            is_array(
+                $multiGameweekModel[
+                    'totals'
+                ]
+                ?? null
+            )
+                ? $multiGameweekModel[
+                    'totals'
+                ]
+                : [];
+
+
+        $hasProjection =
+            (
+                (int) (
+                    $multiGameweekModel[
+                        'fixture_projection_count'
+                    ]
+                    ?? 0
+                )
+            )
+            >
+            0;
+
+
+        return [
+
+            'status' =>
+                $hasProjection
+                    ? 'Available'
+                    : 'Unavailable',
+
+            'player_id' =>
+                $playerId,
+
+            'fpl_player_id' =>
+                isset(
+                    $player[
+                        'fpl_player_id'
+                    ]
+                )
+                    ? (int) $player[
+                        'fpl_player_id'
+                    ]
+                    : null,
+
+            'team_id' =>
+                $teamId,
+
+            'position' =>
+                $position,
+
+            'fixture_limit' =>
+                $fixtureLimit,
+
+            'fixture_projection_count' =>
+                (int) (
+                    $multiGameweekModel[
+                        'fixture_projection_count'
+                    ]
+                    ?? 0
+                ),
+
+            'fixtures' =>
+                $serviceFixtures,
+
+            'gameweeks' =>
+                $multiGameweekModel[
+                    'gameweeks'
+                ]
+                ?? [],
+
+            'next_3' =>
+                $totals[
+                    'next_3'
+                ]
+                ?? null,
+
+            'next_5' =>
+                $totals[
+                    'next_5'
+                ]
+                ?? null,
+
+            'next_6' =>
+                $totals[
+                    'next_6'
+                ]
+                ?? null
+        ];
+    }
+    
+    
+    
+    /**
      * Return a complete intelligence profile for one player.
      */
     public function getPlayerProfile(
@@ -3371,6 +4360,52 @@ class PlayerIntelligenceService
         $teams =
             $this->teamRepository
                 ->getAll();
+                
+        
+        $teamNameLookup =
+    [];
+
+
+    foreach (
+        $teams
+        as $teamRow
+    ) {
+
+        $lookupTeamId =
+            (int) (
+                $teamRow[
+                    'id'
+                ]
+                ?? 0
+            );
+
+
+        $lookupTeamName =
+            trim(
+                (string) (
+                    $teamRow[
+                        'name'
+                    ]
+                    ?? ''
+                )
+            );
+
+
+        if (
+            $lookupTeamId <= 0
+            ||
+            $lookupTeamName === ''
+        ) {
+
+            continue;
+        }
+
+
+        $teamNameLookup[
+            $lookupTeamId
+        ] =
+            $lookupTeamName;
+    }
 
 
         $fixtures =
@@ -3992,6 +5027,27 @@ class PlayerIntelligenceService
                 ->calculateOpportunityTrend(
                     $fixtureRun
                 );
+                
+        
+        /*
+         * --------------------------------------------------------
+         * MULTI-GAMEWEEK EXPECTED POINTS
+         * --------------------------------------------------------
+         *
+         * The detailed player profile is the appropriate place to
+         * expose planning projections because it operates on one
+         * player at a time.
+         *
+         * Do not attach these projections to getAllPlayerSummaries(),
+         * where calculating six future fixtures for every player
+         * would unnecessarily increase the cost of the bulk pipeline.
+         */
+
+        $multiGameweekExpectedPoints =
+            $this->getPlayerMultiGameweekExpectedPoints(
+                $playerId,
+                6
+            );
 
 
         /*
@@ -4036,6 +5092,9 @@ class PlayerIntelligenceService
 
             'summary' =>
                 $profileSummary,
+
+            'multi_gameweek_expected_points' =>
+                $multiGameweekExpectedPoints,
 
             'fixtures' => [
 

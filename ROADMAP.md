@@ -42,7 +42,7 @@ The system should remain explainable, testable and robust throughout:
 
 Current stable release:
 
-**v0.28.0 — Player Form & Trend Intelligence**
+**v0.30.0 — Multi-Gameweek Expected Points Intelligence**
 
 GitHub `main` is the authoritative code baseline after every completed commit.
 
@@ -255,6 +255,47 @@ Form Intelligence remains separate from:
 - Effective Confidence
 - underlying Player Strength
 
+### Expected Points Intelligence
+
+Includes:
+
+- next-gameweek Expected Points
+- projected minutes
+- Projection Confidence
+- expected goals
+- expected assists
+- clean-sheet probability
+- goalkeeper saves
+- defensive contributions
+- expected bonus
+- goals-conceded deductions
+- position-aware FPL scoring
+- fixture and opponent context
+- early-season sample regression
+- component-level explainability
+- individual Player Profile presentation
+
+Expected Points now also supports multi-gameweek planning through:
+
+- fixture-specific future Expected Points projections
+- real upcoming Premier League fixture context
+- opponent team identity
+- home/away venue context
+- position-aware Fixture Opportunity
+- opponent Attack Rating
+- opponent Defence Rating
+- Next 3 projected points
+- Next 5 projected points
+- Next 6 projected points
+- per-fixture Projected Minutes
+- per-fixture Projection Confidence
+- per-fixture Expected Points component explainability
+
+The immediate next-fixture projection remains the primary single-gameweek
+Expected Points contract.
+
+Multi-gameweek projections reuse that model with fixture-specific context rather
+than maintaining a separate scoring model.
 
 ### Fixture Intelligence
 
@@ -1085,39 +1126,176 @@ applicable.
 
 ---
 
-## v0.30.0 — Multi-Gameweek Planning Intelligence
+## v0.30.0 — Multi-Gameweek Expected Points Intelligence
+
+### Status
+
+**COMPLETE**
 
 ### Dependency
 
-Strongly benefits from v0.28 and v0.29.
+Builds on v0.29.0 Expected Points Intelligence.
 
 ### Goal
 
-Move beyond next-gameweek decisions.
+Extend the single-fixture Expected Points model into an explainable
+multi-gameweek projection foundation.
 
-### Planned Work
+Allow individual players to be evaluated across several upcoming fixtures
+without introducing a separate or competing projection model.
 
-Support planning horizons such as:
+### Delivered
 
-- next 3 gameweeks
-- next 5 gameweeks
+Added multi-gameweek Expected Points projections using the existing
+single-fixture Expected Points engine as the scoring source of truth.
 
-Add:
+Added fixture-specific future projection context including:
 
-- multi-GW fixture score
-- projected points across horizon
-- fixture swings
+- gameweek
+- kickoff time
+- opponent team
+- opponent name
+- home/away venue
+- base Fixture Opportunity
+- position-aware Fixture Opportunity
+- opponent Attack Rating
+- opponent Defence Rating
+
+Added per-fixture projection outputs including:
+
+- Projected Points
+- Projected Minutes
+- Projection Confidence
+- Projection Confidence label
+- Expected Points components
+- projection inputs
+- supporting evidence
+
+Added planning horizons for:
+
+- Next 3 gameweeks
+- Next 5 gameweeks
+- Next 6 gameweeks
+
+Planning-horizon totals are calculated directly from the underlying
+fixture-level Expected Points projections.
+
+### Defensive Fixture Sensitivity
+
+Improved defensive Expected Points so materially different fixture contexts
+remain distinguishable even when opponent Attack Ratings are equal.
+
+Clean-sheet probability now retains broader fixture context alongside
+opponent attacking strength.
+
+Expected goals-conceded modelling now retains broader fixture context alongside
+opponent attacking strength.
+
+Goalkeeper save projections remain driven by opponent attacking strength rather
+than general fixture opportunity.
+
+This preserves the intended distinction between:
+
+- likelihood of preventing goals
+- likelihood of facing save opportunities
+
+### Player Intelligence Integration
+
+Added multi-gameweek Expected Points to individual Player Intelligence profiles.
+
+The multi-gameweek model is deliberately calculated for individual players
+rather than every player returned by `getAllPlayerSummaries()`.
+
+This avoids multiplying expensive Expected Points calculations across the
+complete player pool when multi-gameweek detail is not required.
+
+### Player Profile
+
+Added a dedicated Multi-Gameweek Planning section to the Player Profile.
+
+The interface exposes:
+
+- Next 3 projected points
+- Next 5 projected points
+- Next 6 projected points
+- six upcoming fixture projections
+- gameweek
+- opponent
+- home/away venue
+- Fixture Opportunity
+- Projected Minutes
+- Projection Confidence
+- Expected Points
+
+The planning interface follows the existing Player Intelligence design system
+and remains responsive within the Player Profile.
+
+### Architecture Decision
+
+Multi-gameweek Expected Points does not maintain an independent scoring model.
+
+Each fixture projection reuses the existing Expected Points model with
+fixture-specific context.
+
+This ensures:
+
+- single-gameweek and multi-gameweek projections remain consistent
+- scoring changes only need to be implemented once
+- component explainability remains identical
+- regression coverage can protect one projection architecture
+
+The first multi-gameweek fixture projection must remain aligned with the
+immediate next-fixture Expected Points projection.
+
+### Scope Decision
+
+v0.30.0 establishes the player-level multi-gameweek projection foundation.
+
+The following broader planning features remain future work:
+
 - transfer horizon value
 - Hold vs Buy vs Sell analysis
+- transfer timing across several gameweeks
+- squad-level planning horizons
+- defensive rotation analysis
+- goalkeeper rotation analysis
+- fixture-cluster analysis
 
-Upgrade Transfer Intelligence so it can distinguish between:
+These should build on the completed multi-gameweek Expected Points foundation
+rather than being forced into the initial projection milestone.
 
-- strong one-week punt
-- strong medium-term transfer
-- player worth holding despite one poor fixture
-- player with deteriorating future schedule
+### Validation
 
-Expose horizon selection in relevant pages.
+Controlled fixture-sensitivity testing confirms that favourable and difficult
+fixtures produce appropriately different defensive Expected Points behaviour.
+
+Real-data validation confirms:
+
+- future fixtures resolve correctly
+- opponent names resolve correctly
+- home/away context resolves correctly
+- Fixture Opportunity reaches the projection contract
+- Projected Minutes reaches each fixture projection
+- Projection Confidence reaches each fixture projection
+- individual fixture Expected Points remain numeric
+- planning horizons equal their underlying fixture sums
+- the immediate next-fixture projection remains aligned with the first
+  multi-gameweek fixture projection
+- the Player Profile renders all six future fixture projections
+- temporary diagnostic output does not leak into the Player Profile
+
+### Testing
+
+The complete regression suite passes with:
+
+- 117 test files
+- 117 test files passed
+- 0 test files failed
+- 0 test files with errors
+- 4,071 assertions passed
+- 0 assertions failed
+
+v0.30.0 is complete.
 
 
 ---
@@ -1577,15 +1755,21 @@ Before each release:
 
 # Current Next Action
 
-**NEXT: v0.30.0 — Multi-Gameweek Planning Intelligence**
+**NEXT: v0.31.0 — Market & Price Intelligence**
 
-Use the completed v0.29.0 Expected Points foundation to extend player and squad
-decision-making beyond a single upcoming fixture.
+Build on the completed historical-data, Player Form, Expected Points and
+multi-gameweek projection foundations by introducing historical FPL market
+intelligence.
 
 The next milestone should focus on:
 
-1. multi-gameweek projected points
-2. fixture-run aggregation
-3. transfer timing over several gameweeks
-4. squad planning horizons
-5. explainable short-term versus medium-term trade-offs
+1. historical player price movement
+2. historical ownership movement
+3. transfer momentum
+4. value trends
+5. explainable market trend classifications
+
+Market behaviour must remain a supporting decision signal.
+
+Popularity and transfer activity must not be treated as evidence that a player
+is intrinsically strong.

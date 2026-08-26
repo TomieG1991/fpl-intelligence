@@ -6,6 +6,64 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.30.0] - Multi-Gameweek Expected Points Intelligence
+
+### Added
+
+- Added multi-gameweek Expected Points modelling across upcoming fixture horizons.
+- Added `MultiGameweekExpectedPoints` support for projecting individual future fixtures while preserving the existing single-fixture Expected Points model as the scoring source of truth.
+- Added Next 3, Next 5 and Next 6 Expected Points planning totals.
+- Added fixture-specific multi-gameweek projection contexts using real upcoming Premier League fixtures.
+- Added position-aware fixture opportunity to each future Expected Points projection.
+- Added opponent Attack Rating and Defence Rating context to future fixture projections.
+- Added opponent team names and home/away context to the multi-gameweek service contract.
+- Added individual fixture projected points, projected minutes and projection confidence across the planning horizon.
+- Added full Expected Points component and input explainability to each future fixture projection.
+- Added multi-gameweek Expected Points to individual Player Intelligence profiles.
+- Added a new Multi-Gameweek Planning section to the Player Profile UI.
+- Added Planning Horizons presentation for Next 3, Next 5 and Next 6 Expected Points.
+- Added Upcoming Projections presentation showing gameweek, opponent, venue, fixture opportunity, projected minutes, confidence and xP.
+- Added responsive styling for the Multi-Gameweek Planning interface.
+- Added dedicated multi-gameweek service, profile and page integration tests.
+- Added controlled fixture-sensitivity diagnostics to validate that fixture context materially affects Expected Points.
+
+### Changed
+
+- Extended Player Intelligence to support medium-term planning without adding six future projections to every bulk player summary.
+- Kept multi-gameweek projection generation scoped to individual players to avoid unnecessarily increasing the cost of `getAllPlayerSummaries()`.
+- Reused the existing Team Strength, Team Performance and Fixture Intelligence models for future fixture context rather than introducing a separate fixture-strength system.
+- Preserved the existing immediate next-fixture Expected Points projection and confirmed it matches the first fixture of the multi-gameweek projection horizon.
+- Improved goalkeeper and defender defensive fixture sensitivity by blending opponent Attack Rating with broader fixture opportunity.
+- Updated clean-sheet probability so materially different fixture contexts no longer collapse to identical defensive expectations when opponent Attack Ratings are equal.
+- Updated expected goals-conceded modelling to retain broader fixture context alongside specialist opponent attacking strength.
+- Kept goalkeeper save projections driven by opponent attacking strength rather than general fixture opportunity.
+- Added shared defensive-threat context so clean-sheet probability and expected goals-conceded deductions move coherently.
+- Added opponent-name lookup to the multi-gameweek service contract without introducing per-fixture database queries.
+- Refined Player Profile spacing and readability around the new planning section.
+
+### Fixed
+
+- Fixed multi-gameweek goalkeeper projections where fixtures with substantially different Fixture Intelligence opportunity scores could produce identical Expected Points because defensive components only considered opponent Attack Rating.
+- Fixed clean-sheet probability discarding broader fixture context.
+- Fixed expected goals-conceded projections discarding broader fixture context.
+- Fixed real multi-gameweek projections such as highly favourable and highly difficult fixtures collapsing to the same defensive Expected Points.
+- Fixed opponent names initially resolving as blank in the multi-gameweek fixture contract.
+- Fixed player-page multi-gameweek integration test behaviour by using real HTTP page requests rather than including `player.php` directly under CLI execution.
+- Fixed home/away page-test assertions so rendered whitespace does not create false failures.
+
+### Validation
+
+- Controlled fixture-sensitivity testing confirms favourable fixtures produce higher clean-sheet probability and smaller expected goals-conceded deductions than difficult fixtures when opponent Attack Rating is held constant.
+- Confirmed goalkeeper expected saves remain unchanged when only broader fixture opportunity changes.
+- Confirmed real goalkeeper multi-gameweek projections now separate appropriately across materially different fixture contexts.
+- Confirmed immediate next-fixture Expected Points remains aligned with the first multi-gameweek fixture projection.
+- Confirmed Player Profile planning horizons equal the sum of their underlying fixture projections.
+- Confirmed real opponent names, H/A venue context, fixture opportunity and projected points render correctly on the Player Profile.
+- Confirmed no temporary diagnostic output is exposed on the live Player Profile.
+- Complete regression suite passes with 117 of 117 test files.
+- 4,071 of 4,071 assertions pass.
+- Zero test failures and zero execution errors.
+
 ## [0.29.0] - Expected Points Intelligence
 
 ### Added

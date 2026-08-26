@@ -653,6 +653,65 @@ $projectedExpectedAssists =
     $projectedPointsInputs[
         'expected_assists'
     ]
+    ?? null;
+
+/*
+ * ============================================================
+ * MULTI-GAMEWEEK EXPECTED POINTS
+ * ============================================================
+ */
+
+$multiGameweekExpectedPoints =
+    is_array(
+        $profile[
+            'multi_gameweek_expected_points'
+        ]
+        ?? null
+    )
+        ? $profile[
+            'multi_gameweek_expected_points'
+        ]
+        : [];
+
+
+$multiGameweekStatus =
+    $multiGameweekExpectedPoints[
+        'status'
+    ]
+    ?? 'Unavailable';
+
+
+$multiGameweekFixtures =
+    is_array(
+        $multiGameweekExpectedPoints[
+            'fixtures'
+        ]
+        ?? null
+    )
+        ? $multiGameweekExpectedPoints[
+            'fixtures'
+        ]
+        : [];
+
+
+$multiGameweekNext3 =
+    $multiGameweekExpectedPoints[
+        'next_3'
+    ]
+    ?? null;
+
+
+$multiGameweekNext5 =
+    $multiGameweekExpectedPoints[
+        'next_5'
+    ]
+    ?? null;
+
+
+$multiGameweekNext6 =
+    $multiGameweekExpectedPoints[
+        'next_6'
+    ]
     ?? null;    
 
 $activeNav = 'players';
@@ -1668,6 +1727,448 @@ $activeNav = 'players';
                             </span>
 
                         </div>
+
+                    </section>
+                    
+                    
+                    <section
+                        class="dashboard-card player-multi-gameweek-card"
+                        data-player-multi-gameweek
+                    >
+
+                        <div class="card-header">
+
+                            <div>
+
+                                <p class="card-kicker">
+                                    Planning Intelligence
+                                </p>
+
+                                <h2>
+                                    Multi-Gameweek Planning
+                                </h2>
+
+                            </div>
+
+
+                            <span class="card-badge">
+
+                                <?= htmlspecialchars(
+                                    $multiGameweekStatus,
+                                    ENT_QUOTES,
+                                    'UTF-8'
+                                ); ?>
+
+                            </span>
+
+                        </div>
+
+
+                        <p class="assessment-summary">
+
+                            Multi-Gameweek Planning estimates this player's expected FPL
+                            returns across the upcoming fixture horizon using projected
+                            minutes, current form, fixture context and position-specific
+                            scoring.
+
+                        </p>
+
+
+                        <?php if (
+                            $multiGameweekStatus === 'Available'
+                            &&
+                            !empty(
+                                $multiGameweekFixtures
+                            )
+                        ): ?>
+
+
+                            <!-- ==================================
+                                 PLANNING HORIZONS
+                                 ================================== -->
+
+                            <div class="performance-section-heading">
+
+                                <div>
+
+                                    <p class="card-kicker">
+                                        Planning Horizons
+                                    </p>
+
+                                    <h3>
+                                        Expected Points (xP)
+                                    </h3>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="player-multi-gameweek-horizons">
+
+                                <div class="player-multi-gameweek-horizon">
+
+                                    <span>
+                                        Next 3
+                                    </span>
+
+                                    <strong>
+
+                                        <?= profileDisplayNumber(
+                                            $multiGameweekNext3,
+                                            2
+                                        ); ?>
+
+                                    </strong>
+
+                                    <small>
+                                        Expected points (xP)
+                                    </small>
+
+                                </div>
+
+
+                                <div class="player-multi-gameweek-horizon">
+
+                                    <span>
+                                        Next 5
+                                    </span>
+
+                                    <strong>
+
+                                        <?= profileDisplayNumber(
+                                            $multiGameweekNext5,
+                                            2
+                                        ); ?>
+
+                                    </strong>
+
+                                    <small>
+                                        Expected points (xP)
+                                    </small>
+
+                                </div>
+
+
+                                <div class="player-multi-gameweek-horizon">
+
+                                    <span>
+                                        Next 6
+                                    </span>
+
+                                    <strong>
+
+                                        <?= profileDisplayNumber(
+                                            $multiGameweekNext6,
+                                            2
+                                        ); ?>
+
+                                    </strong>
+
+                                    <small>
+                                        Expected points (xP)
+                                    </small>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- ==================================
+                                 UPCOMING PROJECTIONS
+                                 ================================== -->
+
+                            <div class="performance-section-heading">
+
+                                <div>
+
+                                    <p class="card-kicker">
+                                        Fixture Forecast
+                                    </p>
+
+                                    <h3>
+                                        Upcoming Projections
+                                    </h3>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="player-multi-gameweek-fixtures">
+
+                                <?php foreach (
+                                    $multiGameweekFixtures
+                                    as $multiFixture
+                                ): ?>
+
+
+                                    <?php
+
+                                    $multiProjection =
+                                        is_array(
+                                            $multiFixture[
+                                                'projection'
+                                            ]
+                                            ?? null
+                                        )
+                                            ? $multiFixture[
+                                                'projection'
+                                            ]
+                                            : [];
+
+
+                                    $multiOpponentName =
+                                        trim(
+                                            (string) (
+                                                $multiFixture[
+                                                    'opponent_name'
+                                                ]
+                                                ?? ''
+                                            )
+                                        );
+
+
+                                    $multiOpponentName =
+                                        $multiOpponentName !== ''
+                                            ? $multiOpponentName
+                                            : 'Unknown Opponent';
+
+
+                                    $multiIsHome =
+                                        $multiFixture[
+                                            'is_home'
+                                        ]
+                                        ?? null;
+
+
+                                    $multiVenue =
+                                        $multiIsHome === true
+                                            ? 'H'
+                                            : (
+                                                $multiIsHome === false
+                                                    ? 'A'
+                                                    : '—'
+                                            );
+
+
+                                    $multiFixtureOpportunity =
+                                        $multiFixture[
+                                            'fixture_opportunity'
+                                        ]
+                                        ?? null;
+
+
+                                    $multiProjectedPoints =
+                                        $multiProjection[
+                                            'projected_points'
+                                        ]
+                                        ?? null;
+
+
+                                    $multiProjectedMinutes =
+                                        $multiProjection[
+                                            'projected_minutes'
+                                        ]
+                                        ?? null;
+
+
+                                    $multiProjectionConfidence =
+                                        $multiProjection[
+                                            'projection_confidence_percent'
+                                        ]
+                                        ?? null;
+
+
+                                    $multiProjectionConfidenceLabel =
+                                        $multiProjection[
+                                            'projection_confidence_label'
+                                        ]
+                                        ?? 'Unavailable';
+
+
+                                    $multiGameweek =
+                                        $multiFixture[
+                                            'gameweek'
+                                        ]
+                                        ?? null;
+
+                                    ?>
+
+
+                                    <div class="player-multi-gameweek-fixture">
+
+                                        <div class="player-multi-gameweek-fixture-main">
+
+                                            <div class="player-multi-gameweek-fixture-gw">
+
+                                                GW<?= htmlspecialchars(
+                                                    (string) (
+                                                        $multiGameweek
+                                                        ?? '—'
+                                                    ),
+                                                    ENT_QUOTES,
+                                                    'UTF-8'
+                                                ); ?>
+
+                                            </div>
+
+
+                                            <div class="player-multi-gameweek-fixture-opponent">
+
+                                                <strong>
+
+                                                    <?= htmlspecialchars(
+                                                        $multiOpponentName,
+                                                        ENT_QUOTES,
+                                                        'UTF-8'
+                                                    ); ?>
+
+                                                </strong>
+
+
+                                                <span>
+
+                                                    <?= htmlspecialchars(
+                                                        $multiVenue,
+                                                        ENT_QUOTES,
+                                                        'UTF-8'
+                                                    ); ?>
+
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+
+
+                                        <div class="player-multi-gameweek-fixture-context">
+
+                                            <span>
+
+                                                Opportunity
+                                                <strong>
+
+                                                    <?= profileDisplayNumber(
+                                                        $multiFixtureOpportunity,
+                                                        1
+                                                    ); ?>
+
+                                                </strong>
+
+                                            </span>
+
+
+                                            <span>
+
+                                                Minutes
+                                                <strong>
+
+                                                    <?= profileDisplayNumber(
+                                                        $multiProjectedMinutes,
+                                                        0
+                                                    ); ?>
+
+                                                </strong>
+
+                                            </span>
+
+
+                                            <span>
+
+                                                Confidence
+                                                <strong>
+
+                                                    <?= profileDisplayPercent(
+                                                        $multiProjectionConfidence
+                                                    ); ?>
+
+                                                </strong>
+
+                                            </span>
+
+                                        </div>
+
+
+                                        <div class="player-multi-gameweek-fixture-points">
+
+                                            <strong>
+
+                                                <?= profileDisplayNumber(
+                                                    $multiProjectedPoints,
+                                                    2
+                                                ); ?>
+
+                                            </strong>
+
+                                            <span>
+                                                xP
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+
+                                <?php endforeach; ?>
+
+                            </div>
+
+
+                            <div class="player-summary-footer">
+
+                                <span>
+                                    Projection confidence
+                                </span>
+
+                                <strong>
+
+                                    <?= htmlspecialchars(
+                                        (string) (
+                                            $multiGameweekFixtures[
+                                                0
+                                            ][
+                                                'projection'
+                                            ][
+                                                'projection_confidence_label'
+                                            ]
+                                            ?? 'Unavailable'
+                                        ),
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    ); ?>
+
+                                </strong>
+
+                                <span>
+                                    across the upcoming planning horizon
+                                </span>
+
+                            </div>
+
+
+                        <?php else: ?>
+
+
+                            <div class="profile-not-found">
+
+                                <div class="empty-icon">
+                                    —
+                                </div>
+
+                                <h3>
+                                    Planning Projection Unavailable
+                                </h3>
+
+                                <p>
+                                    There is not yet enough upcoming fixture or player evidence
+                                    to build a multi-gameweek projection.
+                                </p>
+
+                            </div>
+
+
+                        <?php endif; ?>
 
                     </section>
                     

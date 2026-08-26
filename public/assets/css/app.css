@@ -10684,3 +10684,253 @@ a {
     grid-template-columns:
         repeat(3, minmax(0, 1fr));
 }
+
+/*
+ * ============================================================
+ * PLAYER MULTI-GAMEWEEK PLANNING
+ * ============================================================
+ */
+
+.player-multi-gameweek-card {
+    margin-top: 20px;
+}
+
+
+.player-multi-gameweek-horizons {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 14px;
+
+    margin-bottom: 26px;
+}
+
+
+.player-multi-gameweek-horizon {
+    padding: 18px;
+
+    border:
+        1px solid #34405a;
+
+    border-radius: 10px;
+
+    background:
+        #171e2e;
+}
+
+
+.player-multi-gameweek-horizon span {
+    display: block;
+
+    margin-bottom: 8px;
+
+    color:
+        #9eabc0;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+
+.player-multi-gameweek-horizon strong {
+    display: block;
+
+    color:
+        #ffffff;
+
+    font-size: 28px;
+    font-weight: 750;
+
+    letter-spacing:
+        -0.03em;
+}
+
+
+.player-multi-gameweek-horizon small {
+    display: block;
+
+    margin-top: 6px;
+
+    color:
+        #647088;
+
+    font-size: 11px;
+}
+
+
+.player-multi-gameweek-fixtures {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+
+.player-multi-gameweek-fixture {
+    display: grid;
+
+    grid-template-columns:
+        minmax(180px, 1.2fr)
+        minmax(260px, 2fr)
+        90px;
+
+    align-items: center;
+
+    gap: 18px;
+
+    padding:
+        14px
+        16px;
+
+    border:
+        1px solid #34405a;
+
+    border-radius: 10px;
+
+    background:
+        #171e2e;
+}
+
+
+.player-multi-gameweek-fixture-main {
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+}
+
+
+.player-multi-gameweek-fixture-gw {
+    min-width: 44px;
+
+    color:
+        #a99fff;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+
+.player-multi-gameweek-fixture-opponent {
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+}
+
+
+.player-multi-gameweek-fixture-opponent strong {
+    color:
+        #ffffff;
+
+    font-size: 14px;
+}
+
+
+.player-multi-gameweek-fixture-opponent span {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-width: 26px;
+    height: 24px;
+
+    border:
+        1px solid #34405a;
+
+    border-radius: 999px;
+
+    color:
+        #b7c1d2;
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+
+.player-multi-gameweek-fixture-context {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap:
+        8px
+        16px;
+}
+
+
+.player-multi-gameweek-fixture-context span {
+    color:
+        #9eabc0;
+
+    font-size: 11px;
+}
+
+
+.player-multi-gameweek-fixture-context strong {
+    margin-left: 4px;
+
+    color:
+        #cbd3e1;
+
+    font-weight: 700;
+}
+
+
+.player-multi-gameweek-fixture-points {
+    text-align: right;
+}
+
+
+.player-multi-gameweek-fixture-points strong {
+    display: block;
+
+    color:
+        #ffffff;
+
+    font-size: 20px;
+    font-weight: 750;
+}
+
+
+.player-multi-gameweek-fixture-points span {
+    color:
+        #8d99ad;
+
+    font-size: 11px;
+    font-weight: 600;
+}
+
+
+@media (
+    max-width: 900px
+) {
+
+    .player-multi-gameweek-horizons {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .player-multi-gameweek-fixture {
+        grid-template-columns:
+            1fr;
+
+        gap: 12px;
+    }
+
+
+    .player-multi-gameweek-fixture-points {
+        text-align: left;
+    }
+}
+
+.player-assessment-card {
+    margin-top: 20px;
+}

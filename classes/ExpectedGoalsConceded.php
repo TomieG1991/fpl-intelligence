@@ -211,12 +211,84 @@ class ExpectedGoalsConceded
             );
 
 
-        $fixtureMultiplier =
+        $fixtureOpportunity =
+            $this->nullableBounded(
+                $fixtureContext[
+                    'fixture_opportunity'
+                ]
+                ?? null,
+                0.0,
+                100.0
+            );
+
+
+        /*
+         * Convert player-perspective fixture opportunity into
+         * defensive threat.
+         *
+         * 100 opportunity = 0 defensive threat
+         *   0 opportunity = 100 defensive threat
+         */
+        $fixtureDefensiveThreat =
+            $fixtureOpportunity !== null
+                ? 100.0
+                    -
+                    $fixtureOpportunity
+                : null;
+
+
+        /*
+         * Blend specialist opponent attacking strength with the
+         * broader fixture context.
+         *
+         * Opponent Attack Rating remains the dominant signal.
+         */
+        if (
             $opponentAttackRating !== null
+            &&
+            $fixtureDefensiveThreat !== null
+        ) {
+
+            $defensiveThreatRating =
+                (
+                    $opponentAttackRating
+                    *
+                    0.75
+                )
+                +
+                (
+                    $fixtureDefensiveThreat
+                    *
+                    0.25
+                );
+
+        } elseif (
+            $opponentAttackRating !== null
+        ) {
+
+            $defensiveThreatRating =
+                $opponentAttackRating;
+
+        } elseif (
+            $fixtureDefensiveThreat !== null
+        ) {
+
+            $defensiveThreatRating =
+                $fixtureDefensiveThreat;
+
+        } else {
+
+            $defensiveThreatRating =
+                null;
+        }
+
+
+        $fixtureMultiplier =
+            $defensiveThreatRating !== null
                 ? 0.75
                     +
                     (
-                        $opponentAttackRating
+                        $defensiveThreatRating
                         /
                         200
                     )
@@ -327,6 +399,12 @@ class ExpectedGoalsConceded
 
             'opponent_attack_rating' =>
                 $opponentAttackRating,
+
+            'fixture_opportunity' =>
+                $fixtureOpportunity,
+
+            'defensive_threat_rating' =>
+                $defensiveThreatRating,
 
             'fixture_multiplier' =>
                 round(

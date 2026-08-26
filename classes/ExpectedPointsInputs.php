@@ -297,12 +297,81 @@ class ExpectedPointsInputs
             );
 
 
-        $defensiveFixtureMultiplier =
+        /*
+         * --------------------------------------------------------
+         * DEFENSIVE FIXTURE CONTEXT
+         * --------------------------------------------------------
+         *
+         * Defensive projections should primarily respond to the
+         * opponent's attacking strength, but should also retain
+         * broader Fixture Intelligence context.
+         *
+         * Fixture opportunity is expressed from the player's
+         * perspective:
+         *
+         * 100 = very favourable
+         *   0 = very difficult
+         *
+         * Convert it into defensive threat before blending:
+         *
+         * 100 opportunity -> 0 threat
+         *   0 opportunity -> 100 threat
+         *
+         * Opponent Attack Rating remains the dominant signal.
+         */
+
+        $fixtureDefensiveThreat =
+            $fixtureOpportunity !== null
+                ? 100.0 - $fixtureOpportunity
+                : null;
+
+
+        if (
             $opponentAttackRating !== null
+            &&
+            $fixtureDefensiveThreat !== null
+        ) {
+
+            $defensiveThreatRating =
+                (
+                    $opponentAttackRating
+                    *
+                    0.75
+                )
+                +
+                (
+                    $fixtureDefensiveThreat
+                    *
+                    0.25
+                );
+
+        } elseif (
+            $opponentAttackRating !== null
+        ) {
+
+            $defensiveThreatRating =
+                $opponentAttackRating;
+
+        } elseif (
+            $fixtureDefensiveThreat !== null
+        ) {
+
+            $defensiveThreatRating =
+                $fixtureDefensiveThreat;
+
+        } else {
+
+            $defensiveThreatRating =
+                null;
+        }
+
+
+        $defensiveFixtureMultiplier =
+            $defensiveThreatRating !== null
                 ? 1.25
                     -
                     (
-                        $opponentAttackRating
+                        $defensiveThreatRating
                         /
                         200
                     )
@@ -349,7 +418,10 @@ class ExpectedPointsInputs
                     $form,
                     [
                         'opponent_attack_rating' =>
-                            $opponentAttackRating
+                            $opponentAttackRating,
+
+                        'fixture_opportunity' =>
+                            $fixtureOpportunity
                     ]
                 );
 
