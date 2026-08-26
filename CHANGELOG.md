@@ -6,6 +6,40 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.28.0] - In progress
+
+### Added
+
+- Added next-gameweek FPL Expected Points modelling.
+- Added projected-minutes modelling with availability, participation and recent-minutes evidence.
+- Added projection confidence with bounded confidence labels and percentages.
+- Added position-aware FPL Expected Points scoring for goalkeepers, defenders, midfielders and forwards.
+- Added expected-goals and expected-assists projection inputs using recent per-90 performance evidence.
+- Added clean-sheet probability modelling using recent defensive evidence and fixture context.
+- Added goalkeeper save projections using recency-weighted saves per 90 and fixture opportunity.
+- Added defensive-contribution projections for the 2026/27 FPL defensive-contribution scoring rules.
+- Added position-specific defensive-action baselines and early-season sample regression.
+- Added expected bonus-point modelling using recency-weighted BPS evidence, position baselines and projected minutes.
+- Added a smooth probabilistic BPS-to-bonus curve calibrated from complete GW1 2026/27 data.
+- Added Expected Points component evidence and specialist-component status reporting.
+- Added real-data Expected Points, goalkeeper saves, defensive contributions and bonus diagnostics.
+- Added baseline/calibration analysis tools for defensive contributions and bonus points.
+- Expanded Expected Points regression coverage across Player Intelligence and downstream application services.
+
+### Changed
+
+- Integrated Projected Points, Projected Minutes and Projection Confidence into Player Intelligence summaries.
+- Replaced placeholder goalkeeper-save, defensive-contribution and bonus components with modelled expectations.
+- Added early-season regression so limited fixture history is pulled toward position-level baselines rather than overfitting individual GW1 performances.
+- Updated Expected Points component totals to include modelled saves, defensive contributions and bonus.
+- Calibrated Expected Bonus as a probabilistic expectation rather than treating projected BPS as a deterministic realised BPS score.
+
+### Validation
+
+- Complete regression suite passes with 108 of 108 test files.
+- 3,845 of 3,845 assertions pass with zero failures and zero test errors.
+- Real-data validation confirms conservative early-season Expected Points behaviour, including modelled goalkeeper saves, defensive contributions and bonus.
+
 ## [0.28.0] - Player Form Intelligence
 
 ### Added

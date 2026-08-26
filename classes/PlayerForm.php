@@ -125,6 +125,16 @@ class PlayerForm
         $totalExpectedGoalsConceded =
             0.0;
             
+        $totalSaves =
+            0;
+            
+        $totalCbit =
+            0;
+
+
+        $totalCbirt =
+            0;
+            
         $weightedPoints =
             0.0;
 
@@ -159,6 +169,16 @@ class PlayerForm
 
         $weightedExpectedGoalsConceded =
             0.0;
+            
+        $weightedSaves =
+            0.0;
+            
+        $weightedCbit =
+            0.0;
+
+
+        $weightedCbirt =
+            0.0;
 
 
         $weightedExpectedGoalsMinutes =
@@ -179,6 +199,16 @@ class PlayerForm
 
         $weightedExpectedGoalsConcededMinutes =
             0.0;
+            
+        $weightedSavesMinutes =
+            0.0;
+            
+        $weightedCbitMinutes =
+            0.0;
+
+
+        $weightedCbirtMinutes =
+            0.0;
 
 
         $expectedGoalsSamples =
@@ -198,6 +228,9 @@ class PlayerForm
 
 
         $expectedGoalsConcededSamples =
+            0;
+            
+        $savesSamples =
             0;
 
 
@@ -233,6 +266,102 @@ class PlayerForm
 
             $totalMinutes +=
                 $minutes;
+                
+            /*
+             * --------------------------------------------------------
+             * DEFENSIVE CONTRIBUTION ACTIONS
+             * --------------------------------------------------------
+             *
+             * DEF:
+             * CBIT =
+             * clearances + blocks + interceptions + tackles
+             *
+             * MID / FWD:
+             * CBIRT =
+             * CBIT + recoveries
+             *
+             * The FPL API exposes clearances, blocks and interceptions
+             * as one combined historical field.
+             */
+
+            $clearancesBlocksInterceptions =
+                max(
+                    0,
+                    (int) (
+                        $row[
+                            'clearances_blocks_interceptions'
+                        ]
+                        ?? 0
+                    )
+                );
+
+
+            $tackles =
+                max(
+                    0,
+                    (int) (
+                        $row[
+                            'tackles'
+                        ]
+                        ?? 0
+                    )
+                );
+
+
+            $recoveries =
+                max(
+                    0,
+                    (int) (
+                        $row[
+                            'recoveries'
+                        ]
+                        ?? 0
+                    )
+                );
+
+
+            $cbit =
+                $clearancesBlocksInterceptions
+                +
+                $tackles;
+
+
+            $cbirt =
+                $cbit
+                +
+                $recoveries;
+
+
+            $totalCbit +=
+                $cbit;
+
+
+            $totalCbirt +=
+                $cbirt;
+
+
+            $weightedCbit +=
+                $cbit
+                *
+                $weight;
+
+
+            $weightedCbirt +=
+                $cbirt
+                *
+                $weight;
+
+
+            $weightedCbitMinutes +=
+                $minutes
+                *
+                $weight;
+
+
+            $weightedCbirtMinutes +=
+                $minutes
+                *
+                $weight;
 
 
             $weightedAppearanceMinutes +=
@@ -271,6 +400,44 @@ class PlayerForm
 
             $totalBps +=
                 $bpsValue;
+                
+            
+            if (
+                is_numeric(
+                    $row[
+                        'saves'
+                    ]
+                    ?? null
+                )
+            ) {
+
+                $savesValue =
+                    max(
+                        0,
+                        (int) $row[
+                            'saves'
+                        ]
+                    );
+
+
+                $totalSaves +=
+                    $savesValue;
+
+
+                $weightedSaves +=
+                    $savesValue
+                    *
+                    $weight;
+
+
+                $savesSamples++;
+
+
+                $weightedSavesMinutes +=
+                    $minutes
+                    *
+                    $weight;
+            }
 
 
             $weightedBps +=
@@ -532,6 +699,44 @@ class PlayerForm
                     90
                 )
                 : null;
+                
+        $savesPer90 =
+            (
+                $totalMinutes > 0
+                &&
+                $savesSamples > 0
+            )
+                ? (
+                    $totalSaves
+                    /
+                    $totalMinutes
+                    *
+                    90
+                )
+                : null;
+                
+        $cbitPer90 =
+            $totalMinutes > 0
+                ? (
+                    $totalCbit
+                    /
+                    $totalMinutes
+                    *
+                    90
+                )
+                : null;
+
+
+        $cbirtPer90 =
+            $totalMinutes > 0
+                ? (
+                    $totalCbirt
+                    /
+                    $totalMinutes
+                    *
+                    90
+                )
+                : null;
 
 
         $cleanSheetRate =
@@ -622,6 +827,15 @@ class PlayerForm
                     *
                     90
                 : null;
+                
+        $weightedSavesPer90 =
+            $weightedSavesMinutes > 0
+                ? $weightedSaves
+                    /
+                    $weightedSavesMinutes
+                    *
+                    90
+                : null;
 
 
         $weightedCleanSheetRate =
@@ -641,6 +855,29 @@ class PlayerForm
                     $weightedExpectedGoalsConcededMinutes
                     *
                     90
+                : null;
+                
+        $weightedCbitPer90 =
+            $weightedCbitMinutes > 0
+                ? (
+                    $weightedCbit
+                    /
+                    $weightedCbitMinutes
+                    *
+                    90
+                )
+                : null;
+
+
+        $weightedCbirtPer90 =
+            $weightedCbirtMinutes > 0
+                ? (
+                    $weightedCbirt
+                    /
+                    $weightedCbirtMinutes
+                    *
+                    90
+                )
                 : null;
 
 
@@ -958,6 +1195,11 @@ class PlayerForm
                     $this->roundNullable(
                         $bpsPer90
                     ),
+                    
+                'saves_per_90' =>
+                    $this->roundNullable(
+                        $savesPer90
+                    ),
 
                 'clean_sheet_rate' =>
                     $this->roundNullable(
@@ -967,7 +1209,17 @@ class PlayerForm
                 'expected_goals_conceded_per_90' =>
                     $this->roundNullable(
                         $expectedGoalsConcededPer90
-                    )
+                    ),
+                    
+                'cbit_per_90' =>
+                    $this->roundNullable(
+                        $cbitPer90
+                    ),
+
+                'cbirt_per_90' =>
+                    $this->roundNullable(
+                        $cbirtPer90
+                    ),
             ],
 
             'weighted_metrics' => [
@@ -1006,6 +1258,11 @@ class PlayerForm
                     $this->roundNullable(
                         $weightedBpsPer90
                     ),
+                    
+                'saves_per_90' =>
+                    $this->roundNullable(
+                        $weightedSavesPer90
+                    ),
 
                 'clean_sheet_rate' =>
                     $this->roundNullable(
@@ -1015,7 +1272,17 @@ class PlayerForm
                 'expected_goals_conceded_per_90' =>
                     $this->roundNullable(
                         $weightedExpectedGoalsConcededPer90
-                    )
+                    ),
+                    
+                'cbit_per_90' =>
+                    $this->roundNullable(
+                        $weightedCbitPer90
+                    ),
+
+                'cbirt_per_90' =>
+                    $this->roundNullable(
+                        $weightedCbirtPer90
+                    ),
             ],
 
             'component_ratings' => [

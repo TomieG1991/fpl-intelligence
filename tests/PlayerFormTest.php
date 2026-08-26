@@ -813,7 +813,34 @@ try {
             ),
             2
         )
-        . "<br><br>";
+        . "<br>";
+        
+    playerFormCheck(
+        'Saves per 90 is numeric for goalkeeper sample',
+        is_numeric(
+            $model[
+                'raw_metrics'
+            ][
+                'saves_per_90'
+            ]
+            ?? null
+        )
+    );
+
+
+    playerFormCheck(
+        'Weighted Saves per 90 is numeric for goalkeeper sample',
+        is_numeric(
+            $model[
+                'weighted_metrics'
+            ][
+                'saves_per_90'
+            ]
+            ?? null
+        )
+    );
+    
+    echo "<br><br>";
 
 
     /*

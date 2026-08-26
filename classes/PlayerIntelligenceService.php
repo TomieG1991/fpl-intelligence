@@ -15,6 +15,16 @@ class PlayerIntelligenceService
     private PlayerForm $playerForm;
 
     private PlayerFormTrend $playerFormTrend;
+    
+    private ExpectedMinutes $expectedMinutes;
+
+    private ExpectedPointsInputs $expectedPointsInputs;
+
+    private ExpectedPoints $expectedPoints;
+
+    private ProjectionConfidence $projectionConfidence;
+
+    private PlayerExpectedPoints $playerExpectedPoints;
 
     private PlayerIntelligenceEngine $playerEngine;
 
@@ -98,6 +108,36 @@ class PlayerIntelligenceService
         $this->playerFormTrend =
             new PlayerFormTrend(
                 $this->playerForm
+            );
+            
+        /*
+         * --------------------------------------------------------
+         * EXPECTED POINTS INTELLIGENCE
+         * --------------------------------------------------------
+         */
+
+        $this->expectedMinutes =
+            new ExpectedMinutes();
+
+
+        $this->expectedPointsInputs =
+            new ExpectedPointsInputs();
+
+
+        $this->expectedPoints =
+            new ExpectedPoints();
+
+
+        $this->projectionConfidence =
+            new ProjectionConfidence();
+
+
+        $this->playerExpectedPoints =
+            new PlayerExpectedPoints(
+                $this->expectedMinutes,
+                $this->expectedPointsInputs,
+                $this->expectedPoints,
+                $this->projectionConfidence
             );
 
 
@@ -756,6 +796,67 @@ class PlayerIntelligenceService
                             $opponentDefenceRating
                         )
                     : null;
+                    
+            /*
+             * --------------------------------------------------------
+             * EXPECTED POINTS INTELLIGENCE
+             * --------------------------------------------------------
+             *
+             * The projection currently remains diagnostic.
+             *
+             * It does NOT yet alter:
+             *
+             * - Player Intelligence Score
+             * - Player Ranking
+             * - Transfer Intelligence
+             * - Captain Intelligence
+             * - Wildcard Intelligence
+             * - Gameweek Intelligence
+             */
+
+            $expectedPointsModel =
+                null;
+
+
+            /*
+             * A real upcoming fixture is required before producing a
+             * fixture-based player projection.
+             *
+             * Do not silently treat missing fixture context as a neutral
+             * current-gameweek fixture.
+             */
+            if (
+                $nextFixtureRating !== null
+                &&
+                is_numeric(
+                    $nextFixtureRating
+                )
+            ) {
+
+                $expectedPointsModel =
+                    $this->playerExpectedPoints
+                        ->project(
+                            $player,
+                            $formModel,
+                            [
+
+                                /*
+                                 * Use the immediate position-aware player
+                                 * fixture opportunity already owned by
+                                 * Fixture Intelligence.
+                                 */
+                                'fixture_opportunity' =>
+                                    $positionAwareFixtureRating,
+
+                                /*
+                                 * Defensive clean-sheet expectation uses the
+                                 * opponent's Attack Rating independently.
+                                 */
+                                'opponent_attack_rating' =>
+                                    $opponentAttackRating
+                            ]
+                        );
+            }
 
 
             try {
@@ -918,6 +1019,84 @@ class PlayerIntelligenceService
                         'minutes_difference'
                     ]
                     ?? null;
+                    
+                /*
+                 * --------------------------------------------------------
+                 * EXPECTED POINTS INTELLIGENCE
+                 * --------------------------------------------------------
+                 *
+                 * Projection outputs are exposed diagnostically only.
+                 *
+                 * No existing intelligence or recommendation score is
+                 * changed by these fields at this stage.
+                 */
+
+                $summary['projected_points'] =
+                    $expectedPointsModel[
+                        'projected_points'
+                    ]
+                    ?? null;
+
+
+                $summary['projected_minutes'] =
+                    $expectedPointsModel[
+                        'projected_minutes'
+                    ]
+                    ?? null;
+
+
+                $summary['projection_confidence'] =
+                    $expectedPointsModel[
+                        'projection_confidence'
+                    ]
+                    ?? null;
+
+
+                $summary['projection_confidence_percent'] =
+                    $expectedPointsModel[
+                        'projection_confidence_percent'
+                    ]
+                    ?? null;
+
+
+                $summary['projection_confidence_label'] =
+                    $expectedPointsModel[
+                        'projection_confidence_label'
+                    ]
+                    ?? null;
+
+
+                $summary['projected_points_components'] =
+                    $expectedPointsModel[
+                        'components'
+                    ]
+                    ?? [];
+
+
+                $summary['projected_points_inputs'] =
+                    $expectedPointsModel[
+                        'inputs'
+                    ]
+                    ?? [];
+
+
+                /*
+                 * Explicitly expose whether a valid projection was available.
+                 */
+                $summary['has_projected_points'] =
+                    $expectedPointsModel !== null
+                    &&
+                    isset(
+                        $expectedPointsModel[
+                            'projected_points'
+                        ]
+                    )
+                    &&
+                    is_numeric(
+                        $expectedPointsModel[
+                            'projected_points'
+                        ]
+                    );
 
                 /*
                  * Preserve useful explorer data that does

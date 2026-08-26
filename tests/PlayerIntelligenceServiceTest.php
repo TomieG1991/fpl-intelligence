@@ -5973,6 +5973,384 @@ testPass(
 
 
     echo "<br>";
+    
+    
+    /*
+     * ============================================================
+     * SCENARIO U
+     * EXPECTED POINTS INTELLIGENCE
+     * ============================================================
+     */
+
+    echo "============================================<br>";
+    echo "Scenario U: Expected Points Intelligence<br>";
+    echo "============================================<br>";
+
+
+    $allProjectionFieldsPresent =
+        true;
+
+
+    $allProjectedPointsValid =
+        true;
+
+
+    $allProjectedMinutesValid =
+        true;
+
+
+    $allProjectionConfidenceValid =
+        true;
+
+
+    $allProjectionLabelsValid =
+        true;
+
+
+    $allProjectionComponentsValid =
+        true;
+
+
+    $allProjectionInputsValid =
+        true;
+
+
+    $projectionLabels = [
+        'High',
+        'Moderate',
+        'Low',
+        'Very Low'
+    ];
+
+
+    $projectedPlayerCount =
+        0;
+
+
+    $unprojectedPlayerCount =
+        0;
+
+
+    foreach (
+        $summaries
+        as $summary
+    ) {
+
+        foreach (
+            [
+                'projected_points',
+                'projected_minutes',
+                'projection_confidence',
+                'projection_confidence_percent',
+                'projection_confidence_label',
+                'projected_points_components',
+                'projected_points_inputs',
+                'has_projected_points'
+            ]
+            as $field
+        ) {
+
+            if (
+                !array_key_exists(
+                    $field,
+                    $summary
+                )
+            ) {
+
+                $allProjectionFieldsPresent =
+                    false;
+
+                break 2;
+            }
+        }
+
+
+        $hasProjectedPoints =
+            (
+                $summary[
+                    'has_projected_points'
+                ]
+                ?? false
+            )
+            === true;
+
+
+        if (
+            $hasProjectedPoints
+        ) {
+
+            $projectedPlayerCount++;
+
+
+            $projectedPoints =
+                $summary[
+                    'projected_points'
+                ]
+                ?? null;
+
+
+            if (
+                !is_numeric(
+                    $projectedPoints
+                )
+                ||
+                (float) $projectedPoints < 0
+            ) {
+
+                $allProjectedPointsValid =
+                    false;
+            }
+
+
+            $projectedMinutes =
+                $summary[
+                    'projected_minutes'
+                ]
+                ?? null;
+
+
+            if (
+                !is_numeric(
+                    $projectedMinutes
+                )
+                ||
+                (float) $projectedMinutes < 0
+                ||
+                (float) $projectedMinutes > 90
+            ) {
+
+                $allProjectedMinutesValid =
+                    false;
+            }
+
+
+            $projectionConfidence =
+                $summary[
+                    'projection_confidence'
+                ]
+                ?? null;
+
+
+            $projectionConfidencePercent =
+                $summary[
+                    'projection_confidence_percent'
+                ]
+                ?? null;
+
+
+            if (
+                !is_numeric(
+                    $projectionConfidence
+                )
+                ||
+                (float) $projectionConfidence < 0
+                ||
+                (float) $projectionConfidence > 1
+                ||
+                !is_numeric(
+                    $projectionConfidencePercent
+                )
+                ||
+                (float) $projectionConfidencePercent < 0
+                ||
+                (float) $projectionConfidencePercent > 100
+            ) {
+
+                $allProjectionConfidenceValid =
+                    false;
+            }
+
+
+            if (
+                !in_array(
+                    (
+                        $summary[
+                            'projection_confidence_label'
+                        ]
+                        ?? null
+                    ),
+                    $projectionLabels,
+                    true
+                )
+            ) {
+
+                $allProjectionLabelsValid =
+                    false;
+            }
+
+
+            $components =
+                $summary[
+                    'projected_points_components'
+                ]
+                ?? null;
+
+
+            if (
+                !is_array(
+                    $components
+                )
+            ) {
+
+                $allProjectionComponentsValid =
+                    false;
+
+            } else {
+
+                foreach (
+                    [
+                        'appearance',
+                        'goals',
+                        'assists',
+                        'clean_sheet',
+                        'saves',
+                        'bonus',
+                        'defensive_contributions'
+                    ]
+                    as $component
+                ) {
+
+                    if (
+                        !array_key_exists(
+                            $component,
+                            $components
+                        )
+                        ||
+                        !is_numeric(
+                            $components[
+                                $component
+                            ]
+                        )
+                    ) {
+
+                        $allProjectionComponentsValid =
+                            false;
+                    }
+                }
+            }
+
+
+            $inputs =
+                $summary[
+                    'projected_points_inputs'
+                ]
+                ?? null;
+
+
+            if (
+                !is_array(
+                    $inputs
+                )
+                ||
+                !array_key_exists(
+                    'expected_goals',
+                    $inputs
+                )
+                ||
+                !array_key_exists(
+                    'expected_assists',
+                    $inputs
+                )
+                ||
+                !array_key_exists(
+                    'clean_sheet_probability',
+                    $inputs
+                )
+            ) {
+
+                $allProjectionInputsValid =
+                    false;
+            }
+
+        } else {
+
+            $unprojectedPlayerCount++;
+        }
+    }
+
+
+    testPass(
+        'All Player Intelligence summaries expose Expected Points fields',
+        $allProjectionFieldsPresent
+    );
+
+
+    testPass(
+        'All available Projected Points are numeric and non-negative',
+        $allProjectedPointsValid
+    );
+
+
+    testPass(
+        'All available Projected Minutes remain between 0 and 90',
+        $allProjectedMinutesValid
+    );
+
+
+    testPass(
+        'All projection confidence values remain within legal bounds',
+        $allProjectionConfidenceValid
+    );
+
+
+    testPass(
+        'All projection confidence labels use supported states',
+        $allProjectionLabelsValid
+    );
+
+
+    testPass(
+        'All available Expected Points projections expose component breakdowns',
+        $allProjectionComponentsValid
+    );
+
+
+    testPass(
+        'All available Expected Points projections expose input evidence',
+        $allProjectionInputsValid
+    );
+
+
+    /*
+     * Current schedule should provide at least some upcoming-fixture
+     * projections.
+     */
+
+    testPass(
+        'Current player pool contains projected players',
+        $projectedPlayerCount > 0
+    );
+
+
+    /*
+     * A projection is only valid when an upcoming fixture exists.
+     *
+     * The exact count of unprojected players can legitimately vary
+     * with fixture state, so we only verify the accounting contract.
+     */
+
+    testPass(
+        'Projected and unprojected counts account for all summaries',
+        (
+            $projectedPlayerCount
+            +
+            $unprojectedPlayerCount
+        )
+        ===
+        count(
+            $summaries
+        )
+    );
+
+
+    echo "Projected Players: "
+        . $projectedPlayerCount
+        . "<br>";
+
+
+    echo "Unprojected Players: "
+        . $unprojectedPlayerCount
+        . "<br><br>";
 
 
     /*

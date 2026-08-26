@@ -787,55 +787,250 @@ These must remain independently explainable.
 
 ## v0.29.0 — FPL Expected Points Intelligence
 
+### Status
+
+**IN DEVELOPMENT**
+
+### Dependency
+
+Requires v0.27.0 and strongly benefits from v0.28.0 historical Form Intelligence.
+
 ### Goal
 
-Translate the existing intelligence models into an understandable FPL points
-projection.
+Translate the existing intelligence and historical evidence models into an
+explainable next-gameweek FPL points projection.
 
-### Planned Work
+### Delivered So Far
 
-Create an Expected Points / Projected Points model using:
+Added next-gameweek Projected Points modelling using:
 
-- expected minutes
-- attacking performance
-- clean-sheet opportunity
-- fixture intelligence
-- position
-- availability
-- Effective Confidence
-- recent form
-- team attack/defence context
-
-Generate:
-
-- next-gameweek projected points
 - projected minutes
-- projection confidence
-- projection breakdown
+- attacking performance
+- expected goals
+- expected assists
+- clean-sheet probability
+- fixture opportunity
+- opponent attack/defence context
+- position-aware FPL scoring
+- player availability
+- recent historical evidence
 
-Keep projections explainable.
+Added:
 
-Example:
+- Projected Points
+- Projected Minutes
+- Projection Confidence
+- projection confidence labels
+- explainable scoring-component breakdown
+- projection evidence and sample diagnostics
 
-Projected Points: 6.4
+Added position-aware FPL Expected Points components for:
 
-Components:
-- Expected Minutes
-- Attacking Return Potential
-- Clean Sheet Potential
-- Fixture Opportunity
-- Reliability Adjustment
+- appearance points
+- goals
+- assists
+- clean sheets
+- goalkeeper saves
+- defensive contributions
+- bonus points
+
+### Projected Minutes
+
+Added projected-minutes modelling using current availability and historical
+participation evidence.
+
+Projected Minutes are bounded between 0 and 90 and provide the playing-time
+foundation for the Expected Points model.
+
+### Attacking Returns
+
+Added expected attacking-return modelling using historical:
+
+- expected goals per 90
+- expected assists per 90
+
+Historical attacking evidence is combined with projected playing time and
+fixture opportunity before being translated into position-specific FPL points.
+
+### Clean-Sheet Projection
+
+Added clean-sheet probability modelling using:
+
+- recent clean-sheet evidence
+- opponent attacking strength
+- fixture context
+- projected minutes
+- early-season sample confidence
+
+Clean-sheet Expected Points use official position-specific FPL scoring.
+
+### Goalkeeper Saves
+
+Added goalkeeper save projections using:
+
+- historical saves per 90
+- recency-weighted save evidence
+- projected minutes
+- fixture save opportunity
+
+Save Expected Points use official FPL goalkeeper save scoring.
+
+Outfield players explicitly expose save modelling as `Not Applicable`.
+
+### Defensive Contributions
+
+Added 2026/27 FPL defensive-contribution Expected Points modelling.
+
+The model uses the appropriate defensive-action evidence by position and
+supports the official position-specific defensive-contribution thresholds.
+
+Added position baselines derived from completed real fixture-history evidence.
+
+Early-season player rates are regressed toward their position baseline using
+appearance sample confidence so one match cannot dominate the projection.
+
+Defensive-contribution modelling exposes:
+
+- raw defensive actions per 90
+- position baseline
+- appearance sample size
+- sample confidence
+- regressed action rate
+- fixture opportunity multiplier
+- projected defensive actions
+- threshold probability
+- expected defensive-contribution points
+
+### Bonus Points
+
+Added Expected Bonus modelling using historical BPS evidence.
+
+The model uses:
+
+- recency-weighted BPS per 90
+- position-specific BPS baselines
+- projected minutes
+- appearance sample confidence
+- early-season regression
+- projected BPS
+
+Added a smooth probabilistic BPS-to-bonus curve calibrated from complete GW1
+2026/27 player-fixture evidence.
+
+This avoids treating projected BPS as a deterministic realised match BPS score
+and prevents small exact-BPS samples from producing unstable projection jumps.
+
+Expected Bonus remains bounded between zero and three FPL points.
+
+### Early-Season Protection
+
+Expected Points components using limited historical evidence apply explicit
+sample regression.
+
+With one appearance of evidence, individual rates remain strongly regressed
+toward appropriate position-level baselines.
+
+As historical evidence grows, player-specific performance is allowed to carry
+progressively greater weight.
+
+This protects the projection engine from overreacting to isolated early-season
+performances.
+
+### Explainability
+
+Expected Points exposes component-level outputs covering:
+
+- appearance
+- goals
+- assists
+- clean sheets
+- saves
+- bonus
+- defensive contributions
+
+Supporting evidence is retained so the application can explain why each
+component contributes to the final projection.
+
+### Current Real-Data Validation
+
+Complete GW1 historical evidence is available for projection modelling.
+
+Real-data diagnostics confirm:
+
+- goalkeeper save projections are active
+- defensive-contribution projections are active
+- bonus projections are active
+- early-season sample regression is active
+- specialist components reach the final Projected Points total
+
+For example, high-BPS players receive positive Expected Bonus while one-match
+evidence remains conservatively regressed toward position baselines.
 
 ### Testing
 
-Use synthetic scenarios to ensure:
+Added synthetic, regression and real-data coverage for:
 
-- stronger fixtures improve projection
-- lower expected minutes reduce projection
-- unavailable players are penalised
-- position scoring behaves correctly
-- projections remain bounded and sensible
+- projected minutes
+- projection confidence
+- Expected Points inputs
+- position-aware FPL scoring
+- attacking Expected Points
+- clean-sheet probability
+- goalkeeper saves
+- defensive contributions
+- defensive-contribution baselines
+- defensive-contribution sample regression
+- bonus modelling
+- BPS position baselines
+- BPS sample regression
+- probabilistic bonus behaviour
+- component totals
+- Player Intelligence integration
+- complete real-player projection coverage
 
+The current complete regression suite passes with:
+
+- 108 test files
+- 108 test files passed
+- 0 test files failed
+- 0 test files with errors
+- 3,845 assertions passed
+- 0 assertions failed
+
+### Remaining Before v0.29.0 Completion
+
+Audit the relationship between:
+
+- Projection Confidence
+- Sample Confidence
+- Effective Confidence
+- recent Form evidence
+
+Ensure the existing confidence architecture remains semantically separate and
+that Expected Points uses reliability evidence intentionally rather than
+duplicating or collapsing confidence concepts.
+
+Audit official negative FPL scoring events and decide whether they should be
+modelled directly in v0.29.0 or explicitly deferred to a later calibration
+milestone.
+
+Complete the final Expected Points player-profile presentation and
+explainability review.
+
+Run final regression validation after the remaining integration work.
+
+### Important Rules
+
+Expected Points must remain explainable.
+
+Sample Confidence, Effective Confidence, Projection Confidence and Form
+Intelligence must retain clearly defined and separate responsibilities.
+
+Early-season evidence must not be allowed to create unrealistically confident
+projections.
+
+Projection components must use official 2026/27 FPL scoring rules where
+applicable.
 
 ---
 
@@ -1331,7 +1526,15 @@ Before each release:
 
 # Current Next Action
 
-**NEXT: v0.27.0 — Historical Gameweek Data Foundation**
+**NEXT: Complete v0.29.0 — FPL Expected Points Intelligence**
 
-The first task is to design the historical database schema before modifying
-the existing update scripts.
+The core Expected Points projection engine is now implemented.
+
+Before completing v0.29.0:
+
+1. audit Projection Confidence, Sample Confidence and Effective Confidence usage
+2. confirm how recent Form evidence influences Expected Points
+3. audit negative FPL scoring events and decide whether they belong in v0.29.0
+4. complete the final player-profile Expected Points presentation
+5. run the complete regression suite
+6. update the stable baseline to v0.29.0
