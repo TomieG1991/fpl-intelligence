@@ -42,7 +42,7 @@ The system should remain explainable, testable and robust throughout:
 
 Current stable release:
 
-**v0.27.0 — Historical Gameweek & Fixture Intelligence**
+**v0.28.0 — Player Form & Trend Intelligence**
 
 GitHub `main` is the authoritative code baseline after every completed commit.
 
@@ -192,12 +192,15 @@ Historical fixture importing is:
 - batchable
 - API-throttled
 
-The historical tables currently preserve evidence but do not yet directly alter
-Player Intelligence, Transfer Intelligence, Wildcard Intelligence, Captain
-Intelligence or Gameweek Intelligence.
+Historical evidence now feeds the standalone Player Form Intelligence layer.
 
-Historical evidence will begin influencing intelligence models from v0.28.0
-onwards.
+Player Form Intelligence currently remains diagnostic and explainable rather
+than directly altering the core Player Intelligence Score or downstream
+decision systems.
+
+Historical Form evidence is exposed through Player Intelligence summaries and
+player profiles, while its eventual influence on projections and decision
+models will be introduced conservatively in later milestones.
 
 
 ## Current Intelligence Systems
@@ -218,6 +221,39 @@ Includes:
 - Overall Player Intelligence
 - Player Assessment
 - Player Comparison
+
+
+### Player Form Intelligence
+
+Includes:
+
+- official per-fixture historical performance evidence
+- configurable recent fixture windows
+- configurable recent appearance windows
+- recency-weighted historical performance
+- position-aware Form modelling
+- Form Rating
+- Performance Rating
+- participation rate
+- zero-minute fixture evidence
+- Performance Trend
+- Participation Trend
+- Minutes Trend
+- Improving / Stable / Declining classifications
+- insufficient-data protection
+- historical sample diagnostics
+- request-level historical Form caching
+
+Player Form Intelligence currently remains diagnostic.
+
+It is exposed through Player Intelligence summaries and individual player
+profiles but does not yet directly alter the core Player Intelligence Score.
+
+Form Intelligence remains separate from:
+
+- Sample Confidence
+- Effective Confidence
+- underlying Player Strength
 
 
 ### Fixture Intelligence
@@ -544,69 +580,184 @@ The complete project regression suite passes with v0.27.0 integrated.
 
 ## v0.28.0 — Player Form & Trend Intelligence
 
+### Status
+
+**COMPLETE**
+
 ### Dependency
 
 Requires v0.27.0.
 
 ### Goal
 
+Add recent-form intelligence using persisted official per-fixture history rather
+than relying primarily on cumulative season totals.
+
 Add recent-form intelligence rather than relying primarily on season totals.
 
-### Planned Work
+### Delivered
 
-Build recent player form from official per-fixture history rather than relying
-on cumulative season totals.
+Added `PlayerForm` for recent historical Player Form modelling using persisted
+official per-fixture FPL history.
 
-Add historical retrieval for configurable windows such as:
+Added configurable historical retrieval covering:
 
-- last 3 fixtures
-- last 5 fixtures
-- last 3 appearances
-- last 5 appearances
+- recent fixtures
+- recent appearances
+- zero-minute official fixture history
+- participation evidence
 
-Evaluate recent performance in:
+Added recency-weighted Form modelling so newer fixtures carry greater influence
+without allowing one match to dominate the historical sample.
 
-- minutes
-- starts
-- total points
-- goals
-- assists
-- expected goals
-- expected assists
-- expected goal involvements
-- BPS
-- clean sheets where appropriate
-- expected goals conceded where appropriate
+Added position-aware Form modelling using appropriate evidence for:
 
-Separate recent performance quality from recent participation.
+- goalkeepers
+- defenders
+- midfielders
+- forwards
 
-A zero-minute official history row is known evidence and must not simply be
-discarded.
+Added historical performance metrics including:
 
-Form Intelligence should distinguish between:
+- points per appearance
+- average appearance minutes
+- expected goals per 90
+- expected assists per 90
+- expected goal involvements per 90
+- BPS per 90
+- clean-sheet rate
+- expected goals conceded per 90
 
-- performance form
-- minutes/participation trend
-- underlying statistical trend
-
-Add recency weighting so recent fixtures carry somewhat more influence than
-older fixtures without allowing one exceptional match to dominate.
-
-Add:
+Added:
 
 - Form Rating
-- Form Trend
+- Performance Rating
+- participation rate
+- fixture sample size
+- appearance sample size
+- zero-minute fixture count
+
+Separated holistic recent Form from on-pitch Performance so playing-time
+security does not incorrectly determine performance quality.
+
+Added `PlayerFormTrend` with independent:
+
+- Performance Trend
 - Participation Trend
-- improving / stable / declining classification
-- recent form sample size
-- recent form explanation
+- Minutes Trend
 
-Form must remain position-aware where appropriate.
+Trend classifications support:
 
-Integrate Form Intelligence into Player Intelligence conservatively only after
-the standalone model is validated.
+- Improving
+- Stable
+- Declining
+- Insufficient Data
 
-Display recent form and trend information on player profiles.
+Added minimum historical sample protection so early-season evidence cannot
+produce misleading trend classifications.
+
+Added Player Form Intelligence to:
+
+- bulk Player Intelligence summaries
+- individual Player Intelligence profiles
+
+Added a Historical Intelligence / Recent Form section to player profiles showing:
+
+- Form Rating
+- Performance Rating
+- Participation
+- Performance Trend
+- Participation Trend
+- Minutes Trend
+- historical fixture sample
+- historical appearance sample
+- zero-minute evidence where applicable
+
+Added request-level historical Form caching to prevent repeated database queries
+during large Player Intelligence operations.
+
+The caching optimisation reduced the complete regression-suite runtime from
+approximately 255 seconds to approximately 134 seconds.
+
+### Architecture Decision
+
+Player Form Intelligence remains diagnostic at this stage.
+
+Form does not yet directly alter:
+
+- core Player Intelligence Score
+- Transfer Intelligence
+- Starting XI decisions
+- Captain Intelligence
+- Wildcard Intelligence
+- Gameweek Intelligence
+
+This allows the historical Form model to accumulate and be validated against
+real gameweek evidence before it receives decision-making weight.
+
+### Confidence Separation
+
+The existing confidence architecture remains unchanged.
+
+Sample Confidence
+→ statistical sample maturity
+
+Effective Confidence
+→ current decision reliability
+
+Form Intelligence
+→ recent performance and participation direction
+
+These concepts remain independently explainable and must not be collapsed into
+one metric.
+
+### Current Real-Data State
+
+GW1 currently provides:
+
+- 610 persisted player fixture-history records
+- 610 unique players
+- all 10 Premier League fixtures represented
+
+Real player profiles now expose historical Form Intelligence.
+
+With only GW1 historical evidence available, trend classifications correctly
+return `Insufficient Data` until sufficient history accumulates.
+
+### Testing
+
+Added regression coverage for:
+
+- Player Form model structure
+- position-aware Form weighting
+- recency weighting
+- Performance Rating
+- zero-minute history
+- participation modelling
+- historical sample sizes
+- Form Rating bounds
+- Performance Rating bounds
+- Performance Trend
+- Participation Trend
+- Minutes Trend
+- trend thresholds
+- insufficient historical evidence
+- early-season behaviour
+- Player Intelligence Service integration
+- individual Player Profile integration
+- request-level historical caching
+- Player Form profile UI
+- PHP error protection
+- performance regression
+
+The complete project regression suite passes with:
+
+- 96 test files
+- 96 test files passed
+- 0 test files failed
+- 0 test files with errors
+- 3,417 assertions passed
+- 0 assertions failed
 
 ### Important Rule
 
