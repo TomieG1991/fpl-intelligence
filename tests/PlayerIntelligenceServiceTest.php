@@ -54,28 +54,42 @@ try {
         new Database();
 
 
+    $db =
+        $database
+            ->getConnection();
+
+
     $service =
         new PlayerIntelligenceService(
-            $database->getConnection()
+            $db
         );
 
 
-    $players =
-        $service
-            ->getAllPlayerSummaries();
-            
     $playerRepository =
         new PlayerRepository(
-            $database->getConnection()
+            $db
         );
 
 
-} catch (Throwable $exception) {
+    /*
+     * Build the complete summary collection once and reuse it
+     * throughout this test.
+     */
+
+    $summaries =
+        $service
+            ->getAllPlayerSummaries();
+
+} catch (
+    Throwable $exception
+) {
 
     echo "SETUP FAILED ❌<br>";
 
     echo htmlspecialchars(
-        $exception->getMessage()
+        $exception->getMessage(),
+        ENT_QUOTES,
+        'UTF-8'
     );
 
     exit;
@@ -92,12 +106,6 @@ try {
 echo "<br>============================================<br>";
 echo "Scenario A: Player Summaries<br>";
 echo "============================================<br>";
-
-
-$summaries =
-    $service
-        ->getAllPlayerSummaries();
-
 
 testPass(
     'Player summaries return an array',
@@ -211,6 +219,9 @@ $playerId =
 echo "<br>============================================<br>";
 echo "Scenario B: Complete Player Profile<br>";
 echo "============================================<br>";
+
+
+
 
 
 $profile =
@@ -609,7 +620,6 @@ $comparisonPlayers =
             2
         );
 
-
 testPass(
     'At least two ranked players are available for comparison',
     count(
@@ -650,7 +660,6 @@ if (
                 $comparisonPlayerIdA,
                 $comparisonPlayerIdB
             );
-
 
     testPass(
         'Player comparison returns an array',
@@ -1212,7 +1221,6 @@ echo "<br>============================================<br>";
 echo "Scenario J: Transfer Decision<br>";
 echo "============================================<br>";
 
-
 $transferCandidates =
     $service
         ->getRankedPlayers(
@@ -1460,8 +1468,7 @@ echo "============================================<br>";
  */
 
 $combinationPlayers =
-    $service
-        ->getAllPlayerSummaries();
+    $summaries;
 
 
 $transferPairA =
@@ -2360,8 +2367,7 @@ echo "============================================<br>";
 
 
 $allSummaries =
-    $service
-        ->getAllPlayerSummaries();
+    $summaries;
 
 
 $syntheticImportedPlayers =
@@ -2848,6 +2854,8 @@ testPass(
 );
 
 
+
+
 $squadRecommendationResult =
     $service
         ->getSquadTransferRecommendations(
@@ -2856,6 +2864,7 @@ $squadRecommendationResult =
             3,
             3
         );
+
 
 
 testPass(
@@ -3002,6 +3011,8 @@ echo "Scenario P: Squad Double Transfer Recommendations<br>";
 echo "============================================<br>";
 
 
+
+
 $squadDoubleRecommendationResult =
     $service
         ->getSquadDoubleTransferRecommendations(
@@ -3010,6 +3021,7 @@ $squadDoubleRecommendationResult =
             5,
             5
         );
+
 
 
 testPass(
@@ -3549,6 +3561,8 @@ testPass(
         )
         === 15
     );
+
+
 
 
     $captainRecommendationResult =
@@ -4305,12 +4319,12 @@ testPass(
      * conservative fallback behaviour.
      */
 
+
     $gameweekStartingXIResult =
         $service
             ->getGameweekStartingXI(
                 $squadForRecommendations
             );
-
 
     /*
      * ------------------------------------------------------------
@@ -4956,7 +4970,6 @@ testPass(
                 $squadForRecommendations,
                 0.0
             );
-
 
     testPass(
         'Gameweek Decision Intelligence returns an array',

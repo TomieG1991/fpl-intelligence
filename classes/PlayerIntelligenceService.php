@@ -8,6 +8,19 @@ class PlayerIntelligenceService
 
     private FixtureRepository $fixtureRepository;
     
+    /*
+     * Request-scoped cache of the complete Player Intelligence
+     * summary collection.
+     *
+     * Higher-level intelligence workflows frequently reuse the
+     * same current player summaries during one PHP request.
+     *
+     * This cache exists only for the lifetime of this service
+     * instance and is rebuilt on the next request.
+     */
+    private ?array $playerSummariesCache =
+        null;
+    
     private PlayerFixtureHistoryRepository $playerFixtureHistoryRepository;
 
     private PlayerFormHistory $playerFormHistory;
@@ -226,6 +239,22 @@ class PlayerIntelligenceService
      */
     public function getAllPlayerSummaries(): array
     {
+        /*
+         * ========================================================
+         * REQUEST-SCOPED CACHE
+         * ========================================================
+         */
+
+        if (
+            $this->playerSummariesCache
+            !==
+            null
+        ) {
+
+            return
+                $this->playerSummariesCache;
+        }
+        
         $players =
             $this->playerRepository
                 ->getAll();
@@ -1336,7 +1365,12 @@ class PlayerIntelligenceService
         
 
 
-        return $summaries;
+        $this->playerSummariesCache =
+            $summaries;
+
+
+        return
+            $this->playerSummariesCache;
     }
 
 
