@@ -51,6 +51,9 @@ $playerId =
 
 $profile =
     null;
+    
+$marketSummary =
+    [];
 
 
 $pageError =
@@ -83,6 +86,66 @@ if (
 
         $pageError =
             $exception->getMessage();
+    }
+}
+
+/*
+ * ============================================================
+ * MARKET INTELLIGENCE
+ * ============================================================
+ *
+ * Market Intelligence is supporting decision evidence.
+ *
+ * Failure to resolve market evidence must not prevent the
+ * underlying Player Profile from loading.
+ */
+
+if (
+    $profile !== null
+    &&
+    $playerId !== false
+    &&
+    $playerId !== null
+    &&
+    $playerId > 0
+) {
+
+    try {
+
+        $marketIntelligenceService =
+            new MarketIntelligenceService(
+                $db
+            );
+
+
+        $marketSummary =
+            $marketIntelligenceService
+                ->getPlayerMarketSummary(
+                    $playerId
+                );
+
+
+    } catch (
+        Throwable $exception
+    ) {
+
+        $marketSummary = [
+
+            'status' =>
+                'Unavailable',
+
+            'player_id' =>
+                $playerId,
+
+            'classification' =>
+                'Unavailable',
+
+            'evidence_count' =>
+                0,
+
+            'evidence' =>
+                []
+        ];
     }
 }
 
@@ -712,7 +775,129 @@ $multiGameweekNext6 =
     $multiGameweekExpectedPoints[
         'next_6'
     ]
-    ?? null;    
+    ?? null; 
+
+/*
+ * ============================================================
+ * MARKET INTELLIGENCE
+ * ============================================================
+ */
+
+$marketStatus =
+    $marketSummary[
+        'status'
+    ]
+    ?? 'Unavailable';
+
+
+$marketClassification =
+    $marketSummary[
+        'classification'
+    ]
+    ?? 'Unavailable';
+
+
+$marketEvidenceCount =
+    (int) (
+        $marketSummary[
+            'evidence_count'
+        ]
+        ?? 0
+    );
+
+
+$marketEvidence =
+    is_array(
+        $marketSummary[
+            'evidence'
+        ]
+        ?? null
+    )
+        ? $marketSummary[
+            'evidence'
+        ]
+        : [];
+
+
+$marketPriceEvidence =
+    is_array(
+        $marketEvidence[
+            'price'
+        ]
+        ?? null
+    )
+        ? $marketEvidence[
+            'price'
+        ]
+        : [];
+
+
+$marketOwnershipEvidence =
+    is_array(
+        $marketEvidence[
+            'ownership'
+        ]
+        ?? null
+    )
+        ? $marketEvidence[
+            'ownership'
+        ]
+        : [];
+
+
+$marketTransferEvidence =
+    is_array(
+        $marketEvidence[
+            'transfers'
+        ]
+        ?? null
+    )
+        ? $marketEvidence[
+            'transfers'
+        ]
+        : [];
+
+
+$marketPriceStatus =
+    $marketPriceEvidence[
+        'status'
+    ]
+    ?? 'Unavailable';
+
+
+$marketPriceDirection =
+    $marketPriceEvidence[
+        'direction'
+    ]
+    ?? 'Unavailable';
+
+
+$marketOwnershipStatus =
+    $marketOwnershipEvidence[
+        'status'
+    ]
+    ?? 'Unavailable';
+
+
+$marketOwnershipDirection =
+    $marketOwnershipEvidence[
+        'direction'
+    ]
+    ?? 'Unavailable';
+
+
+$marketTransferStatus =
+    $marketTransferEvidence[
+        'status'
+    ]
+    ?? 'Unavailable';
+
+
+$marketTransferDirection =
+    $marketTransferEvidence[
+        'direction'
+    ]
+    ?? 'Unavailable';    
 
 $activeNav = 'players';
 
@@ -2478,6 +2663,323 @@ $activeNav = 'players';
                             <?php endif; ?>
 
                         </div>
+
+                    </section>
+                    
+                    <!-- ======================================
+                         MARKET INTELLIGENCE
+                         ====================================== -->
+
+                    <section
+                        class="dashboard-card player-market-intelligence-card"
+                        data-player-market-intelligence
+                    >
+
+                        <div class="card-header">
+
+                            <div>
+
+                                <p class="card-kicker">
+                                    Market Intelligence
+                                </p>
+
+                                <h2>
+                                    Market Movement
+                                </h2>
+
+                            </div>
+
+
+                            <span class="card-badge">
+
+                                <?= htmlspecialchars(
+                                    $marketClassification,
+                                    ENT_QUOTES,
+                                    'UTF-8'
+                                ); ?>
+
+                            </span>
+
+                        </div>
+
+
+                        <p class="assessment-summary">
+
+                            Market Intelligence tracks historical price,
+                            ownership and transfer movement as supporting
+                            FPL decision evidence. Market popularity does
+                            not determine the player's underlying quality.
+
+                        </p>
+
+
+                        <?php if (
+                            $marketStatus === 'Available'
+                        ): ?>
+
+
+                            <!-- ==================================
+                                 MARKET CLASSIFICATION
+                                 ================================== -->
+
+                            <div class="player-form-rating-grid">
+
+                                <div class="player-form-rating-card">
+
+                                    <span class="player-form-rating-label">
+                                        Market Signal
+                                    </span>
+
+                                    <strong>
+
+                                        <?= htmlspecialchars(
+                                            $marketClassification,
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ); ?>
+
+                                    </strong>
+
+                                    <small>
+                                        Combined market classification
+                                    </small>
+
+                                </div>
+
+
+                                <div class="player-form-rating-card">
+
+                                    <span class="player-form-rating-label">
+                                        Evidence
+                                    </span>
+
+                                    <strong>
+
+                                        <?= number_format(
+                                            $marketEvidenceCount
+                                        ); ?>
+
+                                        / 3
+
+                                    </strong>
+
+                                    <small>
+                                        Available market signals
+                                    </small>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- ==================================
+                                 MARKET COMPONENTS
+                                 ================================== -->
+
+                            <div class="performance-section-heading">
+
+                                <div>
+
+                                    <p class="card-kicker">
+                                        Market Evidence
+                                    </p>
+
+                                    <h3>
+                                        Movement Signals
+                                    </h3>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="assessment-component-grid">
+
+                                <div
+                                    class="assessment-component"
+                                    data-market-price
+                                >
+
+                                    <span>
+                                        Price Movement
+                                    </span>
+
+                                    <strong>
+
+                                        <?= htmlspecialchars(
+                                            $marketPriceDirection,
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ); ?>
+
+                                    </strong>
+
+                                    <small>
+
+                                        <?= htmlspecialchars(
+                                            $marketPriceStatus,
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ); ?>
+
+                                    </small>
+
+                                </div>
+
+
+                                <div
+                                    class="assessment-component"
+                                    data-market-ownership
+                                >
+
+                                    <span>
+                                        Ownership Movement
+                                    </span>
+
+                                    <strong>
+
+                                        <?= htmlspecialchars(
+                                            $marketOwnershipDirection,
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ); ?>
+
+                                    </strong>
+
+                                    <small>
+
+                                        <?= htmlspecialchars(
+                                            $marketOwnershipStatus,
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ); ?>
+
+                                    </small>
+
+                                </div>
+
+
+                                <div
+                                    class="assessment-component"
+                                    data-market-transfers
+                                >
+
+                                    <span>
+                                        Transfer Momentum
+                                    </span>
+
+                                    <strong>
+
+                                        <?= htmlspecialchars(
+                                            $marketTransferDirection,
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ); ?>
+
+                                    </strong>
+
+                                    <small>
+
+                                        <?= htmlspecialchars(
+                                            $marketTransferStatus,
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ); ?>
+
+                                    </small>
+
+                                </div>
+
+                            </div>
+
+
+                            <?php if (
+                                $marketClassification
+                                ===
+                                'Insufficient Evidence'
+                            ): ?>
+
+                                <div class="player-summary-footer">
+
+                                    <strong>
+                                        Insufficient Evidence
+                                    </strong>
+
+                                    <span>
+
+                                        Historical market evidence is still
+                                        developing. At least two trustworthy
+                                        market signals are required before a
+                                        directional market classification is
+                                        produced.
+
+                                    </span>
+
+                                </div>
+
+                            <?php else: ?>
+
+                                <div class="player-summary-footer">
+
+                                    <span>
+                                        Market classification
+                                    </span>
+
+                                    <strong>
+
+                                        <?= htmlspecialchars(
+                                            $marketClassification,
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ); ?>
+
+                                    </strong>
+
+                                    <span>
+                                        from
+                                    </span>
+
+                                    <strong>
+
+                                        <?= number_format(
+                                            $marketEvidenceCount
+                                        ); ?>
+
+                                    </strong>
+
+                                    <span>
+                                        available signals
+                                    </span>
+
+                                </div>
+
+                            <?php endif; ?>
+
+
+                        <?php else: ?>
+
+
+                            <div class="profile-not-found">
+
+                                <div class="empty-icon">
+                                    —
+                                </div>
+
+                                <h3>
+                                    Market Intelligence Unavailable
+                                </h3>
+
+                                <p>
+
+                                    Historical market evidence is not
+                                    currently available for this player.
+
+                                </p>
+
+                            </div>
+
+
+                        <?php endif; ?>
 
                     </section>
                     

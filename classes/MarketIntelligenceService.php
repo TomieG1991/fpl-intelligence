@@ -37,6 +37,175 @@ class MarketIntelligenceService
                 $db
             );
     }
+    
+    
+    public function getPlayerMarketSummary(
+        int $playerId
+    ): array {
+
+        $result =
+            $this->getPlayerMarketIntelligence(
+                $playerId
+            );
+
+
+        if (
+            (
+                $result[
+                    'status'
+                ]
+                ?? null
+            )
+            !==
+            'Available'
+        ) {
+
+            return [
+
+                'status' =>
+                    'Unavailable',
+
+                'player_id' =>
+                    $playerId,
+
+                'classification' =>
+                    'Unavailable',
+
+                'evidence_count' =>
+                    0,
+
+                'evidence' => [
+
+                    'price' => [
+
+                        'status' =>
+                            'Unavailable',
+
+                        'direction' =>
+                            'Unavailable'
+                    ],
+
+                    'ownership' => [
+
+                        'status' =>
+                            'Unavailable',
+
+                        'direction' =>
+                            'Unavailable'
+                    ],
+
+                    'transfers' => [
+
+                        'status' =>
+                            'Unavailable',
+
+                        'direction' =>
+                            'Unavailable'
+                    ]
+                ]
+            ];
+        }
+
+
+        $priceMovement =
+            $result[
+                'price_movement'
+            ]
+            ?? [];
+
+
+        $ownershipMovement =
+            $result[
+                'ownership_movement'
+            ]
+            ?? [];
+
+
+        $transferMomentum =
+            $result[
+                'transfer_momentum'
+            ]
+            ?? [];
+
+
+        $combinedSignal =
+            $result[
+                'combined_market_signal'
+            ]
+            ?? [];
+
+
+        return [
+
+            'status' =>
+                'Available',
+
+            'player_id' =>
+                $playerId,
+
+            'classification' =>
+                $combinedSignal[
+                    'classification'
+                ]
+                ?? 'Insufficient Evidence',
+
+            'evidence_count' =>
+                (int) (
+                    $combinedSignal[
+                        'available_signals'
+                    ]
+                    ?? 0
+                ),
+
+            'evidence' => [
+
+                'price' => [
+
+                    'status' =>
+                        $priceMovement[
+                            'status'
+                        ]
+                        ?? 'Unavailable',
+
+                    'direction' =>
+                        $priceMovement[
+                            'direction'
+                        ]
+                        ?? 'Unavailable'
+                ],
+
+                'ownership' => [
+
+                    'status' =>
+                        $ownershipMovement[
+                            'status'
+                        ]
+                        ?? 'Unavailable',
+
+                    'direction' =>
+                        $ownershipMovement[
+                            'direction'
+                        ]
+                        ?? 'Unavailable'
+                ],
+
+                'transfers' => [
+
+                    'status' =>
+                        $transferMomentum[
+                            'status'
+                        ]
+                        ?? 'Unavailable',
+
+                    'direction' =>
+                        $transferMomentum[
+                            'direction'
+                        ]
+                        ?? 'Unavailable'
+                ]
+            ]
+        ];
+    }
 
 
     /*
