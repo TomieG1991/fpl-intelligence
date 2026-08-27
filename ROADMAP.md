@@ -46,6 +46,20 @@ Current stable release:
 
 GitHub `main` is the authoritative code baseline after every completed commit.
 
+---
+
+Current development milestone:
+
+**v0.31.0 — Market & Price Intelligence — IN PROGRESS**
+
+The current v0.31.0 development baseline includes the historical Market
+Intelligence data foundation, price movement, ownership movement, transfer
+momentum and combined Market Signal modelling.
+
+v0.31.0 is not yet considered complete.
+
+---
+
 
 ## Current Data Foundation
 
@@ -74,9 +88,10 @@ The application currently stores and updates:
 - official FPL gameweeks
 - gameweek deadlines
 - previous/current/next gameweek state
-- player gameweek snapshots
+- immutable player gameweek snapshots
 - historical player price
-- historical ownership
+- historical raw selected-manager count
+- historical ownership percentage where trustworthy
 - historical availability state
 - per-fixture player history
 - per-fixture minutes
@@ -118,15 +133,16 @@ Gameweek importing is idempotent.
 
 ### Player Gameweek Snapshots
 
-The current FPL bootstrap state is preserved by gameweek.
+Completed-gameweek player state is preserved as immutable historical evidence.
 
 Snapshots retain appropriate player state such as:
 
 - player identity
 - team
 - position
-- price
-- ownership
+- historical price
+- raw selected-manager count where historical evidence exists
+- ownership percentage where trustworthy
 - availability
 - minutes
 - goals
@@ -138,7 +154,32 @@ Snapshots retain appropriate player state such as:
 - expected assists
 - expected goal involvements
 
-Snapshot importing is idempotent.
+Historical snapshots are intentionally separate from the refreshable live
+`players` table.
+
+Once a completed-gameweek snapshot has been captured, normal snapshot capture
+uses an immutable `insertIfAbsent()` contract and does not overwrite the
+historical row when live FPL state later changes.
+
+Raw historical selected-manager count is sourced from official completed
+player fixture history rather than inferred from rounded ownership percentage.
+
+Players without genuine historical evidence are not assigned invented market
+values.
+
+GW1 historical recovery validated:
+
+- 614 snapshot rows existed
+- 610 players had genuine GW1 fixture-history evidence
+- 610 historical selected-manager counts were restored
+- 610 historical prices were validated
+- 10 incorrect snapshot prices were corrected
+- four players without GW1 historical evidence remain unsupported rather than
+  receiving manufactured historical values
+
+Historical GW1 ownership percentage remains deliberately excluded from market
+trend calculations because an exact historical total-manager denominator is not
+available.
 
 ### Player Fixture History
 
@@ -296,6 +337,62 @@ Expected Points contract.
 
 Multi-gameweek projections reuse that model with fixture-specific context rather
 than maintaining a separate scoring model.
+
+### Market Intelligence
+
+Market Intelligence is currently under active development as part of v0.31.0.
+
+The current foundation includes:
+
+- historical price movement
+- historical raw ownership-count movement
+- transfer momentum
+- Rising / Stable / Falling component classifications
+- combined Market Signal
+- Strong Rising
+- Rising
+- Stable
+- Falling
+- Strong Falling
+- Mixed
+- Insufficient Evidence
+- insufficient-history protection
+- duplicate-gameweek protection
+- null/invalid evidence protection
+- early-season protection
+
+Price movement uses immutable historical gameweek snapshots.
+
+Ownership movement uses exact historical raw selected-manager counts rather
+than relying on rounded ownership percentages.
+
+Transfer momentum uses persisted official `player_fixture_history` evidence.
+
+The combined Market Signal requires at least two trustworthy component signals
+before producing a directional classification.
+
+With only GW1 historical evidence currently available, real players correctly
+return:
+
+- Price Movement: `Insufficient Historical Data`
+- Ownership Movement: `Insufficient Historical Data`
+- Transfer Momentum: `Insufficient Historical Data`
+- Combined Market Signal: `Insufficient Evidence`
+
+Market Intelligence currently remains a supporting intelligence layer.
+
+It does not directly alter:
+
+- Player Strength
+- Player Intelligence Score
+- Expected Points
+- Transfer recommendations
+- Captain Intelligence
+- Wildcard Intelligence
+- Gameweek Intelligence
+
+Popularity and transfer activity must not be treated as proof of player
+quality.
 
 ### Fixture Intelligence
 
@@ -1302,42 +1399,206 @@ v0.30.0 is complete.
 
 ## v0.31.0 — Market & Price Intelligence
 
+### Status
+
+**IN PROGRESS**
+
+### Dependency
+
+Builds on the v0.27.0 historical data foundation.
+
 ### Goal
 
-Use FPL market information as a supporting decision signal.
+Use FPL market information as an explainable supporting decision signal without
+treating popularity as evidence of underlying player quality.
 
-### Planned Work
+### Delivered So Far
 
-Preserve historical:
+Added `MarketIntelligenceService`.
 
-- player price
-- ownership percentage
-- transfers in
-- transfers out where available
+Added historical Price Movement Intelligence using immutable player gameweek
+snapshots.
 
-Add:
-
-- price movement history
-- ownership movement
-- transfer momentum
-- value trend
-- market trend classification
-
-Potential outputs:
+Price movement supports:
 
 - Rising
 - Stable
 - Falling
-- Heavily Bought
-- Heavily Sold
+- Insufficient Historical Data
+
+Added historical Ownership Movement Intelligence using exact raw
+selected-manager counts.
+
+Ownership movement supports:
+
+- Rising
+- Stable
+- Falling
+- Insufficient Historical Data
+
+Historical ownership movement deliberately does not depend on legacy GW1
+`selected_by_percent` because that field cannot currently be reconstructed with
+an exact historical denominator.
+
+Added Transfer Momentum Intelligence using official persisted
+`player_fixture_history` data.
+
+Transfer Momentum preserves:
+
+- transfers in
+- transfers out
+- transfer balance
+- zero-transfer evidence
+- distinct gameweek identity
+
+Added Combined Market Signal modelling.
+
+Combined classifications currently support:
+
+- Strong Rising
+- Rising
+- Stable
+- Falling
+- Strong Falling
+- Mixed
+- Insufficient Evidence
+
+At least two trustworthy component signals are required before the service
+produces a directional combined classification.
+
+### Historical Snapshot Architecture
+
+The live `players` table remains refreshable current FPL state.
+
+`player_gameweek_snapshots` now represents immutable historical gameweek state.
+
+`player_fixture_history` remains the official completed-fixture history source
+for:
+
+- player performance
+- historical selected-manager count
+- transfer activity
+
+Normal snapshot capture uses `insertIfAbsent()` and does not overwrite an
+existing historical player/gameweek record.
+
+### GW1 Market Recovery
+
+The original GW1 snapshot had been refreshed with later live player state.
+
+A controlled recovery process established:
+
+- 614 GW1 snapshot rows
+- 610 players with genuine official GW1 fixture-history evidence
+- 4 players without genuine GW1 fixture history
+- 10 historical price differences
+- 610 missing historical selected-manager counts
+
+Recovered:
+
+- 610 trustworthy historical GW1 prices
+- 610 exact historical selected-manager counts
+
+Corrected the 10 historical price differences.
+
+The four unsupported players were deliberately left without invented historical
+selected counts.
+
+Historical GW1 `selected_by_percent` remains excluded from ownership-trend
+calculations because the exact historical total-player denominator is not
+stored.
+
+### Early-Season Behaviour
+
+Market Intelligence must not manufacture trends from one gameweek.
+
+With only GW1 historical evidence available, current real-data behaviour is:
+
+- Price Movement: `Insufficient Historical Data`
+- Ownership Movement: `Insufficient Historical Data`
+- Transfer Momentum: `Insufficient Historical Data`
+- Combined Market Signal: `Insufficient Evidence`
+
+The same models should begin producing genuine directional intelligence
+automatically as later immutable gameweek snapshots accumulate.
+
+### Architecture Decision
+
+Market behaviour is supporting intelligence.
+
+Market Intelligence must remain separate from:
+
+- Player Strength
+- Expected Points
+- Player Intelligence quality
+- Sample Confidence
+- Effective Confidence
+- Projection Confidence
+
+Popularity, transfers and price movement must not be treated as proof that a
+player is intrinsically strong.
+
+Market data may later inform decision timing and financial risk, but should not
+override football-performance evidence.
+
+### Testing
+
+Added dedicated regression and integration coverage for:
+
+- Market Intelligence service structure
+- real-player market-state retrieval
+- historical price evidence
+- controlled rising price movement
+- controlled falling price movement
+- stable price movement
+- chronological price history
+- duplicate-gameweek price protection
+- invalid price evidence
+- raw ownership-count movement
+- conflicting percentage protection
+- zero-manager ownership evidence
+- transfer momentum
+- transfer-balance integrity
+- zero-transfer evidence
+- distinct transfer gameweeks
+- duplicate-gameweek transfer protection
+- combined Market Signal classification
+- mixed evidence
+- partial evidence
+- insufficient evidence
+- public combined-signal integration
+- repeatability
+- invalid-player protection
+- early-season real-data behaviour
+- immutable snapshot lifecycle
+- GW1 historical market recovery
+
+The current complete regression suite passes with:
+
+- 132 test files
+- 132 test files passed
+- 0 test files failed
+- 0 test files with errors
+- 4,348 assertions passed
+- 0 assertions failed
+
+### Remaining Work
+
+Before v0.31.0 is complete:
+
+- add a stable public Market Intelligence summary contract
+- expose Market Intelligence through the appropriate player-facing interface
+- evaluate value-trend intelligence once sufficient history exists
+- evaluate downstream decision integration conservatively
+- continue accumulating trustworthy historical market evidence
+- determine whether any numerical market-strength scoring is justified by real
+  multi-gameweek evidence
 
 ### Important Rule
 
 Popularity must not be treated as proof of player quality.
 
 Market data should support decisions, not dominate Player Intelligence.
-
-
 ---
 
 ## v0.32.0 — Squad Horizon & Rotation Intelligence
@@ -1755,21 +2016,32 @@ Before each release:
 
 # Current Next Action
 
-**NEXT: v0.31.0 — Market & Price Intelligence**
+**CONTINUE: v0.31.0 — Market & Price Intelligence**
 
-Build on the completed historical-data, Player Form, Expected Points and
-multi-gameweek projection foundations by introducing historical FPL market
-intelligence.
+The Market Intelligence data and directional modelling foundation is now
+complete.
 
-The next milestone should focus on:
+Completed so far:
 
-1. historical player price movement
-2. historical ownership movement
-3. transfer momentum
-4. value trends
-5. explainable market trend classifications
+1. historical snapshot lifecycle correction
+2. exact raw selected-manager count preservation
+3. GW1 historical market recovery
+4. Price Movement Intelligence
+5. Ownership Movement Intelligence
+6. Transfer Momentum Intelligence
+7. Combined Market Signal
+8. early-season insufficient-evidence protection
+
+Next:
+
+1. add a stable public Market Intelligence summary contract
+2. expose Market Intelligence through an appropriate player-facing interface
+3. inspect real multi-gameweek market behaviour as GW2+ evidence accumulates
+4. evaluate value-trend intelligence
+5. determine whether and how Market Intelligence should support downstream
+   Transfer, Squad and Gameweek decision systems
 
 Market behaviour must remain a supporting decision signal.
 
-Popularity and transfer activity must not be treated as evidence that a player
-is intrinsically strong.
+Popularity, transfer activity and price movement must not be treated as
+evidence that a player is intrinsically strong.

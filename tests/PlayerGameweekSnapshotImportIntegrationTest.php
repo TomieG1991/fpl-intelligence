@@ -657,93 +657,420 @@ echo "<br>";
 /*
  * ============================================================
  * SCENARIO H
- * SNAPSHOT / CURRENT PLAYER PARITY
+ * HISTORICAL SNAPSHOT INTEGRITY
  * ============================================================
  *
- * Since these snapshots were just captured from the same
- * bootstrap dataset used to update players, they should match
- * the current player table at this point in time.
+ * Completed-gameweek snapshots are immutable historical
+ * records.
+ *
+ * They are not required to remain equal to the live players
+ * table after prices, ownership or cumulative statistics move.
+ *
+ * Where trustworthy player_fixture_history exists for the
+ * completed gameweek, historical price and selected-manager
+ * count should agree with that historical evidence.
  */
 
 echo "============================================<br>";
-echo "Scenario H: Current-State Parity<br>";
+echo "Scenario H: Historical Snapshot Integrity<br>";
 echo "============================================<br>";
 
 
-$parityMismatchStatement =
-    $db->prepare(
-        "
-        SELECT COUNT(*)
-        FROM
-            player_gameweek_snapshots pgs
-        INNER JOIN
-            players p
-                ON p.id = pgs.player_id
-        WHERE
-            pgs.gameweek_id = :gameweek_id
-            AND
-            (
-                pgs.price <> p.price
-                OR
-                (
-                    pgs.price IS NULL
-                    AND
-                    p.price IS NOT NULL
-                )
-                OR
-                (
-                    pgs.price IS NOT NULL
-                    AND
-                    p.price IS NULL
-                )
-                OR
-                pgs.selected_by_percent <> p.selected_by_percent
-                OR
-                (
-                    pgs.selected_by_percent IS NULL
-                    AND
-                    p.selected_by_percent IS NOT NULL
-                )
-                OR
-                (
-                    pgs.selected_by_percent IS NOT NULL
-                    AND
-                    p.selected_by_percent IS NULL
-                )
-                OR
-                pgs.minutes <> p.minutes
-                OR
-                pgs.goals <> p.goals
-                OR
-                pgs.assists <> p.assists
-                OR
-                pgs.clean_sheets <> p.clean_sheets
-                OR
-                pgs.bonus <> p.bonus
-                OR
-                pgs.bps <> p.bps
-            )
-        "
+$currentGameweekFinished =
+    !empty(
+        $currentGameweek[
+            'finished'
+        ]
+        ?? false
     );
 
 
-$parityMismatchStatement
-    ->execute([
-
-        ':gameweek_id' =>
-            $currentGameweekId
-    ]);
-
-
-$parityMismatchCount =
-    (int) $parityMismatchStatement
-        ->fetchColumn();
+$currentGameweekDataChecked =
+    !empty(
+        $currentGameweek[
+            'data_checked'
+        ]
+        ?? false
+    );
 
 
-playerSnapshotImportCheck(
-    'Current snapshots match current player bootstrap state',
-    $parityMismatchCount === 0
-);
+$snapshotEligible =
+    $currentGameweekFinished
+    &&
+    $currentGameweekDataChecked;
+
+
+echo "Gameweek Finished: "
+    . (
+        $currentGameweekFinished
+            ? 'Yes'
+            : 'No'
+    )
+    . "<br>";
+
+
+echo "Gameweek Data Checked: "
+    . (
+        $currentGameweekDataChecked
+            ? 'Yes'
+            : 'No'
+    )
+    . "<br>";
+
+
+echo "Historical Snapshot State: "
+    . (
+        $snapshotEligible
+            ? 'Completed / Immutable'
+            : 'Not Yet Historical'
+    )
+    . "<br><br>";
+
+
+if (
+    $snapshotEligible
+) {
+
+    /*
+     * --------------------------------------------------------
+     * HISTORICAL PRICE PARITY
+     * --------------------------------------------------------
+     */
+
+    $historicalPriceStatement =
+        $db->prepare(
+            "
+                SELECT
+                    COUNT(DISTINCT pgs.player_id)
+                        AS comparable_players,
+
+                    COUNT(
+                        DISTINCT CASE
+                            WHEN
+                                pgs.price = pfh.price
+                                OR
+                                (
+                                    pgs.price IS NULL
+                                    AND
+                                    pfh.price IS NULL
+                                )
+                            THEN pgs.player_id
+                            ELSE NULL
+                        END
+                    ) AS matching_price_players
+
+                FROM
+                    player_gameweek_snapshots pgs
+
+                INNER JOIN
+                    player_fixture_history pfh
+                        ON pfh.player_id = pgs.player_id
+                        AND pfh.gameweek_id = pgs.gameweek_id
+
+                WHERE
+                    pgs.gameweek_id = :gameweek_id
+            "
+        );
+
+
+    $historicalPriceStatement
+        ->execute(
+            [
+                ':gameweek_id' =>
+                    $currentGameweekId
+            ]
+        );
+
+
+    $historicalPriceResult =
+        $historicalPriceStatement
+            ->fetch(
+                PDO::FETCH_ASSOC
+            );
+
+
+    $comparableHistoricalPlayers =
+        (int) (
+            $historicalPriceResult[
+                'comparable_players'
+            ]
+            ?? 0
+        );
+
+
+    $matchingHistoricalPrices =
+        (int) (
+            $historicalPriceResult[
+                'matching_price_players'
+            ]
+            ?? 0
+        );
+
+
+    echo "Players With Historical Evidence: "
+        . $comparableHistoricalPlayers
+        . "<br>";
+
+
+    echo "Players Matching Historical Price: "
+        . $matchingHistoricalPrices
+        . "<br>";
+
+
+    playerSnapshotImportCheck(
+        'Completed snapshots match trustworthy historical prices',
+        $comparableHistoricalPlayers > 0
+        &&
+        $matchingHistoricalPrices
+            ===
+            $comparableHistoricalPlayers
+    );
+
+
+    /*
+     * --------------------------------------------------------
+     * HISTORICAL SELECTED-COUNT PARITY
+     * --------------------------------------------------------
+     *
+     * Raw selected-manager count is exact historical market
+     * evidence. Only players with a populated historical value
+     * are considered comparable.
+     */
+
+    $historicalSelectedStatement =
+        $db->prepare(
+            "
+                SELECT
+                    COUNT(DISTINCT pgs.player_id)
+                        AS comparable_players,
+
+                    COUNT(
+                        DISTINCT CASE
+                            WHEN
+                                pgs.selected = pfh.selected
+                            THEN pgs.player_id
+                            ELSE NULL
+                        END
+                    ) AS matching_selected_players
+
+                FROM
+                    player_gameweek_snapshots pgs
+
+                INNER JOIN
+                    player_fixture_history pfh
+                        ON pfh.player_id = pgs.player_id
+                        AND pfh.gameweek_id = pgs.gameweek_id
+
+                WHERE
+                    pgs.gameweek_id = :gameweek_id
+                    AND
+                    pfh.selected IS NOT NULL
+            "
+        );
+
+
+    $historicalSelectedStatement
+        ->execute(
+            [
+                ':gameweek_id' =>
+                    $currentGameweekId
+            ]
+        );
+
+
+    $historicalSelectedResult =
+        $historicalSelectedStatement
+            ->fetch(
+                PDO::FETCH_ASSOC
+            );
+
+
+    $comparableSelectedPlayers =
+        (int) (
+            $historicalSelectedResult[
+                'comparable_players'
+            ]
+            ?? 0
+        );
+
+
+    $matchingHistoricalSelected =
+        (int) (
+            $historicalSelectedResult[
+                'matching_selected_players'
+            ]
+            ?? 0
+        );
+
+
+    echo "Players With Historical Selected Count: "
+        . $comparableSelectedPlayers
+        . "<br>";
+
+
+    echo "Players Matching Historical Selected Count: "
+        . $matchingHistoricalSelected
+        . "<br>";
+
+
+    playerSnapshotImportCheck(
+        'Completed snapshots match trustworthy historical selected counts',
+        $comparableSelectedPlayers > 0
+        &&
+        $matchingHistoricalSelected
+            ===
+            $comparableSelectedPlayers
+    );
+
+
+    /*
+     * --------------------------------------------------------
+     * UNSUPPORTED HISTORICAL SELECTED VALUES
+     * --------------------------------------------------------
+     *
+     * A player without fixture-history evidence for this
+     * gameweek must not be given an invented selected count.
+     */
+
+    $unsupportedSelectedStatement =
+        $db->prepare(
+            "
+                SELECT
+                    COUNT(*)
+
+                FROM
+                    player_gameweek_snapshots pgs
+
+                LEFT JOIN
+                    player_fixture_history pfh
+                        ON pfh.player_id = pgs.player_id
+                        AND pfh.gameweek_id = pgs.gameweek_id
+
+                WHERE
+                    pgs.gameweek_id = :gameweek_id
+                    AND
+                    pfh.id IS NULL
+                    AND
+                    pgs.selected IS NOT NULL
+            "
+        );
+
+
+    $unsupportedSelectedStatement
+        ->execute(
+            [
+                ':gameweek_id' =>
+                    $currentGameweekId
+            ]
+        );
+
+
+    $unsupportedSelectedCount =
+        (int)
+        $unsupportedSelectedStatement
+            ->fetchColumn();
+
+
+    echo "Unsupported Historical Selected Values: "
+        . $unsupportedSelectedCount
+        . "<br>";
+
+
+    playerSnapshotImportCheck(
+        'Snapshots do not invent selected counts without historical evidence',
+        $unsupportedSelectedCount === 0
+    );
+
+
+    /*
+     * --------------------------------------------------------
+     * LIVE DIVERGENCE DIAGNOSTIC
+     * --------------------------------------------------------
+     *
+     * Historical snapshots are allowed to differ from current
+     * live player state. Report that divergence diagnostically
+     * rather than treating it as a failure.
+     */
+
+    $livePriceDifferenceStatement =
+        $db->prepare(
+            "
+                SELECT
+                    COUNT(*)
+
+                FROM
+                    player_gameweek_snapshots pgs
+
+                INNER JOIN
+                    players p
+                        ON p.id = pgs.player_id
+
+                WHERE
+                    pgs.gameweek_id = :gameweek_id
+                    AND
+                    (
+                        pgs.price <> p.price
+                        OR
+                        (
+                            pgs.price IS NULL
+                            AND
+                            p.price IS NOT NULL
+                        )
+                        OR
+                        (
+                            pgs.price IS NOT NULL
+                            AND
+                            p.price IS NULL
+                        )
+                    )
+            "
+        );
+
+
+    $livePriceDifferenceStatement
+        ->execute(
+            [
+                ':gameweek_id' =>
+                    $currentGameweekId
+            ]
+        );
+
+
+    $livePriceDifferenceCount =
+        (int)
+        $livePriceDifferenceStatement
+            ->fetchColumn();
+
+
+    echo "Historical/Live Price Differences: "
+        . $livePriceDifferenceCount
+        . "<br>";
+
+
+    echo "Live-State Parity Required: No<br>";
+
+
+} else {
+
+    /*
+     * If this test is ever run before the current gameweek has
+     * completed, historical fixture evidence is not yet the
+     * correct comparison source.
+     *
+     * At that point this scenario validates only that the
+     * snapshot set remains structurally available.
+     */
+
+    playerSnapshotImportCheck(
+        'Non-completed gameweek snapshot set remains structurally available',
+        !empty(
+            $currentSnapshots
+        )
+    );
+
+
+    echo "Historical Evidence Comparison: Not Yet Applicable<br>";
+}
 
 
 echo "<br>";

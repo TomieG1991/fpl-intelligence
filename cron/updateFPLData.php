@@ -130,11 +130,6 @@ try {
             $db
         );
         
-    $playerGameweekSnapshotRepository =
-        new PlayerGameweekSnapshotRepository(
-            $db
-        );
-
 
     /*
      * ========================================================
@@ -469,10 +464,7 @@ try {
 
     $playersSkipped = 0;
     
-    $playerSnapshotsImported =
-        0;
-
-
+   
     foreach (
         $data['elements']
         as $player
@@ -668,214 +660,7 @@ try {
             ':news' =>
                 $player['news']
                 ?? null
-        ]);
-        
-        $storedPlayerStatement =
-            $db->prepare(
-                "
-                SELECT
-                    id
-                FROM
-                    players
-                WHERE
-                    fpl_player_id = :fpl_player_id
-                LIMIT 1
-                "
-            );
-
-
-        $storedPlayerStatement
-            ->execute([
-
-                ':fpl_player_id' =>
-                    (int) $player[
-                        'id'
-                    ]
-            ]);
-
-
-        $storedPlayerId =
-            $storedPlayerStatement
-                ->fetchColumn();
-
-
-        if ($storedPlayerId === false) {
-
-            throw new RuntimeException(
-                'Imported player could not be resolved for snapshot: '
-                . (
-                    $player[
-                        'web_name'
-                    ]
-                    ?? $player[
-                        'id'
-                    ]
-                )
-            );
-        }
-        
-        $playerGameweekSnapshotRepository
-            ->upsert([
-
-                'gameweek_id' =>
-                    $currentGameweekId,
-
-                'player_id' =>
-                    (int) $storedPlayerId,
-
-                'fpl_player_id' =>
-                    (int) $player[
-                        'id'
-                    ],
-
-                'team_id' =>
-                    $teamId,
-
-                'position' =>
-                    $position,
-
-                'price' =>
-                    isset(
-                        $player[
-                            'now_cost'
-                        ]
-                    )
-                        ? (
-                            (float) $player[
-                                'now_cost'
-                            ]
-                        )
-                        / 10
-                        : null,
-
-                'selected_by_percent' =>
-                    isset(
-                        $player[
-                            'selected_by_percent'
-                        ]
-                    )
-                        ? (float) $player[
-                            'selected_by_percent'
-                        ]
-                        : null,
-
-                'chance_of_playing' =>
-                    isset(
-                        $player[
-                            'chance_of_playing_next_round'
-                        ]
-                    )
-                        ? (int) $player[
-                            'chance_of_playing_next_round'
-                        ]
-                        : null,
-
-                'status' =>
-                    $player[
-                        'status'
-                    ]
-                    ?? null,
-
-                'news' =>
-                    $player[
-                        'news'
-                    ]
-                    ?? null,
-
-                'minutes' =>
-                    (int) (
-                        $player[
-                            'minutes'
-                        ]
-                        ?? 0
-                    ),
-
-                'goals' =>
-                    (int) (
-                        $player[
-                            'goals_scored'
-                        ]
-                        ?? 0
-                    ),
-
-                'assists' =>
-                    (int) (
-                        $player[
-                            'assists'
-                        ]
-                        ?? 0
-                    ),
-
-                'clean_sheets' =>
-                    (int) (
-                        $player[
-                            'clean_sheets'
-                        ]
-                        ?? 0
-                    ),
-
-                'bonus' =>
-                    (int) (
-                        $player[
-                            'bonus'
-                        ]
-                        ?? 0
-                    ),
-
-                'bps' =>
-                    (int) (
-                        $player[
-                            'bps'
-                        ]
-                        ?? 0
-                    ),
-
-                'ict_index' =>
-                    isset(
-                        $player[
-                            'ict_index'
-                        ]
-                    )
-                        ? (float) $player[
-                            'ict_index'
-                        ]
-                        : null,
-
-                'expected_goals' =>
-                    isset(
-                        $player[
-                            'expected_goals'
-                        ]
-                    )
-                        ? (float) $player[
-                            'expected_goals'
-                        ]
-                        : null,
-
-                'expected_assists' =>
-                    isset(
-                        $player[
-                            'expected_assists'
-                        ]
-                    )
-                        ? (float) $player[
-                            'expected_assists'
-                        ]
-                        : null,
-
-                'expected_goal_involvements' =>
-                    isset(
-                        $player[
-                            'expected_goal_involvements'
-                        ]
-                    )
-                        ? (float) $player[
-                            'expected_goal_involvements'
-                        ]
-                        : null
-            ]);
-            
-            $playerSnapshotsImported++;
+        ]);  
 
 
         $playersImported++;
@@ -894,10 +679,7 @@ try {
     echo "Players imported: "
         . $playersImported
         . "\n";
-        
-    echo "Player snapshots imported: "
-        . $playerSnapshotsImported
-        . "\n";
+
 
 
     echo "Players skipped: "
