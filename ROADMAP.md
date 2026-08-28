@@ -38,7 +38,7 @@ The system should remain explainable, testable and robust throughout:
 
 Current stable release:
 
-**v0.31.0 — Market Intelligence**
+**v0.32.0 — Squad Horizon & Rotation Intelligence**
 
 GitHub `main` is the authoritative code baseline after every completed commit.
 
@@ -46,16 +46,16 @@ GitHub `main` is the authoritative code baseline after every completed commit.
 
 Current development milestone:
 
-**v0.32.0 — Squad Horizon & Rotation Intelligence — NEXT**
+**v0.33.0 — Blank & Double Gameweek Intelligence — NEXT**
 
-v0.31.0 is complete and establishes the historical Market Intelligence
-foundation, including price movement, ownership movement, transfer momentum,
-combined Market Signal modelling, Value Trend Intelligence and Player Profile
-integration.
+v0.32.0 is complete and establishes the squad-level multi-gameweek planning
+foundation, including Starting XI optimisation, bench coverage, goalkeeper
+rotation, defensive rotation, fixture clashes, weak fixture clusters, position
+depth, repeated benching and structural weakness analysis.
 
-The next development milestone is v0.32.0, which will extend the existing
-multi-gameweek player projection foundation into squad-level horizon and
-rotation analysis.
+The next development milestone is v0.33.0, which will make the existing fixture,
+Expected Points and decision models explicitly aware of Blank and Double
+Gameweeks.
 ---
 
 
@@ -1712,37 +1712,341 @@ data is available.
 Popularity must not be treated as proof of player quality.
 
 Market data should support decisions, not dominate Player Intelligence.
+
 ---
 
 ## v0.32.0 — Squad Horizon & Rotation Intelligence
 
+### Status
+
+**COMPLETE**
+
+### Dependency
+
+Builds on v0.30.0 Multi-Gameweek Expected Points Intelligence.
+
 ### Goal
 
-Evaluate the squad as a multi-week unit.
+Evaluate the complete FPL squad as a multi-week unit using the existing
+player-level projection architecture.
 
-### Planned Work
+Identify rotation opportunities, bench coverage, fixture clashes, position-depth
+problems and structural weaknesses without introducing a separate competing
+Expected Points model.
 
-Analyse:
+### Delivered
 
-- defensive rotation
-- goalkeeper rotation
+Added `SquadHorizonIntelligence` for analysing a complete 15-player squad across
+consecutive upcoming FPL gameweeks.
+
+Added `SquadHorizonIntelligenceService` as the production orchestration layer
+between:
+
+- imported FPL squads
+- local player identity
+- existing multi-gameweek Expected Points
+- Squad Horizon Intelligence
+
+Added a three-gameweek production horizon covering:
+
+- complete squad projections
+- legal Starting XI selection
+- optimal formation
+- Starting XI projected points
+- bench composition
+- bench projected points
+
+### Bench Coverage
+
+Added Bench Coverage Intelligence for every horizon gameweek.
+
+The model exposes:
+
+- bench player count
+- total projected bench points
+- strongest outfield substitute
+- weakest outfield starter
+- replacement coverage gap
+
+This allows the squad to distinguish a numerically complete bench from one that
+actually provides useful projected cover.
+
+### Goalkeeper Rotation
+
+Added Goalkeeper Rotation Intelligence.
+
+The model evaluates:
+
+- preferred goalkeeper by gameweek
+- preference changes across the horizon
+- rotating goalkeeper projected points
+- best single goalkeeper projected points
+- projected rotation gain
+
+Tie handling and missing-projection behaviour are deterministic and protected by
+dedicated regression coverage.
+
+### Defensive Rotation
+
+Added Defensive Rotation Intelligence.
+
+Defender pairs are evaluated across the horizon and retained when the preferred
+defender changes between gameweeks.
+
+The output exposes:
+
+- defender pair identity
+- preferred defender by gameweek
+- number of preference changes
+
+This identifies genuine projected rotation opportunities rather than simply
+listing all defender combinations.
+
+### Fixture Clashes
+
+Added Fixture Clash Intelligence.
+
+A clash exists when two projected Starting XI players directly oppose one
+another in the same Premier League fixture.
+
+Clashes are identified using reciprocal:
+
+`team_id → opponent_team_id`
+
+relationships.
+
+Clash counts represent player-pair clashes rather than distinct football
+fixtures.
+
+Missing or ambiguous opponent metadata does not manufacture a clash.
+
+### Weak Fixture Clusters
+
+Added Weak Fixture Cluster Intelligence.
+
+A projected Starting XI player is treated as weak for this analysis when their
+Projected Points are below 3.0.
+
+A gameweek becomes a weak fixture cluster when at least three Starting XI
+players meet that condition.
+
+Missing projections remain unknown rather than being converted into artificial
+zero-point weaknesses.
+
+### Position Depth
+
+Added Position Depth Intelligence across the complete 15-player squad.
+
+Usable players require at least 3.0 Projected Points.
+
+Minimum usable position requirements are:
+
+- GK: 1
+- DEF: 3
+- MID: 2
+- FWD: 1
+
+The model exposes usable-player counts, depth counts and weak-depth positions.
+
+### Repeated Benching
+
+Added Repeated Benching Intelligence.
+
+The model tracks for every squad player:
+
+- starts
+- bench appearances
+- benched gameweeks
+- average projected points while benched
+- repeated-benching state
+- meaningful repeated-benching state
+
+A player is repeatedly benched when projected onto the bench at least twice
+within the horizon.
+
+Repeated benching is considered meaningful when average projected bench points
+are at least 3.0.
+
+### Structural Weakness
+
+Added explainable Structural Weakness Intelligence combining four explicit
+problems:
+
+1. Weak Fixture Cluster
+2. Position Depth Weakness
+3. Uncovered Weak XI
+4. Fixture Clash
+
+Severity is determined from the number of active structural problems:
+
+- 0 → None
+- 1 → Low
+- 2 → Moderate
+- 3 → High
+- 4 → Severe
+
+The model exposes:
+
+- structural problems by gameweek
+- gameweeks containing problems
+- worst gameweek
+- maximum problem count
+- maximum severity
+
+No hidden weighted squad-health score is used.
+
+### Production Integration
+
+Integrated Squad Horizon into the real Squad Intelligence import path.
+
+The production service:
+
+1. validates the imported FPL squad
+2. resolves all 15 imported FPL player IDs to local players
+3. requests the existing multi-gameweek Expected Points projection for each player
+4. adapts the authoritative projection data into the Squad Horizon contract
+5. preserves fixture opponent metadata where it is unambiguous
+6. passes the complete adapted squad into `SquadHorizonIntelligence`
+
+An incomplete 15-player resolution does not produce a misleading partial
+Squad Horizon.
+
+### Squad Intelligence Interface
+
+Added a dedicated Squad Horizon interface to the Squad page.
+
+The interface now presents:
+
+- maximum structural risk
+- gameweek structural severity
+- Starting XI projected points
+- formation
+- weak starters
+- player clashes
+- weak position depth
+- Bench Coverage
+- Goalkeeper Rotation
+- Defensive Rotation
+- Repeated Benching
+- detailed Structural Weakness explanation
+
+The interface uses responsive layouts and controlled empty states consistent
+with the existing application design.
+
+### Architecture Decision
+
+Squad Horizon sits above the existing Expected Points architecture.
+
+The intended flow is:
+
+`Existing Player Projections`
+`→ Squad Horizon`
+`→ Rotation / Bench / Structural Analysis`
+
+`MultiGameweekExpectedPoints` remains the player-projection source of truth.
+
+Squad Horizon does not recalculate player Expected Points and does not maintain
+an independent scoring model.
+
+This preserves one projection architecture and prevents squad-planning logic
+from drifting away from player-level Expected Points.
+
+### Fixture Metadata Decision
+
+The existing multi-gameweek service's fixture-level opponent metadata is used
+for Squad Horizon fixture analysis.
+
+When a player has exactly one fixture in a gameweek, authoritative opponent
+metadata can be preserved.
+
+When multiple fixtures exist in one gameweek, a single opponent is not
+manufactured for the aggregated player/gameweek row.
+
+This keeps the v0.32 model safe for the dedicated Blank & Double Gameweek work
+planned for v0.33.0.
+
+### Real-Data Validation
+
+Real-data integration confirms:
+
+- 15 of 15 imported players resolve locally
+- 15 of 15 players have valid FPL positions
+- 15 of 15 players currently expose multi-gameweek projections
+- 90 projected fixtures are available across the real squad projection source
+- the production horizon resolves gameweeks 2, 3 and 4
+- 90 player/gameweek projection comparisons reconcile exactly
+- zero projection mismatches exist against `MultiGameweekExpectedPoints`
+- authoritative single-fixture opponent metadata is preserved
+- fixture clashes are supported by reciprocal fixture metadata
+
+The real-data integration also exposes explainable:
+
+- Starting XI selections
 - bench coverage
-- fixture clashes
 - weak fixture clusters
 - position depth
-- expensive bench problems
-- coverage during difficult fixtures
+- fixture clashes
+- structural weakness
+- goalkeeper rotation
+- defensive rotation
+- repeated benching
 
-Add squad-level future strength over 3-5 gameweeks.
+### Testing
 
-Identify:
+Added dedicated synthetic, edge-case, service and real-data coverage for:
 
-- rotation strengths
-- structural weaknesses
-- players repeatedly likely to be benched
-- weak bench coverage
-- fixture bottlenecks
+- Squad Horizon construction
+- Starting XI selection
+- legal formations
+- Starting XI edge cases
+- Bench Coverage
+- Defensive Rotation
+- Goalkeeper Rotation
+- Goalkeeper Rotation edge cases
+- Fixture Clashes
+- Weak Fixture Clusters
+- Position Depth
+- Repeated Benching
+- Repeated Benching edge cases
+- Structural Weakness
+- production service orchestration
+- real-data production integration
+- projection reconciliation
+- fixture metadata reconciliation
 
+The focused v0.32.0 model coverage passes:
+
+- 194 synthetic/model assertions
+- 65 production-service assertions
+- 18 real-data integration assertions
+
+The final complete regression suite passes with:
+
+- 155 test files
+- 155 test files passed
+- 0 test files failed
+- 0 test files with errors
+- 4,840 assertions passed
+- 0 assertions failed
+- approximately 165 seconds total runtime
+
+### Completion Notes
+
+v0.32.0 completes the squad-level multi-gameweek planning foundation.
+
+The application can now evaluate not only which individual players project well,
+but how the complete 15-player squad fits together across upcoming gameweeks.
+
+This provides the structural foundation required by later:
+
+- Blank Gameweek planning
+- Double Gameweek planning
+- Wildcard timing
+- Free Hit Intelligence
+- Bench Boost Intelligence
+- longer-term squad planning
+
+The next milestone is v0.33.0 — Blank & Double Gameweek Intelligence.
 
 ---
 
@@ -2129,36 +2433,41 @@ Before each release:
 
 # Current Next Action
 
-**START: v0.32.0 — Squad Horizon & Rotation Intelligence**
+**START: v0.33.0 — Blank & Double Gameweek Intelligence**
 
-v0.31.0 Market Intelligence is complete.
+v0.32.0 Squad Horizon & Rotation Intelligence is complete.
 
-The final v0.31.0 regression baseline is:
+The final v0.32.0 regression baseline is:
 
-- 140 test files
-- 140 test files passed
+- 155 test files
+- 155 test files passed
 - 0 test files failed
 - 0 test files with errors
-- 4,581 assertions passed
+- 4,840 assertions passed
 - 0 assertions failed
+- approximately 165 seconds total runtime
 
-The next milestone is to extend the existing player-level multi-gameweek
-Expected Points foundation into squad-level planning intelligence.
+The next milestone is to make the existing fixture, projection and decision
+architecture explicitly aware of unusual FPL schedules.
 
-Initial v0.32.0 focus:
+Initial v0.33.0 focus:
 
-1. define the Squad Horizon Intelligence contract
-2. evaluate the current squad across multiple upcoming gameweeks
-3. identify fixture clashes and weak fixture clusters
-4. evaluate defensive rotation
-5. evaluate goalkeeper rotation
-6. evaluate bench coverage and position depth
-7. identify players repeatedly likely to require benching
-8. expose explainable squad-level horizon outputs
+1. define explicit Blank Gameweek and Double Gameweek fixture semantics
+2. detect teams with zero, one or multiple fixtures within a gameweek
+3. ensure player projections preserve multiple fixtures within one gameweek
+4. ensure Blank Gameweeks produce no manufactured fixture projection
+5. adapt squad-level horizon analysis for Blank and Double Gameweeks
+6. validate Starting XI and captain decisions against unusual fixture schedules
+7. evaluate transfer behaviour around Blank and Double Gameweeks
+8. add controlled synthetic normal-GW, BGW, DGW and mixed-schedule regression coverage
 
-v0.32.0 should build on the existing multi-gameweek Expected Points model rather
-than creating a separate competing projection model.
+v0.33.0 must build on the existing fixture and multi-gameweek Expected Points
+architecture rather than introducing separate Blank/Double Gameweek scoring
+logic.
 
-Market Intelligence may later provide supporting context for squad planning,
-but should not be given downstream decision weight without explicit design,
-testing and evidence.
+The v0.32.0 decision to avoid manufacturing a single opponent for an aggregated
+multi-fixture player/gameweek must be preserved until v0.33.0 introduces an
+explicit multi-fixture squad-horizon contract.
+
+All existing normal-gameweek behaviour must remain protected while Blank and
+Double Gameweek support is introduced.

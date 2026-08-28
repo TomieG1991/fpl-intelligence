@@ -6,6 +6,161 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.32.0] - Squad Horizon & Rotation Intelligence
+
+### Added
+
+- Added Squad Horizon Intelligence for evaluating a complete 15-player FPL squad across multiple upcoming gameweeks.
+- Added `SquadHorizonIntelligence.php` as the dedicated squad-level multi-gameweek analysis model.
+- Added `SquadHorizonIntelligenceService.php` as the production orchestration layer between imported FPL squads, existing multi-gameweek Expected Points and Squad Horizon Intelligence.
+- Added squad-level three-gameweek horizon modelling using the existing multi-gameweek Expected Points architecture.
+- Added legal Starting XI optimisation for every gameweek in the horizon.
+- Added support for all valid FPL formations while preserving position constraints.
+- Added projected Starting XI points for every horizon gameweek.
+- Added bench identification for every horizon gameweek.
+- Added Bench Coverage Intelligence including:
+  - bench player count
+  - total projected bench points
+  - strongest outfield substitute
+  - weakest outfield starter
+  - replacement coverage gap
+- Added Goalkeeper Rotation Intelligence including:
+  - preferred goalkeeper by gameweek
+  - goalkeeper preference changes
+  - rotating goalkeeper projected points
+  - best single goalkeeper projected points
+  - rotation gain
+- Added Defensive Rotation Intelligence using projected points across the planning horizon.
+- Added identification of defender pairs where the preferred player changes across upcoming gameweeks.
+- Added Fixture Clash Intelligence for detecting Starting XI players directly opposing one another.
+- Added reciprocal team/opponent fixture validation for player-pair clashes.
+- Added Weak Fixture Cluster Intelligence.
+- Added identification of weak Starting XI projections below the defined projected-points threshold.
+- Added Position Depth Intelligence using position-specific minimum usable-player requirements.
+- Added weak-depth identification for goalkeeper, defence, midfield and forward positions.
+- Added Repeated Benching Intelligence.
+- Added identification of players repeatedly projected to remain on the bench.
+- Added meaningful repeated-benching classification using average projected bench points.
+- Added Structural Weakness Intelligence combining:
+  - Weak Fixture Cluster
+  - Position Depth Weakness
+  - Uncovered Weak XI
+  - Fixture Clash
+- Added structural severity classifications:
+  - None
+  - Low
+  - Moderate
+  - High
+  - Severe
+- Added worst-gameweek and maximum structural-risk summaries across the squad horizon.
+- Added production Squad Horizon integration to the Squad Intelligence page.
+- Added a dedicated Squad Horizon Overview interface.
+- Added gameweek cards showing:
+  - Starting XI projected points
+  - formation
+  - weak starters
+  - player clashes
+  - weak position depth
+  - structural severity
+- Added dedicated Bench Coverage presentation.
+- Added dedicated Goalkeeper Rotation presentation.
+- Added dedicated Defensive Rotation presentation.
+- Added dedicated Repeated Benching presentation.
+- Added detailed Structural Weakness presentation with active-problem explainability.
+- Added responsive Squad Horizon styling consistent with the existing application interface.
+- Added real-data projection reconciliation against the existing Multi-Gameweek Expected Points model.
+- Added real-data fixture metadata reconciliation.
+- Added live-FPL-API availability protection to the Squad Horizon real-data integration diagnostic.
+
+### Changed
+
+- Extended Squad Intelligence from primarily current-gameweek analysis into explainable multi-gameweek squad planning.
+- Reused the existing `PlayerIntelligenceService` multi-gameweek Expected Points contract rather than creating a separate squad projection engine.
+- Kept `MultiGameweekExpectedPoints.php` as the authoritative source for fixture-level and gameweek-level player projections.
+- Added a production adapter that resolves imported FPL player IDs to local players before constructing Squad Horizon input.
+- Preserved existing player-level projection totals when adapting them into squad-level horizon analysis.
+- Preserved opponent metadata from the existing top-level multi-gameweek fixture contract for squad fixture analysis.
+- Changed squad horizon selection to operate over consecutive FPL gameweeks rather than simply counting raw fixtures.
+- Added safe handling for missing gameweek projections without manufacturing projected points.
+- Added safe opponent handling for gameweeks containing multiple fixtures so ambiguous opponent metadata is not represented as a single opponent.
+- Kept existing Squad preview builders unchanged because they use mapped preview data rather than the raw FPL importer contract.
+- Preserved the existing Expected Points, Multi-Gameweek Expected Points, Player Intelligence, Transfer, Wildcard, Captain and Gameweek intelligence models while adding Squad Horizon as a higher-level planning layer.
+
+### Fixed
+
+- Prevented missing fixture context from being silently treated as neutral fixture context during multi-gameweek projection.
+- Prevented missing player/gameweek projections from being converted into fabricated projected-point values.
+- Prevented ambiguous multi-fixture opponent metadata from being treated as a valid single-fixture opponent.
+- Fixed fixture-clash analysis by preserving authoritative team/opponent metadata through the production Squad Horizon adapter.
+- Fixed Squad Horizon formation presentation by deriving formation from the selected Starting XI player positions.
+- Fixed weak-starter presentation to use the authoritative `weak_player_count` contract.
+- Fixed weak-position-depth presentation to use the authoritative `weak_depth_positions` contract.
+- Fixed structural maximum-severity presentation so severity styling renders as a compact status badge.
+- Prevented temporary live FPL API unavailability from causing a fatal type error in the Squad Horizon real-data integration diagnostic.
+- Preserved genuine real-data integration failures while allowing unavailable external FPL squad data to be reported as a controlled diagnostic skip.
+
+### Architecture
+
+- Squad Horizon Intelligence sits above the existing Expected Points and Multi-Gameweek Expected Points architecture.
+- Player projections remain owned by the existing Expected Points models.
+- Squad Horizon consumes those projections and analyses squad structure, rotation, bench coverage and multi-week risk.
+- No independent Squad Horizon player-scoring model was introduced.
+- The architecture therefore remains:
+
+  `Existing Player Projections → Squad Horizon → Rotation / Bench / Structural Analysis`
+
+- Fixture clashes count opposing player pairs rather than distinct Premier League fixtures.
+- Position depth evaluates the complete 15-player squad rather than only the selected Starting XI.
+- Structural weakness remains explainable through explicit component problems rather than a hidden weighted health score.
+
+### Real-Data Validation
+
+- Confirmed a real imported FPL squad resolves all 15 players to the local database.
+- Confirmed all 15 resolved players receive valid FPL positions.
+- Confirmed all 15 real squad players currently have available multi-gameweek projections.
+- Confirmed the real-data integration produces 90 projected fixtures.
+- Confirmed the production Squad Horizon uses gameweeks 2, 3 and 4 for the current three-gameweek horizon.
+- Reconciled 90 real player/gameweek projection comparisons against `MultiGameweekExpectedPoints`.
+- Confirmed zero projection mismatches.
+- Confirmed production adaptation preserves all authoritative single-fixture opponent metadata.
+- Confirmed real fixture clashes are supported by reciprocal team/opponent relationships.
+- Confirmed real Starting XI, bench coverage, position depth, goalkeeper rotation, defensive rotation, repeated benching and structural weakness outputs can be explained from their underlying projection evidence.
+
+### Testing
+
+- Added `SquadHorizonIntelligenceTest.php`.
+- Added `SquadHorizonStartingXITest.php`.
+- Added `SquadHorizonStartingXIEdgeCasesTest.php`.
+- Added `SquadHorizonBenchCoverageTest.php`.
+- Added `SquadHorizonDefensiveRotationTest.php`.
+- Added `SquadHorizonGoalkeeperRotationTest.php`.
+- Added `SquadHorizonGoalkeeperRotationEdgeCasesTest.php`.
+- Added `SquadHorizonFixtureClashesTest.php`.
+- Added `SquadHorizonWeakFixtureClustersTest.php`.
+- Added `SquadHorizonPositionDepthTest.php`.
+- Added `SquadHorizonRepeatedBenchingTest.php`.
+- Added `SquadHorizonRepeatedBenchingEdgeCasesTest.php`.
+- Added `SquadHorizonStructuralWeaknessTest.php`.
+- Added `SquadHorizonIntelligenceServiceTest.php`.
+- Added `SquadHorizonRealDataIntegrationTest.php`.
+- Confirmed the focused Squad Horizon model suite passes all 194 assertions.
+- Confirmed the production Squad Horizon service test passes all 65 assertions.
+- Confirmed the real-data Squad Horizon integration test passes all 18 assertions when live FPL squad data is available.
+- Re-ran the complete project regression suite after final Squad Horizon production and UI integration.
+- Confirmed all 155 of 155 test files pass.
+- Confirmed all 4,840 assertions pass.
+- Confirmed zero test failures.
+- Confirmed zero test execution errors.
+- Complete regression suite runtime: approximately 165 seconds.
+
+### Completion Notes
+
+- v0.32.0 completes the Squad Horizon & Rotation Intelligence milestone.
+- The application can now evaluate a complete FPL squad as a multi-gameweek unit rather than considering future projections only player by player.
+- Squad Horizon provides explainable evidence for Starting XI strength, bench coverage, goalkeeper rotation, defensive rotation, fixture clashes, position depth, repeated benching and structural weakness.
+- The completed horizon layer establishes the squad-planning foundation required for later Blank & Double Gameweek and Chip Intelligence milestones.
+
+
 ## [0.31.0] - Market Intelligence
 
 ### Added

@@ -33,6 +33,9 @@ $setupError =
     
 $playerRepository = 
     null;
+    
+$squadHorizonService =
+    null;
 
 
 try {
@@ -52,9 +55,17 @@ try {
         
         
     $playerRepository =
-    new PlayerRepository(
-        $database->getConnection()
+        new PlayerRepository(
+            $database->getConnection()
     );
+    
+    
+    $squadHorizonService =
+        new SquadHorizonIntelligenceService(
+            $playerRepository,
+            $service,
+            new SquadHorizonIntelligence()
+        );
 
 } catch (Throwable $exception) {
 
@@ -1854,6 +1865,14 @@ $doubleTransferResult =
     null;
 
 
+$squadHorizonServiceResult =
+    null;
+
+
+$squadHorizonResult =
+    null;
+
+
 $pageError =
     null;
 
@@ -1996,6 +2015,68 @@ if (
             ===
             'success'
         ) {
+
+            /*
+             * ====================================================
+             * v0.32 SQUAD HORIZON INTELLIGENCE
+             * ====================================================
+             *
+             * Feed the original successful FPL import directly
+             * into the production Squad Horizon orchestration
+             * service.
+             *
+             * This is intentionally independent of the older
+             * mapped-squad representation used by transfer and
+             * captain intelligence below.
+             */
+
+            if (
+                $squadHorizonService !== null
+            ) {
+
+                $squadHorizonServiceResult =
+                    $squadHorizonService
+                        ->buildForImportedSquad(
+                            $importResult,
+                            3
+                        );
+
+
+                if (
+                    (
+                        $squadHorizonServiceResult[
+                            'status'
+                        ]
+                        ?? null
+                    )
+                    ===
+                    'Available'
+                    &&
+                    isset(
+                        $squadHorizonServiceResult[
+                            'horizon_result'
+                        ]
+                    )
+                    &&
+                    is_array(
+                        $squadHorizonServiceResult[
+                            'horizon_result'
+                        ]
+                    )
+                ) {
+
+                    $squadHorizonResult =
+                        $squadHorizonServiceResult[
+                            'horizon_result'
+                        ];
+                }
+            }
+
+
+            /*
+             * Existing Squad Intelligence mapping remains
+             * unchanged.
+             */
 
             $mappedSquad =
                 $service
@@ -2253,6 +2334,43 @@ function squadMovementClass(
 }
 
 
+function squadHorizonSeverityClass(
+    mixed $severity
+): string {
+
+    $severity =
+        strtolower(
+            trim(
+                (string) $severity
+            )
+        );
+
+
+    return match (
+        $severity
+    ) {
+
+        'severe' =>
+            'squad-horizon-severity-severe',
+
+        'high' =>
+            'squad-horizon-severity-high',
+
+        'moderate' =>
+            'squad-horizon-severity-moderate',
+
+        'low' =>
+            'squad-horizon-severity-low',
+
+        'none' =>
+            'squad-horizon-severity-none',
+
+        default =>
+            'squad-horizon-severity-neutral'
+    };
+}
+
+
 ?>
 <!DOCTYPE html>
 
@@ -2455,6 +2573,8 @@ function squadMovementClass(
                 </section>
 
             <?php endif; ?>
+            
+            
 
 
             <?php
@@ -2701,6 +2821,2228 @@ function squadMovementClass(
                     </div>
 
                 </section>
+                
+                <?php if (
+                    $squadHorizonResult !== null
+                    &&
+                    (
+                        $squadHorizonResult[
+                            'status'
+                        ]
+                        ?? null
+                    )
+                    ===
+                    'Available'
+                ): ?>
+
+                    <?php
+
+                    $horizonGameweeks =
+                        $squadHorizonResult[
+                            'gameweeks'
+                        ]
+                        ?? [];
+
+
+                    $horizonFixtureClashes =
+                        $squadHorizonResult[
+                            'fixture_clashes'
+                        ][
+                            'gameweeks'
+                        ]
+                        ?? [];
+
+
+                    $horizonWeakFixtures =
+                        $squadHorizonResult[
+                            'weak_fixture_clusters'
+                        ][
+                            'gameweeks'
+                        ]
+                        ?? [];
+
+
+                    $horizonPositionDepth =
+                        $squadHorizonResult[
+                            'position_depth'
+                        ][
+                            'gameweeks'
+                        ]
+                        ?? [];
+
+
+                    $horizonStructuralWeakness =
+                        $squadHorizonResult[
+                            'structural_weakness'
+                        ][
+                            'gameweeks'
+                        ]
+                        ?? [];
+
+
+                    $horizonMaximumSeverity =
+                        $squadHorizonResult[
+                            'structural_weakness'
+                        ][
+                            'max_severity'
+                        ]
+                        ?? 'None';
+                        
+                    $horizonGoalkeeperRotation =
+                        $squadHorizonResult[
+                            'goalkeeper_rotation'
+                        ]
+                        ?? [];
+
+
+                    $horizonPreferredGoalkeeperIds =
+                        $horizonGoalkeeperRotation[
+                            'preferred_goalkeeper_ids'
+                        ]
+                        ?? [];
+
+
+                    $horizonGoalkeeperAlternations =
+                        (int) (
+                            $horizonGoalkeeperRotation[
+                                'alternation_count'
+                            ]
+                            ?? 0
+                        );
+
+
+                    $horizonRotatingGoalkeeperPoints =
+                        $horizonGoalkeeperRotation[
+                            'rotating_projected_points'
+                        ]
+                        ?? null;
+
+
+                    $horizonBestSingleGoalkeeper =
+                        $horizonGoalkeeperRotation[
+                            'best_single_goalkeeper'
+                        ]
+                        ?? null;
+
+
+                    $horizonGoalkeeperRotationGain =
+                        $horizonGoalkeeperRotation[
+                            'rotation_gain'
+                        ]
+                        ?? null;
+                        
+                    $horizonDefensiveRotation =
+                        $squadHorizonResult[
+                            'defensive_rotation'
+                        ]
+                        ?? [];
+
+
+                    $horizonDefensiveRotationGameweeks =
+                        $horizonDefensiveRotation[
+                            'gameweeks'
+                        ]
+                        ?? [];
+
+
+                    $horizonDefensiveRotationPairs =
+                        $horizonDefensiveRotation[
+                            'rotation_pairs'
+                        ]
+                        ?? [];
+                        
+                        $horizonRepeatedBenching =
+                            $squadHorizonResult[
+                                'repeated_benching'
+                            ]
+                            ?? [];
+
+
+                        $horizonRepeatedBenchingPlayers =
+                            $horizonRepeatedBenching[
+                                'players'
+                            ]
+                            ?? [];
+
+
+                        $horizonRepeatedlyBenchedPlayerCount =
+                            (int) (
+                                $horizonRepeatedBenching[
+                                    'repeatedly_benched_player_count'
+                                ]
+                                ?? 0
+                            );
+
+
+                        $horizonMeaningfulRepeatedBenchingPlayerCount =
+                            (int) (
+                                $horizonRepeatedBenching[
+                                    'meaningful_repeated_benching_player_count'
+                                ]
+                                ?? 0
+                            );
+                            
+                        $horizonStructuralSummary =
+                            $squadHorizonResult[
+                                'structural_weakness'
+                            ]
+                            ?? [];
+
+
+                        $horizonStructuralProblemGameweeks =
+                            (int) (
+                                $horizonStructuralSummary[
+                                    'gameweeks_with_problems'
+                                ]
+                                ?? 0
+                            );
+
+
+                        $horizonStructuralWorstGameweek =
+                            $horizonStructuralSummary[
+                                'worst_gameweek'
+                            ]
+                            ?? null;
+
+
+                        $horizonStructuralMaxProblemCount =
+                            (int) (
+                                $horizonStructuralSummary[
+                                    'max_problem_count'
+                                ]
+                                ?? 0
+                            );
+
+                    ?>
+
+
+                    <!-- ==============================================
+                         SQUAD HORIZON INTELLIGENCE
+                         ============================================== -->
+
+                    <section class="dashboard-section squad-horizon-section">
+
+                        <div class="section-heading">
+
+                            <div>
+
+                                <p class="eyebrow">
+                                    Squad Horizon
+                                </p>
+
+                                <h2>
+                                    Next 3 Gameweeks
+                                </h2>
+
+                                <p class="section-description">
+                                    Projected squad strength, structural weaknesses
+                                    and selection pressure across the upcoming
+                                    three-gameweek horizon.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="squad-horizon-overview">
+
+                            <article class="squad-horizon-health-card">
+
+                                <span class="squad-horizon-label">
+                                    Maximum Structural Risk
+                                </span>
+
+                                <strong class="squad-horizon-health-value <?= htmlspecialchars(
+                                    squadHorizonSeverityClass(
+                                        $horizonMaximumSeverity
+                                    ),
+                                    ENT_QUOTES,
+                                    'UTF-8'
+                                ); ?>">
+
+                                    <?= htmlspecialchars(
+                                        (string) $horizonMaximumSeverity,
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    ); ?>
+
+                                </strong>
+
+                                <span class="squad-horizon-note">
+                                    Worst level found across the projected horizon
+                                </span>
+
+                            </article>
+
+                        </div>
+
+
+                        <div class="squad-horizon-gameweek-grid">
+
+                            <?php foreach (
+                                $horizonGameweeks
+                                as $gameweekNumber => $gameweek
+                            ): ?>
+
+                                <?php
+
+                                $startingXI =
+                                    $gameweek[
+                                        'starting_xi'
+                                    ]
+                                    ?? [];
+
+
+                                $formationCounts = [
+
+                                    'DEF' =>
+                                        0,
+
+                                    'MID' =>
+                                        0,
+
+                                    'FWD' =>
+                                        0
+                                ];
+
+
+                                foreach (
+                                    $startingXI
+                                    as $startingPlayer
+                                ) {
+
+                                    $startingPosition =
+                                        $startingPlayer[
+                                            'position'
+                                        ]
+                                        ?? null;
+
+
+                                    if (
+                                        isset(
+                                            $formationCounts[
+                                                $startingPosition
+                                            ]
+                                        )
+                                    ) {
+
+                                        $formationCounts[
+                                            $startingPosition
+                                        ]++;
+                                    }
+                                }
+
+
+                                $formation =
+                                    (
+                                        count(
+                                            $startingXI
+                                        )
+                                        ===
+                                        11
+                                    )
+                                        ? (
+                                            $formationCounts[
+                                                'DEF'
+                                            ]
+                                            . '-'
+                                            . $formationCounts[
+                                                'MID'
+                                            ]
+                                            . '-'
+                                            . $formationCounts[
+                                                'FWD'
+                                            ]
+                                        )
+                                        : '—';
+
+
+                                $startingProjectedPoints =
+                                    $gameweek[
+                                        'starting_xi_projected_points'
+                                    ]
+                                    ?? null;
+
+
+                                $weakFixtureData =
+                                    $horizonWeakFixtures[
+                                        $gameweekNumber
+                                    ]
+                                    ?? [];
+
+
+                                $weakStarterCount =
+                                    (int) (
+                                        $weakFixtureData[
+                                            'weak_player_count'
+                                        ]
+                                        ?? 0
+                                    );
+
+
+                                $fixtureClashData =
+                                    $horizonFixtureClashes[
+                                        $gameweekNumber
+                                    ]
+                                    ?? [];
+
+
+                                $fixtureClashCount =
+                                    (int) (
+                                        $fixtureClashData[
+                                            'clash_count'
+                                        ]
+                                        ?? 0
+                                    );
+
+
+                                $positionDepthData =
+                                    $horizonPositionDepth[
+                                        $gameweekNumber
+                                    ]
+                                    ?? [];
+
+
+                                $weakDepthPositions =
+                                    $positionDepthData[
+                                        'weak_depth_positions'
+                                    ]
+                                    ?? [];
+
+
+                                $structuralData =
+                                    $horizonStructuralWeakness[
+                                        $gameweekNumber
+                                    ]
+                                    ?? [];
+
+
+                                $structuralSeverity =
+                                    $structuralData[
+                                        'severity'
+                                    ]
+                                    ?? 'None';
+
+                                ?>
+
+                                <article class="squad-horizon-gameweek-card">
+
+                                    <div class="squad-horizon-gameweek-top">
+
+                                        <span class="squad-horizon-gameweek">
+                                            GW<?= (int) $gameweekNumber; ?>
+                                        </span>
+
+                                        <span class="squad-horizon-severity <?= htmlspecialchars(
+                                            squadHorizonSeverityClass(
+                                                $structuralSeverity
+                                            ),
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ); ?>">
+
+                                            <?= htmlspecialchars(
+                                                (string) $structuralSeverity,
+                                                ENT_QUOTES,
+                                                'UTF-8'
+                                            ); ?>
+
+                                        </span>
+
+                                    </div>
+
+
+                                    <div class="squad-horizon-primary-stat">
+
+                                        <span>
+                                            Starting XI xP
+                                        </span>
+
+                                        <strong>
+                                            <?= is_numeric(
+                                                $startingProjectedPoints
+                                            )
+                                                ? number_format(
+                                                    (float) $startingProjectedPoints,
+                                                    2
+                                                )
+                                                : '—'; ?>
+                                        </strong>
+
+                                    </div>
+
+
+                                    <div class="squad-horizon-stat-grid">
+
+                                        <div>
+
+                                            <span>
+                                                Formation
+                                            </span>
+
+                                            <strong>
+                                                <?= htmlspecialchars(
+                                                    (string) $formation,
+                                                    ENT_QUOTES,
+                                                    'UTF-8'
+                                                ); ?>
+                                            </strong>
+
+                                        </div>
+
+
+                                        <div>
+
+                                            <span>
+                                                Weak Starters
+                                            </span>
+
+                                            <strong>
+                                                <?= $weakStarterCount; ?>
+                                            </strong>
+
+                                        </div>
+
+
+                                        <div>
+
+                                            <span>
+                                                Player Clashes
+                                            </span>
+
+                                            <strong>
+                                                <?= $fixtureClashCount; ?>
+                                            </strong>
+
+                                        </div>
+
+
+                                        <div>
+
+                                            <span>
+                                                Weak Depth
+                                            </span>
+
+                                            <strong>
+
+                                                <?= htmlspecialchars(
+                                                    !empty(
+                                                        $weakDepthPositions
+                                                    )
+                                                        ? implode(
+                                                            ', ',
+                                                            $weakDepthPositions
+                                                        )
+                                                        : 'None',
+                                                    ENT_QUOTES,
+                                                    'UTF-8'
+                                                ); ?>
+
+                                            </strong>
+
+                                        </div>
+
+                                    </div>
+
+                                </article>
+
+                            <?php endforeach; ?>
+
+                        </div>
+
+
+                        <!-- ==========================================
+                             BENCH COVERAGE
+                             ========================================== -->
+
+                        <div class="squad-horizon-subsection">
+
+                            <div class="squad-horizon-subsection-heading">
+
+                                <div>
+
+                                    <p class="eyebrow">
+                                        Bench Coverage
+                                    </p>
+
+                                    <h3>
+                                        Replacement Strength
+                                    </h3>
+
+                                </div>
+
+
+                                <p>
+                                    Projected bench strength and the
+                                    immediate outfield replacement available
+                                    behind the selected Starting XI.
+                                </p>
+
+                            </div>
+
+
+                            <div class="squad-horizon-bench-grid">
+
+                                <?php foreach (
+                                    $horizonGameweeks
+                                    as $gameweekNumber => $gameweek
+                                ): ?>
+
+                                    <?php
+
+                                    $benchCoverage =
+                                        $gameweek[
+                                            'bench_coverage'
+                                        ]
+                                        ?? [];
+
+
+                                    $benchPlayerCount =
+                                        (int) (
+                                            $benchCoverage[
+                                                'bench_player_count'
+                                            ]
+                                            ?? 0
+                                        );
+
+
+                                    $benchProjectedPoints =
+                                        $benchCoverage[
+                                            'total_projected_points'
+                                        ]
+                                        ?? null;
+
+
+                                    $firstOutfieldSubstitute =
+                                        $benchCoverage[
+                                            'first_outfield_substitute'
+                                        ]
+                                        ?? null;
+
+
+                                    $weakestOutfieldStarter =
+                                        $benchCoverage[
+                                            'weakest_outfield_starter'
+                                        ]
+                                        ?? null;
+
+
+                                    $coverageGap =
+                                        $benchCoverage[
+                                            'coverage_gap'
+                                        ]
+                                        ?? null;
+
+
+                                    $firstSubstituteName =
+                                        is_array(
+                                            $firstOutfieldSubstitute
+                                        )
+                                            ? (
+                                                $firstOutfieldSubstitute[
+                                                    'name'
+                                                ]
+                                                ?? 'Unknown'
+                                            )
+                                            : 'Unavailable';
+
+
+                                    $firstSubstitutePoints =
+                                        is_array(
+                                            $firstOutfieldSubstitute
+                                        )
+                                            ? (
+                                                $firstOutfieldSubstitute[
+                                                    'projected_points'
+                                                ]
+                                                ?? null
+                                            )
+                                            : null;
+
+
+                                    $weakestStarterName =
+                                        is_array(
+                                            $weakestOutfieldStarter
+                                        )
+                                            ? (
+                                                $weakestOutfieldStarter[
+                                                    'name'
+                                                ]
+                                                ?? 'Unknown'
+                                            )
+                                            : 'Unavailable';
+
+
+                                    $weakestStarterPoints =
+                                        is_array(
+                                            $weakestOutfieldStarter
+                                        )
+                                            ? (
+                                                $weakestOutfieldStarter[
+                                                    'projected_points'
+                                                ]
+                                                ?? null
+                                            )
+                                            : null;
+
+                                    ?>
+
+                                    <article class="squad-horizon-bench-card">
+
+                                        <div class="squad-horizon-bench-top">
+
+                                            <span class="squad-horizon-gameweek">
+                                                GW<?= (int) $gameweekNumber; ?>
+                                            </span>
+
+                                            <span class="squad-horizon-bench-count">
+
+                                                <?= $benchPlayerCount; ?>
+
+                                                bench players
+
+                                            </span>
+
+                                        </div>
+
+
+                                        <div class="squad-horizon-bench-primary">
+
+                                            <span>
+                                                Total Bench xP
+                                            </span>
+
+                                            <strong>
+                                                <?= is_numeric(
+                                                    $benchProjectedPoints
+                                                )
+                                                    ? number_format(
+                                                        (float) $benchProjectedPoints,
+                                                        2
+                                                    )
+                                                    : '—'; ?>
+                                            </strong>
+
+                                        </div>
+
+
+                                        <div class="squad-horizon-bench-details">
+
+                                            <div>
+
+                                                <span>
+                                                    Best Outfield Substitute
+                                                </span>
+
+                                                <strong>
+                                                    <?= htmlspecialchars(
+                                                        (string) $firstSubstituteName,
+                                                        ENT_QUOTES,
+                                                        'UTF-8'
+                                                    ); ?>
+                                                </strong>
+
+                                                <small>
+
+                                                    <?= is_numeric(
+                                                        $firstSubstitutePoints
+                                                    )
+                                                        ? number_format(
+                                                            (float) $firstSubstitutePoints,
+                                                            2
+                                                        ) . ' xP'
+                                                        : 'Projection unavailable'; ?>
+
+                                                </small>
+
+                                            </div>
+
+
+                                            <div>
+
+                                                <span>
+                                                    Weakest Outfield Starter
+                                                </span>
+
+                                                <strong>
+                                                    <?= htmlspecialchars(
+                                                        (string) $weakestStarterName,
+                                                        ENT_QUOTES,
+                                                        'UTF-8'
+                                                    ); ?>
+                                                </strong>
+
+                                                <small>
+
+                                                    <?= is_numeric(
+                                                        $weakestStarterPoints
+                                                    )
+                                                        ? number_format(
+                                                            (float) $weakestStarterPoints,
+                                                            2
+                                                        ) . ' xP'
+                                                        : 'Projection unavailable'; ?>
+
+                                                </small>
+
+                                            </div>
+
+
+                                            <div>
+
+                                                <span>
+                                                    Coverage Gap
+                                                </span>
+
+                                                <strong>
+
+                                                    <?= is_numeric(
+                                                        $coverageGap
+                                                    )
+                                                        ? number_format(
+                                                            (float) $coverageGap,
+                                                            2
+                                                        )
+                                                        : '—'; ?>
+
+                                                </strong>
+
+                                                <small>
+                                                    Starter xP minus best substitute xP
+                                                </small>
+
+                                            </div>
+
+                                        </div>
+
+                                    </article>
+
+                                <?php endforeach; ?>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ==========================================
+                             GOALKEEPER ROTATION
+                             ========================================== -->
+
+                        <div class="squad-horizon-subsection">
+
+                            <div class="squad-horizon-subsection-heading">
+
+                                <div>
+
+                                    <p class="eyebrow">
+                                        Goalkeeper Rotation
+                                    </p>
+
+                                    <h3>
+                                        Starting Goalkeeper Plan
+                                    </h3>
+
+                                </div>
+
+
+                                <p>
+                                    Compares rotating your goalkeepers each
+                                    gameweek with simply starting the strongest
+                                    single goalkeeper throughout the horizon.
+                                </p>
+
+                            </div>
+
+
+                            <div class="squad-horizon-goalkeeper-summary">
+
+                                <article class="squad-horizon-goalkeeper-summary-card">
+
+                                    <span>
+                                        Best Single Goalkeeper
+                                    </span>
+
+                                    <strong>
+
+                                        <?= htmlspecialchars(
+                                            is_array(
+                                                $horizonBestSingleGoalkeeper
+                                            )
+                                                ? (string) (
+                                                    $horizonBestSingleGoalkeeper[
+                                                        'name'
+                                                    ]
+                                                    ?? 'Unavailable'
+                                                )
+                                                : 'Unavailable',
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ); ?>
+
+                                    </strong>
+
+                                    <small>
+
+                                        <?php if (
+                                            is_array(
+                                                $horizonBestSingleGoalkeeper
+                                            )
+                                            &&
+                                            is_numeric(
+                                                $horizonBestSingleGoalkeeper[
+                                                    'projected_points'
+                                                ]
+                                                ?? null
+                                            )
+                                        ): ?>
+
+                                            <?= number_format(
+                                                (float) $horizonBestSingleGoalkeeper[
+                                                    'projected_points'
+                                                ],
+                                                2
+                                            ); ?> xP across horizon
+
+                                        <?php else: ?>
+
+                                            Projection unavailable
+
+                                        <?php endif; ?>
+
+                                    </small>
+
+                                </article>
+
+
+                                <article class="squad-horizon-goalkeeper-summary-card">
+
+                                    <span>
+                                        Rotating Goalkeeper xP
+                                    </span>
+
+                                    <strong>
+
+                                        <?= is_numeric(
+                                            $horizonRotatingGoalkeeperPoints
+                                        )
+                                            ? number_format(
+                                                (float) $horizonRotatingGoalkeeperPoints,
+                                                2
+                                            )
+                                            : '—'; ?>
+
+                                    </strong>
+
+                                    <small>
+                                        Best available goalkeeper each gameweek
+                                    </small>
+
+                                </article>
+
+
+                                <article class="squad-horizon-goalkeeper-summary-card">
+
+                                    <span>
+                                        Rotation Gain
+                                    </span>
+
+                                    <strong>
+
+                                        <?= is_numeric(
+                                            $horizonGoalkeeperRotationGain
+                                        )
+                                            ? number_format(
+                                                (float) $horizonGoalkeeperRotationGain,
+                                                2
+                                            )
+                                            : '—'; ?>
+
+                                    </strong>
+
+                                    <small>
+                                        xP gained versus the best single goalkeeper
+                                    </small>
+
+                                </article>
+
+
+                                <article class="squad-horizon-goalkeeper-summary-card">
+
+                                    <span>
+                                        Preference Changes
+                                    </span>
+
+                                    <strong>
+                                        <?= $horizonGoalkeeperAlternations; ?>
+                                    </strong>
+
+                                    <small>
+                                        Changes in preferred goalkeeper
+                                    </small>
+
+                                </article>
+
+                            </div>
+
+
+                            <div class="squad-horizon-goalkeeper-plan">
+
+                                <?php foreach (
+                                    $horizonGameweeks
+                                    as $gameweekNumber => $gameweek
+                                ): ?>
+
+                                    <?php
+
+                                    $gameweekIndex =
+                                        array_search(
+                                            (int) $gameweekNumber,
+                                            array_keys(
+                                                $horizonGameweeks
+                                            ),
+                                            true
+                                        );
+
+
+                                    $preferredGoalkeeperId =
+                                        $gameweekIndex !== false
+                                            ? (
+                                                $horizonPreferredGoalkeeperIds[
+                                                    $gameweekIndex
+                                                ]
+                                                ?? null
+                                            )
+                                            : null;
+
+
+                                    $preferredGoalkeeper =
+                                        null;
+
+
+                                    foreach (
+                                        $gameweek[
+                                            'players'
+                                        ]
+                                        ?? []
+                                        as $gameweekPlayer
+                                    ) {
+
+                                        if (
+                                            (
+                                                $gameweekPlayer[
+                                                    'position'
+                                                ]
+                                                ?? null
+                                            )
+                                            !==
+                                            'GK'
+                                        ) {
+
+                                            continue;
+                                        }
+
+
+                                        if (
+                                            !is_numeric(
+                                                $preferredGoalkeeperId
+                                            )
+                                            ||
+                                            (
+                                                (int) (
+                                                    $gameweekPlayer[
+                                                        'player_id'
+                                                    ]
+                                                    ?? 0
+                                                )
+                                            )
+                                            !==
+                                            (int) $preferredGoalkeeperId
+                                        ) {
+
+                                            continue;
+                                        }
+
+
+                                        $preferredGoalkeeper =
+                                            $gameweekPlayer;
+
+                                        break;
+                                    }
+
+                                    ?>
+
+                                    <article class="squad-horizon-goalkeeper-card">
+
+                                        <span class="squad-horizon-gameweek">
+                                            GW<?= (int) $gameweekNumber; ?>
+                                        </span>
+
+
+                                        <span class="squad-horizon-goalkeeper-card-label">
+                                            Preferred Goalkeeper
+                                        </span>
+
+
+                                        <strong>
+
+                                            <?= htmlspecialchars(
+                                                is_array(
+                                                    $preferredGoalkeeper
+                                                )
+                                                    ? (string) (
+                                                        $preferredGoalkeeper[
+                                                            'name'
+                                                        ]
+                                                        ?? 'Unavailable'
+                                                    )
+                                                    : 'Unavailable',
+                                                ENT_QUOTES,
+                                                'UTF-8'
+                                            ); ?>
+
+                                        </strong>
+
+
+                                        <small>
+
+                                            <?php if (
+                                                is_array(
+                                                    $preferredGoalkeeper
+                                                )
+                                                &&
+                                                is_numeric(
+                                                    $preferredGoalkeeper[
+                                                        'projected_points'
+                                                    ]
+                                                    ?? null
+                                                )
+                                            ): ?>
+
+                                                <?= number_format(
+                                                    (float) $preferredGoalkeeper[
+                                                        'projected_points'
+                                                    ],
+                                                    2
+                                                ); ?> xP
+
+                                            <?php else: ?>
+
+                                                Projection unavailable
+
+                                            <?php endif; ?>
+
+                                        </small>
+
+                                    </article>
+
+                                <?php endforeach; ?>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ==========================================
+                             DEFENSIVE ROTATION
+                             ========================================== -->
+
+                        <div class="squad-horizon-subsection">
+
+                            <div class="squad-horizon-subsection-heading">
+
+                                <div>
+
+                                    <p class="eyebrow">
+                                        Defensive Rotation
+                                    </p>
+
+                                    <h3>
+                                        Defender Rotation Opportunities
+                                    </h3>
+
+                                </div>
+
+
+                                <p>
+                                    Identifies defender pairs whose projected
+                                    preference changes across the horizon,
+                                    highlighting where rotation may improve
+                                    weekly selection.
+                                </p>
+
+                            </div>
+
+
+                            <?php if (
+                                !empty(
+                                    $horizonDefensiveRotationPairs
+                                )
+                            ): ?>
+
+                                <div class="squad-horizon-defender-pairs">
+
+                                    <?php foreach (
+                                        $horizonDefensiveRotationPairs
+                                        as $rotationPair
+                                    ): ?>
+
+                                        <?php
+
+                                        $rotationPlayerIds =
+                                            $rotationPair[
+                                                'player_ids'
+                                            ]
+                                            ?? [];
+
+
+                                        $rotationPreferredPlayerIds =
+                                            $rotationPair[
+                                                'preferred_player_ids'
+                                            ]
+                                            ?? [];
+
+
+                                        $rotationAlternationCount =
+                                            (int) (
+                                                $rotationPair[
+                                                    'alternation_count'
+                                                ]
+                                                ?? 0
+                                            );
+
+
+                                        $firstDefenderId =
+                                            isset(
+                                                $rotationPlayerIds[
+                                                    0
+                                                ]
+                                            )
+                                                ? (int) $rotationPlayerIds[
+                                                    0
+                                                ]
+                                                : null;
+
+
+                                        $secondDefenderId =
+                                            isset(
+                                                $rotationPlayerIds[
+                                                    1
+                                                ]
+                                            )
+                                                ? (int) $rotationPlayerIds[
+                                                    1
+                                                ]
+                                                : null;
+
+
+                                        $defenderNames =
+                                            [];
+
+
+                                        foreach (
+                                            $horizonGameweeks
+                                            as $rotationGameweek
+                                        ) {
+
+                                            foreach (
+                                                $rotationGameweek[
+                                                    'players'
+                                                ]
+                                                ?? []
+                                                as $rotationPlayer
+                                            ) {
+
+                                                $rotationPlayerId =
+                                                    isset(
+                                                        $rotationPlayer[
+                                                            'player_id'
+                                                        ]
+                                                    )
+                                                        ? (int) $rotationPlayer[
+                                                            'player_id'
+                                                        ]
+                                                        : null;
+
+
+                                                if (
+                                                    $rotationPlayerId === null
+                                                ) {
+
+                                                    continue;
+                                                }
+
+
+                                                if (
+                                                    $rotationPlayerId
+                                                    !==
+                                                    $firstDefenderId
+                                                    &&
+                                                    $rotationPlayerId
+                                                    !==
+                                                    $secondDefenderId
+                                                ) {
+
+                                                    continue;
+                                                }
+
+
+                                                if (
+                                                    !isset(
+                                                        $defenderNames[
+                                                            $rotationPlayerId
+                                                        ]
+                                                    )
+                                                ) {
+
+                                                    $defenderNames[
+                                                        $rotationPlayerId
+                                                    ] =
+                                                        $rotationPlayer[
+                                                            'name'
+                                                        ]
+                                                        ?? 'Unknown';
+                                                }
+                                            }
+                                        }
+
+
+                                        $firstDefenderName =
+                                            $firstDefenderId !== null
+                                                ? (
+                                                    $defenderNames[
+                                                        $firstDefenderId
+                                                    ]
+                                                    ?? 'Unknown'
+                                                )
+                                                : 'Unknown';
+
+
+                                        $secondDefenderName =
+                                            $secondDefenderId !== null
+                                                ? (
+                                                    $defenderNames[
+                                                        $secondDefenderId
+                                                    ]
+                                                    ?? 'Unknown'
+                                                )
+                                                : 'Unknown';
+
+                                        ?>
+
+                                        <article class="squad-horizon-defender-pair-card">
+
+                                            <div class="squad-horizon-defender-pair-top">
+
+                                                <div>
+
+                                                    <span>
+                                                        Rotation Pair
+                                                    </span>
+
+                                                    <strong>
+                                                        <?= htmlspecialchars(
+                                                            (string) $firstDefenderName,
+                                                            ENT_QUOTES,
+                                                            'UTF-8'
+                                                        ); ?>
+
+                                                        <span aria-hidden="true">
+                                                            ↔
+                                                        </span>
+
+                                                        <?= htmlspecialchars(
+                                                            (string) $secondDefenderName,
+                                                            ENT_QUOTES,
+                                                            'UTF-8'
+                                                        ); ?>
+                                                    </strong>
+
+                                                </div>
+
+
+                                                <span class="squad-horizon-defender-switch-count">
+
+                                                    <?= $rotationAlternationCount; ?>
+
+                                                    <?= $rotationAlternationCount === 1
+                                                        ? 'switch'
+                                                        : 'switches'; ?>
+
+                                                </span>
+
+                                            </div>
+
+
+                                            <div class="squad-horizon-defender-plan">
+
+                                                <?php foreach (
+                                                    $horizonGameweeks
+                                                    as $rotationGameweekNumber => $rotationGameweek
+                                                ): ?>
+
+                                                    <?php
+
+                                                    $rotationGameweekKeys =
+                                                        array_keys(
+                                                            $horizonGameweeks
+                                                        );
+
+
+                                                    $rotationGameweekIndex =
+                                                        array_search(
+                                                            (int) $rotationGameweekNumber,
+                                                            $rotationGameweekKeys,
+                                                            true
+                                                        );
+
+
+                                                    $preferredDefenderId =
+                                                        $rotationGameweekIndex !== false
+                                                            ? (
+                                                                $rotationPreferredPlayerIds[
+                                                                    $rotationGameweekIndex
+                                                                ]
+                                                                ?? null
+                                                            )
+                                                            : null;
+
+
+                                                    $preferredDefenderName =
+                                                        is_numeric(
+                                                            $preferredDefenderId
+                                                        )
+                                                            ? (
+                                                                $defenderNames[
+                                                                    (int) $preferredDefenderId
+                                                                ]
+                                                                ?? 'Unknown'
+                                                            )
+                                                            : 'Unavailable';
+
+
+                                                    $preferredDefenderPoints =
+                                                        null;
+
+
+                                                    foreach (
+                                                        $rotationGameweek[
+                                                            'players'
+                                                        ]
+                                                        ?? []
+                                                        as $rotationGameweekPlayer
+                                                    ) {
+
+                                                        if (
+                                                            !is_numeric(
+                                                                $preferredDefenderId
+                                                            )
+                                                        ) {
+
+                                                            break;
+                                                        }
+
+
+                                                        if (
+                                                            (
+                                                                (int) (
+                                                                    $rotationGameweekPlayer[
+                                                                        'player_id'
+                                                                    ]
+                                                                    ?? 0
+                                                                )
+                                                            )
+                                                            !==
+                                                            (int) $preferredDefenderId
+                                                        ) {
+
+                                                            continue;
+                                                        }
+
+
+                                                        $preferredDefenderPoints =
+                                                            $rotationGameweekPlayer[
+                                                                'projected_points'
+                                                            ]
+                                                            ?? null;
+
+                                                        break;
+                                                    }
+
+                                                    ?>
+
+                                                    <div class="squad-horizon-defender-gameweek">
+
+                                                        <span class="squad-horizon-gameweek">
+                                                            GW<?= (int) $rotationGameweekNumber; ?>
+                                                        </span>
+
+
+                                                        <strong>
+                                                            <?= htmlspecialchars(
+                                                                (string) $preferredDefenderName,
+                                                                ENT_QUOTES,
+                                                                'UTF-8'
+                                                            ); ?>
+                                                        </strong>
+
+
+                                                        <small>
+
+                                                            <?= is_numeric(
+                                                                $preferredDefenderPoints
+                                                            )
+                                                                ? number_format(
+                                                                    (float) $preferredDefenderPoints,
+                                                                    2
+                                                                ) . ' xP'
+                                                                : 'Projection unavailable'; ?>
+
+                                                        </small>
+
+                                                    </div>
+
+                                                <?php endforeach; ?>
+
+                                            </div>
+
+                                        </article>
+
+                                    <?php endforeach; ?>
+
+                                </div>
+
+                            <?php else: ?>
+
+                                <div class="squad-horizon-defender-empty">
+
+                                    <strong>
+                                        No meaningful defender rotation found
+                                    </strong>
+
+                                    <p>
+                                        The projected preference between your
+                                        defenders does not switch across this
+                                        three-gameweek horizon.
+                                    </p>
+
+                                </div>
+
+                            <?php endif; ?>
+
+                        </div>
+
+
+                        <!-- ==========================================
+                             REPEATED BENCHING
+                             ========================================== -->
+
+                        <div class="squad-horizon-subsection">
+
+                            <div class="squad-horizon-subsection-heading">
+
+                                <div>
+
+                                    <p class="eyebrow">
+                                        Repeated Benching
+                                    </p>
+
+                                    <h3>
+                                        Bench Utilisation
+                                    </h3>
+
+                                </div>
+
+
+                                <p>
+                                    Identifies players repeatedly left outside
+                                    the projected optimal Starting XI and
+                                    highlights when strong projected output is
+                                    being left on the bench.
+                                </p>
+
+                            </div>
+
+
+                            <div class="squad-horizon-benching-summary">
+
+                                <article class="squad-horizon-benching-summary-card">
+
+                                    <span>
+                                        Repeatedly Benched
+                                    </span>
+
+                                    <strong>
+                                        <?= $horizonRepeatedlyBenchedPlayerCount; ?>
+                                    </strong>
+
+                                    <small>
+                                        Players benched in at least two gameweeks
+                                    </small>
+
+                                </article>
+
+
+                                <article class="squad-horizon-benching-summary-card">
+
+                                    <span>
+                                        Meaningful Benching
+                                    </span>
+
+                                    <strong>
+                                        <?= $horizonMeaningfulRepeatedBenchingPlayerCount; ?>
+                                    </strong>
+
+                                    <small>
+                                        Repeatedly benched with average bench xP of 3.0+
+                                    </small>
+
+                                </article>
+
+                            </div>
+
+
+                            <?php
+
+                            $displayRepeatedBenchingPlayers =
+                                array_values(
+                                    array_filter(
+                                        $horizonRepeatedBenchingPlayers,
+                                        static function (
+                                            array $player
+                                        ): bool {
+
+                                            return
+                                                (
+                                                    $player[
+                                                        'is_repeatedly_benched'
+                                                    ]
+                                                    ?? false
+                                                )
+                                                ===
+                                                true;
+                                        }
+                                    )
+                                );
+
+
+                            usort(
+                                $displayRepeatedBenchingPlayers,
+                                static function (
+                                    array $playerA,
+                                    array $playerB
+                                ): int {
+
+                                    $benchCountA =
+                                        (int) (
+                                            $playerA[
+                                                'bench_count'
+                                            ]
+                                            ?? 0
+                                        );
+
+
+                                    $benchCountB =
+                                        (int) (
+                                            $playerB[
+                                                'bench_count'
+                                            ]
+                                            ?? 0
+                                        );
+
+
+                                    if (
+                                        $benchCountA
+                                        !==
+                                        $benchCountB
+                                    ) {
+
+                                        return
+                                            $benchCountB
+                                            <=>
+                                            $benchCountA;
+                                    }
+
+
+                                    $averageA =
+                                        is_numeric(
+                                            $playerA[
+                                                'average_benched_projected_points'
+                                            ]
+                                            ?? null
+                                        )
+                                            ? (float) $playerA[
+                                                'average_benched_projected_points'
+                                            ]
+                                            : -1.0;
+
+
+                                    $averageB =
+                                        is_numeric(
+                                            $playerB[
+                                                'average_benched_projected_points'
+                                            ]
+                                            ?? null
+                                        )
+                                            ? (float) $playerB[
+                                                'average_benched_projected_points'
+                                            ]
+                                            : -1.0;
+
+
+                                    return
+                                        $averageB
+                                        <=>
+                                        $averageA;
+                                }
+                            );
+
+                            ?>
+
+
+                            <?php if (
+                                !empty(
+                                    $displayRepeatedBenchingPlayers
+                                )
+                            ): ?>
+
+                                <div class="squad-horizon-benching-grid">
+
+                                    <?php foreach (
+                                        $displayRepeatedBenchingPlayers
+                                        as $benchedPlayer
+                                    ): ?>
+
+                                        <?php
+
+                                        $benchedGameweeks =
+                                            $benchedPlayer[
+                                                'benched_gameweeks'
+                                            ]
+                                            ?? [];
+
+
+                                        $benchCount =
+                                            (int) (
+                                                $benchedPlayer[
+                                                    'bench_count'
+                                                ]
+                                                ?? 0
+                                            );
+
+
+                                        $startCount =
+                                            (int) (
+                                                $benchedPlayer[
+                                                    'start_count'
+                                                ]
+                                                ?? 0
+                                            );
+
+
+                                        $averageBenchedPoints =
+                                            $benchedPlayer[
+                                                'average_benched_projected_points'
+                                            ]
+                                            ?? null;
+
+
+                                        $isMeaningfulBenching =
+                                            (
+                                                $benchedPlayer[
+                                                    'is_meaningful_repeated_benching'
+                                                ]
+                                                ?? false
+                                            )
+                                            ===
+                                            true;
+
+                                        ?>
+
+                                        <article class="squad-horizon-benching-card">
+
+                                            <div class="squad-horizon-benching-card-top">
+
+                                                <div>
+
+                                                    <span class="squad-horizon-benching-position">
+                                                        <?= htmlspecialchars(
+                                                            (string) (
+                                                                $benchedPlayer[
+                                                                    'position'
+                                                                ]
+                                                                ?? '—'
+                                                            ),
+                                                            ENT_QUOTES,
+                                                            'UTF-8'
+                                                        ); ?>
+                                                    </span>
+
+
+                                                    <strong>
+                                                        <?= htmlspecialchars(
+                                                            (string) (
+                                                                $benchedPlayer[
+                                                                    'name'
+                                                                ]
+                                                                ?? 'Unknown'
+                                                            ),
+                                                            ENT_QUOTES,
+                                                            'UTF-8'
+                                                        ); ?>
+                                                    </strong>
+
+                                                </div>
+
+
+                                                <?php if (
+                                                    $isMeaningfulBenching
+                                                ): ?>
+
+                                                    <span class="squad-horizon-benching-badge">
+                                                        Meaningful
+                                                    </span>
+
+                                                <?php endif; ?>
+
+                                            </div>
+
+
+                                            <div class="squad-horizon-benching-metrics">
+
+                                                <div>
+
+                                                    <span>
+                                                        Benched
+                                                    </span>
+
+                                                    <strong>
+                                                        <?= $benchCount; ?>
+                                                    </strong>
+
+                                                </div>
+
+
+                                                <div>
+
+                                                    <span>
+                                                        Started
+                                                    </span>
+
+                                                    <strong>
+                                                        <?= $startCount; ?>
+                                                    </strong>
+
+                                                </div>
+
+
+                                                <div>
+
+                                                    <span>
+                                                        Avg Bench xP
+                                                    </span>
+
+                                                    <strong>
+
+                                                        <?= is_numeric(
+                                                            $averageBenchedPoints
+                                                        )
+                                                            ? number_format(
+                                                                (float) $averageBenchedPoints,
+                                                                2
+                                                            )
+                                                            : '—'; ?>
+
+                                                    </strong>
+
+                                                </div>
+
+                                            </div>
+
+
+                                            <div class="squad-horizon-benching-gameweeks">
+
+                                                <span>
+                                                    Benched Gameweeks
+                                                </span>
+
+
+                                                <div>
+
+                                                    <?php foreach (
+                                                        $benchedGameweeks
+                                                        as $benchedGameweek
+                                                    ): ?>
+
+                                                        <span>
+                                                            GW<?= (int) $benchedGameweek; ?>
+                                                        </span>
+
+                                                    <?php endforeach; ?>
+
+                                                </div>
+
+                                            </div>
+
+                                        </article>
+
+                                    <?php endforeach; ?>
+
+                                </div>
+
+                            <?php else: ?>
+
+                                <div class="squad-horizon-defender-empty">
+
+                                    <strong>
+                                        No repeated benching found
+                                    </strong>
+
+                                    <p>
+                                        No squad player is projected to be
+                                        benched in at least two gameweeks
+                                        across this horizon.
+                                    </p>
+
+                                </div>
+
+                            <?php endif; ?>
+
+                        </div>
+
+
+                        <!-- ==========================================
+                             STRUCTURAL WEAKNESS DETAIL
+                             ========================================== -->
+
+                        <div class="squad-horizon-subsection">
+
+                            <div class="squad-horizon-subsection-heading">
+
+                                <div>
+
+                                    <p class="eyebrow">
+                                        Structural Weakness
+                                    </p>
+
+                                    <h3>
+                                        Horizon Risk Explanation
+                                    </h3>
+
+                                </div>
+
+
+                                <p>
+                                    Explains which squad-structure problems
+                                    combine to produce each gameweek's
+                                    structural severity.
+                                </p>
+
+                            </div>
+
+
+                            <div class="squad-horizon-structural-summary">
+
+                                <article class="squad-horizon-structural-summary-card">
+
+                                    <span>
+                                        Gameweeks With Problems
+                                    </span>
+
+                                    <strong>
+                                        <?= $horizonStructuralProblemGameweeks; ?>
+                                    </strong>
+
+                                    <small>
+                                        Across the current horizon
+                                    </small>
+
+                                </article>
+
+
+                                <article class="squad-horizon-structural-summary-card">
+
+                                    <span>
+                                        Worst Gameweek
+                                    </span>
+
+                                    <strong>
+
+                                        <?= is_numeric(
+                                            $horizonStructuralWorstGameweek
+                                        )
+                                            ? 'GW'
+                                                . (int) $horizonStructuralWorstGameweek
+                                            : '—'; ?>
+
+                                    </strong>
+
+                                    <small>
+                                        Highest structural problem count
+                                    </small>
+
+                                </article>
+
+
+                                <article class="squad-horizon-structural-summary-card">
+
+                                    <span>
+                                        Maximum Problems
+                                    </span>
+
+                                    <strong>
+                                        <?= $horizonStructuralMaxProblemCount; ?>
+                                    </strong>
+
+                                    <small>
+                                        Out of four structural checks
+                                    </small>
+
+                                </article>
+
+
+                                <article class="squad-horizon-structural-summary-card">
+
+                                    <span>
+                                        Maximum Severity
+                                    </span>
+
+                                    <strong class="<?= htmlspecialchars(
+                                        squadHorizonSeverityClass(
+                                            $horizonMaximumSeverity
+                                        ),
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    ); ?>">
+
+                                        <?= htmlspecialchars(
+                                            (string) $horizonMaximumSeverity,
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ); ?>
+
+                                    </strong>
+
+                                    <small>
+                                        Worst level across the horizon
+                                    </small>
+
+                                </article>
+
+                            </div>
+
+
+                            <div class="squad-horizon-structural-grid">
+
+                                <?php foreach (
+                                    $horizonGameweeks
+                                    as $gameweekNumber => $gameweek
+                                ): ?>
+
+                                    <?php
+
+                                    $structuralGameweek =
+                                        $horizonStructuralWeakness[
+                                            $gameweekNumber
+                                        ]
+                                        ?? [];
+
+
+                                    $structuralProblems =
+                                        $structuralGameweek[
+                                            'problems'
+                                        ]
+                                        ?? [];
+
+
+                                    $structuralProblemCount =
+                                        (int) (
+                                            $structuralGameweek[
+                                                'problem_count'
+                                            ]
+                                            ?? 0
+                                        );
+
+
+                                    $structuralSeverity =
+                                        $structuralGameweek[
+                                            'severity'
+                                        ]
+                                        ?? 'None';
+
+
+                                    $structuralProblemChecks = [
+
+                                        'Weak Fixture Cluster' =>
+                                            (
+                                                $structuralGameweek[
+                                                    'has_weak_fixture_cluster'
+                                                ]
+                                                ?? false
+                                            )
+                                            ===
+                                            true,
+
+                                        'Position Depth Weakness' =>
+                                            (
+                                                $structuralGameweek[
+                                                    'has_position_depth_weakness'
+                                                ]
+                                                ?? false
+                                            )
+                                            ===
+                                            true,
+
+                                        'Uncovered Weak XI' =>
+                                            (
+                                                $structuralGameweek[
+                                                    'has_uncovered_weak_xi'
+                                                ]
+                                                ?? false
+                                            )
+                                            ===
+                                            true,
+
+                                        'Fixture Clash' =>
+                                            (
+                                                $structuralGameweek[
+                                                    'has_fixture_clashes'
+                                                ]
+                                                ?? false
+                                            )
+                                            ===
+                                            true
+                                    ];
+
+                                    ?>
+
+                                    <article class="squad-horizon-structural-card">
+
+                                        <div class="squad-horizon-structural-card-top">
+
+                                            <span class="squad-horizon-gameweek">
+                                                GW<?= (int) $gameweekNumber; ?>
+                                            </span>
+
+
+                                            <span class="squad-horizon-severity <?= htmlspecialchars(
+                                                squadHorizonSeverityClass(
+                                                    $structuralSeverity
+                                                ),
+                                                ENT_QUOTES,
+                                                'UTF-8'
+                                            ); ?>">
+
+                                                <?= htmlspecialchars(
+                                                    (string) $structuralSeverity,
+                                                    ENT_QUOTES,
+                                                    'UTF-8'
+                                                ); ?>
+
+                                            </span>
+
+                                        </div>
+
+
+                                        <div class="squad-horizon-structural-count">
+
+                                            <span>
+                                                Structural Problems
+                                            </span>
+
+                                            <strong>
+                                                <?= $structuralProblemCount; ?>
+                                                / 4
+                                            </strong>
+
+                                        </div>
+
+
+                                        <div class="squad-horizon-structural-checks">
+
+                                            <?php foreach (
+                                                $structuralProblemChecks
+                                                as $problemLabel => $hasProblem
+                                            ): ?>
+
+                                                <div class="<?= $hasProblem
+                                                    ? 'squad-horizon-structural-check squad-horizon-structural-check-active'
+                                                    : 'squad-horizon-structural-check'; ?>">
+
+                                                    <span class="squad-horizon-structural-indicator">
+                                                        <?= $hasProblem
+                                                            ? '!'
+                                                            : '✓'; ?>
+                                                    </span>
+
+
+                                                    <span>
+                                                        <?= htmlspecialchars(
+                                                            (string) $problemLabel,
+                                                            ENT_QUOTES,
+                                                            'UTF-8'
+                                                        ); ?>
+                                                    </span>
+
+                                                </div>
+
+                                            <?php endforeach; ?>
+
+                                        </div>
+
+
+                                        <?php if (
+                                            !empty(
+                                                $structuralProblems
+                                            )
+                                        ): ?>
+
+                                            <div class="squad-horizon-structural-explanation">
+
+                                                <span>
+                                                    Active Problems
+                                                </span>
+
+                                                <p>
+                                                    <?= htmlspecialchars(
+                                                        implode(
+                                                            ', ',
+                                                            $structuralProblems
+                                                        ),
+                                                        ENT_QUOTES,
+                                                        'UTF-8'
+                                                    ); ?>
+                                                </p>
+
+                                            </div>
+
+                                        <?php else: ?>
+
+                                            <div class="squad-horizon-structural-explanation">
+
+                                                <span>
+                                                    Active Problems
+                                                </span>
+
+                                                <p>
+                                                    No structural problems detected.
+                                                </p>
+
+                                            </div>
+
+                                        <?php endif; ?>
+
+                                    </article>
+
+                                <?php endforeach; ?>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+                <?php endif; ?>
                 
                 <?php if (
                     $captainRecommendations !== null
