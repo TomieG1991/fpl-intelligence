@@ -897,7 +897,39 @@ $marketTransferDirection =
     $marketTransferEvidence[
         'direction'
     ]
-    ?? 'Unavailable';    
+    ?? 'Unavailable'; 
+
+/*
+ * ============================================================
+ * MARKET VALUE TREND
+ * ============================================================
+ */
+
+$marketValueTrend =
+    is_array(
+        $marketSummary[
+            'value_trend'
+        ]
+        ?? null
+    )
+        ? $marketSummary[
+            'value_trend'
+        ]
+        : [];
+
+
+$marketValueTrendStatus =
+    $marketValueTrend[
+        'status'
+    ]
+    ?? 'Unavailable';
+
+
+$marketValueTrendClassification =
+    $marketValueTrend[
+        'classification'
+    ]
+    ?? 'Insufficient Evidence';    
 
 $activeNav = 'players';
 
@@ -2765,6 +2797,46 @@ $activeNav = 'players';
 
                                     <small>
                                         Available market signals
+                                    </small>
+
+                                </div>
+
+
+                                <div
+                                    class="player-form-rating-card"
+                                    data-market-value-trend
+                                >
+
+                                    <span class="player-form-rating-label">
+                                        Value Trend
+                                    </span>
+
+                                    <strong>
+
+                                        <?= htmlspecialchars(
+                                            $marketValueTrendClassification,
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ); ?>
+
+                                    </strong>
+
+                                    <small>
+
+                                        <?php if (
+                                            $marketValueTrendClassification
+                                            ===
+                                            'Insufficient Evidence'
+                                        ): ?>
+
+                                            Historical value trend evidence is still developing
+
+                                        <?php else: ?>
+
+                                            Current value combined with market direction
+
+                                        <?php endif; ?>
+
                                     </small>
 
                                 </div>

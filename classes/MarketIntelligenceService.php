@@ -133,6 +133,13 @@ class MarketIntelligenceService
                 'combined_market_signal'
             ]
             ?? [];
+            
+        
+        $valueTrend =
+            $result[
+                'value_trend'
+            ]
+            ?? [];
 
 
         return [
@@ -203,6 +210,20 @@ class MarketIntelligenceService
                         ]
                         ?? 'Unavailable'
                 ]
+            ],
+            'value_trend' => [
+
+                'status' =>
+                    $valueTrend[
+                        'status'
+                    ]
+                    ?? 'Unavailable',
+
+                'classification' =>
+                    $valueTrend[
+                        'classification'
+                    ]
+                    ?? 'Insufficient Evidence'
             ]
         ];
     }
@@ -319,6 +340,60 @@ class MarketIntelligenceService
                 $ownershipMovement,
                 $transferMomentum
             );
+            
+            
+        /*
+         * ========================================================
+         * VALUE TREND
+         * ========================================================
+         *
+         * Value Trend combines the player's existing Player
+         * Intelligence value rating with the independent Market
+         * Intelligence classification.
+         *
+         * The existing PlayerValue model remains the source of truth
+         * for current FPL value. Market Intelligence must not
+         * recalculate or redefine that value model.
+         */
+
+        $playerIntelligenceService =
+            new PlayerIntelligenceService(
+                $this->db
+            );
+
+
+        $playerProfile =
+            $playerIntelligenceService
+                ->getPlayerProfile(
+                    $playerId
+                );
+
+
+        $valueRating =
+            $this->numericOrNull(
+                $playerProfile[
+                    'summary'
+                ][
+                    'value_rating'
+                ]
+                ?? null
+            );
+
+
+        $valueTrend =
+            $this->buildValueTrend(
+                [
+                    'value_rating' =>
+                        $valueRating
+                ],
+                [
+                    'classification' =>
+                        $combinedMarketSignal[
+                            'classification'
+                        ]
+                        ?? 'Insufficient Evidence'
+                ]
+            );
 
 
         return [
@@ -371,9 +446,12 @@ class MarketIntelligenceService
 
             'transfer_momentum' =>
                 $transferMomentum,
-                
+
             'combined_market_signal' =>
-                $combinedMarketSignal
+                $combinedMarketSignal,
+
+            'value_trend' =>
+                $valueTrend
         ];
     }
 
@@ -1436,5 +1514,287 @@ class MarketIntelligenceService
             (int) $value;
     }
     
+    
+    public function buildValueTrend(
+    array $valueEvidence,
+    array $marketEvidence
+): array {
+
+    $valueRating =
+        $valueEvidence[
+            'value_rating'
+        ]
+        ?? null;
+
+
+    $marketClassification =
+        $marketEvidence[
+            'classification'
+        ]
+        ?? null;
+
+
+    /*
+     * ========================================================
+     * VALIDATE VALUE EVIDENCE
+     * ========================================================
+     */
+
+    if (
+        $valueRating === null
+        ||
+        !is_numeric(
+            $valueRating
+        )
+    ) {
+
+        return [
+
+            'status' =>
+                'Insufficient Historical Data',
+
+            'classification' =>
+                'Insufficient Evidence',
+
+            'value_rating' =>
+                null,
+
+            'market_classification' =>
+                $marketClassification
+        ];
+    }
+
+
+    $valueRating =
+        (float) $valueRating;
+
+
+    if (
+        $valueRating < 0
+        ||
+        $valueRating > 100
+    ) {
+
+        return [
+
+            'status' =>
+                'Insufficient Historical Data',
+
+            'classification' =>
+                'Insufficient Evidence',
+
+            'value_rating' =>
+                $valueRating,
+
+            'market_classification' =>
+                $marketClassification
+        ];
+    }
+
+
+    /*
+     * ========================================================
+     * VALIDATE MARKET EVIDENCE
+     * ========================================================
+     */
+
+    $validMarketClassifications =
+        [
+            'Strong Rising',
+            'Rising',
+            'Stable',
+            'Falling',
+            'Strong Falling',
+            'Mixed'
+        ];
+
+
+    if (
+        !in_array(
+            $marketClassification,
+            $validMarketClassifications,
+            true
+        )
+    ) {
+
+        return [
+
+            'status' =>
+                'Insufficient Historical Data',
+
+            'classification' =>
+                'Insufficient Evidence',
+
+            'value_rating' =>
+                $valueRating,
+
+            'market_classification' =>
+                $marketClassification
+        ];
+    }
+
+
+    /*
+     * ========================================================
+     * VALUE BAND
+     * ========================================================
+     *
+     * Existing PlayerValue thresholds:
+     *
+     * 75+  = Excellent / Exceptional
+     * 40+  = Average / Good
+     * <40  = Poor / Very Poor
+     */
+
+    if (
+        $valueRating >= 75
+    ) {
+
+        $valueBand =
+            'Strong';
+
+    } elseif (
+        $valueRating >= 40
+    ) {
+
+        $valueBand =
+            'Neutral';
+
+    } else {
+
+        $valueBand =
+            'Weak';
+    }
+
+
+    /*
+     * ========================================================
+     * VALUE TREND CLASSIFICATION
+     * ========================================================
+     */
+
+    $classification =
+        'Mixed Value Signal';
+
+
+    if (
+        $valueBand === 'Strong'
+    ) {
+
+        if (
+            in_array(
+                $marketClassification,
+                [
+                    'Strong Rising',
+                    'Rising'
+                ],
+                true
+            )
+        ) {
+
+            $classification =
+                'Improving Value';
+
+        } elseif (
+            $marketClassification
+            ===
+            'Stable'
+        ) {
+
+            $classification =
+                'Stable Value';
+
+        } elseif (
+            in_array(
+                $marketClassification,
+                [
+                    'Falling',
+                    'Strong Falling',
+                    'Mixed'
+                ],
+                true
+            )
+        ) {
+
+            $classification =
+                'Mixed Value Signal';
+        }
+
+    } elseif (
+        $valueBand === 'Weak'
+    ) {
+
+        if (
+            in_array(
+                $marketClassification,
+                [
+                    'Falling',
+                    'Strong Falling'
+                ],
+                true
+            )
+        ) {
+
+            $classification =
+                'Deteriorating Value';
+
+        } elseif (
+            in_array(
+                $marketClassification,
+                [
+                    'Rising',
+                    'Strong Rising',
+                    'Mixed'
+                ],
+                true
+            )
+        ) {
+
+            $classification =
+                'Mixed Value Signal';
+
+        } elseif (
+            $marketClassification
+            ===
+            'Stable'
+        ) {
+
+            $classification =
+                'Stable Value';
+        }
+
+    } else {
+
+        /*
+         * Neutral current value.
+         *
+         * Market direction alone must not promote a player to
+         * Improving Value or Deteriorating Value.
+         */
+
+        $classification =
+            $marketClassification
+            ===
+            'Stable'
+                ? 'Stable Value'
+                : 'Mixed Value Signal';
+    }
+
+
+    return [
+
+        'status' =>
+            'Available',
+
+        'classification' =>
+            $classification,
+
+        'value_rating' =>
+            $valueRating,
+
+        'market_classification' =>
+            $marketClassification
+    ];
+}
     
 }
