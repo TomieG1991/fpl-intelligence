@@ -36,13 +36,9 @@ The system should remain explainable, testable and robust throughout:
 
 ---
 
-# Current Stable Baseline
-
-## Version
-
 Current stable release:
 
-**v0.30.0 — Multi-Gameweek Expected Points Intelligence**
+**v0.31.0 — Market Intelligence**
 
 GitHub `main` is the authoritative code baseline after every completed commit.
 
@@ -50,14 +46,16 @@ GitHub `main` is the authoritative code baseline after every completed commit.
 
 Current development milestone:
 
-**v0.31.0 — Market & Price Intelligence — IN PROGRESS**
+**v0.32.0 — Squad Horizon & Rotation Intelligence — NEXT**
 
-The current v0.31.0 development baseline includes the historical Market
-Intelligence data foundation, price movement, ownership movement, transfer
-momentum and combined Market Signal modelling.
+v0.31.0 is complete and establishes the historical Market Intelligence
+foundation, including price movement, ownership movement, transfer momentum,
+combined Market Signal modelling, Value Trend Intelligence and Player Profile
+integration.
 
-v0.31.0 is not yet considered complete.
-
+The next development milestone is v0.32.0, which will extend the existing
+multi-gameweek player projection foundation into squad-level horizon and
+rotation analysis.
 ---
 
 
@@ -340,9 +338,9 @@ than maintaining a separate scoring model.
 
 ### Market Intelligence
 
-Market Intelligence is currently under active development as part of v0.31.0.
+Market Intelligence is complete as part of v0.31.0.
 
-The current foundation includes:
+The current system includes:
 
 - historical price movement
 - historical raw ownership-count movement
@@ -356,10 +354,18 @@ The current foundation includes:
 - Strong Falling
 - Mixed
 - Insufficient Evidence
+- Value Trend Intelligence
+- Improving Value
+- Stable Value
+- Deteriorating Value
+- Mixed Value Signal
 - insufficient-history protection
 - duplicate-gameweek protection
 - null/invalid evidence protection
 - early-season protection
+- compact public Market Intelligence summaries
+- Player Intelligence integration
+- Player Profile presentation
 
 Price movement uses immutable historical gameweek snapshots.
 
@@ -371,6 +377,9 @@ Transfer momentum uses persisted official `player_fixture_history` evidence.
 The combined Market Signal requires at least two trustworthy component signals
 before producing a directional classification.
 
+Value Trend combines the existing Player Value model with market direction
+without allowing market popularity to redefine underlying player quality.
+
 With only GW1 historical evidence currently available, real players correctly
 return:
 
@@ -378,8 +387,9 @@ return:
 - Ownership Movement: `Insufficient Historical Data`
 - Transfer Momentum: `Insufficient Historical Data`
 - Combined Market Signal: `Insufficient Evidence`
+- Value Trend: `Insufficient Evidence`
 
-Market Intelligence currently remains a supporting intelligence layer.
+Market Intelligence remains a supporting intelligence layer.
 
 It does not directly alter:
 
@@ -391,8 +401,8 @@ It does not directly alter:
 - Wildcard Intelligence
 - Gameweek Intelligence
 
-Popularity and transfer activity must not be treated as proof of player
-quality.
+Popularity, transfer activity and price movement must not be treated as proof
+of player quality.
 
 ### Fixture Intelligence
 
@@ -1397,11 +1407,11 @@ v0.30.0 is complete.
 
 ---
 
-## v0.31.0 — Market & Price Intelligence
+## v0.31.0 — Market Intelligence
 
 ### Status
 
-**IN PROGRESS**
+**COMPLETE**
 
 ### Dependency
 
@@ -1412,7 +1422,7 @@ Builds on the v0.27.0 historical data foundation.
 Use FPL market information as an explainable supporting decision signal without
 treating popularity as evidence of underlying player quality.
 
-### Delivered So Far
+### Delivered
 
 Added `MarketIntelligenceService`.
 
@@ -1465,6 +1475,48 @@ Combined classifications currently support:
 
 At least two trustworthy component signals are required before the service
 produces a directional combined classification.
+
+### Value Trend Intelligence
+
+Added Value Trend Intelligence combining the existing Player Value model with
+the completed Market Intelligence classification.
+
+Player Value remains the source of truth for underlying value quality.
+
+Value groups are interpreted as:
+
+- Strong Value:
+  - Exceptional
+  - Excellent
+  - Good
+- Neutral:
+  - Average
+- Weak:
+  - Poor
+  - Very Poor
+
+Value Trend classifications support:
+
+- Improving Value
+- Stable Value
+- Deteriorating Value
+- Mixed Value Signal
+- Insufficient Evidence
+
+Strong Value combined with Rising or Strong Rising market behaviour produces
+`Improving Value`.
+
+Strong Value combined with Stable market behaviour produces `Stable Value`.
+
+Weak Value combined with Falling or Strong Falling market behaviour produces
+`Deteriorating Value`.
+
+Conflicting value and market evidence produces `Mixed Value Signal`.
+
+Insufficient market evidence produces `Insufficient Evidence`.
+
+Market activity does not independently increase the underlying Player Value
+rating.
 
 ### Historical Snapshot Architecture
 
@@ -1541,6 +1593,36 @@ player is intrinsically strong.
 Market data may later inform decision timing and financial risk, but should not
 override football-performance evidence.
 
+### Public Integration
+
+Added a stable public Market Intelligence summary contract.
+
+The public summary exposes:
+
+- combined Market Intelligence classification
+- evidence count
+- compact price direction
+- compact ownership direction
+- compact transfer direction
+- compact Value Trend classification
+
+Internal historical arrays and detailed implementation evidence remain outside
+the compact public contract.
+
+Market Intelligence is exposed through individual Player Intelligence profiles.
+
+The Player Profile now includes a dedicated Market Intelligence section showing:
+
+- Market Signal
+- Evidence
+- Value Trend
+- Price Movement
+- Ownership Movement
+- Transfer Momentum
+
+Early-season insufficient-history states are presented explicitly rather than
+being disguised as stable market behaviour.
+
 ### Testing
 
 Added dedicated regression and integration coverage for:
@@ -1573,26 +1655,57 @@ Added dedicated regression and integration coverage for:
 - immutable snapshot lifecycle
 - GW1 historical market recovery
 
-The current complete regression suite passes with:
+Additional final milestone coverage includes:
 
-- 132 test files
-- 132 test files passed
+- public Market Intelligence summary contract
+- Player Intelligence Market Intelligence integration
+- Player Profile Market Intelligence presentation
+- Value Trend classification
+- Value Trend integration
+- compact Value Trend summary contract
+- Player Intelligence Value Trend integration
+- milestone-level acceptance coverage
+- request-scoped Player Intelligence caching regression coverage
+
+The final v0.31.0 milestone acceptance test passes:
+
+- 75 milestone checks passed
+- 0 milestone checks failed
+
+The final complete regression suite passes with:
+
+- 140 test files
+- 140 test files passed
 - 0 test files failed
 - 0 test files with errors
-- 4,348 assertions passed
+- 4,581 assertions passed
 - 0 assertions failed
+- approximately 164 seconds total runtime
 
-### Remaining Work
+### Completion Notes
 
-Before v0.31.0 is complete:
+v0.31.0 completes the Market Intelligence milestone.
 
-- add a stable public Market Intelligence summary contract
-- expose Market Intelligence through the appropriate player-facing interface
-- evaluate value-trend intelligence once sufficient history exists
-- evaluate downstream decision integration conservatively
-- continue accumulating trustworthy historical market evidence
-- determine whether any numerical market-strength scoring is justified by real
-  multi-gameweek evidence
+The completed system now provides:
+
+- immutable historical market evidence
+- historical price movement
+- exact raw selected-manager ownership movement
+- transfer momentum
+- combined Market Signal classification
+- Value Trend Intelligence
+- controlled insufficient-history behaviour
+- compact public Market Intelligence summaries
+- Player Intelligence integration
+- Player Profile presentation
+
+Market Intelligence remains deliberately separate from underlying football
+quality and projection models.
+
+Future milestones may use Market Intelligence as supporting evidence for
+transfer timing, squad planning and gameweek decisions, but such integration
+must be justified conservatively rather than introduced simply because market
+data is available.
 
 ### Important Rule
 
@@ -2016,32 +2129,36 @@ Before each release:
 
 # Current Next Action
 
-**CONTINUE: v0.31.0 — Market & Price Intelligence**
+**START: v0.32.0 — Squad Horizon & Rotation Intelligence**
 
-The Market Intelligence data and directional modelling foundation is now
-complete.
+v0.31.0 Market Intelligence is complete.
 
-Completed so far:
+The final v0.31.0 regression baseline is:
 
-1. historical snapshot lifecycle correction
-2. exact raw selected-manager count preservation
-3. GW1 historical market recovery
-4. Price Movement Intelligence
-5. Ownership Movement Intelligence
-6. Transfer Momentum Intelligence
-7. Combined Market Signal
-8. early-season insufficient-evidence protection
+- 140 test files
+- 140 test files passed
+- 0 test files failed
+- 0 test files with errors
+- 4,581 assertions passed
+- 0 assertions failed
 
-Next:
+The next milestone is to extend the existing player-level multi-gameweek
+Expected Points foundation into squad-level planning intelligence.
 
-1. add a stable public Market Intelligence summary contract
-2. expose Market Intelligence through an appropriate player-facing interface
-3. inspect real multi-gameweek market behaviour as GW2+ evidence accumulates
-4. evaluate value-trend intelligence
-5. determine whether and how Market Intelligence should support downstream
-   Transfer, Squad and Gameweek decision systems
+Initial v0.32.0 focus:
 
-Market behaviour must remain a supporting decision signal.
+1. define the Squad Horizon Intelligence contract
+2. evaluate the current squad across multiple upcoming gameweeks
+3. identify fixture clashes and weak fixture clusters
+4. evaluate defensive rotation
+5. evaluate goalkeeper rotation
+6. evaluate bench coverage and position depth
+7. identify players repeatedly likely to require benching
+8. expose explainable squad-level horizon outputs
 
-Popularity, transfer activity and price movement must not be treated as
-evidence that a player is intrinsically strong.
+v0.32.0 should build on the existing multi-gameweek Expected Points model rather
+than creating a separate competing projection model.
+
+Market Intelligence may later provide supporting context for squad planning,
+but should not be given downstream decision weight without explicit design,
+testing and evidence.

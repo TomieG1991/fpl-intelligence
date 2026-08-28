@@ -21,7 +21,7 @@ $activeNav =
             </div>
 
             <div class="brand-version">
-                v0.30.0
+                v0.31.0
             </div>
 
         </div>
