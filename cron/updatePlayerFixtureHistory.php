@@ -1233,4 +1233,182 @@ echo "Import mode: "
     . "\n";
 
 
-echo "Update complete\n";
+/*
+ * ============================================================
+ * COMPLETED-GAMEWEEK SNAPSHOT CAPTURE
+ * ============================================================
+ *
+ * Historical snapshots depend on completed player fixture
+ * history for trustworthy gameweek-specific market values.
+ *
+ * Therefore snapshot capture is performed automatically only
+ * after a successful FULL history import.
+ *
+ * Batch imports must never trigger snapshot capture.
+ *
+ * Failed/incomplete full imports must also never trigger
+ * snapshot capture.
+ */
+
+$selectedPlayerCount =
+    count(
+        $players
+    );
+
+
+$snapshotCaptureGate =
+    new PlayerGameweekSnapshotCaptureGate();
+
+
+$fullImportComplete =
+    $snapshotCaptureGate
+        ->shouldCapture(
+            $fullImport,
+            $selectedPlayerCount,
+            $playersProcessed,
+            $playersFailed
+        );
+
+
+echo "<br>";
+echo "============================================<br>";
+echo "Player Gameweek Snapshot Capture<br>";
+echo "============================================<br>";
+
+
+if (
+    !$fullImport
+) {
+
+    echo "Snapshot capture skipped<br>";
+    echo "Reason: Batch history imports do not capture snapshots<br>";
+
+} elseif (
+    !$fullImportComplete
+) {
+
+    echo "Snapshot capture skipped<br>";
+    echo "Reason: Full history import did not complete successfully<br>";
+
+    echo "Players expected: "
+        . $selectedPlayerCount
+        . "<br>";
+
+    echo "Players processed: "
+        . $playersProcessed
+        . "<br>";
+
+    echo "Players failed: "
+        . $playersFailed
+        . "<br>";
+
+} else {
+
+    try {
+
+        $snapshotCapture =
+            new PlayerGameweekSnapshotCapture(
+                $db
+            );
+
+
+        $snapshotResult =
+            $snapshotCapture
+                ->captureLatestCompletedGameweek();
+
+
+        $snapshotStatus =
+            (string) (
+                $snapshotResult[
+                    'status'
+                ]
+                ?? 'Unavailable'
+            );
+
+
+        echo "Capture status: "
+            . $snapshotStatus
+            . "<br>";
+
+
+        if (
+            $snapshotStatus === 'Complete'
+        ) {
+
+            echo "Gameweek: GW"
+                . (
+                    $snapshotResult[
+                        'fpl_gameweek_id'
+                    ]
+                    ?? '—'
+                )
+                . "<br>";
+
+
+            echo "Players considered: "
+                . (
+                    $snapshotResult[
+                        'players_considered'
+                    ]
+                    ?? 0
+                )
+                . "<br>";
+
+
+            echo "Snapshots inserted: "
+                . (
+                    $snapshotResult[
+                        'inserted'
+                    ]
+                    ?? 0
+                )
+                . "<br>";
+
+
+            echo "Snapshots already present: "
+                . (
+                    $snapshotResult[
+                        'existing'
+                    ]
+                    ?? 0
+                )
+                . "<br>";
+
+
+            echo "Snapshots skipped: "
+                . (
+                    $snapshotResult[
+                        'skipped'
+                    ]
+                    ?? 0
+                )
+                . "<br>";
+
+        } else {
+
+            echo "Reason: "
+                . (
+                    $snapshotResult[
+                        'reason'
+                    ]
+                    ?? 'Unknown'
+                )
+                . "<br>";
+        }
+
+    } catch (
+        Throwable $exception
+    ) {
+
+        echo "Snapshot capture failed\n";
+
+        echo "Reason: "
+            . $exception
+                ->getMessage()
+            . "<br>";
+    }
+}
+
+
+echo "<br>";
+echo "Update complete<br>";

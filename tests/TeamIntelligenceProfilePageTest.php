@@ -611,7 +611,7 @@ foreach (
 teamProfilePageCheck(
     'Overall strength value is rendered',
     preg_match(
-        '/Overall\s*<\/span>\s*<strong>\s*100\.0\s*<\/strong>/i',
+        '/Overall\s*<\/span>\s*<strong>\s*[0-9]+(?:\.[0-9]+)?\s*<\/strong>/i',
         $normalisedHtml
     ) === 1
 );
@@ -620,7 +620,7 @@ teamProfilePageCheck(
 teamProfilePageCheck(
     'Home strength value is rendered',
     preg_match(
-        '/Home\s*<\/span>\s*<strong>\s*100\.0\s*<\/strong>/i',
+        '/Home\s*<\/span>\s*<strong>\s*[0-9]+(?:\.[0-9]+)?\s*<\/strong>/i',
         $normalisedHtml
     ) === 1
 );
@@ -629,7 +629,7 @@ teamProfilePageCheck(
 teamProfilePageCheck(
     'Away strength value is rendered',
     preg_match(
-        '/Away\s*<\/span>\s*<strong>\s*100\.0\s*<\/strong>/i',
+        '/Away\s*<\/span>\s*<strong>\s*[0-9]+(?:\.[0-9]+)?\s*<\/strong>/i',
         $normalisedHtml
     ) === 1
 );

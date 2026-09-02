@@ -1107,15 +1107,25 @@ if (
 
 
     marketCombinedSignalCheck(
-        'Current real early-season market state remains Insufficient Evidence',
-        (
-            $realCombined[
-                'classification'
-            ]
-            ?? null
+        'Current real market state returns a recognised combined classification',
+        in_array(
+            (
+                $realCombined[
+                    'classification'
+                ]
+                ?? null
+            ),
+            [
+                'Strong Rising',
+                'Rising',
+                'Stable',
+                'Falling',
+                'Strong Falling',
+                'Mixed',
+                'Insufficient Evidence'
+            ],
+            true
         )
-        ===
-        'Insufficient Evidence'
     );
 }
 

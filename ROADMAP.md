@@ -38,7 +38,7 @@ The system should remain explainable, testable and robust throughout:
 
 Current stable release:
 
-**v0.32.0 — Squad Horizon & Rotation Intelligence**
+**v0.33.0 — Blank & Double Gameweek Intelligence**
 
 GitHub `main` is the authoritative code baseline after every completed commit.
 
@@ -46,16 +46,21 @@ GitHub `main` is the authoritative code baseline after every completed commit.
 
 Current development milestone:
 
-**v0.33.0 — Blank & Double Gameweek Intelligence — NEXT**
+**v0.34.0 — Chip Intelligence — NEXT**
 
-v0.32.0 is complete and establishes the squad-level multi-gameweek planning
-foundation, including Starting XI optimisation, bench coverage, goalkeeper
-rotation, defensive rotation, fixture clashes, weak fixture clusters, position
-depth, repeated benching and structural weakness analysis.
+v0.33.0 is complete and establishes explicit Blank, Normal and Double Gameweek
+semantics across fixture modelling, multi-gameweek Expected Points, Squad
+Horizon planning, Starting XI selection, captaincy, fixture clashes and transfer
+evaluation.
 
-The next development milestone is v0.33.0, which will make the existing fixture,
-Expected Points and decision models explicitly aware of Blank and Double
-Gameweeks.
+The completed v0.33.0 milestone also strengthens historical snapshot integrity by
+using completed-gameweek fixture history as the authoritative source for
+historical market prices and by automatically capturing completed-gameweek
+snapshots after a successful full fixture-history import.
+
+The next development milestone is v0.34.0, which will build Chip Intelligence on
+top of the completed multi-gameweek, Blank/Double Gameweek and Squad Horizon
+architecture.
 ---
 
 
@@ -2052,37 +2057,298 @@ The next milestone is v0.33.0 — Blank & Double Gameweek Intelligence.
 
 ## v0.33.0 — Blank & Double Gameweek Intelligence
 
+### Status
+
+**COMPLETE**
+
+### Dependency
+
+Builds on:
+
+- v0.30.0 Multi-Gameweek Expected Points Intelligence
+- v0.32.0 Squad Horizon & Rotation Intelligence
+
 ### Goal
 
-Make fixture modelling explicitly aware of unusual FPL schedules.
+Make fixture modelling explicitly aware of unusual FPL schedules without
+introducing a separate Blank/Double Gameweek scoring system.
 
-### Planned Work
+### Delivered
 
-Detect:
+Added explicit schedule modelling for:
 
-- blank gameweeks
-- double gameweeks
-- multiple fixtures for one team
-- teams with no fixture
+- Blank Gameweeks
+- Normal Gameweeks
+- Double Gameweeks
+- teams with zero fixtures
+- teams with one fixture
+- teams with multiple fixtures
 
-Adapt:
+Added `GameweekScheduleIntelligence` as the canonical team/gameweek schedule
+classification model.
 
-- fixture opportunity
-- projected points
-- captain recommendations
-- Starting XI decisions
-- transfer recommendations
+Schedule semantics are:
 
-Avoid assuming every team has exactly one fixture per gameweek.
+- 0 fixtures → Blank
+- 1 fixture → Normal
+- 2+ fixtures → Double
+
+Complete fixture rows are preserved for multi-fixture gameweeks.
+
+Fixture ordering is deterministic by kickoff time and fixture identity.
+
+### Multi-Gameweek Expected Points
+
+Extended `MultiGameweekExpectedPoints` with explicit schedule semantics.
+
+Player/gameweek projections now preserve:
+
+- `fixture_count`
+- `schedule_type`
+- complete fixture arrays
+
+Internal gameweek gaps between represented projections are preserved as explicit
+Blank Gameweeks with:
+
+- zero projected points
+- zero fixtures
+- empty fixture arrays
+
+Double Gameweeks retain their individual fixture projections while exposing the
+existing aggregated gameweek Expected Points total.
+
+A single aggregate opponent is not manufactured when multiple fixtures exist.
+
+The public projection method signature remains unchanged.
+
+### Squad Horizon Integration
+
+Extended `SquadHorizonIntelligenceService` to preserve authoritative schedule
+metadata through the production adapter.
+
+Extended `SquadHorizonIntelligence` player/gameweek rows with:
+
+- fixture count
+- schedule type
+- complete fixture evidence
+
+Unknown legacy schedule data remains unknown rather than being incorrectly
+classified as Blank.
+
+Squad Horizon continues to use the existing multi-gameweek Expected Points model
+rather than recalculating player projections.
+
+### Starting XI Intelligence
+
+Validated Starting XI optimisation through:
+
+- Normal Gameweeks
+- Blank Gameweeks
+- Double Gameweeks
+
+Selection remains based on:
+
+- legal FPL formations
+- aggregated player projected points
+
+No special rule forces a Double Gameweek player into the Starting XI.
+
+No special rule automatically excludes a Blank Gameweek player outside the
+normal projected-points optimisation.
+
+### Captain Intelligence
+
+Added explicit captain selection to Squad Horizon gameweeks.
+
+Captain selection:
+
+- is restricted to the selected Starting XI
+- uses projected points
+- uses deterministic lower-player-ID tie-breaking
+
+Blank and Double Gameweek value therefore influences captaincy naturally through
+the existing projection model.
+
+No separate Double Gameweek captain bonus is used.
+
+### Double Gameweek Fixture Clashes
+
+Extended Fixture Clash Intelligence to understand multiple fixtures in one
+gameweek.
+
+Where usable fixture-level relationships exist, clashes are validated using:
+
+- fixture identity
+- reciprocal team/opponent relationships
+
+Fixture-level evidence is authoritative when available.
+
+The existing aggregate-opponent logic remains as a compatibility fallback when
+fixture-level relationships are unavailable.
+
+Each opposing player pair produces at most one clash record per gameweek.
+
+### Transfer Evaluation
+
+Added `evaluateTransfer()` to Squad Horizon Intelligence.
+
+Transfer evaluation compares:
+
+- the current squad horizon
+- the replacement squad horizon
+- before/after Starting XI projected points
+
+Blank and Double Gameweek value therefore affects transfer decisions through the
+existing Expected Points architecture.
+
+A Double Gameweek does not automatically make a transfer an improvement.
+
+Transfer outcomes can correctly remain:
+
+- Improvement
+- Neutral
+- Regression
+
+depending on projected Starting XI impact.
+
+### Historical Snapshot Integrity
+
+During final v0.33 regression testing, completed-gameweek historical snapshot
+price handling was strengthened.
+
+Completed-gameweek snapshot capture now prefers authoritative historical price
+evidence from `player_fixture_history` rather than later live `players.price`.
+
+Live price remains only a defensive fallback where historical price evidence is
+unavailable.
+
+The affected GW2 historical snapshots were repaired from persisted fixture
+history.
+
+Validation confirmed:
+
+- 92 snapshot prices corrected
+- 0 historical-price mismatches remained after repair
+- 626 comparable players matched historical price evidence
+- 626 comparable players matched historical selected-manager evidence
+- 92 legitimate historical/live price differences now remain
+
+These live differences are expected because completed snapshots are immutable
+historical state.
+
+### Historical Update Workflow
+
+Integrated completed-gameweek snapshot capture into the full player
+fixture-history update workflow.
+
+The intended refresh dependency is now:
+
+`Live FPL Update`
+`→ Fixture Update`
+`→ Full Player Fixture History Import`
+`→ Completed-Gameweek Snapshot Capture`
+
+Added `PlayerGameweekSnapshotCaptureGate`.
+
+Automatic capture is allowed only when:
+
+- the import is FULL
+- at least one player is selected
+- every selected player is processed
+- zero players fail
+
+Batch imports do not trigger snapshot capture.
+
+Incomplete or failed full imports do not trigger snapshot capture.
+
+The standalone snapshot capture runner remains available for deliberate manual
+use and diagnostics.
+
+### Architecture Decision
+
+Blank and Double Gameweek Intelligence extends the existing architecture rather
+than competing with it.
+
+The intended flow is:
+
+`Fixture Schedule`
+`→ Multi-Gameweek Expected Points`
+`→ Squad Horizon`
+`→ Starting XI / Captaincy / Clash / Transfer Decisions`
+
+There is:
+
+- no independent BGW scoring model
+- no independent DGW scoring model
+- no artificial DGW bonus
+- no artificial BGW penalty beyond absence of fixture points
+
+This keeps one authoritative player-projection architecture.
 
 ### Testing
 
-Include synthetic:
+Added dedicated coverage for:
 
-- normal GW
-- blank GW
-- double GW
-- mixed BGW/DGW
+- explicit schedule classification
+- schedule edge cases
+- real schedule data
+- multi-gameweek schedule semantics
+- Squad Horizon schedule semantics
+- schedule propagation
+- Double Gameweek fixture clashes
+- Double Gameweek clash edge cases
+- Blank/Double Starting XI behaviour
+- Blank/Double captaincy
+- captaincy edge cases
+- Blank/Double transfer evaluation
+- transfer-evaluation edge cases
+- mixed Normal/Blank/Double regression
+- snapshot capture gating
+- fixture-history/snapshot-capture workflow wiring
+
+The focused v0.33 Blank/Double Gameweek suite passes:
+
+- 521 unique focused assertions
+- 0 failures
+
+Snapshot workflow regression coverage confirms:
+
+- snapshot capture gate: 11 / 11 passed
+- fixture-history/snapshot integration: 28 / 28 passed
+- snapshot capture service: passed
+- snapshot capture runner: passed
+- historical snapshot integration: passed
+
+The final complete regression suite passes with:
+
+- 171 test files
+- 171 test files passed
+- 0 test files failed
+- 0 test files with errors
+- 5,234 assertions passed
+- 0 assertions failed
+- 169.715 seconds total runtime
+
+### Completion Notes
+
+v0.33.0 completes the Blank & Double Gameweek Intelligence milestone.
+
+The application now represents unusual FPL schedules explicitly from fixture
+structure through player projections and squad-level decisions.
+
+Blank Gameweeks no longer disappear or produce manufactured fixture projections.
+
+Double Gameweeks retain individual fixture evidence while still using aggregated
+gameweek Expected Points for optimisation.
+
+Starting XI, captaincy, fixture clashes and transfer evaluation all remain driven
+by the same schedule-aware Expected Points architecture.
+
+Historical snapshot capture is now safer and part of the correct full historical
+update workflow.
+
+The completed BGW/DGW architecture provides the foundation required by
+v0.34.0 — Chip Intelligence.
 
 
 ---
@@ -2433,41 +2699,90 @@ Before each release:
 
 # Current Next Action
 
-**START: v0.33.0 — Blank & Double Gameweek Intelligence**
+**START: v0.34.0 — Chip Intelligence**
 
-v0.32.0 Squad Horizon & Rotation Intelligence is complete.
+v0.33.0 Blank & Double Gameweek Intelligence is complete.
 
-The final v0.32.0 regression baseline is:
+The final v0.33.0 regression baseline is:
 
-- 155 test files
-- 155 test files passed
+- 171 test files
+- 171 test files passed
 - 0 test files failed
 - 0 test files with errors
-- 4,840 assertions passed
+- 5,234 assertions passed
 - 0 assertions failed
-- approximately 165 seconds total runtime
+- 169.715 seconds total runtime
 
-The next milestone is to make the existing fixture, projection and decision
-architecture explicitly aware of unusual FPL schedules.
+The completed v0.33.0 milestone now provides explicit Blank, Normal and Double
+Gameweek semantics throughout the existing fixture, projection and squad-planning
+architecture.
 
-Initial v0.33.0 focus:
+The application can now safely represent:
 
-1. define explicit Blank Gameweek and Double Gameweek fixture semantics
-2. detect teams with zero, one or multiple fixtures within a gameweek
-3. ensure player projections preserve multiple fixtures within one gameweek
-4. ensure Blank Gameweeks produce no manufactured fixture projection
-5. adapt squad-level horizon analysis for Blank and Double Gameweeks
-6. validate Starting XI and captain decisions against unusual fixture schedules
-7. evaluate transfer behaviour around Blank and Double Gameweeks
-8. add controlled synthetic normal-GW, BGW, DGW and mixed-schedule regression coverage
+- teams with zero fixtures in a gameweek
+- teams with one fixture in a gameweek
+- teams with multiple fixtures in a gameweek
+- explicit Blank Gameweek player projections
+- individual Double Gameweek fixture evidence
+- schedule-aware Squad Horizon analysis
+- Blank/Double-aware Starting XI optimisation
+- schedule-aware captain selection
+- Double Gameweek fixture clashes
+- Blank/Double-aware transfer evaluation
 
-v0.33.0 must build on the existing fixture and multi-gameweek Expected Points
-architecture rather than introducing separate Blank/Double Gameweek scoring
-logic.
+The existing Expected Points architecture remains the source of player projection
+value. No separate Blank or Double Gameweek scoring model was introduced.
 
-The v0.32.0 decision to avoid manufacturing a single opponent for an aggregated
-multi-fixture player/gameweek must be preserved until v0.33.0 introduces an
-explicit multi-fixture squad-horizon contract.
+Historical snapshot integrity was also strengthened during v0.33.0.
 
-All existing normal-gameweek behaviour must remain protected while Blank and
-Double Gameweek support is introduced.
+Completed-gameweek snapshot capture now uses authoritative historical fixture
+history for historical price evidence, and successful full fixture-history
+updates automatically trigger safe completed-gameweek snapshot capture.
+
+The next milestone is:
+
+**v0.34.0 — Chip Intelligence**
+
+Initial v0.34.0 focus:
+
+1. define a common explainable Chip Intelligence decision contract
+2. add Wildcard Timing Intelligence using existing squad and multi-gameweek
+   projections
+3. add Free Hit Intelligence for one-gameweek squad optimisation
+4. add Bench Boost Intelligence using complete squad and bench projections
+5. add Triple Captain Intelligence using captain and multi-gameweek Expected
+   Points
+6. account explicitly for Blank and Double Gameweeks when evaluating chip value
+7. distinguish immediate chip value from the value of holding the chip
+8. provide Use / Consider / Hold recommendations with supporting evidence
+9. add controlled synthetic and real-data regression coverage for chip decisions
+
+v0.34.0 must build on the existing:
+
+- Expected Points Intelligence
+- Multi-Gameweek Expected Points Intelligence
+- Squad Horizon Intelligence
+- Blank & Double Gameweek Intelligence
+- Captain Intelligence
+- Wildcard Intelligence
+
+Chip Intelligence should coordinate these existing systems rather than duplicate
+their scoring models.
+
+Wildcard Timing should evaluate the value of restructuring the squad rather than
+replace the existing Wildcard squad optimiser.
+
+Free Hit Intelligence should optimise specifically for the target gameweek while
+respecting normal FPL squad constraints.
+
+Bench Boost Intelligence should evaluate the projected value and reliability of
+the complete 15-player squad, with particular attention to bench strength.
+
+Triple Captain Intelligence should build on existing Captain Intelligence and
+Expected Points rather than introduce an independent captain-scoring model.
+
+Blank and Double Gameweek information should act through the schedule-aware
+projection architecture completed in v0.33.0.
+
+All existing non-chip decision behaviour must remain protected while Chip
+Intelligence is introduced.

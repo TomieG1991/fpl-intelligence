@@ -630,6 +630,54 @@ class SquadHorizonIntelligenceService
                 }
 
 
+                /*
+                 * Preserve the explicit v0.33 schedule semantics
+                 * produced by MultiGameweekExpectedPoints.
+                 *
+                 * fixture_count and schedule_type describe the
+                 * aggregated player/gameweek schedule.
+                 *
+                 * The richer top-level service fixture rows are
+                 * preserved here because they expose opponent,
+                 * home/away and fixture identity metadata required
+                 * by downstream Squad Horizon intelligence.
+                 *
+                 * For a Blank Gameweek, $gameweekFixtures is
+                 * naturally empty.
+                 *
+                 * For a Double Gameweek, every individual fixture
+                 * is preserved while opponent_team_id above remains
+                 * null because no single opponent truthfully
+                 * represents the aggregated gameweek.
+                 */
+
+                $fixtureCount =
+                    isset(
+                        $gameweekProjection[
+                            'fixture_count'
+                        ]
+                    )
+                    &&
+                    is_numeric(
+                        $gameweekProjection[
+                            'fixture_count'
+                        ]
+                    )
+                        ? (int) $gameweekProjection[
+                            'fixture_count'
+                        ]
+                        : count(
+                            $gameweekFixtures
+                        );
+
+
+                $scheduleType =
+                    $gameweekProjection[
+                        'schedule_type'
+                    ]
+                    ?? null;
+
+
                 $adaptedGameweeks[
                     $gameweek
                 ] = [
@@ -644,7 +692,16 @@ class SquadHorizonIntelligenceService
                         $teamId,
 
                     'opponent_team_id' =>
-                        $opponentTeamId
+                        $opponentTeamId,
+
+                    'fixture_count' =>
+                        $fixtureCount,
+
+                    'schedule_type' =>
+                        $scheduleType,
+
+                    'fixtures' =>
+                        $gameweekFixtures
                 ];
             }
 

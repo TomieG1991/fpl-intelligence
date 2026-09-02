@@ -6,6 +6,184 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.33.0] - Blank & Double Gameweek Intelligence
+
+### Added
+
+- Added explicit Blank and Double Gameweek schedule intelligence.
+- Added `GameweekScheduleIntelligence.php` as the canonical team/gameweek schedule-analysis model.
+- Added explicit schedule classifications:
+  - Blank
+  - Normal
+  - Double
+- Added fixture-count semantics for every analysed team/gameweek:
+  - zero fixtures = Blank
+  - one fixture = Normal
+  - two or more fixtures = Double
+- Added preservation of complete fixture rows for teams with multiple fixtures in the same gameweek.
+- Added deterministic fixture ordering by kickoff time and fixture identity.
+- Added explicit Blank Gameweek rows to multi-gameweek player projections where a gap exists between represented gameweeks.
+- Added `fixture_count`, `schedule_type` and `fixtures` metadata to multi-gameweek projection summaries.
+- Added schedule-semantic propagation through `SquadHorizonIntelligenceService`.
+- Added schedule-semantic propagation into `SquadHorizonIntelligence`.
+- Added support for Blank, Normal and Double schedules within the existing Squad Horizon planning model.
+- Added Double Gameweek-aware Fixture Clash Intelligence using individual fixture identities and reciprocal opponent relationships.
+- Added fixture-level clash validation where authoritative multi-fixture data is available.
+- Added legacy aggregate-opponent fallback for players without usable fixture-level schedule data.
+- Added automatic captain selection to each Squad Horizon gameweek.
+- Added deterministic captain tie-breaking using projected points and player ID.
+- Added horizon transfer evaluation through `evaluateTransfer()`.
+- Added before/after Starting XI projected-points comparison for proposed squad changes.
+- Added transfer-result classifications that naturally account for Blank and Double Gameweeks through existing Expected Points.
+- Added mixed Normal/Blank/Double schedule regression coverage across the full Squad Horizon model.
+- Added automatic completed-gameweek snapshot capture after a successful full player fixture-history import.
+- Added `PlayerGameweekSnapshotCaptureGate.php` to control whether automatic snapshot capture is safe to run.
+- Added explicit protection preventing batch fixture-history imports from triggering snapshot capture.
+- Added explicit protection preventing failed or incomplete full fixture-history imports from triggering snapshot capture.
+- Preserved the standalone `capturePlayerGameweekSnapshots.php` runner for deliberate manual snapshot capture and diagnostics.
+
+### Changed
+
+- Extended `MultiGameweekExpectedPoints` so internal missing gameweeks between represented projections are preserved as explicit Blank Gameweeks rather than silently disappearing.
+- Extended multi-gameweek player projection summaries with schedule semantics without changing the public projection method signature.
+- Extended the Squad Horizon production adapter to preserve authoritative fixture-count, schedule-type and multi-fixture information.
+- Extended Squad Horizon player/gameweek rows with:
+  - `fixture_count`
+  - `schedule_type`
+  - `fixtures`
+- Changed Fixture Clash Intelligence to prefer authoritative fixture-level relationships whenever both players contain usable fixture data.
+- Preserved the existing reciprocal aggregate-opponent clash logic as a compatibility fallback where fixture-level relationships are unavailable.
+- Extended Squad Horizon output with an explicit captain selected from the legal Starting XI.
+- Extended Squad Horizon with transfer evaluation using the existing Starting XI optimiser and projected-points model.
+- Updated live-data regression assumptions that had become stale after the project moved into GW2.
+- Updated real-data Market Intelligence testing so valid current market classifications are accepted rather than assuming a specific early-season classification.
+- Updated real-data Player Form recency testing so multiple completed appearances correctly exercise recency weighting.
+- Updated Team Intelligence Profile regression checks so live strength values are validated as numeric rather than being hard-coded to historic `100.0` values.
+- Changed completed-gameweek snapshot price capture to prefer authoritative historical `player_fixture_history.price` rather than the current live `players.price`.
+- Retained live player price only as a defensive fallback when trustworthy historical price evidence is unavailable.
+- Integrated snapshot capture directly into the successful full player fixture-history update workflow so historical capture no longer depends on a separate manual step.
+
+### Fixed
+
+- Fixed completed-gameweek snapshot prices being populated from later live player prices when snapshot capture occurred after FPL price movement.
+- Prevented completed historical snapshots from recording a newer live price for an earlier gameweek.
+- Repaired the affected GW2 snapshot prices from authoritative persisted player fixture-history evidence.
+- Confirmed 92 previously incorrect GW2 snapshot prices were repaired.
+- Confirmed zero historical-price mismatches remained after the repair.
+- Preserved immutable snapshot behaviour after the historical-price correction.
+- Prevented partial fixture-history imports from being followed by automatic snapshot capture.
+- Prevented failed full fixture-history imports from creating new completed-gameweek snapshots.
+- Prevented ordinary diagnostic/batch history imports from creating immutable snapshots.
+- Prevented Blank Gameweeks from being represented as fabricated single-fixture projections.
+- Prevented Double Gameweeks from being collapsed into one manufactured aggregate opponent.
+- Prevented fixture-clash analysis from missing valid clashes inside Double Gameweeks.
+- Prevented multiple fixtures between the same player pair from creating duplicate clash rows.
+- Prevented schedule classification from being inferred inside Squad Horizon when authoritative upstream schedule information is unavailable.
+- Preserved null/unknown legacy schedule state instead of manufacturing Blank classifications.
+- Fixed temporary live-data regression failures caused by GW1-specific assumptions after current FPL data advanced into GW2.
+
+### Architecture
+
+- Blank and Double Gameweek Intelligence extends the existing fixture and Expected Points architecture rather than introducing a separate scoring system.
+- `GameweekScheduleIntelligence` provides explicit schedule truth for team/gameweek fixture counts.
+- `MultiGameweekExpectedPoints` remains authoritative for fixture-level player projections and gameweek-level projected-points totals.
+- `SquadHorizonIntelligenceService` adapts those projections without inventing opponents or alternate scores.
+- `SquadHorizonIntelligence` consumes the resulting schedule-aware player projections for Starting XI, captaincy, clashes, structural analysis and transfer evaluation.
+- Starting XI selection remains driven by aggregated projected points and legal FPL formations.
+- Captaincy remains driven by projected points from the selected Starting XI.
+- Transfer evaluation remains driven by before/after Starting XI projected points.
+- No artificial Double Gameweek bonus was introduced.
+- No artificial Blank Gameweek penalty was introduced beyond the absence of projected fixture points.
+- No special rule forces a Double Gameweek player into the Starting XI or captaincy.
+- No special rule prohibits a Blank Gameweek player from selection if the wider optimiser evidence would justify the decision.
+- Fixture-level relationships are authoritative for clash detection where available.
+- Aggregate opponent relationships remain a backwards-compatible fallback for legacy projection rows.
+- Completed-gameweek snapshot capture now follows the historical-data dependency chain:
+
+  `Live FPL Update → Fixture Update → Full Player Fixture History Import → Snapshot Capture`
+
+- Automatic snapshot capture is gated by successful completion of the full historical import.
+- Historical fixture history is the authoritative source for completed-gameweek market price and selected-manager evidence.
+- Completed snapshots remain immutable once inserted.
+
+### Blank & Double Gameweek Validation
+
+- Confirmed zero fixtures classify as `Blank`.
+- Confirmed one fixture classifies as `Normal`.
+- Confirmed two or more fixtures classify as `Double`.
+- Confirmed complete fixture rows are preserved for Double Gameweeks.
+- Confirmed multi-gameweek Expected Points preserves multiple fixtures within one gameweek and sums their projections.
+- Confirmed Blank Gameweeks produce zero projected points and an empty fixture list rather than a manufactured fixture.
+- Confirmed Squad Horizon preserves Normal, Blank and Double schedule metadata.
+- Confirmed legal Starting XI optimisation behaves correctly through Blank and Double Gameweeks without special-case scoring.
+- Confirmed captaincy naturally responds to Blank and Double Gameweek projected value.
+- Confirmed captain selection is always restricted to the selected Starting XI.
+- Confirmed equal captain projections use deterministic lower-player-ID tie-breaking.
+- Confirmed Double Gameweek fixture clashes are detected from individual fixture identities.
+- Confirmed each opposing player pair produces at most one clash record per gameweek.
+- Confirmed transfer evaluation can classify Blank/Double schedule changes as Improvement, Neutral or Regression according to actual Starting XI projected-point impact.
+- Confirmed Double Gameweek status alone does not force a transfer to be classified as an improvement.
+- Confirmed mixed Normal/Blank/Double schedules preserve all existing Squad Horizon intelligence sections.
+
+### Historical Snapshot Validation
+
+- Confirmed completed-gameweek fixture history is used as the authoritative historical price source during new snapshot capture.
+- Confirmed snapshot capture remains idempotent when completed-gameweek snapshots already exist.
+- Confirmed the existing capture service recognises existing snapshots without creating duplicates.
+- Confirmed repaired GW2 snapshots match trustworthy historical price evidence for all 626 comparable players.
+- Confirmed repaired GW2 snapshots match trustworthy historical selected-manager evidence for all 626 comparable players.
+- Confirmed zero unsupported historical selected-manager values were manufactured.
+- Confirmed 92 legitimate differences now exist between immutable GW2 historical prices and current live player prices.
+- Confirmed live-state price parity is not required for completed immutable snapshots.
+- Confirmed a one-player batch fixture-history update skips snapshot capture.
+- Confirmed automatic snapshot capture is allowed only when a full import processes every selected player with zero failures.
+
+### Testing
+
+- Added `GameweekScheduleIntelligenceTest.php`.
+- Added `GameweekScheduleIntelligenceEdgeCasesTest.php`.
+- Added `GameweekScheduleIntelligenceRealDataTest.php`.
+- Added `MultiGameweekExpectedPointsScheduleSemanticsTest.php`.
+- Added `SquadHorizonScheduleSemanticsTest.php`.
+- Added `SquadHorizonSchedulePropagationTest.php`.
+- Added `SquadHorizonDoubleGameweekFixtureClashTest.php`.
+- Added `SquadHorizonDoubleGameweekFixtureClashEdgeCasesTest.php`.
+- Added `SquadHorizonBlankDoubleStartingXITest.php`.
+- Added `SquadHorizonBlankDoubleCaptaincyTest.php`.
+- Added `SquadHorizonCaptaincyEdgeCasesTest.php`.
+- Added `SquadHorizonBlankDoubleTransferEvaluationTest.php`.
+- Added `SquadHorizonTransferEvaluationEdgeCasesTest.php`.
+- Added `SquadHorizonMixedScheduleRegressionTest.php`.
+- Added `PlayerGameweekSnapshotCaptureGateTest.php`.
+- Added `PlayerFixtureHistorySnapshotCaptureIntegrationTest.php`.
+- Extended existing Multi-Gameweek Expected Points regression coverage for explicit Blank Gameweek semantics.
+- Extended existing snapshot-capture regression coverage for historical-price correctness and immutable reruns.
+- Extended existing live-data tests to remain valid as the real FPL season advances.
+- Confirmed the focused v0.33 Blank/Double Gameweek suite passes all 521 unique assertions.
+- Confirmed `PlayerGameweekSnapshotCaptureGateTest.php` passes all 11 assertions.
+- Confirmed `PlayerFixtureHistorySnapshotCaptureIntegrationTest.php` passes all 28 assertions.
+- Confirmed the snapshot capture, capture runner and historical snapshot integration regression tests remain green.
+- Re-ran the complete project regression suite after all v0.33 production, snapshot-integrity and workflow changes.
+- Confirmed all 171 of 171 test files pass.
+- Confirmed all 5,234 assertions pass.
+- Confirmed zero test failures.
+- Confirmed zero test execution errors.
+- Complete regression suite runtime: 169.715 seconds.
+
+### Completion Notes
+
+- v0.33.0 completes the Blank & Double Gameweek Intelligence milestone.
+- The application now represents unusual FPL schedules explicitly from fixture structure through player projection and squad planning.
+- Blank Gameweeks no longer disappear or produce manufactured fixture projections.
+- Double Gameweeks retain their individual fixture evidence while exposing aggregated player projected points for decision-making.
+- Starting XI optimisation, captaincy, fixture clashes and transfer evaluation all operate through the same schedule-aware Expected Points architecture.
+- No parallel BGW/DGW scoring model was introduced.
+- Historical snapshot capture now uses trustworthy completed-gameweek market evidence and is automatically triggered by the correct full-history update workflow.
+- The GW2 historical snapshot-price issue discovered during v0.33 regression testing has been corrected and permanently guarded against.
+- The milestone leaves the existing Expected Points and Squad Horizon architecture ready for later Chip Intelligence development.
+
+
+
 ## [0.32.0] - Squad Horizon & Rotation Intelligence
 
 ### Added

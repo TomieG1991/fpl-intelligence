@@ -488,38 +488,110 @@ playerFormRecencyCheck(
 
 
 /*
- * With only one genuine stored fixture for Raya at this
- * current point in the season, recency weighting must remain
- * neutral for both fixture and appearance history.
+ * Real database history changes as the season advances.
+ *
+ * The live-player regression should therefore verify that
+ * fixture and appearance weights remain valid recency-weight
+ * sequences rather than assuming exactly one stored match.
  */
 
+$realFixtureWeights =
+    $realModel[
+        'recency_weights'
+    ]['fixture']
+    ?? [];
+
+
+$realAppearanceWeights =
+    $realModel[
+        'recency_weights'
+    ]['appearance']
+    ?? [];
+
+
 playerFormRecencyCheck(
-    'Single real fixture uses neutral fixture weight',
-    (
-        $realModel[
-            'recency_weights'
-        ]['fixture']
-        ?? []
+    'Real fixture history exposes valid recency weights',
+    !empty(
+        $realFixtureWeights
     )
-    ===
-    [
+    &&
+    abs(
+        (
+            (float) (
+                $realFixtureWeights[
+                    0
+                ]
+                ?? 0
+            )
+        )
+        -
         1.0
-    ]
+    )
+    <
+    0.0001
+    &&
+    (
+        count(
+            $realFixtureWeights
+        )
+        ===
+        1
+        ||
+        abs(
+            (
+                (float) end(
+                    $realFixtureWeights
+                )
+            )
+            -
+            1.4
+        )
+        <
+        0.0001
+    )
 );
 
 
 playerFormRecencyCheck(
-    'Single real appearance uses neutral appearance weight',
-    (
-        $realModel[
-            'recency_weights'
-        ]['appearance']
-        ?? []
+    'Real appearance history exposes valid recency weights',
+    !empty(
+        $realAppearanceWeights
     )
-    ===
-    [
+    &&
+    abs(
+        (
+            (float) (
+                $realAppearanceWeights[
+                    0
+                ]
+                ?? 0
+            )
+        )
+        -
         1.0
-    ]
+    )
+    <
+    0.0001
+    &&
+    (
+        count(
+            $realAppearanceWeights
+        )
+        ===
+        1
+        ||
+        abs(
+            (
+                (float) end(
+                    $realAppearanceWeights
+                )
+            )
+            -
+            1.4
+        )
+        <
+        0.0001
+    )
 );
 
 
@@ -622,42 +694,59 @@ if (
 
 
     /*
-     * With a single stored real fixture, raw and weighted
-     * metrics should remain equal because the weight is 1.0.
+     * With one stored appearance, raw and weighted values should
+     * remain equal because the only weight is 1.0.
+     *
+     * With multiple appearances, weighted values are allowed to
+     * differ because newer evidence receives more weight.
      */
 
+    $realAppearanceCount =
+        count(
+            $realAppearanceWeights
+        );
+
+
     playerFormRecencyCheck(
-        'Single-fixture raw and weighted points remain equal',
+        'Real weighted points remain valid for current appearance history',
+        $realAppearanceCount > 1
+        ||
         (
-            $rawMetrics[
-                'points_per_appearance'
-            ]
-            ?? null
-        )
-        ===
-        (
-            $weightedMetrics[
-                'points_per_appearance'
-            ]
-            ?? null
+            (
+                $rawMetrics[
+                    'points_per_appearance'
+                ]
+                ?? null
+            )
+            ===
+            (
+                $weightedMetrics[
+                    'points_per_appearance'
+                ]
+                ?? null
+            )
         )
     );
 
 
     playerFormRecencyCheck(
-        'Single-fixture raw and weighted BPS remain equal',
+        'Real weighted BPS remains valid for current appearance history',
+        $realAppearanceCount > 1
+        ||
         (
-            $rawMetrics[
-                'bps_per_90'
-            ]
-            ?? null
-        )
-        ===
-        (
-            $weightedMetrics[
-                'bps_per_90'
-            ]
-            ?? null
+            (
+                $rawMetrics[
+                    'bps_per_90'
+                ]
+                ?? null
+            )
+            ===
+            (
+                $weightedMetrics[
+                    'bps_per_90'
+                ]
+                ?? null
+            )
         )
     );
 }

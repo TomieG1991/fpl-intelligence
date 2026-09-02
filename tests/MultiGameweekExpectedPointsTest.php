@@ -471,14 +471,74 @@ $result =
 
 
 multiGwCheck(
-    'Blank GW3 does not fabricate a gameweek projection',
-    !isset(
+    'Blank GW3 is preserved as an explicit blank gameweek',
+    isset(
         $result[
             'gameweeks'
         ][
             3
         ]
     )
+    &&
+    (
+        (int) (
+            $result[
+                'gameweeks'
+            ][
+                3
+            ][
+                'fixture_count'
+            ]
+            ?? -1
+        )
+    )
+    ===
+    0
+    &&
+    (
+        $result[
+            'gameweeks'
+        ][
+            3
+        ][
+            'schedule_type'
+        ]
+        ?? null
+    )
+    ===
+    'Blank'
+    &&
+    (
+        $result[
+            'gameweeks'
+        ][
+            3
+        ][
+            'fixtures'
+        ]
+        ?? null
+    )
+    ===
+    []
+    &&
+    abs(
+        (
+            (float) (
+                $result[
+                    'gameweeks'
+                ][
+                    3
+                ][
+                    'projected_points'
+                ]
+                ?? -1.0
+            )
+        )
+        -
+        0.0
+    )
+    <
+    0.001
 );
 
 

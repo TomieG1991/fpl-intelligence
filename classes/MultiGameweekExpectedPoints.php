@@ -555,9 +555,120 @@ class MultiGameweekExpectedPoints
         }
 
 
+                /*
+         * --------------------------------------------------------
+         * EXPLICIT GAMEWEEK SCHEDULE
+         * --------------------------------------------------------
+         *
+         * v0.33.0
+         *
+         * Previously, a Blank Gameweek existed only implicitly as
+         * a missing key between two represented gameweeks.
+         *
+         * For planning intelligence we now preserve every gameweek
+         * between the first and last represented projection.
+         *
+         * A missing gameweek therefore becomes an explicit Blank:
+         *
+         * fixture_count     = 0
+         * schedule_type     = Blank
+         * projected_points  = 0.0
+         * fixtures          = []
+         *
+         * Existing fixture projections remain untouched.
+         */
+
+        if (
+            !empty(
+                $gameweekProjections
+            )
+        ) {
+
+            $representedGameweeks =
+                array_map(
+                    'intval',
+                    array_keys(
+                        $gameweekProjections
+                    )
+                );
+
+
+            sort(
+                $representedGameweeks,
+                SORT_NUMERIC
+            );
+
+
+            $firstRepresentedGameweek =
+                $representedGameweeks[
+                    0
+                ]
+                ?? null;
+
+
+            $lastRepresentedGameweek =
+                !empty(
+                    $representedGameweeks
+                )
+                    ? end(
+                        $representedGameweeks
+                    )
+                    : null;
+
+
+            if (
+                $firstRepresentedGameweek !== null
+                &&
+                $lastRepresentedGameweek !== null
+            ) {
+
+                for (
+                    $gameweek =
+                        $firstRepresentedGameweek;
+                    $gameweek <=
+                        $lastRepresentedGameweek;
+                    $gameweek++
+                ) {
+
+                    if (
+                        isset(
+                            $gameweekProjections[
+                                $gameweek
+                            ]
+                        )
+                    ) {
+
+                        continue;
+                    }
+
+
+                    $gameweekProjections[
+                        $gameweek
+                    ] = [
+
+                        'gameweek' =>
+                            $gameweek,
+
+                        'fixture_count' =>
+                            0,
+
+                        'schedule_type' =>
+                            'Blank',
+
+                        'projected_points' =>
+                            0.0,
+
+                        'fixtures' =>
+                            []
+                    ];
+                }
+            }
+        }
+
+
         /*
          * --------------------------------------------------------
-         * NORMALISE GAMEWEEK TOTALS
+         * NORMALISE GAMEWEEK TOTALS AND SCHEDULE TYPE
          * --------------------------------------------------------
          */
 
@@ -572,15 +683,56 @@ class MultiGameweekExpectedPoints
             as $gameweek => $summary
         ) {
 
+            $fixtureCount =
+                (int) (
+                    $summary[
+                        'fixture_count'
+                    ]
+                    ?? 0
+                );
+
+
+            if (
+                $fixtureCount === 0
+            ) {
+
+                $scheduleType =
+                    'Blank';
+
+            } elseif (
+                $fixtureCount === 1
+            ) {
+
+                $scheduleType =
+                    'Normal';
+
+            } else {
+
+                $scheduleType =
+                    'Double';
+            }
+
+
+            $gameweekProjections[
+                $gameweek
+            ][
+                'schedule_type'
+            ] =
+                $scheduleType;
+
+
             $gameweekProjections[
                 $gameweek
             ][
                 'projected_points'
             ] =
                 round(
-                    (float) $summary[
-                        'projected_points'
-                    ],
+                    (float) (
+                        $summary[
+                            'projected_points'
+                        ]
+                        ?? 0.0
+                    ),
                     2
                 );
         }

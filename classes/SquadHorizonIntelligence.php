@@ -297,6 +297,38 @@ class SquadHorizonIntelligence
                     null;
 
 
+                /*
+                 * ------------------------------------------------
+                 * GAMEWEEK SCHEDULE SEMANTICS
+                 * ------------------------------------------------
+                 *
+                 * v0.33.0
+                 *
+                 * SquadHorizonIntelligence does not determine
+                 * whether a player has a Blank, Normal or Double
+                 * Gameweek.
+                 *
+                 * That schedule truth has already been established
+                 * upstream and is preserved here for downstream
+                 * squad-level intelligence.
+                 *
+                 * Individual fixture rows are also preserved so a
+                 * Double Gameweek can retain both opponents rather
+                 * than manufacturing one aggregate opponent.
+                 */
+
+                $fixtureCount =
+                    null;
+
+
+                $scheduleType =
+                    null;
+
+
+                $fixtures =
+                    [];
+
+
                 if (
                     is_array(
                         $projection
@@ -343,6 +375,69 @@ class SquadHorizonIntelligence
                                 'opponent_team_id'
                             ];
                     }
+
+
+                    if (
+                        isset(
+                            $projection[
+                                'fixture_count'
+                            ]
+                        )
+                        &&
+                        is_numeric(
+                            $projection[
+                                'fixture_count'
+                            ]
+                        )
+                    ) {
+
+                        $fixtureCount =
+                            (int) $projection[
+                                'fixture_count'
+                            ];
+                    }
+
+
+                    if (
+                        isset(
+                            $projection[
+                                'schedule_type'
+                            ]
+                        )
+                        &&
+                        is_string(
+                            $projection[
+                                'schedule_type'
+                            ]
+                        )
+                    ) {
+
+                        $scheduleType =
+                            $projection[
+                                'schedule_type'
+                            ];
+                    }
+
+
+                    if (
+                        isset(
+                            $projection[
+                                'fixtures'
+                            ]
+                        )
+                        &&
+                        is_array(
+                            $projection[
+                                'fixtures'
+                            ]
+                        )
+                    ) {
+
+                        $fixtures =
+                            $projection[
+                                'fixtures'
+                            ];
+                    }
                 }
 
 
@@ -378,12 +473,22 @@ class SquadHorizonIntelligence
                         $teamId,
 
                     'opponent_team_id' =>
-                        $opponentTeamId
+                        $opponentTeamId,
+
+                    'fixture_count' =>
+                        $fixtureCount,
+
+                    'schedule_type' =>
+                        $scheduleType,
+
+                    'fixtures' =>
+                        $fixtures
                 ];
+                
             }
 
 
-                        /*
+            /*
              * ----------------------------------------------------
              * SELECT BEST LEGAL STARTING XI
              * ----------------------------------------------------
@@ -392,6 +497,14 @@ class SquadHorizonIntelligence
             $selection =
                 $this->selectStartingXI(
                     $players
+                );
+
+
+            $captain =
+                $this->selectCaptain(
+                    $selection[
+                        'starting_xi'
+                    ]
                 );
 
 
@@ -425,6 +538,9 @@ class SquadHorizonIntelligence
                     $selection[
                         'starting_xi'
                     ],
+                    
+                'captain' =>
+                    $captain,
 
                 'bench' =>
                     $selection[
@@ -572,7 +688,450 @@ class SquadHorizonIntelligence
             'structural_weakness' =>
                 $structuralWeakness
         ];
-    }    
+    }
+
+
+    /*
+     * ========================================================
+     * EVALUATE TRANSFER OVER HORIZON
+     * ========================================================
+     *
+     * Compare the current squad horizon with the same squad
+     * after one player is replaced.
+     *
+     * Blank and Double Gameweeks require no special scoring
+     * rules here. Their effect is already represented by the
+     * projected points and Starting XI produced by
+     * buildHorizon().
+     */
+    public function evaluateTransfer(
+        array $squad,
+        int $outgoingPlayerId,
+        array $replacement,
+        int $horizon
+    ): array {
+
+        /*
+         * ----------------------------------------------------
+         * VALIDATE BASIC INPUT
+         * ----------------------------------------------------
+         */
+
+        if (
+            empty($squad)
+            ||
+            $outgoingPlayerId <= 0
+            ||
+            $horizon <= 0
+        ) {
+
+            return [
+                'status' =>
+                    'Unavailable',
+
+                'reason' =>
+                    'Invalid transfer evaluation input.'
+            ];
+        }
+
+
+        $incomingPlayerId =
+            (int) (
+                $replacement[
+                    'player_id'
+                ]
+                ?? 0
+            );
+
+
+        if ($incomingPlayerId <= 0) {
+
+            return [
+                'status' =>
+                    'Unavailable',
+
+                'reason' =>
+                    'Replacement player is invalid.'
+            ];
+        }
+
+
+        /*
+         * ----------------------------------------------------
+         * BUILD POST-TRANSFER SQUAD
+         * ----------------------------------------------------
+         */
+
+        $afterSquad =
+            [];
+
+
+        $outgoingPlayer =
+            null;
+
+
+        foreach (
+            $squad
+            as $player
+        ) {
+
+            $playerId =
+                (int) (
+                    $player[
+                        'player_id'
+                    ]
+                    ?? 0
+                );
+
+
+            if (
+                $playerId
+                ===
+                $outgoingPlayerId
+            ) {
+
+                $outgoingPlayer =
+                    $player;
+
+
+                $afterSquad[] =
+                    $replacement;
+
+
+                continue;
+            }
+
+
+            $afterSquad[] =
+                $player;
+        }
+
+
+        if ($outgoingPlayer === null) {
+
+            return [
+                'status' =>
+                    'Unavailable',
+
+                'reason' =>
+                    'Outgoing player was not found in the squad.'
+            ];
+        }
+
+
+        /*
+         * ----------------------------------------------------
+         * BUILD BEFORE / AFTER HORIZONS
+         * ----------------------------------------------------
+         */
+
+        $before =
+            $this->buildHorizon(
+                $squad,
+                $horizon
+            );
+
+
+        $after =
+            $this->buildHorizon(
+                $afterSquad,
+                $horizon
+            );
+
+
+        $beforeGameweeks =
+            $before[
+                'gameweeks'
+            ]
+            ?? [];
+
+
+        $afterGameweeks =
+            $after[
+                'gameweeks'
+            ]
+            ?? [];
+
+
+        if (
+            empty($beforeGameweeks)
+            ||
+            empty($afterGameweeks)
+        ) {
+
+            return [
+                'status' =>
+                    'Unavailable',
+
+                'reason' =>
+                    'Squad horizon could not be built.'
+            ];
+        }
+
+
+        /*
+         * ----------------------------------------------------
+         * COMPARE GAMEWEEKS
+         * ----------------------------------------------------
+         */
+
+        $gameweeks =
+            [];
+
+
+        $beforeTotal =
+            0.0;
+
+
+        $afterTotal =
+            0.0;
+
+
+        foreach (
+            $beforeGameweeks
+            as $gameweekNumber => $beforeGameweek
+        ) {
+
+            if (
+                !isset(
+                    $afterGameweeks[
+                        $gameweekNumber
+                    ]
+                )
+            ) {
+
+                continue;
+            }
+
+
+            $afterGameweek =
+                $afterGameweeks[
+                    $gameweekNumber
+                ];
+
+
+            $beforePoints =
+                is_numeric(
+                    $beforeGameweek[
+                        'starting_xi_projected_points'
+                    ]
+                    ?? null
+                )
+                    ? (float) $beforeGameweek[
+                        'starting_xi_projected_points'
+                    ]
+                    : 0.0;
+
+
+            $afterPoints =
+                is_numeric(
+                    $afterGameweek[
+                        'starting_xi_projected_points'
+                    ]
+                    ?? null
+                )
+                    ? (float) $afterGameweek[
+                        'starting_xi_projected_points'
+                    ]
+                    : 0.0;
+
+
+            $beforeTotal +=
+                $beforePoints;
+
+
+            $afterTotal +=
+                $afterPoints;
+
+
+            /*
+             * Locate the outgoing player's schedule in the
+             * original horizon.
+             */
+            $outgoingScheduleType =
+                null;
+
+
+            foreach (
+                $beforeGameweek[
+                    'players'
+                ]
+                ?? []
+                as $player
+            ) {
+
+                if (
+                    (
+                        (int) (
+                            $player[
+                                'player_id'
+                            ]
+                            ?? 0
+                        )
+                    )
+                    ===
+                    $outgoingPlayerId
+                ) {
+
+                    $outgoingScheduleType =
+                        $player[
+                            'schedule_type'
+                        ]
+                        ?? null;
+
+
+                    break;
+                }
+            }
+
+
+            /*
+             * Locate the incoming player's schedule in the
+             * post-transfer horizon.
+             */
+            $incomingScheduleType =
+                null;
+
+
+            foreach (
+                $afterGameweek[
+                    'players'
+                ]
+                ?? []
+                as $player
+            ) {
+
+                if (
+                    (
+                        (int) (
+                            $player[
+                                'player_id'
+                            ]
+                            ?? 0
+                        )
+                    )
+                    ===
+                    $incomingPlayerId
+                ) {
+
+                    $incomingScheduleType =
+                        $player[
+                            'schedule_type'
+                        ]
+                        ?? null;
+
+
+                    break;
+                }
+            }
+
+
+            $gameweeks[
+                (int) $gameweekNumber
+            ] = [
+
+                'gameweek' =>
+                    (int) $gameweekNumber,
+
+                'before_starting_xi_projected_points' =>
+                    round(
+                        $beforePoints,
+                        2
+                    ),
+
+                'after_starting_xi_projected_points' =>
+                    round(
+                        $afterPoints,
+                        2
+                    ),
+
+                'starting_xi_xp_gain' =>
+                    round(
+                        $afterPoints
+                        -
+                        $beforePoints,
+                        2
+                    ),
+
+                'outgoing_schedule_type' =>
+                    $outgoingScheduleType,
+
+                'incoming_schedule_type' =>
+                    $incomingScheduleType
+            ];
+        }
+
+
+        /*
+         * ----------------------------------------------------
+         * HORIZON RESULT
+         * ----------------------------------------------------
+         */
+
+        $startingXiXpGain =
+            round(
+                $afterTotal
+                -
+                $beforeTotal,
+                2
+            );
+
+
+        if ($startingXiXpGain > 0) {
+
+            $evaluation =
+                'Improvement';
+
+        } elseif ($startingXiXpGain < 0) {
+
+            $evaluation =
+                'Regression';
+
+        } else {
+
+            $evaluation =
+                'Neutral';
+        }
+
+
+        return [
+
+            'status' =>
+                'Available',
+
+            'outgoing_player_id' =>
+                $outgoingPlayerId,
+
+            'incoming_player_id' =>
+                $incomingPlayerId,
+
+            'gameweek_count' =>
+                count(
+                    $gameweeks
+                ),
+
+            'gameweeks' =>
+                $gameweeks,
+
+            'before_starting_xi_projected_points' =>
+                round(
+                    $beforeTotal,
+                    2
+                ),
+
+            'after_starting_xi_projected_points' =>
+                round(
+                    $afterTotal,
+                    2
+                ),
+
+            'starting_xi_xp_gain' =>
+                $startingXiXpGain,
+
+            'evaluation' =>
+                $evaluation
+        ];
+    }
 
 
     /**
@@ -2349,6 +2908,127 @@ class SquadHorizonIntelligence
         ];
     }
     
+    
+    /**
+     * Select the captain from the already-optimised Starting XI.
+     *
+     * Captaincy is driven by projected points rather than fixture
+     * schedule type.
+     *
+     * This means Blank and Double Gameweeks require no special
+     * captaincy rules:
+     *
+     * - a blank naturally contributes 0.0 projected points
+     * - a double contributes its aggregated fixture projection
+     *
+     * The lowest player ID provides a deterministic tie-break.
+     */
+    private function selectCaptain(
+        array $startingXI
+    ): ?array {
+
+        if (
+            empty(
+                $startingXI
+            )
+        ) {
+
+            return
+                null;
+        }
+
+
+        $captainCandidates =
+            array_values(
+                $startingXI
+            );
+
+
+        usort(
+            $captainCandidates,
+            static function (
+                array $firstPlayer,
+                array $secondPlayer
+            ): int {
+
+                $firstProjectedPoints =
+                    is_numeric(
+                        $firstPlayer[
+                            'projected_points'
+                        ]
+                        ?? null
+                    )
+                        ? (float) $firstPlayer[
+                            'projected_points'
+                        ]
+                        : 0.0;
+
+
+                $secondProjectedPoints =
+                    is_numeric(
+                        $secondPlayer[
+                            'projected_points'
+                        ]
+                        ?? null
+                    )
+                        ? (float) $secondPlayer[
+                            'projected_points'
+                        ]
+                        : 0.0;
+
+
+                /*
+                 * Highest projected points first.
+                 */
+                if (
+                    $firstProjectedPoints
+                    !==
+                    $secondProjectedPoints
+                ) {
+
+                    return
+                        $secondProjectedPoints
+                        <=>
+                        $firstProjectedPoints;
+                }
+
+
+                /*
+                 * Deterministic tie-break:
+                 *
+                 * lowest player ID first.
+                 */
+                $firstPlayerId =
+                    (int) (
+                        $firstPlayer[
+                            'player_id'
+                        ]
+                        ?? 0
+                    );
+
+
+                $secondPlayerId =
+                    (int) (
+                        $secondPlayer[
+                            'player_id'
+                        ]
+                        ?? 0
+                    );
+
+
+                return
+                    $firstPlayerId
+                    <=>
+                    $secondPlayerId;
+            }
+        );
+
+
+        return
+            $captainCandidates[0]
+            ?? null;
+    }
+    
     /**
      * Build Starting XI fixture-clash intelligence across
      * the complete squad-planning horizon.
@@ -2383,6 +3063,140 @@ class SquadHorizonIntelligence
             0;
 
 
+        /*
+         * --------------------------------------------------------
+         * FIXTURE RELATIONSHIP DISCOVERY
+         * --------------------------------------------------------
+         *
+         * v0.33.0
+         *
+         * When fixture-level metadata exists, a real clash requires:
+         *
+         * - the same fixture identity
+         * - Player A's opponent = Player B's team
+         * - Player B's opponent = Player A's team
+         *
+         * This prevents reciprocal opponent IDs from manufacturing a
+         * fixture when the underlying fixture identities disagree.
+         *
+         * Older v0.32 rows may not contain fixture arrays. Those rows
+         * continue to use the original aggregate-opponent contract.
+         */
+
+        $getFixtureRelationships =
+            static function (
+                array $player
+            ): array {
+
+                $relationships =
+                    [];
+
+
+                $fixtures =
+                    $player[
+                        'fixtures'
+                    ]
+                    ?? [];
+
+
+                if (
+                    !is_array(
+                        $fixtures
+                    )
+                ) {
+
+                    return
+                        [];
+                }
+
+
+                foreach (
+                    $fixtures
+                    as $fixture
+                ) {
+
+                    if (
+                        !is_array(
+                            $fixture
+                        )
+                    ) {
+
+                        continue;
+                    }
+
+
+                    $opponentTeamId =
+                        $fixture[
+                            'opponent_team_id'
+                        ]
+                        ?? null;
+
+
+                    if (
+                        !is_numeric(
+                            $opponentTeamId
+                        )
+                    ) {
+
+                        continue;
+                    }
+
+
+                    /*
+                     * Prefer the internal fixture ID used throughout
+                     * the application.
+                     *
+                     * fpl_fixture_id is retained as a fallback for
+                     * any fixture row that does not expose fixture_id.
+                     */
+
+                    $fixtureIdentity =
+                        $fixture[
+                            'fixture_id'
+                        ]
+                        ?? null;
+
+
+                    if (
+                        !is_numeric(
+                            $fixtureIdentity
+                        )
+                    ) {
+
+                        $fixtureIdentity =
+                            $fixture[
+                                'fpl_fixture_id'
+                            ]
+                            ?? null;
+                    }
+
+
+                    if (
+                        !is_numeric(
+                            $fixtureIdentity
+                        )
+                    ) {
+
+                        continue;
+                    }
+
+
+                    $relationships[] = [
+
+                        'fixture_id' =>
+                            (int) $fixtureIdentity,
+
+                        'opponent_team_id' =>
+                            (int) $opponentTeamId
+                    ];
+                }
+
+
+                return
+                    $relationships;
+            };
+
+
         foreach (
             $gameweeks
             as $gameweekNumber => $gameweek
@@ -2406,7 +3220,10 @@ class SquadHorizonIntelligence
 
 
             /*
-             * Compare each Starting XI pair exactly once.
+             * Compare each Starting XI player pair exactly once.
+             *
+             * clash_count therefore remains a count of clashing
+             * PLAYER PAIRS rather than underlying football fixtures.
              */
 
             for (
@@ -2428,20 +3245,9 @@ class SquadHorizonIntelligence
                     ?? null;
 
 
-                $firstOpponentTeamId =
-                    $firstPlayer[
-                        'opponent_team_id'
-                    ]
-                    ?? null;
-
-
                 if (
                     !is_numeric(
                         $firstTeamId
-                    )
-                    ||
-                    !is_numeric(
-                        $firstOpponentTeamId
                     )
                 ) {
 
@@ -2453,8 +3259,10 @@ class SquadHorizonIntelligence
                     (int) $firstTeamId;
 
 
-                $firstOpponentTeamId =
-                    (int) $firstOpponentTeamId;
+                $firstFixtureRelationships =
+                    $getFixtureRelationships(
+                        $firstPlayer
+                    );
 
 
                 for (
@@ -2480,20 +3288,9 @@ class SquadHorizonIntelligence
                         ?? null;
 
 
-                    $secondOpponentTeamId =
-                        $secondPlayer[
-                            'opponent_team_id'
-                        ]
-                        ?? null;
-
-
                     if (
                         !is_numeric(
                             $secondTeamId
-                        )
-                        ||
-                        !is_numeric(
-                            $secondOpponentTeamId
                         )
                     ) {
 
@@ -2505,23 +3302,155 @@ class SquadHorizonIntelligence
                         (int) $secondTeamId;
 
 
-                    $secondOpponentTeamId =
-                        (int) $secondOpponentTeamId;
+                    $secondFixtureRelationships =
+                        $getFixtureRelationships(
+                            $secondPlayer
+                        );
+
+
+                    $isClash =
+                        false;
 
 
                     /*
-                     * Both directions must agree before this is
-                     * treated as a genuine opposing fixture.
+                     * ------------------------------------------------
+                     * FIXTURE-AWARE CONTRACT
+                     * ------------------------------------------------
+                     *
+                     * When both players expose usable fixture rows,
+                     * those rows are authoritative.
+                     *
+                     * A matching fixture identity must exist on both
+                     * sides and the team/opponent relationship must be
+                     * reciprocal.
                      */
 
                     if (
-                        $firstTeamId
-                        !==
-                        $secondOpponentTeamId
-                        ||
-                        $firstOpponentTeamId
-                        !==
-                        $secondTeamId
+                        !empty(
+                            $firstFixtureRelationships
+                        )
+                        &&
+                        !empty(
+                            $secondFixtureRelationships
+                        )
+                    ) {
+
+                        foreach (
+                            $firstFixtureRelationships
+                            as $firstFixture
+                        ) {
+
+                            foreach (
+                                $secondFixtureRelationships
+                                as $secondFixture
+                            ) {
+
+                                if (
+                                    $firstFixture[
+                                        'fixture_id'
+                                    ]
+                                    !==
+                                    $secondFixture[
+                                        'fixture_id'
+                                    ]
+                                ) {
+
+                                    continue;
+                                }
+
+
+                                if (
+                                    $firstFixture[
+                                        'opponent_team_id'
+                                    ]
+                                    !==
+                                    $secondTeamId
+                                    ||
+                                    $secondFixture[
+                                        'opponent_team_id'
+                                    ]
+                                    !==
+                                    $firstTeamId
+                                ) {
+
+                                    continue;
+                                }
+
+
+                                $isClash =
+                                    true;
+
+
+                                break
+                                    2;
+                            }
+                        }
+
+                    } else {
+
+                        /*
+                         * --------------------------------------------
+                         * LEGACY v0.32 FALLBACK
+                         * --------------------------------------------
+                         *
+                         * Older synthetic/model callers may expose
+                         * only aggregate opponent_team_id metadata.
+                         *
+                         * Preserve that established behaviour whenever
+                         * fixture-level relationships are unavailable.
+                         */
+
+                        $firstOpponentTeamId =
+                            $firstPlayer[
+                                'opponent_team_id'
+                            ]
+                            ?? null;
+
+
+                        $secondOpponentTeamId =
+                            $secondPlayer[
+                                'opponent_team_id'
+                            ]
+                            ?? null;
+
+
+                        if (
+                            is_numeric(
+                                $firstOpponentTeamId
+                            )
+                            &&
+                            is_numeric(
+                                $secondOpponentTeamId
+                            )
+                        ) {
+
+                            $firstOpponentTeamId =
+                                (int) $firstOpponentTeamId;
+
+
+                            $secondOpponentTeamId =
+                                (int) $secondOpponentTeamId;
+
+
+                            if (
+                                $firstTeamId
+                                ===
+                                $secondOpponentTeamId
+                                &&
+                                $firstOpponentTeamId
+                                ===
+                                $secondTeamId
+                            ) {
+
+                                $isClash =
+                                    true;
+                            }
+                        }
+                    }
+
+
+                    if (
+                        !$isClash
                     ) {
 
                         continue;
@@ -2529,6 +3458,7 @@ class SquadHorizonIntelligence
 
 
                     $playerIds = [
+
                         (int) (
                             $firstPlayer[
                                 'player_id'
@@ -2552,15 +3482,18 @@ class SquadHorizonIntelligence
 
 
                     $clashes[] = [
+
                         'player_ids' =>
                             $playerIds,
 
                         'players' => [
+
                             $firstPlayer,
                             $secondPlayer
                         ],
 
                         'team_ids' => [
+
                             $firstTeamId,
                             $secondTeamId
                         ]
@@ -2578,6 +3511,7 @@ class SquadHorizonIntelligence
             $clashGameweeks[
                 (int) $gameweekNumber
             ] = [
+
                 'gameweek' =>
                     (int) $gameweekNumber,
 
@@ -2604,7 +3538,6 @@ class SquadHorizonIntelligence
             /*
              * A tie keeps the earlier gameweek.
              */
-
             if (
                 $clashCount
                 >
@@ -2622,6 +3555,7 @@ class SquadHorizonIntelligence
 
 
         return [
+
             'gameweek_count' =>
                 count(
                     $clashGameweeks

@@ -435,17 +435,40 @@ class PlayerGameweekSnapshotCapture
                 ?? null;
 
 
-            $historicalSelected =
+            $historicalPrice =
                 is_array(
                     $historicalMarketRow
                 )
-                    ? $this->integerOrNull(
+                    ? $this->numericOrNull(
                         $historicalMarketRow[
-                            'selected'
+                            'price'
                         ]
                         ?? null
                     )
                     : null;
+
+
+            /*
+             * Completed-gameweek fixture history is the authoritative
+             * source for historical market price.
+             *
+             * Snapshot capture may run after the live players table has
+             * already moved on to newer prices, so using players.price
+             * directly can incorrectly write a later price into an
+             * immutable historical snapshot.
+             *
+             * Where historical price evidence is unavailable, retain the
+             * live player value as a defensive fallback.
+             */
+            $snapshotPrice =
+                $historicalPrice
+                ??
+                $this->numericOrNull(
+                    $player[
+                        'price'
+                    ]
+                    ?? null
+                );
 
 
             /*
@@ -475,12 +498,7 @@ class PlayerGameweekSnapshotCapture
                     ?? null,
 
                 'price' =>
-                    $this->numericOrNull(
-                        $player[
-                            'price'
-                        ]
-                        ?? null
-                    ),
+                    $snapshotPrice,
                     
                 'selected' =>
                     $historicalSelected,
