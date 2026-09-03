@@ -231,25 +231,57 @@ class WildcardTimingIntelligenceService
 
         /*
          * --------------------------------------------------------
-         * DECISION
+         * FUTURE WILDCARD VALUE
          * --------------------------------------------------------
          *
-         * Genuine future Wildcard timing has not yet been wired
-         * into this orchestration service.
+         * Waiting one gameweek means retaining the current squad
+         * for the first gameweek and receiving the projected
+         * Wildcard advantage only across the remaining horizon.
          *
-         * For this integration stage the future projected gain
-         * therefore remains zero.
+         * This uses the same already-built squad horizons.
+         *
+         * No new Expected Points calculation or future Wildcard
+         * optimisation is introduced here.
          */
 
-                $decision =
-                    $this->wildcardTimingIntelligence
-                        ->createDecision(
-                            $immediateValue[
-                                'projected_points_gain'
-                            ],
-                            0.0,
-                            $horizonProjectionConfidence
-                        );
+        $futureProjectedGain =
+            $this->calculateFutureProjectedGain(
+                $currentHorizon,
+                $wildcardHorizon
+            );
+
+
+        /*
+         * --------------------------------------------------------
+         * TIMING COMPARISON
+         * --------------------------------------------------------
+         */
+
+        $timingComparison =
+            $this->wildcardTimingIntelligence
+                ->compareTiming(
+                    $immediateValue[
+                        'projected_points_gain'
+                    ],
+                    $futureProjectedGain
+                );
+
+
+        /*
+         * --------------------------------------------------------
+         * DECISION
+         * --------------------------------------------------------
+         */
+
+        $decision =
+            $this->wildcardTimingIntelligence
+                ->createDecision(
+                    $immediateValue[
+                        'projected_points_gain'
+                    ],
+                    $futureProjectedGain,
+                    $horizonProjectionConfidence
+                );
 
 
         return [
@@ -270,6 +302,19 @@ class WildcardTimingIntelligenceService
             'projected_points_gain' =>
                 $immediateValue[
                     'projected_points_gain'
+                ],
+
+            'future_projected_gain' =>
+                $futureProjectedGain,
+
+            'timing_advantage' =>
+                $timingComparison[
+                    'timing_advantage'
+                ],
+
+            'better_timing' =>
+                $timingComparison[
+                    'better_timing'
                 ],
 
             'improves_squad' =>
@@ -513,6 +558,120 @@ class WildcardTimingIntelligenceService
 
         return
             $total;
+    }
+    
+    
+    /*
+     * ============================================================
+     * CALCULATE FUTURE WILDCARD GAIN
+     * ============================================================
+     *
+     * Future value currently means waiting exactly one
+     * gameweek before using the Wildcard.
+     *
+     * The first represented gameweek is therefore excluded
+     * from the Wildcard advantage calculation.
+     *
+     * Remaining gameweeks continue to compare the already-built
+     * current and Wildcard Squad Horizons.
+     */
+    private function calculateFutureProjectedGain(
+        array $currentHorizon,
+        array $wildcardHorizon
+    ): float {
+
+        $gameweekNumbers =
+            $this->extractGameweekNumbers(
+                $currentHorizon
+            );
+
+
+        $firstGameweek =
+            $gameweekNumbers[
+                0
+            ];
+
+
+        $currentFuturePoints =
+            0.0;
+
+
+        $wildcardFuturePoints =
+            0.0;
+
+
+        foreach (
+            $currentHorizon[
+                'gameweeks'
+            ]
+            as $gameweekKey => $gameweek
+        ) {
+
+            $gameweekNumber =
+                (int) (
+                    $gameweek[
+                        'gameweek'
+                    ]
+                    ??
+                    $gameweekKey
+                );
+
+
+            if (
+                $gameweekNumber
+                ===
+                $firstGameweek
+            ) {
+
+                continue;
+            }
+
+
+            $currentFuturePoints +=
+                (float) $gameweek[
+                    'starting_xi_projected_points'
+                ];
+        }
+
+
+        foreach (
+            $wildcardHorizon[
+                'gameweeks'
+            ]
+            as $gameweekKey => $gameweek
+        ) {
+
+            $gameweekNumber =
+                (int) (
+                    $gameweek[
+                        'gameweek'
+                    ]
+                    ??
+                    $gameweekKey
+                );
+
+
+            if (
+                $gameweekNumber
+                ===
+                $firstGameweek
+            ) {
+
+                continue;
+            }
+
+
+            $wildcardFuturePoints +=
+                (float) $gameweek[
+                    'starting_xi_projected_points'
+                ];
+        }
+
+
+        return
+            $wildcardFuturePoints
+            -
+            $currentFuturePoints;
     }
 
 

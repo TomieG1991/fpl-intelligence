@@ -329,7 +329,7 @@ $confidenceResult =
 
 
 wildcardTimingServiceCheck(
-    'Weaker horizon confidence limits final decision confidence',
+    'Timing separation limits final decision confidence when lower than horizon confidence',
     (
         $confidenceResult[
             'decision'
@@ -346,7 +346,7 @@ wildcardTimingServiceCheck(
         ]
             ->getConfidence()
         -
-        0.70
+        0.60
     ) < 0.0001
 );
 
