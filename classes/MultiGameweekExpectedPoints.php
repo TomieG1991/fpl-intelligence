@@ -435,6 +435,23 @@ class MultiGameweekExpectedPoints
                         ]
                         : null,
 
+                'projection_confidence' =>
+                    isset(
+                        $projection[
+                            'projection_confidence'
+                        ]
+                    )
+                    &&
+                    is_numeric(
+                        $projection[
+                            'projection_confidence'
+                        ]
+                    )
+                        ? (float) $projection[
+                            'projection_confidence'
+                        ]
+                        : null,
+
                 'projection_confidence_percent' =>
                     isset(
                         $projection[
@@ -521,8 +538,14 @@ class MultiGameweekExpectedPoints
                         'fixture_count' =>
                             0,
 
+                        'schedule_type' =>
+                            'Blank',
+
                         'projected_points' =>
                             0.0,
+
+                        'projection_confidence' =>
+                            null,
 
                         'fixtures' =>
                             []
@@ -543,6 +566,75 @@ class MultiGameweekExpectedPoints
                     'projected_points'
                 ] +=
                     $projectedPoints;
+                    
+                
+                /*
+                 * ----------------------------------------------------
+                 * GAMEWEEK PROJECTION CONFIDENCE
+                 * ----------------------------------------------------
+                 *
+                 * A gameweek containing multiple projected fixtures
+                 * must not be more confident than its weakest fixture
+                 * projection.
+                 *
+                 * This is especially relevant to Double Gameweeks.
+                 */
+
+                $currentGameweekConfidence =
+                    $gameweekProjections[
+                        $gameweek
+                    ][
+                        'projection_confidence'
+                    ]
+                    ??
+                    null;
+
+
+                $fixtureConfidence =
+                    $fixtureProjection[
+                        'projection_confidence'
+                    ]
+                    ??
+                    null;
+
+
+                if (
+                    is_numeric(
+                        $currentGameweekConfidence
+                    )
+                    &&
+                    is_numeric(
+                        $fixtureConfidence
+                    )
+                ) {
+
+                    $gameweekProjections[
+                        $gameweek
+                    ][
+                        'projection_confidence'
+                    ] =
+                        min(
+                            (float) $currentGameweekConfidence,
+                            (float) $fixtureConfidence
+                        );
+
+                } elseif (
+                    !is_numeric(
+                        $currentGameweekConfidence
+                    )
+                    &&
+                    is_numeric(
+                        $fixtureConfidence
+                    )
+                ) {
+
+                    $gameweekProjections[
+                        $gameweek
+                    ][
+                        'projection_confidence'
+                    ] =
+                        (float) $fixtureConfidence;
+                }
 
 
                 $gameweekProjections[
@@ -657,6 +749,9 @@ class MultiGameweekExpectedPoints
 
                         'projected_points' =>
                             0.0,
+
+                        'projection_confidence' =>
+                            null,
 
                         'fixtures' =>
                             []

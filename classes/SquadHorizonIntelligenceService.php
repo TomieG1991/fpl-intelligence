@@ -290,6 +290,258 @@ class SquadHorizonIntelligenceService
         
         /*
          * --------------------------------------------------------
+         * BUILD HORIZON FROM RESOLVED LOCAL PLAYERS
+         * --------------------------------------------------------
+         *
+         * Player resolution belongs to the imported-squad entry
+         * point.
+         *
+         * Projection, adaptation and Squad Horizon calculation
+         * are shared with other resolved-squad sources such as
+         * WildcardOptimizer.
+         */
+
+        return
+            $this->buildForResolvedSquad(
+                $resolvedPlayers,
+                $horizon
+            );
+    }
+
+
+    /**
+     * Build squad-horizon intelligence from an already-resolved
+     * fifteen-player local squad.
+     *
+     * This entry point will allow non-imported squad sources,
+     * including WildcardOptimizer, to reuse the same projection
+     * and Squad Horizon pipeline.
+     */
+        public function buildForResolvedSquad(
+        array $resolvedPlayers,
+        int $horizon = 3
+    ): array {
+
+        /*
+         * --------------------------------------------------------
+         * REQUIRE COMPLETE RESOLVED SQUAD
+         * --------------------------------------------------------
+         *
+         * Squad Horizon Intelligence requires exactly fifteen
+         * valid local player records.
+         *
+         * This entry point can be called independently of the
+         * imported-squad workflow, so it must enforce the same
+         * complete-squad boundary before requesting projections.
+         */
+
+        $requiredPlayerCount =
+            15;
+
+
+        $resolvedPlayerCount =
+            count(
+                $resolvedPlayers
+            );
+
+
+        if (
+            $resolvedPlayerCount
+            !==
+            $requiredPlayerCount
+        ) {
+
+            return [
+
+                'status' =>
+                    'Unavailable',
+
+                'resolved_player_count' =>
+                    $resolvedPlayerCount,
+
+                'required_player_count' =>
+                    $requiredPlayerCount,
+
+                'player_count' =>
+                    0,
+
+                'players' =>
+                    [],
+
+                'horizon_result' =>
+                    null
+            ];
+        }
+
+
+        /*
+         * --------------------------------------------------------
+         * VALIDATE LOCAL PLAYER IDS
+         * --------------------------------------------------------
+         *
+         * Every resolved player must expose a valid positive local
+         * player ID before any projection work begins.
+         *
+         * Validation is completed for the whole squad first so a
+         * malformed squad can never trigger partial projection or
+         * Squad Horizon calculation.
+         */
+
+        $invalidLocalPlayerIds =
+            [];
+
+
+        $validatedLocalPlayerIds =
+            [];
+
+
+        foreach (
+            $resolvedPlayers
+            as $resolvedPlayer
+        ) {
+
+            $localPlayerId =
+                is_array(
+                    $resolvedPlayer
+                )
+                &&
+                isset(
+                    $resolvedPlayer[
+                        'id'
+                    ]
+                )
+                &&
+                is_numeric(
+                    $resolvedPlayer[
+                        'id'
+                    ]
+                )
+                    ? (int) $resolvedPlayer[
+                        'id'
+                    ]
+                    : 0;
+
+
+            if (
+                $localPlayerId <= 0
+            ) {
+
+                $invalidLocalPlayerIds[] =
+                    $localPlayerId;
+
+
+                continue;
+            }
+
+
+            $validatedLocalPlayerIds[] =
+                $localPlayerId;
+        }
+
+
+        if (
+            !empty(
+                $invalidLocalPlayerIds
+            )
+        ) {
+
+            return [
+
+                'status' =>
+                    'Unavailable',
+
+                'resolved_player_count' =>
+                    $resolvedPlayerCount,
+
+                'required_player_count' =>
+                    $requiredPlayerCount,
+
+                'invalid_local_player_ids' =>
+                    $invalidLocalPlayerIds,
+
+                'player_count' =>
+                    0,
+
+                'players' =>
+                    [],
+
+                'horizon_result' =>
+                    null
+            ];
+        }
+        
+        
+        /*
+         * --------------------------------------------------------
+         * REQUIRE UNIQUE LOCAL PLAYER IDS
+         * --------------------------------------------------------
+         *
+         * A complete resolved squad must contain fifteen distinct
+         * local players.
+         *
+         * Duplicate IDs are detected before any projection work so
+         * an invalid squad can never trigger partial calculation.
+         */
+
+        $localPlayerIdCounts =
+            array_count_values(
+                $validatedLocalPlayerIds
+            );
+
+
+        $duplicateLocalPlayerIds =
+            [];
+
+
+        foreach (
+            $localPlayerIdCounts
+            as $localPlayerId => $occurrenceCount
+        ) {
+
+            if (
+                $occurrenceCount > 1
+            ) {
+
+                $duplicateLocalPlayerIds[] =
+                    (int) $localPlayerId;
+            }
+        }
+
+
+        if (
+            !empty(
+                $duplicateLocalPlayerIds
+            )
+        ) {
+
+            return [
+
+                'status' =>
+                    'Unavailable',
+
+                'resolved_player_count' =>
+                    $resolvedPlayerCount,
+
+                'required_player_count' =>
+                    $requiredPlayerCount,
+
+                'duplicate_local_player_ids' =>
+                    $duplicateLocalPlayerIds,
+
+                'player_count' =>
+                    0,
+
+                'players' =>
+                    [],
+
+                'horizon_result' =>
+                    null
+            ];
+        }
+        
+        
+        /*
+         * --------------------------------------------------------
          * REQUEST MULTI-GAMEWEEK PLAYER PROJECTIONS
          * --------------------------------------------------------
          *
@@ -339,7 +591,7 @@ class SquadHorizonIntelligenceService
             }
 
 
-            $playerProjections[
+                        $playerProjections[
                 $localPlayerId
             ] =
                 $this->playerIntelligenceService
@@ -489,6 +741,24 @@ class SquadHorizonIntelligenceService
                     )
                         ? (float) $gameweekProjection[
                             'projected_points'
+                        ]
+                        : null;
+                        
+                        
+                $projectionConfidence =
+                    isset(
+                        $gameweekProjection[
+                            'projection_confidence'
+                        ]
+                    )
+                    &&
+                    is_numeric(
+                        $gameweekProjection[
+                            'projection_confidence'
+                        ]
+                    )
+                        ? (float) $gameweekProjection[
+                            'projection_confidence'
                         ]
                         : null;
 
@@ -687,6 +957,9 @@ class SquadHorizonIntelligenceService
 
                     'projected_points' =>
                         $projectedPoints,
+
+                    'projection_confidence' =>
+                        $projectionConfidence,
 
                     'team_id' =>
                         $teamId,

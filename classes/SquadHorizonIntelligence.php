@@ -275,6 +275,35 @@ class SquadHorizonIntelligence
                             'projected_points'
                         ];
                 }
+                
+                
+                $projectionConfidence =
+                    null;
+
+
+                if (
+                    is_array(
+                        $projection
+                    )
+                    &&
+                    isset(
+                        $projection[
+                            'projection_confidence'
+                        ]
+                    )
+                    &&
+                    is_numeric(
+                        $projection[
+                            'projection_confidence'
+                        ]
+                    )
+                ) {
+
+                    $projectionConfidence =
+                        (float) $projection[
+                            'projection_confidence'
+                        ];
+                }
 
 
                 /*
@@ -469,6 +498,9 @@ class SquadHorizonIntelligence
                     'projected_points' =>
                         $projectedPoints,
 
+                    'projection_confidence' =>
+                        $projectionConfidence,
+
                     'team_id' =>
                         $teamId,
 
@@ -498,6 +530,116 @@ class SquadHorizonIntelligence
                 $this->selectStartingXI(
                     $players
                 );
+
+
+            /*
+             * ----------------------------------------------------
+             * STARTING XI PROJECTION CONFIDENCE
+             * ----------------------------------------------------
+             *
+             * Projection confidence is weighted by each starter's
+             * projected contribution to the Starting XI total.
+             *
+             * This preserves the existing player-level confidence
+             * model rather than calculating a new confidence score.
+             */
+
+            $startingXiConfidenceWeightedTotal =
+                0.0;
+
+
+            $startingXiConfidenceWeight =
+                0.0;
+                
+                
+            $startingXiConfidenceUnavailable =
+                false;
+
+
+            foreach (
+                $selection[
+                    'starting_xi'
+                ]
+                as $startingPlayer
+            ) {
+
+                $startingPlayerProjectedPoints =
+                    $startingPlayer[
+                        'projected_points'
+                    ]
+                    ??
+                    null;
+
+
+                $startingPlayerConfidence =
+                    $startingPlayer[
+                        'projection_confidence'
+                    ]
+                    ??
+                    null;
+
+
+                if (
+                    !is_numeric(
+                        $startingPlayerProjectedPoints
+                    )
+                ) {
+
+                    continue;
+                }
+
+
+                $startingPlayerProjectedPoints =
+                    (float) $startingPlayerProjectedPoints;
+
+
+                if (
+                    $startingPlayerProjectedPoints
+                    <=
+                    0.0
+                ) {
+
+                    continue;
+                }
+
+
+                if (
+                    !is_numeric(
+                        $startingPlayerConfidence
+                    )
+                ) {
+
+                    $startingXiConfidenceUnavailable =
+                        true;
+
+
+                    continue;
+                }
+
+
+                $startingXiConfidenceWeightedTotal +=
+                    $startingPlayerProjectedPoints
+                    *
+                    (float) $startingPlayerConfidence;
+
+
+                $startingXiConfidenceWeight +=
+                    $startingPlayerProjectedPoints;
+            }
+
+
+            $startingXiProjectionConfidence =
+                !$startingXiConfidenceUnavailable
+                &&
+                $startingXiConfidenceWeight
+                >
+                0.0
+                    ? (
+                        $startingXiConfidenceWeightedTotal
+                        /
+                        $startingXiConfidenceWeight
+                    )
+                    : null;
 
 
             $captain =
@@ -552,10 +694,120 @@ class SquadHorizonIntelligence
                         'starting_xi_projected_points'
                     ],
 
+                'starting_xi_projection_confidence' =>
+                    $startingXiProjectionConfidence,
+
                 'bench_coverage' =>
                     $benchCoverage
             ];
         }
+
+
+        /*
+         * --------------------------------------------------------
+         * HORIZON PROJECTION CONFIDENCE
+         * --------------------------------------------------------
+         *
+         * Combine the individual gameweek Starting XI confidence
+         * values using projected Starting XI points as the weight.
+         *
+         * A zero-point gameweek contributes no weight.
+         */
+
+        $horizonConfidenceWeightedTotal =
+            0.0;
+
+
+        $horizonConfidenceWeight =
+            0.0;
+
+
+        $horizonConfidenceUnavailable =
+            false;
+
+
+        foreach (
+            $gameweeks
+            as $gameweekData
+        ) {
+
+            $gameweekProjectedPoints =
+                $gameweekData[
+                    'starting_xi_projected_points'
+                ]
+                ??
+                null;
+
+
+            $gameweekProjectionConfidence =
+                $gameweekData[
+                    'starting_xi_projection_confidence'
+                ]
+                ??
+                null;
+
+
+            if (
+                !is_numeric(
+                    $gameweekProjectedPoints
+                )
+            ) {
+
+                continue;
+            }
+
+
+            $gameweekProjectedPoints =
+                (float) $gameweekProjectedPoints;
+
+
+            if (
+                $gameweekProjectedPoints
+                <=
+                0.0
+            ) {
+
+                continue;
+            }
+
+
+            if (
+                !is_numeric(
+                    $gameweekProjectionConfidence
+                )
+            ) {
+
+                $horizonConfidenceUnavailable =
+                    true;
+
+
+                continue;
+            }
+
+
+            $horizonConfidenceWeightedTotal +=
+                $gameweekProjectedPoints
+                *
+                (float) $gameweekProjectionConfidence;
+
+
+            $horizonConfidenceWeight +=
+                $gameweekProjectedPoints;
+        }
+
+
+        $horizonProjectionConfidence =
+            !$horizonConfidenceUnavailable
+            &&
+            $horizonConfidenceWeight
+            >
+            0.0
+                ? (
+                    $horizonConfidenceWeightedTotal
+                    /
+                    $horizonConfidenceWeight
+                )
+                : null;
 
 
          /*
@@ -663,6 +915,9 @@ class SquadHorizonIntelligence
 
             'horizon' =>
                 $horizon,
+
+            'projection_confidence' =>
+                $horizonProjectionConfidence,
 
             'gameweeks' =>
                 $gameweeks,
