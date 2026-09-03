@@ -714,6 +714,45 @@ freeHitIntelligenceServiceCheck(
     0.0001
 );
 
+freeHitIntelligenceServiceCheck(
+    'Earliest represented gameweek identity is preserved for downstream Free Hit horizon analysis',
+    (
+        $firstProjectedCandidate[
+            'projection_gameweek'
+        ]
+        ??
+        null
+    )
+    ===
+    3
+);
+
+
+freeHitIntelligenceServiceCheck(
+    'Earliest represented gameweek confidence is preserved for downstream Free Hit horizon analysis',
+    isset(
+        $firstProjectedCandidate[
+            'projection_confidence'
+        ]
+    )
+    &&
+    is_numeric(
+        $firstProjectedCandidate[
+            'projection_confidence'
+        ]
+    )
+    &&
+    abs(
+        (float) $firstProjectedCandidate[
+            'projection_confidence'
+        ]
+        -
+        0.80
+    )
+    <
+    0.0001
+);
+
 
 freeHitIntelligenceServiceCheck(
     'Successful optimizer result produces Available service status',

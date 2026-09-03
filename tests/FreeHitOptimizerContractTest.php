@@ -3625,6 +3625,219 @@ echo
 
 /*
  * ============================================================
+ * SCENARIO P
+ * SUCCESSFUL RESULT EXPOSES STARTING XI PROJECTED POINTS
+ * ============================================================
+ *
+ * Free Hit decision intelligence must compare the optimized
+ * Free Hit Starting XI against the current squad Starting XI.
+ *
+ * FreeHitOptimizer already calculates the strongest legal
+ * Starting XI internally when evaluating affordable squads.
+ *
+ * The successful optimizer contract should therefore expose
+ * that value rather than forcing a later service to duplicate
+ * formation or Starting XI calculations.
+ */
+
+echo
+    '<br>';
+
+echo
+    '============================================<br>';
+
+echo
+    'Scenario P: Starting XI Projected Points Are Exposed<br>';
+
+echo
+    '============================================<br>';
+
+
+$scenarioPPlayers = [
+
+    [
+        'player_id' => 1,
+        'position' => 'GK',
+        'team_id' => 1,
+        'price' => 5.0,
+        'projected_points' => 6.0
+    ],
+
+    [
+        'player_id' => 2,
+        'position' => 'GK',
+        'team_id' => 2,
+        'price' => 4.0,
+        'projected_points' => 2.0
+    ],
+
+
+    [
+        'player_id' => 3,
+        'position' => 'DEF',
+        'team_id' => 3,
+        'price' => 5.0,
+        'projected_points' => 8.0
+    ],
+
+    [
+        'player_id' => 4,
+        'position' => 'DEF',
+        'team_id' => 4,
+        'price' => 5.0,
+        'projected_points' => 7.0
+    ],
+
+    [
+        'player_id' => 5,
+        'position' => 'DEF',
+        'team_id' => 5,
+        'price' => 5.0,
+        'projected_points' => 6.0
+    ],
+
+    [
+        'player_id' => 6,
+        'position' => 'DEF',
+        'team_id' => 6,
+        'price' => 4.0,
+        'projected_points' => 2.0
+    ],
+
+    [
+        'player_id' => 7,
+        'position' => 'DEF',
+        'team_id' => 7,
+        'price' => 4.0,
+        'projected_points' => 1.0
+    ],
+
+
+    [
+        'player_id' => 8,
+        'position' => 'MID',
+        'team_id' => 8,
+        'price' => 7.0,
+        'projected_points' => 10.0
+    ],
+
+    [
+        'player_id' => 9,
+        'position' => 'MID',
+        'team_id' => 9,
+        'price' => 7.0,
+        'projected_points' => 9.0
+    ],
+
+    [
+        'player_id' => 10,
+        'position' => 'MID',
+        'team_id' => 10,
+        'price' => 7.0,
+        'projected_points' => 8.0
+    ],
+
+    [
+        'player_id' => 11,
+        'position' => 'MID',
+        'team_id' => 11,
+        'price' => 7.0,
+        'projected_points' => 7.0
+    ],
+
+    [
+        'player_id' => 12,
+        'position' => 'MID',
+        'team_id' => 12,
+        'price' => 7.0,
+        'projected_points' => 6.0
+    ],
+
+
+    [
+        'player_id' => 13,
+        'position' => 'FWD',
+        'team_id' => 13,
+        'price' => 8.0,
+        'projected_points' => 9.0
+    ],
+
+    [
+        'player_id' => 14,
+        'position' => 'FWD',
+        'team_id' => 14,
+        'price' => 8.0,
+        'projected_points' => 8.0
+    ],
+
+    [
+        'player_id' => 15,
+        'position' => 'FWD',
+        'team_id' => 15,
+        'price' => 5.0,
+        'projected_points' => 3.0
+    ]
+];
+
+
+$scenarioPResult =
+    $optimizer
+        ->optimize(
+            $scenarioPPlayers,
+            100.0
+        );
+
+
+freeHitOptimizerContractCheck(
+    'Starting-XI projection pool returns success',
+    (
+        $scenarioPResult[
+            'status'
+        ]
+        ?? null
+    )
+    ===
+    'success'
+);
+
+
+freeHitOptimizerContractCheck(
+    'Successful result exposes Starting XI projected points',
+    isset(
+        $scenarioPResult[
+            'starting_xi_projected_points'
+        ]
+    )
+    &&
+    is_numeric(
+        $scenarioPResult[
+            'starting_xi_projected_points'
+        ]
+    )
+);
+
+
+freeHitOptimizerContractCheck(
+    'Exposed Starting XI projected points equal the strongest legal formation',
+    isset(
+        $scenarioPResult[
+            'starting_xi_projected_points'
+        ]
+    )
+    &&
+    abs(
+        (float) $scenarioPResult[
+            'starting_xi_projected_points'
+        ]
+        -
+        84.0
+    )
+    <
+    0.0001
+);
+
+/*
+ * ============================================================
  * TEST SUMMARY
  * ============================================================
  */

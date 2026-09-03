@@ -748,12 +748,22 @@ class FreeHitOptimizer
          * --------------------------------------------------------
          */
 
+        $startingXiProjectedPoints =
+            $this->calculateStartingXIProjectedPoints(
+                $squad
+            );
+
+
         return [
+
             'status' =>
                 'success',
 
             'squad' =>
-                $squad
+                $squad,
+
+            'starting_xi_projected_points' =>
+                $startingXiProjectedPoints
         ];
     }
     

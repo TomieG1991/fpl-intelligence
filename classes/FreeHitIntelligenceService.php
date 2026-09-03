@@ -316,11 +316,37 @@ class FreeHitIntelligenceService
                 (float) $projectedPoints;
 
 
+            $projectedPlayer[
+                'projection_gameweek'
+            ] =
+                (int) $earliestGameweek;
+
+
+            $projectedPlayer[
+                'projection_confidence'
+            ] =
+                isset(
+                    $earliestGameweekProjection[
+                        'projection_confidence'
+                    ]
+                )
+                &&
+                is_numeric(
+                    $earliestGameweekProjection[
+                        'projection_confidence'
+                    ]
+                )
+                    ? (float) $earliestGameweekProjection[
+                        'projection_confidence'
+                    ]
+                    : null;
+
+
             $projectedPlayers[] =
                 $projectedPlayer;
+
         }
-
-
+        
         /*
          * --------------------------------------------------------
          * REQUIRE USABLE PROJECTION EVIDENCE
