@@ -38,7 +38,7 @@ The system should remain explainable, testable and robust throughout:
 
 Current stable release:
 
-**v0.33.0 — Blank & Double Gameweek Intelligence**
+**v0.34.0 — Chip Intelligence**
 
 GitHub `main` is the authoritative code baseline after every completed commit.
 
@@ -46,21 +46,34 @@ GitHub `main` is the authoritative code baseline after every completed commit.
 
 Current development milestone:
 
-**v0.34.0 — Chip Intelligence — NEXT**
+**v0.35.0 — Recommendation History & Backtesting — NEXT**
 
-v0.33.0 is complete and establishes explicit Blank, Normal and Double Gameweek
-semantics across fixture modelling, multi-gameweek Expected Points, Squad
-Horizon planning, Starting XI selection, captaincy, fixture clashes and transfer
-evaluation.
+v0.34.0 is complete and adds decision intelligence for all four FPL chips:
 
-The completed v0.33.0 milestone also strengthens historical snapshot integrity by
-using completed-gameweek fixture history as the authoritative source for
-historical market prices and by automatically capturing completed-gameweek
-snapshots after a successful full fixture-history import.
+- Wildcard
+- Free Hit
+- Bench Boost
+- Triple Captain
 
-The next development milestone is v0.34.0, which will build Chip Intelligence on
-top of the completed multi-gameweek, Blank/Double Gameweek and Squad Horizon
-architecture.
+The completed Chip Intelligence milestone builds on the existing Expected Points,
+Squad Horizon, Captain Intelligence and Blank/Double Gameweek architecture rather
+than introducing separate chip-specific projection models.
+
+Each chip now supports:
+
+- Use
+- Consider
+- Hold
+
+with explanation and confidence.
+
+A unified Chip Intelligence dashboard can import a real FPL squad and present all
+four independent chip decisions together without introducing a synthetic overall
+chip score or cross-chip ranking system.
+
+The next development milestone is v0.35.0, which will begin preserving
+recommendations and comparing them with actual outcomes through Recommendation
+History & Backtesting.
 ---
 
 
@@ -2355,55 +2368,223 @@ v0.34.0 — Chip Intelligence.
 
 ## v0.34.0 — Chip Intelligence
 
+### Status
+
+**COMPLETE**
+
 ### Dependencies
 
-Requires strong multi-gameweek and blank/double-gameweek support.
+Builds on:
+
+- Multi-Gameweek Expected Points
+- Squad Horizon & Rotation Intelligence
+- Blank & Double Gameweek Intelligence
+- Captain Intelligence
+- existing Wildcard squad optimisation
 
 ### Goal
 
-Provide intelligent recommendations for FPL chips.
+Provide intelligent, explainable recommendations for all four FPL chips while
+preserving the existing projection and decision architecture.
 
-### Planned Systems
-
-#### Wildcard Timing Intelligence
-
-Extend the existing Wildcard squad generator so the app can answer:
-
-- Is a Wildcard worth using now?
-- How much improvement does the Wildcard create?
-- Is waiting likely to be better?
-
-
-#### Free Hit Intelligence
-
-Generate the optimal one-gameweek Free Hit squad.
-
-
-#### Bench Boost Intelligence
-
-Measure:
-
-- projected bench points
-- bench reliability
-- fixture quality
-- full-squad availability
-
-
-#### Triple Captain Intelligence
-
-Use Captain Intelligence and projected points to identify exceptional captain
-opportunities.
-
-
-### Output
-
-Each chip should support:
+Each chip supports:
 
 - Use
 - Consider
 - Hold
 
 with explanation and confidence.
+
+### Wildcard Timing Intelligence
+
+Extended the existing Wildcard architecture so the application can answer:
+
+- Is a Wildcard worth using now?
+- How much projected improvement does the Wildcard create?
+- Does waiting one gameweek currently project better?
+
+Added current-squad versus Wildcard-squad horizon comparison using existing
+multi-gameweek Expected Points.
+
+Added immediate projected gain, future projected gain, timing advantage and
+explicit `Now`, `Wait` or `Neutral` timing comparison.
+
+Waiting is deliberately modelled conservatively as waiting exactly one represented
+gameweek and comparing the remaining already-built horizon.
+
+Wildcard timing does not invent:
+
+- future player prices
+- future injuries
+- future transfers
+- hypothetical future Wildcard re-optimisation
+
+### Free Hit Intelligence
+
+Added dedicated one-gameweek Free Hit squad optimisation.
+
+The Free Hit pipeline:
+
+- obtains existing one-gameweek Expected Points
+- builds a legal 15-player FPL squad
+- respects position requirements
+- respects the three-player-per-club limit
+- respects the available budget
+- identifies the strongest legal Starting XI
+- compares that Starting XI with the manager's current Starting XI
+- calculates projected Free Hit gain
+- produces a chip decision with explanation and confidence
+
+Free Hit does not maintain an independent Expected Points model.
+
+### Bench Boost Intelligence
+
+Added one-gameweek Bench Boost analysis using the existing Squad Horizon.
+
+Bench Boost evaluates:
+
+- projected bench points
+- bench reliability
+- fixture quality
+- full-squad availability
+
+Projected bench points come directly from existing Squad Horizon bench coverage.
+
+Reliability and availability remain supporting confidence evidence rather than
+being multiplied into projected points again.
+
+### Triple Captain Intelligence
+
+Added Triple Captain decision intelligence using:
+
+- the captain selected by Squad Horizon
+- existing projected points
+- existing Captain Intelligence
+- projection confidence
+- captain confidence
+- schedule evidence
+
+Triple Captain does not introduce a competing captain-selection model.
+
+Blank and Double Gameweek opportunities influence Triple Captain naturally
+through the existing schedule-aware projection architecture.
+
+### Unified Chip Intelligence
+
+Added `public/chips.php` as the unified Chip Intelligence decision-support page.
+
+The page answers:
+
+**Should I use a chip this week, and what does the existing FPL Intelligence
+evidence say about each available option?**
+
+The page supports:
+
+- real FPL Entry ID import
+- Wildcard decision presentation
+- Free Hit decision presentation
+- Bench Boost decision presentation
+- Triple Captain decision presentation
+- recommendation
+- confidence
+- supporting metrics
+- explanation
+
+The page also includes deterministic development preview mode and a production
+integration mode for regression testing.
+
+The existing Wildcard squad-builder page remains separate because its purpose is
+to answer which squad should be selected rather than whether the Wildcard chip
+should be used.
+
+### Architecture Decision
+
+Chip Intelligence sits above existing intelligence systems.
+
+The intended architecture is:
+
+`Existing Player Projections`
+`→ Squad / Optimisation Intelligence`
+`→ Individual Chip Decision Intelligence`
+`→ Unified Chip Intelligence Presentation`
+
+The following remain authoritative:
+
+- Multi-Gameweek Expected Points for player projections
+- Squad Horizon for squad-level projected selection
+- Captain Intelligence for captain quality
+- Wildcard/Free Hit optimisers for legal squad construction
+
+There is:
+
+- no independent chip Expected Points model
+- no artificial Double Gameweek chip bonus
+- no artificial Blank Gameweek chip penalty
+- no synthetic overall chip score
+- no cross-chip ranking model
+- no invented best-chip tiebreak algorithm
+
+Each chip retains its own decision semantics.
+
+If multiple chips independently produce `Use`, the application presents that
+evidence honestly rather than manufacturing an unsupported ranking between them.
+
+### Testing
+
+Added dedicated unit, integration, real-data and page coverage across:
+
+- common Chip Decision behaviour
+- Wildcard timing
+- Wildcard horizon integration
+- Wildcard production decisions
+- Free Hit optimisation
+- Free Hit Expected Points integration
+- Free Hit horizon integration
+- Free Hit decisions
+- Bench Boost analysis
+- Bench Boost production decisions
+- Triple Captain analysis
+- Captain Intelligence integration
+- Triple Captain production decisions
+- unified Chip Intelligence page behaviour
+- real FPL entry support
+- all-four-chip production integration
+- cross-chip scoring/ranking protection
+
+The completed Chip Intelligence page test passes:
+
+- 68 assertions
+- 0 failures
+
+The final complete regression suite passes with:
+
+- 220 test files
+- 220 test files passed
+- 0 test files failed
+- 0 test files with errors
+- 6,104 assertions passed
+- 0 assertions failed
+- 222.901 seconds total runtime
+
+### Completion Notes
+
+v0.34.0 completes the Chip Intelligence milestone.
+
+The application now provides explainable decision support for:
+
+- Wildcard
+- Free Hit
+- Bench Boost
+- Triple Captain
+
+All four chip systems reuse the existing FPL Intelligence architecture rather
+than introducing parallel projection models.
+
+Real FPL squads can be imported directly into the unified Chip Intelligence page
+and evaluated by all four production decision pipelines.
+
+The completed v0.34.0 architecture provides the final decision-support foundation
+required before v0.35.0 begins Recommendation History & Backtesting.
 
 
 ---
@@ -2699,65 +2880,55 @@ Before each release:
 
 # Current Next Action
 
-**START: v0.34.0 — Chip Intelligence**
+**START: v0.35.0 — Recommendation History & Backtesting**
 
-v0.33.0 Blank & Double Gameweek Intelligence is complete.
+v0.34.0 Chip Intelligence is complete.
 
-The final v0.33.0 regression baseline is:
+The final v0.34.0 regression baseline is:
 
-- 171 test files
-- 171 test files passed
+- 220 test files
+- 220 test files passed
 - 0 test files failed
 - 0 test files with errors
-- 5,234 assertions passed
+- 6,104 assertions passed
 - 0 assertions failed
-- 169.715 seconds total runtime
+- 222.901 seconds total runtime
 
-The completed v0.33.0 milestone now provides explicit Blank, Normal and Double
-Gameweek semantics throughout the existing fixture, projection and squad-planning
-architecture.
+The completed v0.34.0 milestone now provides explainable decision support for all
+four FPL chips:
 
-The application can now safely represent:
+- Wildcard
+- Free Hit
+- Bench Boost
+- Triple Captain
 
-- teams with zero fixtures in a gameweek
-- teams with one fixture in a gameweek
-- teams with multiple fixtures in a gameweek
-- explicit Blank Gameweek player projections
-- individual Double Gameweek fixture evidence
-- schedule-aware Squad Horizon analysis
-- Blank/Double-aware Starting XI optimisation
-- schedule-aware captain selection
-- Double Gameweek fixture clashes
-- Blank/Double-aware transfer evaluation
+The application can now:
+
+- compare the current squad with an optimised Wildcard squad
+- measure immediate Wildcard projected-points improvement
+- compare immediate Wildcard value with the projected value of waiting one
+  gameweek
+- optimise a legal one-gameweek Free Hit squad
+- compare the current Starting XI with the proposed Free Hit Starting XI
+- measure projected Bench Boost value
+- evaluate bench reliability
+- evaluate bench fixture quality
+- evaluate full-squad availability
+- identify Triple Captain opportunities using existing captain selection,
+  projected points and Captain Intelligence
+- produce Use / Consider / Hold recommendations
+- expose confidence and explanation for every chip decision
+- import a real FPL squad into the unified Chip Intelligence dashboard
+- present all four chip decisions together without introducing a synthetic
+  overall chip score or cross-chip ranking model
 
 The existing Expected Points architecture remains the source of player projection
-value. No separate Blank or Double Gameweek scoring model was introduced.
+value.
 
-Historical snapshot integrity was also strengthened during v0.33.0.
+Chip Intelligence coordinates existing systems rather than duplicating their
+scoring models.
 
-Completed-gameweek snapshot capture now uses authoritative historical fixture
-history for historical price evidence, and successful full fixture-history
-updates automatically trigger safe completed-gameweek snapshot capture.
-
-The next milestone is:
-
-**v0.34.0 — Chip Intelligence**
-
-Initial v0.34.0 focus:
-
-1. define a common explainable Chip Intelligence decision contract
-2. add Wildcard Timing Intelligence using existing squad and multi-gameweek
-   projections
-3. add Free Hit Intelligence for one-gameweek squad optimisation
-4. add Bench Boost Intelligence using complete squad and bench projections
-5. add Triple Captain Intelligence using captain and multi-gameweek Expected
-   Points
-6. account explicitly for Blank and Double Gameweeks when evaluating chip value
-7. distinguish immediate chip value from the value of holding the chip
-8. provide Use / Consider / Hold recommendations with supporting evidence
-9. add controlled synthetic and real-data regression coverage for chip decisions
-
-v0.34.0 must build on the existing:
+The completed v0.34.0 architecture reuses:
 
 - Expected Points Intelligence
 - Multi-Gameweek Expected Points Intelligence
@@ -2766,23 +2937,63 @@ v0.34.0 must build on the existing:
 - Captain Intelligence
 - Wildcard Intelligence
 
-Chip Intelligence should coordinate these existing systems rather than duplicate
-their scoring models.
+Wildcard Timing continues to evaluate the value of restructuring the squad rather
+than replacing the existing Wildcard squad optimiser.
 
-Wildcard Timing should evaluate the value of restructuring the squad rather than
-replace the existing Wildcard squad optimiser.
+Free Hit Intelligence remains a dedicated one-gameweek optimisation layer that
+uses existing Expected Points and normal FPL squad constraints.
 
-Free Hit Intelligence should optimise specifically for the target gameweek while
-respecting normal FPL squad constraints.
+Bench Boost Intelligence evaluates the projected value and reliability of the
+complete 15-player squad without recalculating player projections.
 
-Bench Boost Intelligence should evaluate the projected value and reliability of
-the complete 15-player squad, with particular attention to bench strength.
+Triple Captain Intelligence builds on existing Captain Intelligence and Expected
+Points rather than introducing an independent captain-scoring model.
 
-Triple Captain Intelligence should build on existing Captain Intelligence and
-Expected Points rather than introduce an independent captain-scoring model.
-
-Blank and Double Gameweek information should act through the schedule-aware
+Blank and Double Gameweek information continues to act through the schedule-aware
 projection architecture completed in v0.33.0.
 
-All existing non-chip decision behaviour must remain protected while Chip
-Intelligence is introduced.
+The next milestone is:
+
+**v0.35.0 — Recommendation History & Backtesting**
+
+Initial v0.35.0 focus:
+
+1. define a persistent recommendation-history architecture
+2. preserve pre-deadline recommendation snapshots
+3. record relevant model outputs at the time recommendations are made
+4. preserve captain recommendations
+5. preserve Starting XI recommendations
+6. preserve transfer recommendations
+7. preserve Gameweek Decision output
+8. preserve projected points and important supporting model components
+9. compare preserved recommendations with actual completed-gameweek outcomes
+10. add initial backtesting metrics for recommendation quality
+11. protect historical recommendation records from later live-data changes
+12. add controlled synthetic and real-data regression coverage for recommendation
+    history and backtesting
+
+v0.35.0 should begin by preserving what the application recommended before each
+deadline.
+
+The first implementation should avoid changing model weights or recommendation
+logic.
+
+Backtesting should initially measure existing behaviour rather than tune it.
+
+The system should preserve enough evidence to answer questions such as:
+
+- Did the recommended captain outperform realistic alternatives?
+- Did recommended transfers outperform the players they replaced?
+- Did the recommended Starting XI outperform available bench alternatives?
+- How accurate were projected minutes?
+- How accurate were projected points?
+- Did stronger Intelligence Scores correlate with stronger realised returns?
+- Were Use / Consider / Hold decisions supported by later outcomes?
+
+Historical recommendation records must remain immutable once captured.
+
+Future model calibration should be based on accumulated backtesting evidence
+rather than whether a current recommendation simply appears reasonable.
+
+All existing recommendation and decision behaviour must remain protected while
+Recommendation History & Backtesting is introduced.

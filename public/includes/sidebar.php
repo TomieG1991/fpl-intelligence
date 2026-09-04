@@ -21,7 +21,7 @@ $activeNav =
             </div>
 
             <div class="brand-version">
-                v0.33.0
+                v0.34.0
             </div>
 
         </div>
@@ -188,6 +188,22 @@ $activeNav =
             </span>
 
             Wildcard Intelligence
+        </a>
+        
+        <a
+            href="chips.php"
+            class="nav-link <?= (
+                $activeNav
+                ?? ''
+            ) === 'chips'
+                ? 'active'
+                : ''; ?>"
+        >
+            <span class="nav-icon">
+                ◇
+            </span>
+
+            Chip Intelligence
         </a>
 
     </nav>

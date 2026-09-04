@@ -12633,3 +12633,600 @@ a {
 
     line-height: 1;
 }
+
+/*
+ * ============================================================
+ * CHIP INTELLIGENCE
+ * ============================================================
+ */
+
+.chip-dashboard {
+    max-width:
+        1500px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * INTRO / ENTRY PANELS
+ * ------------------------------------------------------------
+ */
+
+.chip-dashboard .profile-panel {
+    padding:
+        24px;
+
+    background:
+        #1b2335;
+
+    border:
+        1px solid #34405a;
+
+    border-radius:
+        12px;
+
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.16);
+}
+
+
+.chip-dashboard .dashboard-section {
+    margin-bottom:
+        24px;
+}
+
+
+.chip-dashboard .section-heading {
+    margin-bottom:
+        14px;
+}
+
+
+.chip-dashboard .section-heading h2 {
+    margin:
+        4px
+        0
+        0;
+
+    color:
+        #f6f8fc;
+
+    font-size:
+        21px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * FPL ENTRY FORM
+ * ------------------------------------------------------------
+ */
+
+.chip-entry-form {
+    display:
+        flex;
+
+    align-items:
+        flex-end;
+
+    gap:
+        14px;
+
+    margin-bottom:
+        18px;
+}
+
+
+.chip-entry-field {
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    gap:
+        7px;
+}
+
+
+.chip-entry-field label {
+    color:
+        #aab5c8;
+
+    font-size:
+        12px;
+
+    font-weight:
+        600;
+}
+
+
+.chip-entry-field input {
+    width:
+        220px;
+
+    min-height:
+        40px;
+
+    padding:
+        8px
+        11px;
+
+    border:
+        1px solid #465370;
+
+    border-radius:
+        7px;
+
+    outline:
+        none;
+
+    background:
+        #111725;
+
+    color:
+        #ffffff;
+
+    font-family:
+        inherit;
+
+    font-size:
+        14px;
+
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+
+.chip-entry-field input:focus {
+    border-color:
+        #8173ff;
+
+    box-shadow:
+        0 0 0 3px rgba(111, 92, 255, 0.15);
+}
+
+
+.chip-analyse-button {
+    min-height:
+        40px;
+
+    padding:
+        0
+        18px;
+
+    border:
+        1px solid #7566ff;
+
+    border-radius:
+        7px;
+
+    cursor:
+        pointer;
+
+    background:
+        #6f5cff;
+
+    color:
+        #ffffff;
+
+    font-family:
+        inherit;
+
+    font-size:
+        13px;
+
+    font-weight:
+        700;
+
+    transition:
+        background 0.15s ease,
+        transform 0.15s ease;
+}
+
+
+.chip-analyse-button:hover {
+    background:
+        #8173ff;
+}
+
+
+.chip-analyse-button:active {
+    transform:
+        translateY(1px);
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * CHIP DECISION GRID
+ * ------------------------------------------------------------
+ */
+
+.chip-decision-grid {
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(0, 1fr)
+        );
+
+    gap:
+        20px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * CHIP DECISION CARD
+ * ------------------------------------------------------------
+ */
+
+.chip-decision-card {
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    min-width:
+        0;
+}
+
+
+.chip-decision-header {
+    display:
+        flex;
+
+    align-items:
+        flex-start;
+
+    justify-content:
+        space-between;
+
+    gap:
+        18px;
+
+    padding-bottom:
+        18px;
+
+    margin-bottom:
+        18px;
+
+    border-bottom:
+        1px solid #2d3850;
+}
+
+
+.chip-decision-header h2 {
+    margin:
+        5px
+        0
+        0;
+
+    color:
+        #ffffff;
+
+    font-size:
+        22px;
+}
+
+
+.chip-recommendation {
+    flex-shrink:
+        0;
+
+    display:
+        inline-flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    min-width:
+        92px;
+
+    padding:
+        7px
+        12px;
+
+    border:
+        1px solid #665aa8;
+
+    border-radius:
+        999px;
+
+    background:
+        #302b55;
+
+    color:
+        #cfcaff;
+
+    font-size:
+        11px;
+
+    font-weight:
+        800;
+
+    letter-spacing:
+        0.08em;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * DECISION SUMMARY
+ * ------------------------------------------------------------
+ */
+
+.chip-decision-summary {
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(0, 1fr)
+        );
+
+    gap:
+        12px;
+
+    margin-bottom:
+        18px;
+}
+
+
+.chip-decision-summary > div {
+    padding:
+        13px
+        14px;
+
+    background:
+        #151c2c;
+
+    border:
+        1px solid #2d3850;
+
+    border-radius:
+        9px;
+}
+
+
+.chip-decision-summary strong {
+    display:
+        block;
+
+    margin-top:
+        5px;
+
+    color:
+        #ffffff;
+
+    font-size:
+        17px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * CHIP METRICS
+ * ------------------------------------------------------------
+ */
+
+.chip-metric-list {
+    overflow:
+        hidden;
+
+    margin-bottom:
+        18px;
+
+    border:
+        1px solid #2d3850;
+
+    border-radius:
+        9px;
+}
+
+
+.chip-metric-row {
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        space-between;
+
+    gap:
+        20px;
+
+    padding:
+        11px
+        13px;
+
+    background:
+        #151c2c;
+}
+
+
+.chip-metric-row + .chip-metric-row {
+    border-top:
+        1px solid #2d3850;
+}
+
+
+.chip-metric-row span {
+    color:
+        #aab5c8;
+
+    font-size:
+        13px;
+}
+
+
+.chip-metric-row strong {
+    color:
+        #f6f8fc;
+
+    font-size:
+        13px;
+
+    text-align:
+        right;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * CHIP EXPLANATION
+ * ------------------------------------------------------------
+ */
+
+.chip-explanation {
+    margin-top:
+        auto;
+
+    padding:
+        14px;
+
+    background:
+        #111725;
+
+    border:
+        1px solid #2a3449;
+
+    border-radius:
+        9px;
+}
+
+
+.chip-explanation p:last-child {
+    margin:
+        7px
+        0
+        0;
+
+    color:
+        #c4cddd;
+
+    font-size:
+        13px;
+
+    line-height:
+        1.55;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * RESPONSIVE CHIP INTELLIGENCE
+ * ------------------------------------------------------------
+ */
+
+@media (
+    max-width: 1050px
+) {
+
+    .chip-decision-grid {
+        grid-template-columns:
+            1fr;
+    }
+}
+
+
+@media (
+    max-width: 700px
+) {
+
+    .chip-entry-form {
+        align-items:
+            stretch;
+
+        flex-direction:
+            column;
+    }
+
+
+    .chip-entry-field input {
+        width:
+            100%;
+    }
+
+
+    .chip-decision-header {
+        flex-direction:
+            column;
+    }
+
+
+    .chip-decision-summary {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .chip-metric-row {
+        align-items:
+            flex-start;
+
+        flex-direction:
+            column;
+
+        gap:
+            4px;
+    }
+
+
+    .chip-metric-row strong {
+        text-align:
+            left;
+    }
+}
+
+/*
+ * ------------------------------------------------------------
+ * CHIP RECOMMENDATION STATES
+ * ------------------------------------------------------------
+ */
+
+.chip-recommendation.use {
+    background:
+        rgba(75, 209, 139, 0.14);
+
+    border-color:
+        rgba(75, 209, 139, 0.55);
+
+    color:
+        #72e2aa;
+}
+
+
+.chip-recommendation.consider {
+    background:
+        rgba(111, 92, 255, 0.16);
+
+    border-color:
+        rgba(129, 115, 255, 0.62);
+
+    color:
+        #cfcaff;
+}
+
+
+.chip-recommendation.hold {
+    background:
+        rgba(230, 95, 109, 0.13);
+
+    border-color:
+        rgba(230, 95, 109, 0.5);
+
+    color:
+        #f08b96;
+}

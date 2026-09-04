@@ -6,6 +6,159 @@ The project follows a sprint-based development process.
 
 ---
 
+---
+
+## [0.34.0] - Chip Intelligence
+
+### Added
+
+- Added a common `ChipDecision` contract for FPL chip recommendations.
+- Added support for `Use`, `Consider` and `Hold` chip recommendations with explanation and confidence.
+- Added Wildcard Timing Intelligence for evaluating whether a Wildcard is worth using now or whether waiting one gameweek currently projects better.
+- Added Wildcard projected-points comparison between the current squad and an optimised Wildcard squad.
+- Added Wildcard future-timing comparison using the remaining represented Squad Horizon after waiting one gameweek.
+- Added `WildcardTimingIntelligenceService` for comparing current and Wildcard squad horizons.
+- Added `WildcardHorizonIntelligenceService` for adapting Wildcard optimiser output into the existing Squad Horizon architecture.
+- Added `WildcardDecisionIntelligenceService` as the production Wildcard decision orchestration layer.
+- Added Free Hit Intelligence for generating and evaluating a legal one-gameweek Free Hit squad.
+- Added `FreeHitOptimizer` with FPL squad constraints covering:
+  - 15 players
+  - position quotas
+  - maximum three players per club
+  - available budget
+  - legal Starting XI formations
+- Added Free Hit Starting XI projected-points optimisation.
+- Added `FreeHitIntelligenceService` for supplying existing Expected Points projections to the Free Hit optimiser.
+- Added `FreeHitHorizonIntelligenceService` for adapting the optimised Free Hit squad into the existing one-gameweek Squad Horizon model.
+- Added `FreeHitDecisionIntelligence` for interpreting projected Free Hit improvement as `Use`, `Consider` or `Hold`.
+- Added `FreeHitDecisionIntelligenceService` for comparing the current Starting XI with the proposed Free Hit Starting XI.
+- Added Bench Boost Intelligence using the existing one-gameweek Squad Horizon.
+- Added Bench Boost analysis covering:
+  - projected bench points
+  - bench reliability
+  - fixture quality
+  - full-squad availability
+- Added `BenchBoostDecisionIntelligenceService` as the production Bench Boost orchestration layer.
+- Added Triple Captain Intelligence using the existing Captain Intelligence and Expected Points architecture.
+- Added Triple Captain analysis covering:
+  - selected captain
+  - projected captain points
+  - Captain Intelligence score
+  - projection confidence
+  - captain confidence
+  - fixture count
+  - schedule type
+- Added `TripleCaptainDecisionIntelligenceService` as the production Triple Captain orchestration layer.
+- Added a unified `public/chips.php` Chip Intelligence dashboard.
+- Added real FPL entry import support to the Chip Intelligence dashboard.
+- Added a dedicated FPL Entry ID form for analysing any accessible current FPL squad.
+- Added four independent decision cards for:
+  - Wildcard
+  - Free Hit
+  - Bench Boost
+  - Triple Captain
+- Added recommendation, confidence, supporting metrics and explanation to each chip card.
+- Added deterministic development preview mode for fast presentation regression testing.
+- Added production integration mode for exercising all four real chip pipelines against current local database intelligence.
+- Added responsive Chip Intelligence dashboard styling.
+- Added visually distinct `Use`, `Consider` and `Hold` recommendation states.
+- Added Chip Intelligence to the main application navigation.
+
+### Changed
+
+- Extended `SquadHorizonIntelligenceService` with a resolved-squad production path so already-resolved 15-player squads can use the existing multi-gameweek Expected Points pipeline.
+- Extended Squad Horizon gameweek output with Starting XI projection confidence for downstream decision-confidence handling.
+- Reused existing Squad Horizon Starting XI selection for chip evaluation rather than introducing chip-specific formation logic at the decision-service layer.
+- Reused existing Captain Intelligence as the captain-quality model for Triple Captain decisions.
+- Reused existing multi-gameweek Expected Points as the authoritative player-projection source for Wildcard and Free Hit analysis.
+- Preserved Blank and Double Gameweek schedule semantics throughout chip analysis.
+- Real FPL Chip Intelligence now uses the imported squad's team value plus bank as the available Wildcard and Free Hit budget.
+- Kept the existing Wildcard squad-builder page separate from the new Chip Intelligence decision dashboard.
+- Updated the application version displayed in the sidebar to `v0.34.0`.
+
+### Architecture
+
+- Chip Intelligence sits above the existing Expected Points, Squad Horizon, Captain Intelligence and Wildcard optimisation architecture.
+- No separate chip Expected Points model was introduced.
+- Wildcard Intelligence compares current and optimised squad horizons using existing projected points.
+- Wildcard waiting intelligence compares the immediate Wildcard advantage with the projected advantage remaining after waiting exactly one represented gameweek.
+- Wildcard timing does not invent future prices, injuries or hypothetical future re-optimisation.
+- Free Hit Intelligence consumes existing one-gameweek Expected Points and optimises a legal temporary squad around those projections.
+- Bench Boost Intelligence consumes existing bench projections and supporting reliability evidence rather than recalculating player value.
+- Triple Captain Intelligence combines the Squad Horizon-selected captain's projected points with the existing Captain Intelligence evaluation.
+- Blank and Double Gameweek effects flow naturally through the existing schedule-aware Expected Points architecture.
+- No artificial Double Gameweek chip bonus was introduced.
+- No artificial Blank Gameweek chip penalty was introduced beyond the projected fixture evidence.
+- Each chip retains its own independent decision model.
+- No synthetic overall chip score was introduced.
+- No cross-chip ranking or invented best-chip tiebreak algorithm was introduced.
+- Multiple chips may independently return `Use` when their own evidence justifies that recommendation.
+- `public/chips.php` orchestrates and presents existing intelligence rather than becoming a fifth chip-scoring model.
+
+### Chip Decision Validation
+
+- Confirmed Wildcard Intelligence can report:
+  - current squad projected points
+  - Wildcard squad projected points
+  - projected points gain
+  - future projected gain
+  - timing advantage
+  - whether using now or waiting currently projects better
+- Confirmed Free Hit Intelligence compares the current one-gameweek Starting XI with an optimised Free Hit Starting XI.
+- Confirmed Bench Boost Intelligence evaluates all four projected bench players.
+- Confirmed Bench Boost reliability uses existing projection-confidence evidence.
+- Confirmed Bench Boost full-squad availability evaluates the complete 15-player squad.
+- Confirmed Triple Captain uses the captain selected by the existing Squad Horizon architecture.
+- Confirmed Triple Captain reuses existing Captain Intelligence rather than introducing a competing captain score.
+- Confirmed chip decisions expose recommendation, confidence and explanation.
+- Confirmed real FPL entry analysis successfully executes all four production chip pipelines from one dashboard.
+- Confirmed the Chip Intelligence page does not manufacture an overall chip score or best-chip ranking.
+
+### Testing
+
+- Added dedicated regression coverage for:
+  - common chip decision contracts
+  - Wildcard immediate-value analysis
+  - Wildcard timing comparison
+  - Wildcard timing confidence
+  - Wildcard horizon integration
+  - Wildcard decision-service integration
+  - Free Hit squad optimisation
+  - Free Hit Expected Points integration
+  - Free Hit one-gameweek Squad Horizon integration
+  - Free Hit decision intelligence
+  - Free Hit real-data behaviour
+  - Bench Boost analysis
+  - Bench Boost decision-service integration
+  - Triple Captain analysis
+  - Triple Captain decision-service integration
+  - Triple Captain real-data behaviour
+  - unified Chip Intelligence page presentation
+  - real-entry page behaviour
+  - production integration of all four chip pipelines
+  - protection against synthetic cross-chip scoring and ranking
+- Confirmed `ChipIntelligencePageTest.php` passes all 68 assertions.
+- Re-ran the complete project regression suite after the completed Chip Intelligence implementation.
+- Confirmed all 220 of 220 test files pass.
+- Confirmed all 6,104 assertions pass.
+- Confirmed zero test failures.
+- Confirmed zero test execution errors.
+- Complete regression suite runtime: 222.901 seconds.
+
+### Completion Notes
+
+- v0.34.0 completes the Chip Intelligence milestone.
+- The application can now evaluate Wildcard, Free Hit, Bench Boost and Triple Captain opportunities through one unified decision-support page.
+- All four chips expose `Use`, `Consider` or `Hold` recommendations with explanation and confidence.
+- Wildcard Intelligence can distinguish immediate squad improvement from the projected value of waiting one gameweek.
+- Free Hit Intelligence can construct and evaluate a legal one-gameweek squad using the existing Expected Points architecture.
+- Bench Boost Intelligence evaluates projected bench value together with reliability, fixture and availability evidence.
+- Triple Captain Intelligence combines projected captain returns with the existing Captain Intelligence model.
+- Real FPL squads can be imported directly into the unified Chip Intelligence dashboard.
+- The completed chip architecture remains explainable and preserves the existing separation between projections, squad optimisation and decision policy.
+- No competing Expected Points model, artificial chip bonus, synthetic overall chip score or cross-chip ranking system was introduced.
+- The completed v0.34.0 milestone provides the decision layer needed before v0.35.0 begins Recommendation History & Backtesting.
+
 ## [0.33.0] - Blank & Double Gameweek Intelligence
 
 ### Added
