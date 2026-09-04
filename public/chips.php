@@ -126,8 +126,25 @@ $benchBoostDecisionIntelligenceService =
 
 $tripleCaptainDecisionIntelligenceService =
     null;
-    
+
+
 $fplSquadImporter =
+    null;
+
+
+/*
+ * ============================================================
+ * RECOMMENDATION HISTORY
+ * ============================================================
+ *
+ * Recommendation Candidate persistence is only used for genuine
+ * FPL entry requests.
+ *
+ * Development preview and deterministic integration modes must
+ * never write historical recommendation evidence.
+ */
+
+$recommendationCandidateProductionCapture =
     null;
 
 
@@ -173,6 +190,60 @@ if (
             
         $fplSquadImporter =
             new FPLSquadImporter();
+            
+        /*
+         * --------------------------------------------------------
+         * RECOMMENDATION HISTORY
+         * --------------------------------------------------------
+         *
+         * Build the historical capture stack only for genuine
+         * positive FPL entry requests.
+         *
+         * preview=integration deliberately uses entry ID zero and
+         * must remain non-persistent.
+         */
+
+        if (
+            !$integrationMode
+            &&
+            !$previewMode
+            &&
+            $entryId !== null
+        ) {
+
+            $gameweekRepository =
+                new GameweekRepository(
+                    $db
+                );
+
+
+            $recommendationCandidateRepository =
+                new RecommendationCandidateRepository(
+                    $db
+                );
+
+
+            $recommendationCandidateCaptureService =
+                new RecommendationCandidateCaptureService(
+                    $recommendationCandidateRepository
+                );
+
+
+            $recommendationCandidateProductionService =
+                new RecommendationCandidateProductionService(
+                    $playerIntelligenceService,
+                    new PlayerProjectionEvidence(),
+                    new ChipRecommendationEvidence(),
+                    $recommendationCandidateCaptureService
+                );
+
+
+            $recommendationCandidateProductionCapture =
+                new RecommendationCandidateProductionCapture(
+                    $gameweekRepository,
+                    $recommendationCandidateProductionService
+                );
+        }
 
 
         /*
@@ -1371,16 +1442,82 @@ if (
                 );
 
 
-        $tripleCaptainResult =
-            $tripleCaptainDecisionIntelligenceService
-                ->build(
-                    $importedSquad
-                );
+                $tripleCaptainResult =
+                    $tripleCaptainDecisionIntelligenceService
+                        ->build(
+                            $importedSquad
+                        );
 
 
-        /*
-         * --------------------------------------------------------
-         * WILDCARD CARD
+                /*
+                 * --------------------------------------------------------
+                 * CAPTURE LATEST RECOMMENDATION CANDIDATE
+                 * --------------------------------------------------------
+                 *
+                 * All existing recommendation intelligence has now been
+                 * calculated.
+                 *
+                 * For a genuine FPL entry, preserve the latest complete
+                 * pre-deadline recommendation as the mutable candidate for
+                 * the nearest future gameweek deadline.
+                 *
+                 * Development preview and deterministic integration modes
+                 * never reach this capture path.
+                 */
+
+                if (
+                    !$integrationMode
+                    &&
+                    !$previewMode
+                    &&
+                    $entryId !== null
+                    &&
+                    $recommendationCandidateProductionCapture !== null
+                ) {
+
+                    $generatedAt =
+                        gmdate(
+                            'Y-m-d H:i:s'
+                        );
+
+
+                    try {
+
+                        $recommendationCandidateProductionCapture
+                            ->capture(
+                                $entryId,
+                                $importedSquad,
+                                $wildcardResult,
+                                $freeHitResult,
+                                $benchBoostResult,
+                                $tripleCaptainResult,
+                                $generatedAt
+                            );
+
+                    } catch (
+                        Throwable $recommendationHistoryException
+                    ) {
+
+                        /*
+                         * Recommendation-history persistence must not make
+                         * otherwise valid live Chip Intelligence unusable.
+                         *
+                         * Preserve the live recommendation page while
+                         * recording the historical capture failure in the
+                         * PHP error log for diagnosis.
+                         */
+                        error_log(
+                            'Recommendation Candidate capture failed: '
+                            . $recommendationHistoryException
+                                ->getMessage()
+                        );
+                    }
+                }
+
+
+                /*
+                 * --------------------------------------------------------
+                 * WILDCARD CARD
          * --------------------------------------------------------
          */
 

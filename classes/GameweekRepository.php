@@ -208,6 +208,87 @@ class GameweekRepository
                 ? $gameweek
                 : null;
     }
+    
+    
+        /**
+         * Return the gameweek with the earliest deadline
+         * strictly after the supplied timestamp.
+         *
+         * Recommendation history uses the deadline itself
+         * rather than FPL's current / next event flags so
+         * pre-deadline recommendation evidence is assigned
+         * to the gameweek it was actually targeting.
+         */
+        public function getNextDeadlineAfter(
+            string $timestamp
+        ): ?array {
+
+            /*
+             * Validate the timestamp before passing it to
+             * the database.
+             */
+            try {
+
+                $date =
+                    new DateTimeImmutable(
+                        $timestamp
+                    );
+
+            } catch (
+                Exception $exception
+            ) {
+
+                throw new InvalidArgumentException(
+                    'A valid timestamp is required.',
+                    0,
+                    $exception
+                );
+            }
+
+
+            $formattedTimestamp =
+                $date->format(
+                    'Y-m-d H:i:s'
+                );
+
+
+            $stmt =
+                $this->db->prepare(
+                    "
+                    SELECT *
+                    FROM gameweeks
+                    WHERE
+                        deadline_time IS NOT NULL
+                        AND
+                        deadline_time > :timestamp
+                    ORDER BY
+                        deadline_time ASC
+                    LIMIT 1
+                    "
+                );
+
+
+            $stmt->bindValue(
+                ':timestamp',
+                $formattedTimestamp,
+                PDO::PARAM_STR
+            );
+
+
+            $stmt->execute();
+
+
+            $gameweek =
+                $stmt->fetch(
+                    PDO::FETCH_ASSOC
+                );
+
+
+            return
+                $gameweek !== false
+                    ? $gameweek
+                    : null;
+        }
 
 
     /**

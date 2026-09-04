@@ -1579,6 +1579,158 @@ echo "<br>";
 
 /*
  * ============================================================
+ * SCENARIO — RECOMMENDATION HISTORY INTEGRATION CONTRACT
+ * ============================================================
+ *
+ * v0.35.0 Recommendation History must reuse the dedicated
+ * production-capture boundary rather than implementing
+ * historical persistence directly inside chips.php.
+ *
+ * This is deliberately a source-level page integration test.
+ *
+ * Preview and deterministic integration requests must remain
+ * non-persistent development paths.
+ */
+
+echo "============================================<br>";
+echo "Scenario: Recommendation History Integration Contract<br>";
+echo "============================================<br>";
+
+
+$chipsPagePath =
+    realpath(
+        __DIR__
+        . '/../public/chips.php'
+    );
+
+
+$chipsPageSource =
+    $chipsPagePath !== false
+        ? file_get_contents(
+            $chipsPagePath
+        )
+        : false;
+
+
+$chipsPageSource =
+    is_string(
+        $chipsPageSource
+    )
+        ? $chipsPageSource
+        : '';
+
+
+chipPageTest(
+    'Chip Intelligence page uses RecommendationCandidateProductionCapture',
+    strpos(
+        $chipsPageSource,
+        'new RecommendationCandidateProductionCapture'
+    )
+    !== false
+);
+
+
+chipPageTest(
+    'Chip Intelligence page uses RecommendationCandidateProductionService',
+    strpos(
+        $chipsPageSource,
+        'new RecommendationCandidateProductionService'
+    )
+    !== false
+);
+
+
+chipPageTest(
+    'Chip Intelligence page uses RecommendationCandidateCaptureService',
+    strpos(
+        $chipsPageSource,
+        'new RecommendationCandidateCaptureService'
+    )
+    !== false
+);
+
+
+chipPageTest(
+    'Chip Intelligence page uses RecommendationCandidateRepository',
+    strpos(
+        $chipsPageSource,
+        'new RecommendationCandidateRepository'
+    )
+    !== false
+);
+
+
+chipPageTest(
+    'Chip Intelligence page uses GameweekRepository for recommendation deadline resolution',
+    strpos(
+        $chipsPageSource,
+        'new GameweekRepository'
+    )
+    !== false
+);
+
+
+chipPageTest(
+    'Chip Intelligence page does not write recommendation_candidates with page-level SQL',
+    stripos(
+        $chipsPageSource,
+        'INSERT INTO recommendation_candidates'
+    )
+    === false
+    &&
+    stripos(
+        $chipsPageSource,
+        'UPDATE recommendation_candidates'
+    )
+    === false
+);
+
+
+chipPageTest(
+    'Chip Intelligence page does not write recommendation_snapshots with page-level SQL',
+    stripos(
+        $chipsPageSource,
+        'INSERT INTO recommendation_snapshots'
+    )
+    === false
+    &&
+    stripos(
+        $chipsPageSource,
+        'UPDATE recommendation_snapshots'
+    )
+    === false
+);
+
+
+chipPageTest(
+    'Development preview request still succeeds after recommendation-history integration',
+    (
+        $response[
+            'success'
+        ]
+        ?? false
+    )
+    === true
+);
+
+
+chipPageTest(
+    'Deterministic integration request still succeeds after recommendation-history integration',
+    (
+        $integrationResponse[
+            'success'
+        ]
+        ?? false
+    )
+    === true
+);
+
+
+echo "<br>";
+
+
+/*
+ * ============================================================
  * SUMMARY
  * ============================================================
  */

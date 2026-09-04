@@ -437,6 +437,86 @@ CREATE TABLE IF NOT EXISTS `player_gameweek_snapshots` (
   
   /*
  * ============================================================
+ * RECOMMENDATION SNAPSHOTS
+ * ============================================================
+ *
+ * Stores one immutable pre-deadline recommendation snapshot
+ * per FPL entry and gameweek.
+ *
+ * Unlike player_gameweek_snapshots, which preserve historical
+ * player-state evidence, this table preserves what FPL
+ * Intelligence actually projected and recommended at snapshot
+ * time.
+ *
+ * Recommendation evidence is JSON-encoded and stored as text so
+ * the complete representation produced at snapshot time remains
+ * unchanged by database JSON normalisation.
+ */
+
+CREATE TABLE IF NOT EXISTS `recommendation_snapshots` (
+
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+
+    `gameweek_id` int(11) NOT NULL,
+
+    `entry_id` int(11) NOT NULL,
+
+    `captured_at` datetime NOT NULL,
+
+    `deadline_time` datetime NOT NULL,
+
+        `player_projections`
+        longtext
+        NOT NULL,
+
+    `starting_xi`
+        longtext
+        NOT NULL,
+
+    `captain_recommendation`
+        longtext
+        NOT NULL,
+
+    `transfer_recommendations`
+        longtext
+        NOT NULL,
+
+    `gameweek_decision`
+        longtext
+        NOT NULL,
+
+    `chip_recommendations`
+        longtext
+        NOT NULL,
+
+    `created_at`
+        timestamp NOT NULL
+        DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (`id`),
+
+    UNIQUE KEY `unique_recommendation_snapshot`
+        (`gameweek_id`, `entry_id`),
+
+    KEY `idx_recommendation_snapshot_gameweek`
+        (`gameweek_id`),
+
+    KEY `idx_recommendation_snapshot_entry`
+        (`entry_id`),
+
+    CONSTRAINT `fk_recommendation_snapshot_gameweek`
+        FOREIGN KEY (`gameweek_id`)
+        REFERENCES `gameweeks` (`id`)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+  
+  
+  /*
+ * ============================================================
  * PLAYER FIXTURE HISTORY
  * ============================================================
  *
@@ -679,3 +759,69 @@ CREATE TABLE IF NOT EXISTS `player_fixture_history` (
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci;
+  
+  /*
+ * ============================================================
+ * RECOMMENDATION CANDIDATES
+ * ============================================================
+ *
+ * Stores the latest pre-deadline recommendation evidence for
+ * one FPL entry/gameweek.
+ *
+ * Unlike recommendation_snapshots, this is mutable staging
+ * evidence. A later candidate may replace an earlier candidate
+ * before the deadline.
+ *
+ * Recommendation evidence is JSON-encoded and stored as text so
+ * the complete representation produced at recommendation time
+ * remains unchanged by database JSON normalisation.
+ */
+
+CREATE TABLE recommendation_candidates (
+    id INT NOT NULL AUTO_INCREMENT,
+
+    gameweek_id INT NOT NULL,
+
+    entry_id INT NOT NULL,
+
+    generated_at DATETIME NOT NULL,
+
+    deadline_time DATETIME NOT NULL,
+
+    player_projections LONGTEXT NOT NULL,
+
+    starting_xi LONGTEXT NOT NULL,
+
+    captain_recommendation LONGTEXT NOT NULL,
+
+    transfer_recommendations LONGTEXT NOT NULL,
+
+    gameweek_decision LONGTEXT NOT NULL,
+
+    chip_recommendations LONGTEXT NOT NULL,
+
+    created_at TIMESTAMP NOT NULL
+        DEFAULT CURRENT_TIMESTAMP,
+
+    updated_at TIMESTAMP NOT NULL
+        DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id),
+
+    UNIQUE KEY uq_recommendation_candidate_gameweek_entry (
+        gameweek_id,
+        entry_id
+    ),
+
+    KEY idx_recommendation_candidate_entry (
+        entry_id
+    ),
+
+    CONSTRAINT fk_recommendation_candidates_gameweek
+        FOREIGN KEY (gameweek_id)
+        REFERENCES gameweeks (id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4;
