@@ -435,6 +435,29 @@ class MultiGameweekExpectedPoints
                         ]
                         : null,
 
+                'chance_of_playing' =>
+                    isset(
+                        $projection[
+                            'expected_minutes_model'
+                        ][
+                            'chance_of_playing'
+                        ]
+                    )
+                    &&
+                    is_numeric(
+                        $projection[
+                            'expected_minutes_model'
+                        ][
+                            'chance_of_playing'
+                        ]
+                    )
+                        ? (float) $projection[
+                            'expected_minutes_model'
+                        ][
+                            'chance_of_playing'
+                        ]
+                        : null,
+
                 'projection_confidence' =>
                     isset(
                         $projection[

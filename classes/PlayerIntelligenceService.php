@@ -4178,6 +4178,23 @@ class PlayerIntelligenceService
                                 ]
                                 ?? null,
 
+                            'chance_of_playing' =>
+                                isset(
+                                    $fixtureProjection[
+                                        'chance_of_playing'
+                                    ]
+                                )
+                                &&
+                                is_numeric(
+                                    $fixtureProjection[
+                                        'chance_of_playing'
+                                    ]
+                                )
+                                    ? (float) $fixtureProjection[
+                                        'chance_of_playing'
+                                    ]
+                                    : null,
+
                             'projection_confidence_percent' =>
                                 $fixtureProjection[
                                     'projection_confidence_percent'
@@ -4214,6 +4231,9 @@ class PlayerIntelligenceService
                                 null,
 
                             'projected_minutes' =>
+                                null,
+
+                            'chance_of_playing' =>
                                 null,
 
                             'projection_confidence_percent' =>

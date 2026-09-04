@@ -169,6 +169,29 @@ class MultiGameweekPlayerExpectedPointsStub
                         'fixture_opportunity'
                     ]
                     ?? null
+            ],
+
+            'expected_minutes_model' => [
+
+                'projected_minutes' =>
+                    $minutes,
+
+                'chance_of_playing' =>
+                    isset(
+                        $fixtureContext[
+                            'test_chance_of_playing'
+                        ]
+                    )
+                    &&
+                    is_numeric(
+                        $fixtureContext[
+                            'test_chance_of_playing'
+                        ]
+                    )
+                        ? (float) $fixtureContext[
+                            'test_chance_of_playing'
+                        ]
+                        : 100.0
             ]
         ];
     }
@@ -1022,6 +1045,147 @@ multiGwCheck(
             'fixture_opportunity'
         ]
     )
+);
+
+
+echo "<br>";
+
+
+/*
+ * ============================================================
+ * SCENARIO H
+ * AVAILABILITY METADATA PRESERVATION
+ * ============================================================
+ */
+
+echo "============================================<br>";
+echo "Scenario H: Availability Metadata Preservation<br>";
+echo "============================================<br>";
+
+
+$result =
+    $model
+        ->projectFixtures(
+            $player,
+            $form,
+            [
+                [
+                    'id' =>
+                        10,
+
+                    'gameweek' =>
+                        2
+                ],
+                [
+                    'id' =>
+                        20,
+
+                    'gameweek' =>
+                        3
+                ]
+            ],
+            [
+                'fixture:10' => [
+
+                    'test_projected_points' =>
+                        4.0,
+
+                    'test_projected_minutes' =>
+                        45.0,
+
+                    'test_chance_of_playing' =>
+                        75.0
+                ],
+
+                'fixture:20' => [
+
+                    'test_projected_points' =>
+                        0.0,
+
+                    'test_projected_minutes' =>
+                        0.0,
+
+                    'test_chance_of_playing' =>
+                        0.0
+                ]
+            ]
+        );
+
+
+$firstAvailabilityProjection =
+    $result[
+        'fixtures'
+    ][
+        0
+    ]
+    ?? [];
+
+
+$secondAvailabilityProjection =
+    $result[
+        'fixtures'
+    ][
+        1
+    ]
+    ?? [];
+
+
+multiGwCheck(
+    'Fixture projection exposes chance of playing',
+    array_key_exists(
+        'chance_of_playing',
+        $firstAvailabilityProjection
+    )
+);
+
+
+multiGwCheck(
+    'Fixture projection preserves uncertain availability percentage',
+    isset(
+        $firstAvailabilityProjection[
+            'chance_of_playing'
+        ]
+    )
+    &&
+    abs(
+        (
+            (float) $firstAvailabilityProjection[
+                'chance_of_playing'
+            ]
+        )
+        -
+        75.0
+    )
+    <
+    0.001
+);
+
+
+multiGwCheck(
+    'Fixture projection preserves zero percent availability',
+    array_key_exists(
+        'chance_of_playing',
+        $secondAvailabilityProjection
+    )
+    &&
+    is_numeric(
+        $secondAvailabilityProjection[
+            'chance_of_playing'
+        ]
+        ?? null
+    )
+    &&
+    abs(
+        (
+            (float) $secondAvailabilityProjection[
+                'chance_of_playing'
+            ]
+        )
+        -
+        0.0
+    )
+    <
+    0.001
 );
 
 
