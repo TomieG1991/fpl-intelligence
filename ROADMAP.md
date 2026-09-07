@@ -38,7 +38,7 @@ The system should remain explainable, testable and robust throughout:
 
 Current stable release:
 
-**v0.34.0 — Chip Intelligence**
+**v0.35.0 — Recommendation History & Backtesting**
 
 GitHub `main` is the authoritative code baseline after every completed commit.
 
@@ -46,51 +46,34 @@ GitHub `main` is the authoritative code baseline after every completed commit.
 
 Current development milestone:
 
-**v0.35.0 — Recommendation History & Backtesting — IN PROGRESS**
+**v0.36.0 — Model Calibration & Intelligence Quality — NOT STARTED**
 
-v0.34.0 is complete and adds decision intelligence for all four FPL chips:
+v0.35.0 completes Recommendation History & Backtesting.
 
-- Wildcard
-- Free Hit
-- Bench Boost
-- Triple Captain
+The completed milestone preserves what FPL Intelligence genuinely knew and
+recommended before each gameweek deadline through mutable pre-deadline
+recommendation candidates and immutable deadline-promoted recommendation
+snapshots.
 
-The completed Chip Intelligence milestone builds on the existing Expected Points,
-Squad Horizon, Captain Intelligence and Blank/Double Gameweek architecture rather
-than introducing separate chip-specific projection models.
+Completed-gameweek backtesting now evaluates:
 
-Each chip now supports:
+- projected points
+- projected minutes
+- Starting XI selection
+- Captain Intelligence
+- transfer recommendations
+- Transfer Decision Intelligence
+- Player Intelligence Scores
+- Player Intelligence rankings
 
-- Use
-- Consider
-- Hold
+Player Intelligence ranking evaluation compares preserved full-player-pool
+historical ranking evidence with authoritative realised FPL outcomes using
+Pearson correlation and Spearman rank correlation.
 
-with explanation and confidence.
+v0.35.0 measures existing model behaviour without tuning model weights.
 
-A unified Chip Intelligence dashboard can import a real FPL squad and present all
-four independent chip decisions together without introducing a synthetic overall
-chip score or cross-chip ranking system.
-
-The current development milestone is v0.35.0, which is preserving recommendation
-evidence before each deadline and comparing completed-gameweek recommendations
-with authoritative realised outcomes through Recommendation History & Backtesting.
-
-Recommendation History now preserves mutable pre-deadline candidates and promotes
-the latest eligible candidate into immutable historical evidence at the preserved
-gameweek deadline.
-
-Completed backtesting currently covers projected points, projected minutes,
-Starting XI selection, Captain Intelligence, transfer recommendations and
-Transfer Decision Intelligence.
-
-Full-player-pool Player Intelligence rankings are now also preserved independently
-from squad-only player projections, providing the historical evidence required to
-evaluate whether higher Intelligence Scores correlate with stronger realised
-returns.
-
-Player Intelligence ranking evaluation remains outstanding before v0.35.0 is
-complete.
----
+The next development milestone is v0.36.0, which will use accumulated
+backtesting evidence to investigate Model Calibration & Intelligence Quality.
 
 
 ## Current Data Foundation
@@ -2609,7 +2592,7 @@ required before v0.35.0 begins Recommendation History & Backtesting.
 
 ### Status
 
-**IN PROGRESS**
+**COMPLETE**
 
 ### Goal
 
@@ -2619,7 +2602,7 @@ Preserve what the application genuinely knew and recommended before each
 gameweek deadline, then compare that historical evidence with authoritative
 realised outcomes after the gameweek is complete.
 
-### Delivered So Far
+### Delivered
 
 Added Recommendation History with a controlled pre-deadline lifecycle:
 
@@ -2709,6 +2692,11 @@ Completed-gameweek backtesting now evaluates:
 - Transfer Decision support for `Make Transfer`
 - Transfer Decision support for `Hold`
 - inconclusive handling for non-binary transfer decisions
+- Player Intelligence Score against realised FPL points
+- preserved Player Intelligence ranking against realised return ranking
+- Pearson correlation between Intelligence Score and realised FPL points
+- Spearman rank correlation between historical Intelligence ordering and
+  realised FPL-point ordering
 
 Backtesting uses authoritative completed-gameweek outcomes from persisted
 `player_fixture_history`.
@@ -2716,47 +2704,178 @@ Backtesting uses authoritative completed-gameweek outcomes from persisted
 Completed-gameweek evidence requires the authoritative completed and
 data-checked gameweek boundary.
 
-### Remaining Work
+Player Intelligence ranking backtesting uses the preserved full-player-pool
+`player_rankings` evidence rather than reconstructing historical rankings from
+later live player state or squad-only projection evidence.
 
-Player Intelligence ranking backtesting remains outstanding.
+Player-level ranking evaluation preserves:
 
-The preserved full-player-pool rankings now provide the historical evidence
-needed to answer:
+- historical player identity
+- historical Intelligence Score
+- historical rank
+- realised FPL points
+- realised minutes where available
 
-- Did higher Intelligence Scores correlate with stronger realised returns?
-- Did higher-ranked players generally outperform lower-ranked players?
-- How strong was the relationship between Intelligence Score and realised FPL
-  points?
+Players without matching trustworthy realised outcome evidence are excluded
+rather than assigned manufactured results.
 
-Appropriate ranking and correlation evaluation metrics must be defined under
-test before implementation.
+Players with realised outcomes but without preserved historical ranking evidence
+are not retrospectively added to the historical ranking sample.
 
-### Importance
+Historical non-contiguous ranks remain preserved in player-level evidence.
 
-No model should be tuned purely because today's output "looks right".
+For aggregate rank correlation, the valid historical sample is converted to
+sample-relative ordering so Spearman correlation measures ordering rather than
+the numerical gaps between original full-player-pool rank positions.
 
-Backtesting should provide evidence for future calibration.
+Realised-points ties use average ranks.
 
-v0.35.0 measures the existing models rather than tuning them.
+### Model Evaluation Metrics
 
-Any model calibration justified by the completed backtesting evidence belongs
-to v0.36.0.
+v0.35.0 introduces initial factual model-evaluation metrics without altering the
+models being measured.
 
-### Current Validation
+Projection evaluation includes:
 
-The complete regression suite passes with:
+- mean projected-points error
+- mean absolute projected-points error
+- mean projected-minutes error
+- mean absolute projected-minutes error
 
-- 274 test files
-- 274 test files passed
+Player Intelligence ranking evaluation includes:
+
+- valid evaluation sample size
+- Pearson correlation
+- Spearman rank correlation
+
+Pearson correlation measures the relationship between historical Intelligence
+Score magnitude and realised FPL points.
+
+Spearman correlation measures whether stronger historical Player Intelligence
+ordering generally corresponds with stronger realised FPL-point ordering.
+
+Metrics remain unavailable where the evidence is mathematically insufficient,
+rather than manufacturing a correlation.
+
+These metrics are evidence for future model calibration and do not themselves
+change:
+
+- Player Intelligence
+- Expected Points
+- Captain Intelligence
+- Transfer Intelligence
+- Gameweek Intelligence
+- Chip Intelligence
+
+### Architecture Decision
+
+v0.35.0 measures historical recommendation quality.
+
+It does not tune model weights.
+
+The authoritative flow is:
+
+`Pre-Deadline Recommendation Production`
+`→ Mutable Recommendation Candidate`
+`→ Deadline Promotion`
+`→ Immutable Recommendation Snapshot`
+`→ Authoritative Completed-Gameweek Outcomes`
+`→ Backtesting`
+`→ Model Evaluation Evidence`
+
+Recommendation history and realised player history remain separate evidence
+sources until backtesting deliberately compares them.
+
+Historical recommendation evidence must never be reconstructed using later live
+model output merely to make a backtesting sample available.
+
+Any model calibration justified by accumulated backtesting evidence belongs to
+v0.36.0.
+
+### Testing
+
+Recommendation History & Backtesting is protected by dedicated unit,
+integration, production-pipeline and database-backed coverage.
+
+Player Intelligence ranking backtesting specifically includes:
+
+- player-level ranking/outcome matching
+- missing-outcome protection
+- outcome-only player protection
+- historical rank preservation
+- historical Intelligence Score preservation
+- zero and negative realised-points support
+- malformed evidence protection
+- Pearson correlation
+- Spearman rank correlation
+- realised-points tie handling
+- non-contiguous historical rank handling
+- constant-value correlation protection
+- source-evidence immutability
+- gameweek-level orchestration
+- squad-projection isolation
+- complete production-pipeline integration
+- real database recommendation-snapshot round trip
+- authoritative completed-gameweek outcome integration
+- transaction rollback and synthetic-evidence cleanup
+
+The completed Player Intelligence ranking-backtesting feature adds:
+
+- 5 dedicated test files
+- 177 assertions
+- 0 failures
+
+The final complete v0.35.0 regression suite passes with:
+
+- 279 test files
+- 279 test files passed
 - 0 test files failed
 - 0 test files with errors
-- 7,998 assertions passed
+- 8,175 assertions passed
 - 0 assertions failed
-- 438.302 seconds total runtime
+- 437.984 seconds total runtime
 
-Player Ranking Evidence is now preserved through the complete production
-candidate-to-snapshot lifecycle without expanding squad-only player projection
-semantics or weakening historical immutability.
+### Completion Notes
+
+v0.35.0 completes the Recommendation History & Backtesting milestone.
+
+FPL Intelligence can now preserve what it genuinely knew and recommended before
+a gameweek deadline and compare that immutable evidence with authoritative
+completed-gameweek outcomes.
+
+The completed milestone provides historical evaluation for:
+
+- projected points
+- projected minutes
+- Starting XI selection
+- Captain Intelligence
+- transfer recommendations
+- Transfer Decision Intelligence
+- Player Intelligence Scores
+- Player Intelligence rankings
+
+Full-player-pool Player Intelligence rankings remain deliberately separate from
+manager-squad player projections.
+
+Recommendation candidates remain mutable only before the deadline and only when
+strictly newer evidence is available.
+
+Promoted recommendation snapshots remain immutable historical evidence.
+
+Legacy recommendation snapshots without genuine preserved Player Ranking
+Evidence remain unsupported for ranking backtesting rather than being
+retrospectively populated from current model output.
+
+v0.35.0 establishes the measurement foundation required for evidence-based model
+calibration.
+
+The next milestone is:
+
+**v0.36.0 — Model Calibration & Intelligence Quality**
+
+v0.36.0 may use accumulated backtesting evidence to evaluate whether model
+weights should change, but any calibration must be justified by historical
+results and protected by regression tests.
 
 
 ---

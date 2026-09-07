@@ -6,7 +6,7 @@ The project follows a sprint-based development process.
 
 ---
 
-## [Unreleased] - v0.35.0 Recommendation History & Backtesting
+## [0.35.0] - Recommendation History & Backtesting
 
 ### Added
 
@@ -57,68 +57,32 @@ The project follows a sprint-based development process.
 - Added Transfer Decision backtesting for preserved `Make Transfer` and `Hold`
   recommendations.
 - Added explicit inconclusive handling for non-binary transfer decisions.
-
-### Changed
-
-- Extended `RecommendationCandidate` with independent `player_rankings`
-  evidence.
-- Extended `RecommendationSnapshot` with independent `player_rankings`
-  evidence.
-- Extended recommendation candidate capture and persistence to preserve Player
-  Ranking Evidence.
-- Extended recommendation candidate promotion so Player Ranking Evidence
-  survives promotion exactly.
-- Extended recommendation snapshot persistence to round-trip historical ranking
-  evidence without reconstructing missing legacy evidence.
-- Kept full-player-pool `player_rankings` separate from squad-only
-  `player_projections`.
-- Updated the production recommendation-capture pipeline so global rankings are
-  generated before manager-squad filtering.
-- Preserved strictly newer pre-deadline replacement semantics for mutable
-  recommendation candidates.
-- Preserved immutable first-snapshot semantics after deadline promotion.
-- Updated affected recommendation-history and backtesting integration tests for
-  the expanded historical evidence contract.
-- Updated live-data regressions where season progression had invalidated stale
-  assumptions.
-- Repaired Free Hit optimiser scalability while preserving existing optimisation
-  semantics.
-
-### Removed
-
-- Removed the obsolete `RecommendationSnapshotCaptureService` direct-to-snapshot
-  path.
-- Removed its obsolete regression test.
-- Retired the parallel pre-deadline immutable-capture architecture in favour of
-  the authoritative candidate-to-deadline-promotion lifecycle.
-- Retired obsolete retrospective recommendation-capture behaviour that could not
-  represent what the model genuinely knew before the deadline.
-- Removed synthetic historical evidence where genuine preserved evidence was not
-  available.
-- Retired the obsolete GW1 ownership diagnostic after historical ownership
-  limitations were established.
-
-### Architecture
-
-- Recommendation History now follows one authoritative lifecycle:
-
-  `recommendation production → mutable candidate → deadline promotion → immutable snapshot`
-
-- Recommendation candidates are mutable only before historical promotion and
-  accept replacement only from strictly newer recommendation evidence.
-- Recommendation snapshots remain immutable historical evidence.
-- Player state snapshots remain separate from recommendation snapshots.
-- `player_rankings` represents the complete evaluated player pool.
-- `player_projections` remains manager-squad-specific evidence.
-- Missing legacy Player Ranking Evidence is represented as unavailable rather
-  than reconstructed from later player state.
-- Completed-gameweek backtesting uses authoritative persisted player fixture
-  history for realised outcomes.
-- Backtesting evaluates historical recommendations without modifying the models
-  that originally produced them.
-- Model calibration remains outside v0.35.0 and is reserved for v0.36.0.
-
-### Testing
+- Added `PlayerRankingBacktestingService` for comparing preserved historical
+  Player Intelligence rankings with authoritative realised player outcomes.
+- Added player-level ranking evaluation preserving:
+  - historical player identity
+  - historical Intelligence Score
+  - historical rank
+  - realised FPL points
+  - realised minutes where available
+- Added `PlayerRankingBacktestingMetricsService` for aggregate Player Intelligence
+  evaluation.
+- Added Pearson correlation between historical Intelligence Score magnitude and
+  realised FPL points.
+- Added Spearman rank correlation between historical Player Intelligence ordering
+  and realised FPL-point ordering.
+- Added average-rank handling for tied realised FPL points.
+- Added sample-relative historical ranking for Spearman evaluation so
+  non-contiguous full-player-pool ranks measure relative ordering rather than
+  numerical rank gaps.
+- Added explicit insufficient-evidence handling where correlation cannot be
+  calculated reliably.
+- Added `GameweekPlayerRankingBacktestingService` for gameweek-level Player
+  Intelligence ranking evaluation.
+- Added production-pipeline integration between preserved `player_rankings`,
+  authoritative `player_outcomes` and Player Intelligence evaluation metrics.
+- Added database-backed ranking-backtesting integration using real completed
+  gameweek outcomes and transaction-safe synthetic historical ranking evidence.### Testing
 
 - Added dedicated Player Ranking Evidence contract coverage.
 - Added recommendation candidate ranking-evidence coverage.
@@ -137,33 +101,63 @@ The project follows a sprint-based development process.
 - Added completed-gameweek backtesting coverage for projections, Starting XI,
   Captain Intelligence, transfer recommendations and Transfer Decision
   Intelligence.
-- Re-ran the complete project regression suite after Player Ranking Evidence
-  integration and regression repair.
-- Confirmed all 274 of 274 test files pass.
-- Confirmed all 7,998 assertions pass.
+- Added dedicated Player Intelligence ranking-backtesting coverage across:
+  - player-level historical ranking/outcome matching
+  - historical rank and Intelligence Score preservation
+  - missing and unmatched outcome handling
+  - zero and negative realised FPL points
+  - malformed evidence
+  - Pearson correlation
+  - Spearman rank correlation
+  - realised-points ties
+  - non-contiguous historical ranks
+  - constant-value correlation protection
+  - source-evidence immutability
+  - gameweek-level orchestration
+  - squad-projection isolation
+  - production-pipeline integration
+  - real database integration
+  - authoritative completed-gameweek outcomes
+  - transaction rollback and synthetic-evidence cleanup
+- Added 5 dedicated Player Intelligence ranking-backtesting test files containing
+  177 assertions.
+- Re-ran the complete project regression suite after completing v0.35.0.
+- Confirmed all 279 of 279 test files pass.
+- Confirmed all 8,175 assertions pass.
 - Confirmed zero test failures.
 - Confirmed zero test execution errors.
-- Complete regression suite runtime: 438.302 seconds.
+- Complete regression suite runtime: 437.984 seconds.
 
-### Current v0.35.0 Status
+### Completion Notes
 
-- Recommendation History preservation is operational through the candidate and
-  deadline-promotion architecture.
-- Completed-gameweek backtesting is available for projections, Starting XI,
-  Captain Intelligence, transfer recommendations and Transfer Decision
-  Intelligence.
-- Full-player-pool Player Intelligence rankings are now preserved as immutable
-  historical recommendation evidence.
-- Player Intelligence ranking-versus-realised-return backtesting remains
-  outstanding.
-- v0.35.0 remains in progress and must not tune model weights based on current
-  backtesting results.
-- Model calibration remains planned for v0.36.0.
+- v0.35.0 completes the Recommendation History & Backtesting milestone.
+- Recommendation History now preserves what FPL Intelligence genuinely knew and
+  recommended before each gameweek deadline.
+- Mutable recommendation candidates can accept strictly newer pre-deadline
+  evidence.
+- Deadline promotion converts eligible recommendation evidence into immutable
+  historical snapshots.
+- Completed-gameweek backtesting now evaluates:
+  - projected points
+  - projected minutes
+  - Starting XI selection
+  - Captain Intelligence
+  - transfer recommendations
+  - Transfer Decision Intelligence
+  - Player Intelligence Scores
+  - Player Intelligence rankings
+- Player Intelligence evaluation now provides Pearson and Spearman correlation
+  evidence against authoritative realised FPL outcomes.
+- Full-player-pool `player_rankings` remain deliberately separate from
+  manager-squad `player_projections`.
+- Missing historical recommendation evidence remains unavailable rather than
+  being reconstructed retrospectively from current model output.
+- v0.35.0 measures existing model behaviour and does not tune model weights.
+- Model calibration remains reserved for v0.36.0 — Model Calibration &
+  Intelligence Quality.
 
 ---
 
-
----
 
 ## [0.34.0] - Chip Intelligence
 
