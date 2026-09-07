@@ -46,7 +46,7 @@ GitHub `main` is the authoritative code baseline after every completed commit.
 
 Current development milestone:
 
-**v0.35.0 — Recommendation History & Backtesting — NEXT**
+**v0.35.0 — Recommendation History & Backtesting — IN PROGRESS**
 
 v0.34.0 is complete and adds decision intelligence for all four FPL chips:
 
@@ -71,9 +71,25 @@ A unified Chip Intelligence dashboard can import a real FPL squad and present al
 four independent chip decisions together without introducing a synthetic overall
 chip score or cross-chip ranking system.
 
-The next development milestone is v0.35.0, which will begin preserving
-recommendations and comparing them with actual outcomes through Recommendation
-History & Backtesting.
+The current development milestone is v0.35.0, which is preserving recommendation
+evidence before each deadline and comparing completed-gameweek recommendations
+with authoritative realised outcomes through Recommendation History & Backtesting.
+
+Recommendation History now preserves mutable pre-deadline candidates and promotes
+the latest eligible candidate into immutable historical evidence at the preserved
+gameweek deadline.
+
+Completed backtesting currently covers projected points, projected minutes,
+Starting XI selection, Captain Intelligence, transfer recommendations and
+Transfer Decision Intelligence.
+
+Full-player-pool Player Intelligence rankings are now also preserved independently
+from squad-only player projections, providing the historical evidence required to
+evaluate whether higher Intelligence Scores correlate with stronger realised
+returns.
+
+Player Intelligence ranking evaluation remains outstanding before v0.35.0 is
+complete.
 ---
 
 
@@ -2591,40 +2607,159 @@ required before v0.35.0 begins Recommendation History & Backtesting.
 
 ## v0.35.0 — Recommendation History & Backtesting
 
+### Status
+
+**IN PROGRESS**
+
 ### Goal
 
 Begin measuring whether FPL Intelligence recommendations actually work.
 
-### Planned Work
+Preserve what the application genuinely knew and recommended before each
+gameweek deadline, then compare that historical evidence with authoritative
+realised outcomes after the gameweek is complete.
 
-Before each deadline preserve:
+### Delivered So Far
 
-- player rankings
-- Captain recommendation
+Added Recommendation History with a controlled pre-deadline lifecycle:
+
+- mutable recommendation candidates
+- strictly newer candidate replacement
+- preserved recommendation generation time
+- preserved gameweek deadline
+- deadline-based promotion
+- immutable recommendation snapshots
+- duplicate-promotion protection
+- historical snapshot immutability
+
+Recommendation History now preserves:
+
+- full-player-pool Player Intelligence rankings
+- Captain recommendation and ranked alternatives
 - Starting XI recommendation
 - transfer recommendations
-- projected points
-- Gameweek Decision
-- important model components
+- squad player projections
+- Gameweek Decision Intelligence
+- Chip Intelligence recommendations
+- important model evidence required for later evaluation
 
-After matches complete, compare recommendations with actual outcomes.
+Added full-player-pool `PlayerRankingEvidence`.
 
-Add model evaluation metrics.
+Player Ranking Evidence preserves:
 
-Potential questions:
+- local player identity
+- FPL player identity
+- player name
+- position
+- team identity
+- price
+- Intelligence Score
+- generated rank
 
-- Did the recommended captain outperform alternatives?
-- Did transfer targets outperform sold players?
-- How accurate were expected minutes?
-- How accurate were projected points?
-- Did higher Intelligence Scores correlate with stronger returns?
+Global `player_rankings` evidence remains deliberately separate from
+manager-squad `player_projections`.
 
+The production recommendation-capture path generates Player Ranking Evidence
+from the complete Player Intelligence summary pool before manager-squad
+filtering occurs.
+
+Mutable pre-deadline ranking evidence may be replaced only by a strictly newer
+recommendation candidate.
+
+Once promoted at the preserved deadline, historical Player Ranking Evidence is
+immutable and cannot be rewritten by later candidates.
+
+### Recommendation History Architecture
+
+Recommendation History follows one authoritative lifecycle:
+
+`Recommendation Production`
+`→ Mutable Recommendation Candidate`
+`→ Deadline Promotion`
+`→ Immutable Recommendation Snapshot`
+
+Player state snapshots remain separate from recommendation snapshots:
+
+`player_gameweek_snapshots`
+`→ what was true or known about players`
+
+`recommendation_snapshots`
+`→ what FPL Intelligence believed and recommended`
+
+The obsolete direct-to-snapshot `RecommendationSnapshotCaptureService` path has
+been retired.
+
+Historical recommendation evidence must not be reconstructed from later live
+player state when genuine preserved evidence is unavailable.
+
+### Completed Backtesting
+
+Completed-gameweek backtesting now evaluates:
+
+- projected points against realised FPL points
+- projected minutes against realised minutes
+- projection mean error
+- projection mean absolute error
+- Starting XI recommendation against the best legal realised Starting XI
+- Starting XI selection loss
+- recommended captain against preserved captain alternatives
+- captain points lost
+- recommended transfer target against the outgoing player
+- realised transfer points gain
+- Transfer Decision support for `Make Transfer`
+- Transfer Decision support for `Hold`
+- inconclusive handling for non-binary transfer decisions
+
+Backtesting uses authoritative completed-gameweek outcomes from persisted
+`player_fixture_history`.
+
+Completed-gameweek evidence requires the authoritative completed and
+data-checked gameweek boundary.
+
+### Remaining Work
+
+Player Intelligence ranking backtesting remains outstanding.
+
+The preserved full-player-pool rankings now provide the historical evidence
+needed to answer:
+
+- Did higher Intelligence Scores correlate with stronger realised returns?
+- Did higher-ranked players generally outperform lower-ranked players?
+- How strong was the relationship between Intelligence Score and realised FPL
+  points?
+
+Appropriate ranking and correlation evaluation metrics must be defined under
+test before implementation.
 
 ### Importance
 
 No model should be tuned purely because today's output "looks right".
 
 Backtesting should provide evidence for future calibration.
+
+v0.35.0 measures the existing models rather than tuning them.
+
+Any model calibration justified by the completed backtesting evidence belongs
+to v0.36.0.
+
+### Current Validation
+
+The complete regression suite passes with:
+
+- 274 test files
+- 274 test files passed
+- 0 test files failed
+- 0 test files with errors
+- 7,998 assertions passed
+- 0 assertions failed
+- 438.302 seconds total runtime
+
+Player Ranking Evidence is now preserved through the complete production
+candidate-to-snapshot lifecycle without expanding squad-only player projection
+semantics or weakening historical immutability.
+
+
+---
 
 
 ---

@@ -205,6 +205,7 @@ class ProductionCandidateCaptureService
         int $entryId,
         string $generatedAt,
         string $deadlineTime,
+        array $playerRankings,
         array $playerProjections,
         array $gameweekDecisionResult,
         array $chipRecommendations
@@ -226,6 +227,9 @@ class ProductionCandidateCaptureService
 
             'deadline_time' =>
                 $deadlineTime,
+
+            'player_rankings' =>
+                $playerRankings,
 
             'player_projections' =>
                 $playerProjections,
@@ -567,6 +571,62 @@ $playerSummaries = [
 
         'has_projected_points' =>
             false
+    ],
+
+    [
+        'player_id' =>
+            104,
+
+        'fpl_player_id' =>
+            1004,
+
+        'name' =>
+            'Full Pool Ranking Player',
+
+        'position' =>
+            'FWD',
+
+        'team_id' =>
+            4,
+
+        'price' =>
+            9.5,
+
+        'intelligence_score' =>
+            85.0,
+
+        'projected_points' =>
+            7.50,
+
+        'projected_minutes' =>
+            88.0,
+
+        'projection_confidence' =>
+            0.80,
+
+        'projection_confidence_percent' =>
+            80.0,
+
+        'projection_confidence_label' =>
+            'High',
+
+        'projected_points_components' => [
+
+            'appearance' =>
+                1.95,
+
+            'performance' =>
+                5.55
+        ],
+
+        'projected_points_inputs' => [
+
+            'expected_minutes' =>
+                88.0
+        ],
+
+        'has_projected_points' =>
+            true
     ]
 ];
 
@@ -790,6 +850,10 @@ $playerIntelligence =
     );
 
 
+$playerRankingEvidence =
+    new PlayerRankingEvidence();
+
+
 $playerProjectionEvidence =
     new PlayerProjectionEvidence();
 
@@ -852,6 +916,7 @@ if (
 $productionService =
     new RecommendationCandidateProductionService(
         $playerIntelligence,
+        $playerRankingEvidence,
         $playerProjectionEvidence,
         $chipRecommendationEvidence,
         $captureService
@@ -952,12 +1017,95 @@ productionCandidateAssert(
 
 /*
  * ============================================================
- * E. PLAYER PROJECTION EVIDENCE
+ * E. PLAYER RANKING EVIDENCE
  * ============================================================
  */
 
 productionCandidateSection(
-    'E. Existing Player Projection Evidence'
+    'E. Full Player Pool Ranking Evidence'
+);
+
+
+productionCandidateAssert(
+    count(
+        $captureService
+            ->lastCapture[
+                'player_rankings'
+            ]
+    )
+    ===
+    4,
+    'Ranking evidence contains the full player summary pool.'
+);
+
+
+productionCandidateAssert(
+    $captureService
+        ->lastCapture[
+            'player_rankings'
+        ][
+            0
+        ][
+            'player_id'
+        ]
+    ===
+    104,
+    'Highest Intelligence Score is ranked first even when the player is outside the manager squad.'
+);
+
+
+productionCandidateAssert(
+    $captureService
+        ->lastCapture[
+            'player_rankings'
+        ][
+            0
+        ][
+            'intelligence_score'
+        ]
+    ===
+    85.0,
+    'Existing Intelligence Score is preserved in ranking evidence.'
+);
+
+
+productionCandidateAssert(
+    $captureService
+        ->lastCapture[
+            'player_rankings'
+        ][
+            0
+        ][
+            'rank'
+        ]
+    ===
+    1,
+    'Full-pool ranking evidence preserves the generated rank.'
+);
+
+
+productionCandidateAssert(
+    $captureService
+        ->lastCapture[
+            'player_rankings'
+        ]
+    !==
+    $captureService
+        ->lastCapture[
+            'player_projections'
+        ],
+    'Player rankings remain separate from squad-only projection evidence.'
+);
+
+
+/*
+ * ============================================================
+ * F. PLAYER PROJECTION EVIDENCE
+ * ============================================================
+ */
+
+productionCandidateSection(
+    'F. Existing Player Projection Evidence'
 );
 
 
@@ -1015,12 +1163,12 @@ productionCandidateAssert(
 
 /*
  * ============================================================
- * F. EXISTING CHIP EVIDENCE
+ * G. EXISTING CHIP EVIDENCE
  * ============================================================
  */
 
 productionCandidateSection(
-    'F. Existing Chip Intelligence Evidence'
+    'G. Existing Chip Intelligence Evidence'
 );
 
 
@@ -1076,12 +1224,12 @@ productionCandidateAssert(
 
 /*
  * ============================================================
- * G. HISTORICAL METADATA
+ * H. HISTORICAL METADATA
  * ============================================================
  */
 
 productionCandidateSection(
-    'G. Historical Metadata'
+    'H. Historical Metadata'
 );
 
 
@@ -1131,12 +1279,12 @@ productionCandidateAssert(
 
 /*
  * ============================================================
- * H. BANK PASSED TO EXISTING GAMEWEEK DECISION
+ * I. BANK PASSED TO EXISTING GAMEWEEK DECISION
  * ============================================================
  */
 
 productionCandidateSection(
-    'H. Existing Manager Budget Context'
+    'I. Existing Manager Budget Context'
 );
 
 
@@ -1185,6 +1333,7 @@ $bankCaptureService =
 $bankProductionService =
     new RecommendationCandidateProductionService(
         $bankInspectingIntelligence,
+        $playerRankingEvidence,
         $playerProjectionEvidence,
         $chipRecommendationEvidence,
         $bankCaptureService
@@ -1216,12 +1365,12 @@ productionCandidateAssert(
 
 /*
  * ============================================================
- * I. PREVIEW / INTEGRATION ENTRY PROTECTION
+ * J. PREVIEW / INTEGRATION ENTRY PROTECTION
  * ============================================================
  */
 
 productionCandidateSection(
-    'I. Preview And Integration Protection'
+    'J. Preview And Integration Protection'
 );
 
 
@@ -1240,6 +1389,7 @@ $previewCaptureService =
 $previewProductionService =
     new RecommendationCandidateProductionService(
         $previewIntelligence,
+        $playerRankingEvidence,
         $playerProjectionEvidence,
         $chipRecommendationEvidence,
         $previewCaptureService
@@ -1291,12 +1441,12 @@ productionCandidateAssert(
 
 /*
  * ============================================================
- * J. INCOMPLETE IMPORTED SQUAD
+ * K. INCOMPLETE IMPORTED SQUAD
  * ============================================================
  */
 
 productionCandidateSection(
-    'J. Incomplete Imported Squad'
+    'K. Incomplete Imported Squad'
 );
 
 
@@ -1321,6 +1471,7 @@ $incompleteProductionService =
             $playerSummaries,
             $gameweekDecisionResult
         ),
+        $playerRankingEvidence,
         $playerProjectionEvidence,
         $chipRecommendationEvidence,
         $incompleteCaptureService
@@ -1372,12 +1523,12 @@ productionCandidateAssert(
 
 /*
  * ============================================================
- * K. INCOMPLETE MAPPED SQUAD
+ * L. INCOMPLETE MAPPED SQUAD
  * ============================================================
  */
 
 productionCandidateSection(
-    'K. Incomplete Mapped Squad'
+    'L. Incomplete Mapped Squad'
 );
 
 
@@ -1402,6 +1553,7 @@ $mappedProductionService =
             $playerSummaries,
             $gameweekDecisionResult
         ),
+        $playerRankingEvidence,
         $playerProjectionEvidence,
         $chipRecommendationEvidence,
         $mappedCaptureService
@@ -1453,12 +1605,12 @@ productionCandidateAssert(
 
 /*
  * ============================================================
- * L. UNSUCCESSFUL GAMEWEEK DECISION
+ * M. UNSUCCESSFUL GAMEWEEK DECISION
  * ============================================================
  */
 
 productionCandidateSection(
-    'L. Unsuccessful Gameweek Decision'
+    'M. Unsuccessful Gameweek Decision'
 );
 
 
@@ -1483,6 +1635,7 @@ $decisionProductionService =
             $playerSummaries,
             $failedDecision
         ),
+        $playerRankingEvidence,
         $playerProjectionEvidence,
         $chipRecommendationEvidence,
         $decisionCaptureService
@@ -1534,12 +1687,12 @@ productionCandidateAssert(
 
 /*
  * ============================================================
- * M. DEADLINE PROTECTION
+ * N. DEADLINE PROTECTION
  * ============================================================
  */
 
 productionCandidateSection(
-    'M. Deadline Protection'
+    'N. Deadline Protection'
 );
 
 
@@ -1554,6 +1707,7 @@ $deadlineProductionService =
             $playerSummaries,
             $gameweekDecisionResult
         ),
+        $playerRankingEvidence,
         $playerProjectionEvidence,
         $chipRecommendationEvidence,
         $deadlineCaptureService
@@ -1605,12 +1759,12 @@ productionCandidateAssert(
 
 /*
  * ============================================================
- * N. POST-DEADLINE PROTECTION
+ * O. POST-DEADLINE PROTECTION
  * ============================================================
  */
 
 productionCandidateSection(
-    'N. Post-Deadline Protection'
+    'O. Post-Deadline Protection'
 );
 
 
@@ -1625,6 +1779,7 @@ $postDeadlineProductionService =
             $playerSummaries,
             $gameweekDecisionResult
         ),
+        $playerRankingEvidence,
         $playerProjectionEvidence,
         $chipRecommendationEvidence,
         $postDeadlineCaptureService

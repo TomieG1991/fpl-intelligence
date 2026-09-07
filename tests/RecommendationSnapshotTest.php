@@ -100,6 +100,63 @@ function testThrows(
  * CONTROLLED SNAPSHOT EVIDENCE
  * ============================================================
  */
+ 
+$playerRankings = [
+
+    [
+        'player_id' =>
+            101,
+
+        'fpl_player_id' =>
+            1001,
+
+        'name' =>
+            'Highest Ranked Player',
+
+        'position' =>
+            'MID',
+
+        'team_id' =>
+            1,
+
+        'price' =>
+            8.0,
+
+        'intelligence_score' =>
+            82.5,
+
+        'rank' =>
+            1
+    ],
+
+    [
+        'player_id' =>
+            102,
+
+        'fpl_player_id' =>
+            1002,
+
+        'name' =>
+            'Second Ranked Player',
+
+        'position' =>
+            'FWD',
+
+        'team_id' =>
+            2,
+
+        'price' =>
+            9.0,
+
+        'intelligence_score' =>
+            76.0,
+
+        'rank' =>
+            2
+    ]
+];
+
+
 
 $playerProjections = [
 
@@ -424,6 +481,7 @@ $snapshot =
         2702264,
         $capturedAt,
         $deadlineTime,
+        $playerRankings,
         $playerProjections,
         $startingXI,
         $captainRecommendation,
@@ -469,6 +527,7 @@ testThrows(
     static function () use (
         $capturedAt,
         $deadlineTime,
+        $playerRankings,
         $playerProjections,
         $startingXI,
         $captainRecommendation,
@@ -482,6 +541,7 @@ testThrows(
             2702264,
             $capturedAt,
             $deadlineTime,
+            $playerRankings,
             $playerProjections,
             $startingXI,
             $captainRecommendation,
@@ -498,6 +558,7 @@ testThrows(
     static function () use (
         $capturedAt,
         $deadlineTime,
+        $playerRankings,
         $playerProjections,
         $startingXI,
         $captainRecommendation,
@@ -511,6 +572,7 @@ testThrows(
             2702264,
             $capturedAt,
             $deadlineTime,
+            $playerRankings,
             $playerProjections,
             $startingXI,
             $captainRecommendation,
@@ -541,6 +603,7 @@ testThrows(
     static function () use (
         $capturedAt,
         $deadlineTime,
+        $playerRankings,
         $playerProjections,
         $startingXI,
         $captainRecommendation,
@@ -554,6 +617,7 @@ testThrows(
             0,
             $capturedAt,
             $deadlineTime,
+            $playerRankings,
             $playerProjections,
             $startingXI,
             $captainRecommendation,
@@ -570,6 +634,7 @@ testThrows(
     static function () use (
         $capturedAt,
         $deadlineTime,
+        $playerRankings,
         $playerProjections,
         $startingXI,
         $captainRecommendation,
@@ -583,6 +648,7 @@ testThrows(
             -100,
             $capturedAt,
             $deadlineTime,
+            $playerRankings,
             $playerProjections,
             $startingXI,
             $captainRecommendation,
@@ -611,7 +677,9 @@ echo "============================================<br>";
 
 testThrows(
     static function () use (
+        $capturedAt,
         $deadlineTime,
+        $playerRankings,
         $playerProjections,
         $startingXI,
         $captainRecommendation,
@@ -625,6 +693,7 @@ testThrows(
             2702264,
             '',
             $deadlineTime,
+            $playerRankings,
             $playerProjections,
             $startingXI,
             $captainRecommendation,
@@ -639,7 +708,9 @@ testThrows(
 
 testThrows(
     static function () use (
+        $capturedAt,
         $deadlineTime,
+        $playerRankings,
         $playerProjections,
         $startingXI,
         $captainRecommendation,
@@ -653,6 +724,7 @@ testThrows(
             2702264,
             'not-a-date',
             $deadlineTime,
+            $playerRankings,
             $playerProjections,
             $startingXI,
             $captainRecommendation,
@@ -682,6 +754,7 @@ echo "============================================<br>";
 testThrows(
     static function () use (
         $capturedAt,
+        $playerRankings,
         $playerProjections,
         $startingXI,
         $captainRecommendation,
@@ -695,6 +768,7 @@ testThrows(
             2702264,
             $capturedAt,
             '',
+            $playerRankings,
             $playerProjections,
             $startingXI,
             $captainRecommendation,
@@ -710,6 +784,7 @@ testThrows(
 testThrows(
     static function () use (
         $capturedAt,
+        $playerRankings,
         $playerProjections,
         $startingXI,
         $captainRecommendation,
@@ -723,6 +798,7 @@ testThrows(
             2702264,
             $capturedAt,
             'invalid-deadline',
+            $playerRankings,
             $playerProjections,
             $startingXI,
             $captainRecommendation,
@@ -751,6 +827,7 @@ echo "============================================<br>";
 
 testThrows(
     static function () use (
+        $playerRankings,
         $playerProjections,
         $startingXI,
         $captainRecommendation,
@@ -764,6 +841,7 @@ testThrows(
             2702264,
             '2026-09-11 18:30:00',
             '2026-09-11 18:30:00',
+            $playerRankings,
             $playerProjections,
             $startingXI,
             $captainRecommendation,
@@ -778,6 +856,7 @@ testThrows(
 
 testThrows(
     static function () use (
+        $playerRankings,
         $playerProjections,
         $startingXI,
         $captainRecommendation,
@@ -791,6 +870,7 @@ testThrows(
             2702264,
             '2026-09-11 18:31:00',
             '2026-09-11 18:30:00',
+            $playerRankings,
             $playerProjections,
             $startingXI,
             $captainRecommendation,
@@ -815,6 +895,14 @@ echo "<br>";
 echo "============================================<br>";
 echo "G. Recommendation Section Contract<br>";
 echo "============================================<br>";
+
+
+testResult(
+    is_array(
+        $snapshot->getPlayerRankings()
+    ),
+    'Player rankings are exposed as an array.'
+);
 
 
 testResult(
@@ -870,12 +958,69 @@ echo "<br>";
 
 /*
  * ============================================================
- * H. PLAYER PROJECTIONS PRESERVED
+ * H. PLAYER RANKINGS PRESERVED
  * ============================================================
  */
 
 echo "============================================<br>";
-echo "H. Player Projections Preserved<br>";
+echo "H. Player Rankings Preserved<br>";
+echo "============================================<br>";
+
+
+$storedRankings =
+    $snapshot->getPlayerRankings();
+
+
+testResult(
+    $storedRankings === $playerRankings,
+    'Player ranking evidence is preserved exactly.'
+);
+
+
+testResult(
+    (
+        $storedRankings[0]['player_id']
+        ?? null
+    ) === 101,
+    'Ranked player identity remains unchanged.'
+);
+
+
+testResult(
+    (
+        $storedRankings[0]['intelligence_score']
+        ?? null
+    ) === 82.5,
+    'Intelligence Score remains unchanged.'
+);
+
+
+testResult(
+    (
+        $storedRankings[0]['rank']
+        ?? null
+    ) === 1,
+    'Player rank remains unchanged.'
+);
+
+
+testResult(
+    $storedRankings !== $playerProjections,
+    'Player rankings remain separate from player projection evidence.'
+);
+
+
+echo "<br>";
+
+
+/*
+ * ============================================================
+ * I. PLAYER PROJECTIONS PRESERVED
+ * ============================================================
+ */
+
+echo "============================================<br>";
+echo "I. Player Projections Preserved<br>";
 echo "============================================<br>";
 
 
@@ -930,12 +1075,12 @@ echo "<br>";
 
 /*
  * ============================================================
- * I. STARTING XI PRESERVED
+ * J. STARTING XI PRESERVED
  * ============================================================
  */
 
 echo "============================================<br>";
-echo "I. Starting XI Preserved<br>";
+echo "J. Starting XI Preserved<br>";
 echo "============================================<br>";
 
 
@@ -971,12 +1116,12 @@ echo "<br>";
 
 /*
  * ============================================================
- * J. CAPTAIN RECOMMENDATION PRESERVED
+ * K. CAPTAIN RECOMMENDATION PRESERVED
  * ============================================================
  */
 
 echo "============================================<br>";
-echo "J. Captain Recommendation Preserved<br>";
+echo "K. Captain Recommendation Preserved<br>";
 echo "============================================<br>";
 
 
@@ -1013,12 +1158,12 @@ echo "<br>";
 
 /*
  * ============================================================
- * K. TRANSFER RECOMMENDATIONS PRESERVED
+ * L. TRANSFER RECOMMENDATIONS PRESERVED
  * ============================================================
  */
 
 echo "============================================<br>";
-echo "K. Transfer Recommendations Preserved<br>";
+echo "L. Transfer Recommendations Preserved<br>";
 echo "============================================<br>";
 
 
@@ -1055,12 +1200,12 @@ echo "<br>";
 
 /*
  * ============================================================
- * L. GAMEWEEK DECISION PRESERVED
+ * M. GAMEWEEK DECISION PRESERVED
  * ============================================================
  */
 
 echo "============================================<br>";
-echo "L. Gameweek Decision Preserved<br>";
+echo "M. Gameweek Decision Preserved<br>";
 echo "============================================<br>";
 
 
@@ -1097,12 +1242,12 @@ echo "<br>";
 
 /*
  * ============================================================
- * M. CHIP RECOMMENDATIONS PRESERVED
+ * N. CHIP RECOMMENDATIONS PRESERVED
  * ============================================================
  */
 
 echo "============================================<br>";
-echo "M. Chip Recommendations Preserved<br>";
+echo "N. Chip Recommendations Preserved<br>";
 echo "============================================<br>";
 
 
@@ -1157,12 +1302,12 @@ echo "<br>";
 
 /*
  * ============================================================
- * N. SNAPSHOT EXPORT CONTRACT
+ * O. SNAPSHOT EXPORT CONTRACT
  * ============================================================
  */
 
 echo "============================================<br>";
-echo "N. Snapshot Export Contract<br>";
+echo "O. Snapshot Export Contract<br>";
 echo "============================================<br>";
 
 
@@ -1211,6 +1356,15 @@ testResult(
         ?? null
     ) === $deadlineTime,
     'Export contains the deadline timestamp.'
+);
+
+
+testResult(
+    (
+        $export['player_rankings']
+        ?? null
+    ) === $playerRankings,
+    'Export contains the preserved player rankings.'
 );
 
 
@@ -1273,13 +1427,34 @@ echo "<br>";
 
 /*
  * ============================================================
- * O. SNAPSHOT STATE IS NOT MUTATED THROUGH RETURNED ARRAYS
+ * P. SNAPSHOT STATE IS NOT MUTATED THROUGH RETURNED ARRAYS
  * ============================================================
  */
 
 echo "============================================<br>";
-echo "O. Snapshot State Isolation<br>";
+echo "P. Snapshot State Isolation<br>";
 echo "============================================<br>";
+
+
+$modifiedRankings =
+    $snapshot->getPlayerRankings();
+
+
+$modifiedRankings[0]['intelligence_score'] =
+    999.0;
+
+
+$freshRankings =
+    $snapshot->getPlayerRankings();
+
+
+testResult(
+    (
+        $freshRankings[0]['intelligence_score']
+        ?? null
+    ) === 82.5,
+    'Changing returned player ranking evidence does not mutate snapshot state.'
+);
 
 
 $modifiedProjections =

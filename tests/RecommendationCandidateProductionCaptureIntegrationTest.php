@@ -23,6 +23,7 @@ require_once __DIR__
  *      ↓
  * PlayerIntelligenceService
  *      ↓
+ * PlayerRankingEvidence
  * PlayerProjectionEvidence
  * ChipRecommendationEvidence
  *      ↓
@@ -299,6 +300,7 @@ $candidateCaptureService =
 $productionService =
     new RecommendationCandidateProductionService(
         $playerIntelligenceService,
+        new PlayerRankingEvidence(),
         new PlayerProjectionEvidence(),
         new ChipRecommendationEvidence(),
         $candidateCaptureService
@@ -1186,20 +1188,93 @@ productionCaptureIntegrationAssert(
 
 /*
  * ============================================================
+ * FULL PLAYER POOL RANKING EVIDENCE
+ * ============================================================
+ */
+
+productionCaptureIntegrationSection(
+    'E. Full Player Pool Ranking Evidence'
+);
+
+
+$rankingEvidence =
+    $persisted[
+        'player_rankings'
+    ]
+    ?? [];
+
+
+$expectedRankingEvidence =
+    (new PlayerRankingEvidence())
+        ->build(
+            $summaries
+        );
+
+
+productionCaptureIntegrationAssert(
+    !empty(
+        $rankingEvidence
+    ),
+    'Historical candidate contains full-player-pool ranking evidence.'
+);
+
+
+productionCaptureIntegrationAssert(
+    $rankingEvidence
+    ===
+    $expectedRankingEvidence,
+    'Persisted player ranking evidence matches the full production player pool exactly.'
+);
+
+
+productionCaptureIntegrationAssert(
+    count(
+        $rankingEvidence
+    )
+    >
+    count(
+        $projectionEvidence =
+            $persisted[
+                'player_projections'
+            ]
+            ?? []
+    ),
+    'Full-player-pool ranking evidence remains broader than the 15-player squad projection evidence.'
+);
+
+
+productionCaptureIntegrationAssert(
+    (
+        $rankingEvidence[0][
+            'rank'
+        ]
+        ?? null
+    )
+    ===
+    1,
+    'Highest-ranked preserved player has rank one.'
+);
+
+
+productionCaptureIntegrationAssert(
+    array_key_exists(
+        'intelligence_score',
+        $rankingEvidence[0]
+        ?? []
+    ),
+    'Historical ranking evidence preserves Intelligence Score.'
+);
+
+
+/*
+ * ============================================================
  * PLAYER PROJECTION EVIDENCE
  * ============================================================
  */
 
 productionCaptureIntegrationSection(
-    'E. Player Projection Evidence'
+    'F. Player Projection Evidence'
 );
-
-
-$projectionEvidence =
-    $persisted[
-        'player_projections'
-    ]
-    ?? [];
 
 
 productionCaptureIntegrationAssert(
@@ -1294,7 +1369,7 @@ productionCaptureIntegrationAssert(
  */
 
 productionCaptureIntegrationSection(
-    'F. Gameweek Decision Evidence'
+    'G. Gameweek Decision Evidence'
 );
 
 
@@ -1349,7 +1424,7 @@ productionCaptureIntegrationAssert(
  */
 
 productionCaptureIntegrationSection(
-    'G. Chip Recommendation Evidence'
+    'H. Chip Recommendation Evidence'
 );
 
 
@@ -1467,7 +1542,7 @@ productionCaptureIntegrationAssert(
  */
 
 productionCaptureIntegrationSection(
-    'H. Latest Candidate Replacement'
+    'I. Latest Candidate Replacement'
 );
 
 
@@ -1531,6 +1606,19 @@ productionCaptureIntegrationAssert(
 );
 
 
+productionCaptureIntegrationAssert(
+    (
+        $newerPersisted[
+            'player_rankings'
+        ]
+        ?? []
+    )
+    ===
+    $expectedRankingEvidence,
+    'Newer production capture preserves full-player-pool ranking evidence.'
+);
+
+
 /*
  * ============================================================
  * STALE PRODUCTION CAPTURE CANNOT REPLACE LATEST
@@ -1538,7 +1626,7 @@ productionCaptureIntegrationAssert(
  */
 
 productionCaptureIntegrationSection(
-    'I. Stale Candidate Protection'
+    'J. Stale Candidate Protection'
 );
 
 
@@ -1602,6 +1690,19 @@ productionCaptureIntegrationAssert(
 );
 
 
+productionCaptureIntegrationAssert(
+    (
+        $afterStale[
+            'player_rankings'
+        ]
+        ?? []
+    )
+    ===
+    $expectedRankingEvidence,
+    'Stale production capture cannot replace latest player ranking evidence.'
+);
+
+
 /*
  * ============================================================
  * SINGLE CANDIDATE IDENTITY
@@ -1609,7 +1710,7 @@ productionCaptureIntegrationAssert(
  */
 
 productionCaptureIntegrationSection(
-    'J. Candidate Identity'
+    'K. Candidate Identity'
 );
 
 

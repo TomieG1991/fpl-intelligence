@@ -711,12 +711,23 @@ $tripleCaptainResult = [
  * ============================================================
  */
 
+$playerRankingEvidence =
+    new PlayerRankingEvidence();
+
+
 $playerProjectionEvidence =
     new PlayerProjectionEvidence();
 
 
 $chipRecommendationEvidence =
     new ChipRecommendationEvidence();
+
+
+$playerRankings =
+    $playerRankingEvidence
+        ->build(
+            $playerSummaries
+        );
 
 
 $playerProjections =
@@ -762,6 +773,61 @@ candidateIntegrationSection(
 
 candidateIntegrationAssert(
     count(
+        $playerRankings
+    )
+    ===
+    3,
+    'Player ranking adapter produces full-player-pool evidence.'
+);
+
+
+candidateIntegrationAssert(
+    (
+        $playerRankings[
+            0
+        ][
+            'player_id'
+        ]
+        ?? null
+    )
+    ===
+    102,
+    'Highest Intelligence Score is ranked first.'
+);
+
+
+candidateIntegrationAssert(
+    (
+        $playerRankings[
+            0
+        ][
+            'intelligence_score'
+        ]
+        ?? null
+    )
+    ===
+    78.50,
+    'Player ranking evidence preserves Intelligence Score.'
+);
+
+
+candidateIntegrationAssert(
+    (
+        $playerRankings[
+            0
+        ][
+            'rank'
+        ]
+        ?? null
+    )
+    ===
+    1,
+    'Player ranking evidence preserves generated rank.'
+);
+
+
+candidateIntegrationAssert(
+    count(
         $playerProjections
     )
     ===
@@ -798,6 +864,7 @@ $captured =
             $entryId,
             $earlierGeneratedAt,
             $deadlineTime,
+            $playerRankings,
             $playerProjections,
             $gameweekDecisionResult,
             $chipRecommendations
@@ -887,15 +954,72 @@ candidateIntegrationAssert(
     'Gameweek deadline round trips unchanged.'
 );
 
-
 /*
  * ============================================================
- * E. PLAYER PROJECTION ROUND TRIP
+ * E. PLAYER RANKING ROUND TRIP
  * ============================================================
  */
 
 candidateIntegrationSection(
-    'E. Player Projection Evidence'
+    'E. Player Ranking Evidence'
+);
+
+
+candidateIntegrationAssert(
+    (
+        $persisted[
+            'player_rankings'
+        ]
+        ?? null
+    )
+    ===
+    $playerRankings,
+    'Complete player ranking evidence round trips exactly.'
+);
+
+
+candidateIntegrationAssert(
+    (
+        $persisted[
+            'player_rankings'
+        ][
+            0
+        ][
+            'player_id'
+        ]
+        ?? null
+    )
+    ===
+    102,
+    'Persisted ranking evidence preserves the highest-ranked player.'
+);
+
+
+candidateIntegrationAssert(
+    (
+        $persisted[
+            'player_rankings'
+        ][
+            0
+        ][
+            'rank'
+        ]
+        ?? null
+    )
+    ===
+    1,
+    'Persisted ranking evidence preserves generated rank.'
+);
+
+
+/*
+ * ============================================================
+ * F. PLAYER PROJECTION ROUND TRIP
+ * ============================================================
+ */
+
+candidateIntegrationSection(
+    'F. Player Projection Evidence'
 );
 
 
@@ -925,12 +1049,12 @@ candidateIntegrationAssert(
 
 /*
  * ============================================================
- * F. GAMEWEEK INTELLIGENCE ROUND TRIP
+ * G. GAMEWEEK INTELLIGENCE ROUND TRIP
  * ============================================================
  */
 
 candidateIntegrationSection(
-    'F. Gameweek Intelligence Evidence'
+    'G. Gameweek Intelligence Evidence'
 );
 
 
@@ -986,12 +1110,12 @@ candidateIntegrationAssert(
 
 /*
  * ============================================================
- * G. CHIP INTELLIGENCE ROUND TRIP
+ * H. CHIP INTELLIGENCE ROUND TRIP
  * ============================================================
  */
 
 candidateIntegrationSection(
-    'G. Chip Intelligence Evidence'
+    'H. Chip Intelligence Evidence'
 );
 
 
@@ -1039,12 +1163,12 @@ candidateIntegrationAssert(
 
 /*
  * ============================================================
- * H. NEWER RECOMMENDATION REPLACES CANDIDATE
+ * I. NEWER RECOMMENDATION REPLACES CANDIDATE
  * ============================================================
  */
 
 candidateIntegrationSection(
-    'H. Newer Recommendation Replaces Candidate'
+    'I. Newer Recommendation Replaces Candidate'
 );
 
 
@@ -1087,6 +1211,7 @@ $laterCaptured =
             $entryId,
             $laterGeneratedAt,
             $deadlineTime,
+            $playerRankings,
             $laterPlayerProjections,
             $laterGameweekDecisionResult,
             $chipRecommendations
@@ -1145,12 +1270,12 @@ candidateIntegrationAssert(
 
 /*
  * ============================================================
- * I. STALE RECOMMENDATION CANNOT REPLACE LATEST
+ * J. STALE RECOMMENDATION CANNOT REPLACE LATEST
  * ============================================================
  */
 
 candidateIntegrationSection(
-    'I. Stale Recommendation Cannot Replace Latest'
+    'J. Stale Recommendation Cannot Replace Latest'
 );
 
 
@@ -1161,6 +1286,7 @@ $staleCaptured =
             $entryId,
             $staleGeneratedAt,
             $deadlineTime,
+            $playerRankings,
             $playerProjections,
             $gameweekDecisionResult,
             $chipRecommendations
@@ -1207,12 +1333,12 @@ candidateIntegrationAssert(
 
 /*
  * ============================================================
- * J. CLEANUP
+ * K. CLEANUP
  * ============================================================
  */
 
 candidateIntegrationSection(
-    'J. Controlled Test Cleanup'
+    'K. Controlled Test Cleanup'
 );
 
 

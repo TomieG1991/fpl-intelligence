@@ -629,6 +629,8 @@ CREATE TABLE IF NOT EXISTS `recommendation_snapshots` (
     `captured_at` datetime NOT NULL,
 
     `deadline_time` datetime NOT NULL,
+    
+    `player_rankings` longtext DEFAULT NULL,
 
         `player_projections`
         longtext
@@ -952,6 +954,8 @@ CREATE TABLE recommendation_candidates (
     generated_at DATETIME NOT NULL,
 
     deadline_time DATETIME NOT NULL,
+    
+    player_rankings LONGTEXT DEFAULT NULL,
 
     player_projections LONGTEXT NOT NULL,
 

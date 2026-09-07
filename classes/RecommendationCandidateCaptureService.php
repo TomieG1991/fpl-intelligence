@@ -51,6 +51,7 @@ class RecommendationCandidateCaptureService
         int $entryId,
         string $generatedAt,
         string $deadlineTime,
+        array $playerRankings,
         array $playerProjections,
         array $gameweekDecisionResult,
         array $chipRecommendations
@@ -62,6 +63,18 @@ class RecommendationCandidateCaptureService
 
             throw new InvalidArgumentException(
                 'Gameweek ID must be positive.'
+            );
+        }
+        
+        
+        if (
+            empty(
+                $playerRankings
+            )
+        ) {
+
+            throw new InvalidArgumentException(
+                'Player ranking evidence is required.'
             );
         }
 
@@ -225,6 +238,7 @@ class RecommendationCandidateCaptureService
                 $entryId,
                 $generatedAt,
                 $deadlineTime,
+                $playerRankings,
                 $playerProjections,
                 $gameweek[
                     'starting_xi'

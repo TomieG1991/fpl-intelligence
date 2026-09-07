@@ -209,6 +209,63 @@ $generatedAt =
  * CONTROLLED EVIDENCE
  * ============================================================
  */
+ 
+ $playerRankings = [
+
+    [
+        'player_id' =>
+            101,
+
+        'fpl_player_id' =>
+            1001,
+
+        'name' =>
+            'Highest Ranked Player',
+
+        'position' =>
+            'MID',
+
+        'team_id' =>
+            1,
+
+        'price' =>
+            8.0,
+
+        'intelligence_score' =>
+            82.5,
+
+        'rank' =>
+            1
+    ],
+
+    [
+        'player_id' =>
+            102,
+
+        'fpl_player_id' =>
+            1002,
+
+        'name' =>
+            'Second Ranked Player',
+
+        'position' =>
+            'FWD',
+
+        'team_id' =>
+            2,
+
+        'price' =>
+            9.0,
+
+        'intelligence_score' =>
+            76.0,
+
+        'rank' =>
+            2
+    ]
+];
+
+
 
 $playerProjections = [
 
@@ -447,6 +504,7 @@ $candidate =
         $entryId,
         $generatedAt,
         $deadlineTime,
+        $playerRankings,
         $playerProjections,
         $startingXI,
         $captainRecommendation,
@@ -605,12 +663,38 @@ candidatePromotionAssert(
 
 /*
  * ============================================================
- * D. PLAYER PROJECTIONS PRESERVED EXACTLY
+ * D. PLAYER RANKINGS PRESERVED EXACTLY
  * ============================================================
  */
 
 candidatePromotionSection(
-    'D. Player Projection Evidence'
+    'D. Player Ranking Evidence'
+);
+
+
+candidatePromotionAssert(
+    (
+        $snapshot[
+            'player_rankings'
+        ]
+        ?? null
+    )
+    ===
+    $playerRankings,
+    'Player ranking evidence is promoted without recalculation.'
+);
+
+
+
+
+/*
+ * ============================================================
+ * E. PLAYER PROJECTIONS PRESERVED EXACTLY
+ * ============================================================
+ */
+
+candidatePromotionSection(
+    'E. Player Projection Evidence'
 );
 
 
@@ -629,12 +713,12 @@ candidatePromotionAssert(
 
 /*
  * ============================================================
- * E. STARTING XI PRESERVED EXACTLY
+ * F. STARTING XI PRESERVED EXACTLY
  * ============================================================
  */
 
 candidatePromotionSection(
-    'E. Starting XI Evidence'
+    'F. Starting XI Evidence'
 );
 
 
@@ -653,12 +737,12 @@ candidatePromotionAssert(
 
 /*
  * ============================================================
- * F. CAPTAIN RECOMMENDATION PRESERVED EXACTLY
+ * G. CAPTAIN RECOMMENDATION PRESERVED EXACTLY
  * ============================================================
  */
 
 candidatePromotionSection(
-    'F. Captain Recommendation Evidence'
+    'G. Captain Recommendation Evidence'
 );
 
 
@@ -677,12 +761,12 @@ candidatePromotionAssert(
 
 /*
  * ============================================================
- * G. TRANSFER RECOMMENDATIONS PRESERVED EXACTLY
+ * H. TRANSFER RECOMMENDATIONS PRESERVED EXACTLY
  * ============================================================
  */
 
 candidatePromotionSection(
-    'G. Transfer Recommendation Evidence'
+    'H. Transfer Recommendation Evidence'
 );
 
 
@@ -701,12 +785,12 @@ candidatePromotionAssert(
 
 /*
  * ============================================================
- * H. GAMEWEEK DECISION PRESERVED EXACTLY
+ * I. GAMEWEEK DECISION PRESERVED EXACTLY
  * ============================================================
  */
 
 candidatePromotionSection(
-    'H. Gameweek Decision Evidence'
+    'I. Gameweek Decision Evidence'
 );
 
 
@@ -725,12 +809,12 @@ candidatePromotionAssert(
 
 /*
  * ============================================================
- * I. CHIP RECOMMENDATIONS PRESERVED EXACTLY
+ * J. CHIP RECOMMENDATIONS PRESERVED EXACTLY
  * ============================================================
  */
 
 candidatePromotionSection(
-    'I. Chip Recommendation Evidence'
+    'J. Chip Recommendation Evidence'
 );
 
 
@@ -749,12 +833,12 @@ candidatePromotionAssert(
 
 /*
  * ============================================================
- * J. CANDIDATE REMAINS AVAILABLE
+ * K. CANDIDATE REMAINS AVAILABLE
  * ============================================================
  */
 
 candidatePromotionSection(
-    'J. Candidate Retention'
+    'K. Candidate Retention'
 );
 
 
@@ -776,12 +860,12 @@ candidatePromotionAssert(
 
 /*
  * ============================================================
- * K. DUPLICATE PROMOTION CANNOT REWRITE SNAPSHOT
+ * L. DUPLICATE PROMOTION CANNOT REWRITE SNAPSHOT
  * ============================================================
  */
 
 candidatePromotionSection(
-    'K. Snapshot Immutability'
+    'L. Snapshot Immutability'
 );
 
 
@@ -833,14 +917,29 @@ candidatePromotionAssert(
 );
 
 
+candidatePromotionAssert(
+    (
+        $snapshotAfterDuplicate[
+            'player_rankings'
+        ]
+        ?? null
+    )
+    ===
+    $playerRankings,
+    'Duplicate promotion leaves original player ranking evidence unchanged.'
+);
+
+
+
+
 /*
  * ============================================================
- * L. MISSING CANDIDATE
+ * M. MISSING CANDIDATE
  * ============================================================
  */
 
 candidatePromotionSection(
-    'L. Missing Candidate'
+    'M. Missing Candidate'
 );
 
 

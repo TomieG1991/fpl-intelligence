@@ -203,6 +203,63 @@ $cleanupStmt->execute([
  * CONTROLLED SNAPSHOT EVIDENCE
  * ============================================================
  */
+ 
+$playerRankings = [
+
+    [
+        'player_id' =>
+            101,
+
+        'fpl_player_id' =>
+            1001,
+
+        'name' =>
+            'Highest Ranked Player',
+
+        'position' =>
+            'MID',
+
+        'team_id' =>
+            1,
+
+        'price' =>
+            8.0,
+
+        'intelligence_score' =>
+            82.5,
+
+        'rank' =>
+            1
+    ],
+
+    [
+        'player_id' =>
+            102,
+
+        'fpl_player_id' =>
+            1002,
+
+        'name' =>
+            'Second Ranked Player',
+
+        'position' =>
+            'FWD',
+
+        'team_id' =>
+            2,
+
+        'price' =>
+            9.0,
+
+        'intelligence_score' =>
+            76.0,
+
+        'rank' =>
+            2
+    ]
+];
+
+
 
 $playerProjections = [
 
@@ -384,6 +441,7 @@ $snapshot =
         $entryIdA,
         $capturedAt,
         $deadlineTime,
+        $playerRankings,
         $playerProjections,
         $startingXI,
         $captainRecommendation,
@@ -502,6 +560,30 @@ echo "============================================<br>";
 
 testResult(
     (
+        $stored['player_rankings']
+        ?? null
+    ) === $playerRankings,
+    'Player rankings survive persistence unchanged.'
+);
+
+
+testResult(
+    (
+        $stored['player_rankings']
+        ?? null
+    )
+    !==
+    (
+        $stored['player_projections']
+        ?? null
+    ),
+    'Player rankings remain separate from player projection evidence.'
+);
+
+
+
+testResult(
+    (
         $stored['player_projections']
         ?? null
     ) === $playerProjections,
@@ -568,6 +650,19 @@ echo "D. Duplicate Snapshot Is Not Inserted<br>";
 echo "============================================<br>";
 
 
+$replacementRankings =
+    $playerRankings;
+
+
+$replacementRankings[0]['intelligence_score'] =
+    999.0;
+
+
+$replacementRankings[0]['rank'] =
+    99;
+
+
+
 $replacementProjections =
     $playerProjections;
 
@@ -590,6 +685,7 @@ $replacementSnapshot =
         $entryIdA,
         '2026-08-02 12:00:00',
         $deadlineTime,
+        $replacementRankings,
         $replacementProjections,
         $startingXI,
         $replacementCaptain,
@@ -597,7 +693,6 @@ $replacementSnapshot =
         $gameweekDecision,
         $chipRecommendations
     );
-
 
 $duplicateInserted =
     $repository->insertIfAbsent(
@@ -654,6 +749,33 @@ testResult(
     'Duplicate capture does not replace original projection evidence.'
 );
 
+testResult(
+    (
+        $storedAfterDuplicate[
+            'player_rankings'
+        ][0][
+            'intelligence_score'
+        ]
+        ?? null
+    ) === 82.5,
+    'Duplicate capture does not replace original player ranking evidence.'
+);
+
+
+testResult(
+    (
+        $storedAfterDuplicate[
+            'player_rankings'
+        ][0][
+            'rank'
+        ]
+        ?? null
+    ) === 1,
+    'Duplicate capture preserves the original player rank.'
+);
+
+
+
 
 testResult(
     (
@@ -690,6 +812,7 @@ $secondEntrySnapshot =
         $entryIdB,
         $capturedAt,
         $deadlineTime,
+        $playerRankings,
         $playerProjections,
         $startingXI,
         $captainRecommendation,
@@ -750,6 +873,7 @@ $secondGameweekSnapshot =
         $entryIdA,
         $capturedAt,
         $deadlineTime,
+        $playerRankings,
         $playerProjections,
         $startingXI,
         $captainRecommendation,

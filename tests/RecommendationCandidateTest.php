@@ -115,6 +115,64 @@ $generatedAt =
 
 $deadlineTime =
     '2026-09-05 11:00:00';
+    
+    
+$playerRankings = [
+
+    [
+        'player_id' =>
+            101,
+
+        'fpl_player_id' =>
+            1001,
+
+        'name' =>
+            'Test Player',
+
+        'position' =>
+            'MID',
+
+        'team_id' =>
+            1,
+
+        'price' =>
+            8.0,
+
+        'intelligence_score' =>
+            82.5,
+
+        'rank' =>
+            1
+    ],
+
+    [
+        'player_id' =>
+            102,
+
+        'fpl_player_id' =>
+            1002,
+
+        'name' =>
+            'Second Player',
+
+        'position' =>
+            'FWD',
+
+        'team_id' =>
+            2,
+
+        'price' =>
+            9.0,
+
+        'intelligence_score' =>
+            76.0,
+
+        'rank' =>
+            2
+    ]
+];
+
+
 
 
 $playerProjections = [
@@ -263,6 +321,7 @@ $candidate =
         $entryId,
         $generatedAt,
         $deadlineTime,
+        $playerRankings,
         $playerProjections,
         $startingXI,
         $captainRecommendation,
@@ -306,6 +365,7 @@ try {
         $entryId,
         $generatedAt,
         $deadlineTime,
+        $playerRankings,
         $playerProjections,
         $startingXI,
         $captainRecommendation,
@@ -357,6 +417,7 @@ try {
         0,
         $generatedAt,
         $deadlineTime,
+        $playerRankings,
         $playerProjections,
         $startingXI,
         $captainRecommendation,
@@ -408,6 +469,7 @@ try {
         $entryId,
         'not-a-date',
         $deadlineTime,
+        $playerRankings,
         $playerProjections,
         $startingXI,
         $captainRecommendation,
@@ -459,6 +521,7 @@ try {
         $entryId,
         $generatedAt,
         'not-a-date',
+        $playerRankings,
         $playerProjections,
         $startingXI,
         $captainRecommendation,
@@ -504,6 +567,7 @@ try {
         $entryId,
         $deadlineTime,
         $deadlineTime,
+        $playerRankings,
         $playerProjections,
         $startingXI,
         $captainRecommendation,
@@ -538,6 +602,7 @@ try {
         $entryId,
         '2026-09-05 11:00:01',
         $deadlineTime,
+        $playerRankings,
         $playerProjections,
         $startingXI,
         $captainRecommendation,
@@ -570,6 +635,14 @@ recommendationCandidateAssert(
 recommendationCandidateSection(
     'G. Recommendation Evidence'
 );
+
+
+recommendationCandidateAssert(
+    $candidate->getPlayerRankings() === $playerRankings,
+    'Candidate preserves player ranking evidence.'
+);
+
+
 
 
 recommendationCandidateAssert(
@@ -644,6 +717,9 @@ $expectedExport = [
 
     'deadline_time' =>
         $deadlineTime,
+
+    'player_rankings' =>
+        $playerRankings,
 
     'player_projections' =>
         $playerProjections,

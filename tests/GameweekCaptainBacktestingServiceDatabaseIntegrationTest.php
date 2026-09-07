@@ -589,6 +589,7 @@ $snapshot =
         $deadlineTime,
         [],
         [],
+        [],
         $captainRecommendation,
         [],
         [],

@@ -233,6 +233,64 @@ function buildCandidateCaptureEvidence(
     float $projectedPoints
 ): array {
 
+    $playerRankings = [
+
+        [
+            'player_id' =>
+                201,
+
+            'fpl_player_id' =>
+                1201,
+
+            'name' =>
+                'Highest Ranked Test Player',
+
+            'position' =>
+                'MID',
+
+            'team_id' =>
+                1,
+
+            'price' =>
+                8.0,
+
+            'intelligence_score' =>
+                $label === 'LATER'
+                    ? 88.0
+                    : 82.5,
+
+            'rank' =>
+                1
+        ],
+
+        [
+            'player_id' =>
+                202,
+
+            'fpl_player_id' =>
+                1202,
+
+            'name' =>
+                'Second Ranked Test Player',
+
+            'position' =>
+                'FWD',
+
+            'team_id' =>
+                2,
+
+            'price' =>
+                9.0,
+
+            'intelligence_score' =>
+                76.0,
+
+            'rank' =>
+                2
+        ]
+    ];
+
+
     $playerProjections = [
 
         [
@@ -518,6 +576,9 @@ function buildCandidateCaptureEvidence(
 
     return [
 
+        'player_rankings' =>
+            $playerRankings,
+
         'player_projections' =>
             $playerProjections,
 
@@ -615,6 +676,9 @@ $earlyResult =
             $earlyGeneratedAt,
             $deadlineTime,
             $earlyEvidence[
+                'player_rankings'
+            ],
+            $earlyEvidence[
                 'player_projections'
             ],
             $earlyEvidence[
@@ -661,12 +725,38 @@ candidateCaptureAssert(
 
 /*
  * ============================================================
- * C. PLAYER PROJECTIONS PRESERVED
+ * C. PLAYER RANKINGS PRESERVED
  * ============================================================
  */
 
 candidateCaptureSection(
-    'C. Player Projection Evidence'
+    'C. Player Ranking Evidence'
+);
+
+
+candidateCaptureAssert(
+    (
+        $storedEarly[
+            'player_rankings'
+        ]
+        ?? null
+    )
+    ===
+    $earlyEvidence[
+        'player_rankings'
+    ],
+    'Existing player ranking evidence is preserved exactly.'
+);
+
+
+/*
+ * ============================================================
+ * D. PLAYER PROJECTIONS PRESERVED
+ * ============================================================
+ */
+
+candidateCaptureSection(
+    'D. Player Projection Evidence'
 );
 
 
@@ -904,6 +994,9 @@ $laterResult =
             $laterGeneratedAt,
             $deadlineTime,
             $laterEvidence[
+                'player_rankings'
+            ],
+            $laterEvidence[
                 'player_projections'
             ],
             $laterEvidence[
@@ -939,6 +1032,21 @@ candidateCaptureAssert(
     ===
     $laterGeneratedAt,
     'Newer recommendation generation time is persisted.'
+);
+
+
+candidateCaptureAssert(
+    (
+        $storedLater[
+            'player_rankings'
+        ]
+        ?? null
+    )
+    ===
+    $laterEvidence[
+        'player_rankings'
+    ],
+    'Newer player ranking evidence replaces earlier evidence.'
 );
 
 
@@ -1013,6 +1121,9 @@ $olderResult =
             $olderGeneratedAt,
             $deadlineTime,
             $olderEvidence[
+                'player_rankings'
+            ],
+            $olderEvidence[
                 'player_projections'
             ],
             $olderEvidence[
@@ -1036,6 +1147,21 @@ $storedAfterOlder =
             $entryId,
             $gameweekId
         );
+
+
+candidateCaptureAssert(
+    (
+        $storedAfterOlder[
+            'player_rankings'
+        ]
+        ?? null
+    )
+    ===
+    $laterEvidence[
+        'player_rankings'
+    ],
+    'Older capture leaves latest player ranking evidence unchanged.'
+);
 
 
 candidateCaptureAssert(
@@ -1079,6 +1205,9 @@ $sameTimeResult =
             $laterGeneratedAt,
             $deadlineTime,
             $sameTimeEvidence[
+                'player_rankings'
+            ],
+            $sameTimeEvidence[
                 'player_projections'
             ],
             $sameTimeEvidence[
@@ -1102,6 +1231,21 @@ $storedAfterSameTime =
             $entryId,
             $gameweekId
         );
+
+
+candidateCaptureAssert(
+    (
+        $storedAfterSameTime[
+            'player_rankings'
+        ]
+        ?? null
+    )
+    ===
+    $laterEvidence[
+        'player_rankings'
+    ],
+    'Equal-time capture leaves latest player ranking evidence unchanged.'
+);
 
 
 candidateCaptureAssert(
@@ -1154,6 +1298,9 @@ try {
             $entryId,
             $laterGeneratedAt,
             $deadlineTime,
+            $laterEvidence[
+                'player_rankings'
+            ],
             $laterEvidence[
                 'player_projections'
             ],
@@ -1216,6 +1363,9 @@ try {
             $laterGeneratedAt,
             $deadlineTime,
             $laterEvidence[
+                'player_rankings'
+            ],
+            $laterEvidence[
                 'player_projections'
             ],
             $missingStartingXI,
@@ -1274,6 +1424,9 @@ try {
             $entryId,
             $laterGeneratedAt,
             $deadlineTime,
+            $laterEvidence[
+                'player_rankings'
+            ],
             $laterEvidence[
                 'player_projections'
             ],
@@ -1334,6 +1487,9 @@ try {
             $laterGeneratedAt,
             $deadlineTime,
             $laterEvidence[
+                'player_rankings'
+            ],
+            $laterEvidence[
                 'player_projections'
             ],
             $missingTransfers,
@@ -1393,6 +1549,9 @@ try {
             $laterGeneratedAt,
             $deadlineTime,
             $laterEvidence[
+                'player_rankings'
+            ],
+            $laterEvidence[
                 'player_projections'
             ],
             $missingDecision,
@@ -1418,12 +1577,62 @@ candidateCaptureAssert(
 
 /*
  * ============================================================
- * R. EMPTY PLAYER PROJECTIONS REJECTED
+ * R. EMPTY PLAYER RANKINGS REJECTED
  * ============================================================
  */
 
 candidateCaptureSection(
-    'R. Empty Player Projections'
+    'R. Empty Player Rankings'
+);
+
+
+$emptyRankingsRejected =
+    false;
+
+
+try {
+
+    $service
+        ->capture(
+            $gameweekId,
+            $entryId,
+            $laterGeneratedAt,
+            $deadlineTime,
+            [],
+            $laterEvidence[
+                'player_projections'
+            ],
+            $laterEvidence[
+                'gameweek_decision_result'
+            ],
+            $laterEvidence[
+                'chip_recommendations'
+            ]
+        );
+
+} catch (
+    InvalidArgumentException $exception
+) {
+
+    $emptyRankingsRejected =
+        true;
+}
+
+
+candidateCaptureAssert(
+    $emptyRankingsRejected,
+    'Empty player ranking evidence is rejected.'
+);
+
+
+/*
+ * ============================================================
+ * S. EMPTY PLAYER PROJECTIONS REJECTED
+ * ============================================================
+ */
+
+candidateCaptureSection(
+    'S. Empty Player Projections'
 );
 
 
@@ -1439,6 +1648,9 @@ try {
             $entryId,
             $laterGeneratedAt,
             $deadlineTime,
+            $laterEvidence[
+                'player_rankings'
+            ],
             [],
             $laterEvidence[
                 'gameweek_decision_result'
@@ -1465,12 +1677,12 @@ candidateCaptureAssert(
 
 /*
  * ============================================================
- * S. EMPTY CHIP EVIDENCE REJECTED
+ * T. EMPTY CHIP EVIDENCE REJECTED
  * ============================================================
  */
 
 candidateCaptureSection(
-    'S. Empty Chip Evidence'
+    'T. Empty Chip Evidence'
 );
 
 
@@ -1486,6 +1698,9 @@ try {
             $entryId,
             $laterGeneratedAt,
             $deadlineTime,
+            $laterEvidence[
+                'player_rankings'
+            ],
             $laterEvidence[
                 'player_projections'
             ],

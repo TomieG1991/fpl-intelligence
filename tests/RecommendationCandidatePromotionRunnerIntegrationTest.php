@@ -238,6 +238,62 @@ $newerGeneratedAt =
  * and promotion can be verified.
  */
 
+$playerRankings = [
+
+    [
+        'player_id' =>
+            7002,
+
+        'fpl_player_id' =>
+            17002,
+
+        'name' =>
+            'Controlled Forward',
+
+        'position' =>
+            'FWD',
+
+        'team_id' =>
+            2,
+
+        'price' =>
+            9.5,
+
+        'intelligence_score' =>
+            84.50,
+
+        'rank' =>
+            1
+    ],
+
+    [
+        'player_id' =>
+            7001,
+
+        'fpl_player_id' =>
+            17001,
+
+        'name' =>
+            'Controlled Goalkeeper',
+
+        'position' =>
+            'GK',
+
+        'team_id' =>
+            1,
+
+        'price' =>
+            5.5,
+
+        'intelligence_score' =>
+            72.25,
+
+        'rank' =>
+            2
+    ]
+];
+
+
 $playerProjections = [
 
     [
@@ -425,6 +481,52 @@ $chipRecommendations = [
  *
  * The snapshot must remain unchanged.
  */
+ 
+ $laterPlayerRankings =
+    $playerRankings;
+
+
+$laterPlayerRankings[
+    0
+][
+    'intelligence_score'
+] =
+    70.00;
+
+
+$laterPlayerRankings[
+    0
+][
+    'rank'
+] =
+    2;
+
+
+$laterPlayerRankings[
+    1
+][
+    'intelligence_score'
+] =
+    88.00;
+
+
+$laterPlayerRankings[
+    1
+][
+    'rank'
+] =
+    1;
+
+
+$laterPlayerRankings =
+    [
+        $laterPlayerRankings[
+            1
+        ],
+        $laterPlayerRankings[
+            0
+        ]
+    ];
 
 $laterPlayerProjections =
     $playerProjections;
@@ -597,6 +699,7 @@ $candidate =
         $entryId,
         $generatedAt,
         $deadlineTime,
+        $playerRankings,
         $playerProjections,
         $startingXI,
         $captainRecommendation,
@@ -657,6 +760,18 @@ promotionRunnerIntegrationAssert(
     ===
     $deadlineTime,
     'Candidate preserves controlled deadline.'
+);
+
+promotionRunnerIntegrationAssert(
+    (
+        $storedCandidate[
+            'player_rankings'
+        ]
+        ?? null
+    )
+    ===
+    $playerRankings,
+    'Candidate preserves controlled player ranking evidence.'
 );
 
 
@@ -866,6 +981,52 @@ promotionRunnerIntegrationAssert(
     'Snapshot preserves candidate deadline.'
 );
 
+promotionRunnerIntegrationAssert(
+    (
+        $promotedSnapshot[
+            'player_rankings'
+        ]
+        ?? null
+    )
+    ===
+    $playerRankings,
+    'Snapshot preserves player ranking evidence exactly.'
+);
+
+
+promotionRunnerIntegrationAssert(
+    (
+        $promotedSnapshot[
+            'player_rankings'
+        ][
+            0
+        ][
+            'player_id'
+        ]
+        ?? null
+    )
+    ===
+    7002,
+    'Snapshot preserves original highest-ranked player.'
+);
+
+
+promotionRunnerIntegrationAssert(
+    (
+        $promotedSnapshot[
+            'player_rankings'
+        ][
+            0
+        ][
+            'rank'
+        ]
+        ?? null
+    )
+    ===
+    1,
+    'Snapshot preserves original generated player rank.'
+);
+
 
 promotionRunnerIntegrationAssert(
     (
@@ -1035,6 +1196,7 @@ $laterCandidate =
         $entryId,
         $newerGeneratedAt,
         $deadlineTime,
+        $laterPlayerRankings,
         $laterPlayerProjections,
         $laterStartingXI,
         $laterCaptainRecommendation,
@@ -1076,6 +1238,35 @@ promotionRunnerIntegrationAssert(
     ===
     $newerGeneratedAt,
     'Mutable candidate now contains newer generated timestamp.'
+);
+
+promotionRunnerIntegrationAssert(
+    (
+        $storedLaterCandidate[
+            'player_rankings'
+        ]
+        ?? null
+    )
+    ===
+    $laterPlayerRankings,
+    'Mutable candidate now contains later player ranking evidence.'
+);
+
+
+promotionRunnerIntegrationAssert(
+    (
+        $storedLaterCandidate[
+            'player_rankings'
+        ][
+            0
+        ][
+            'player_id'
+        ]
+        ?? null
+    )
+    ===
+    7001,
+    'Later mutable candidate may change the highest-ranked player.'
 );
 
 
@@ -1188,6 +1379,52 @@ promotionRunnerIntegrationAssert(
     ===
     $generatedAt,
     'Immutable snapshot retains original pre-deadline captured timestamp.'
+);
+
+promotionRunnerIntegrationAssert(
+    (
+        $finalSnapshot[
+            'player_rankings'
+        ]
+        ?? null
+    )
+    ===
+    $playerRankings,
+    'Later mutable rankings cannot rewrite historical snapshot rankings.'
+);
+
+
+promotionRunnerIntegrationAssert(
+    (
+        $finalSnapshot[
+            'player_rankings'
+        ][
+            0
+        ][
+            'player_id'
+        ]
+        ?? null
+    )
+    ===
+    7002,
+    'Immutable snapshot retains original highest-ranked player.'
+);
+
+
+promotionRunnerIntegrationAssert(
+    (
+        $finalSnapshot[
+            'player_rankings'
+        ][
+            0
+        ][
+            'rank'
+        ]
+        ?? null
+    )
+    ===
+    1,
+    'Immutable snapshot retains original player rank.'
 );
 
 

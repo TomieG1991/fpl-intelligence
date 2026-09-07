@@ -28,6 +28,8 @@ class RecommendationSnapshot
      * RecommendationSnapshot does not recalculate, reinterpret or
      * normalise their contents.
      */
+     
+    private array $playerRankings;
 
     private array $playerProjections;
 
@@ -53,6 +55,7 @@ class RecommendationSnapshot
         int $entryId,
         string $capturedAt,
         string $deadlineTime,
+        array $playerRankings,
         array $playerProjections,
         array $startingXI,
         array $captainRecommendation,
@@ -157,7 +160,9 @@ class RecommendationSnapshot
 
         $this->deadlineTime =
             $deadlineTime;
-
+            
+        $this->playerRankings =
+            $playerRankings;        
 
         $this->playerProjections =
             $playerProjections;
@@ -223,6 +228,13 @@ class RecommendationSnapshot
      * PRESERVED RECOMMENDATION EVIDENCE
      * ============================================================
      */
+     
+    public function getPlayerRankings(): array
+    {
+        return $this->playerRankings;
+    }
+
+
 
     public function getPlayerProjections(): array
     {
@@ -287,6 +299,9 @@ class RecommendationSnapshot
 
             'deadline_time' =>
                 $this->deadlineTime,
+
+            'player_rankings' =>
+                $this->playerRankings,
 
             'player_projections' =>
                 $this->playerProjections,

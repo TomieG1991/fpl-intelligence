@@ -54,6 +54,7 @@ class RecommendationCandidateRepository
                     entry_id,
                     generated_at,
                     deadline_time,
+                    player_rankings,
                     player_projections,
                     starting_xi,
                     captain_recommendation,
@@ -119,6 +120,7 @@ class RecommendationCandidateRepository
                     entry_id,
                     generated_at,
                     deadline_time,
+                    player_rankings,
                     player_projections,
                     starting_xi,
                     captain_recommendation,
@@ -422,6 +424,7 @@ class RecommendationCandidateRepository
                     entry_id,
                     generated_at,
                     deadline_time,
+                    player_rankings,
                     player_projections,
                     starting_xi,
                     captain_recommendation,
@@ -433,6 +436,7 @@ class RecommendationCandidateRepository
                     :entry_id,
                     :generated_at,
                     :deadline_time,
+                    :player_rankings,
                     :player_projections,
                     :starting_xi,
                     :captain_recommendation,
@@ -494,6 +498,7 @@ class RecommendationCandidateRepository
                 SET
                     generated_at = :generated_at,
                     deadline_time = :deadline_time,
+                    player_rankings = :player_rankings,
                     player_projections = :player_projections,
                     starting_xi = :starting_xi,
                     captain_recommendation = :captain_recommendation,
@@ -559,6 +564,12 @@ class RecommendationCandidateRepository
 
             'deadline_time' =>
                 $candidate->getDeadlineTime(),
+
+            'player_rankings' =>
+                $this->encodeEvidence(
+                    $candidate
+                        ->getPlayerRankings()
+                ),
 
             'player_projections' =>
                 $this->encodeEvidence(
@@ -655,6 +666,27 @@ class RecommendationCandidateRepository
                 (string) $row[
                     'deadline_time'
                 ],
+
+            'player_rankings' =>
+                (
+                    isset(
+                        $row[
+                            'player_rankings'
+                        ]
+                    )
+                    &&
+                    $row[
+                        'player_rankings'
+                    ]
+                    !==
+                    ''
+                )
+                    ? $this->decodeEvidence(
+                        (string) $row[
+                            'player_rankings'
+                        ]
+                    )
+                    : [],
 
             'player_projections' =>
                 $this->decodeEvidence(

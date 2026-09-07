@@ -160,6 +160,7 @@ class RecommendationSnapshotRepository
                     entry_id,
                     captured_at,
                     deadline_time,
+                    player_rankings,
                     player_projections,
                     starting_xi,
                     captain_recommendation,
@@ -172,6 +173,7 @@ class RecommendationSnapshotRepository
                     :entry_id,
                     :captured_at,
                     :deadline_time,
+                    :player_rankings,
                     :player_projections,
                     :starting_xi,
                     :captain_recommendation,
@@ -196,6 +198,13 @@ class RecommendationSnapshotRepository
 
             ':deadline_time' =>
                 $snapshot->getDeadlineTime(),
+
+            ':player_rankings' =>
+                $this->encodeJson(
+                    $snapshotData[
+                        'player_rankings'
+                    ]
+                ),
 
             ':player_projections' =>
                 $this->encodeJson(
@@ -285,6 +294,46 @@ class RecommendationSnapshotRepository
     private function decodeSnapshot(
         array $snapshot
     ): array {
+
+        /*
+         * Player ranking evidence was introduced after historical
+         * recommendation snapshots already existed.
+         *
+         * A legacy NULL therefore means that no ranking evidence
+         * was preserved at the time. It must not be reconstructed
+         * from later player data.
+         */
+        if (
+            isset(
+                $snapshot[
+                    'player_rankings'
+                ]
+            )
+            &&
+            $snapshot[
+                'player_rankings'
+            ] !== ''
+        ) {
+
+            $snapshot[
+                'player_rankings'
+            ] =
+                json_decode(
+                    (string) $snapshot[
+                        'player_rankings'
+                    ],
+                    true,
+                    512,
+                    JSON_THROW_ON_ERROR
+                );
+
+        } else {
+
+            $snapshot[
+                'player_rankings'
+            ] = [];
+        }
+
 
         $jsonFields = [
 

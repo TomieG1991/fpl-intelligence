@@ -565,6 +565,7 @@ $snapshot =
         [],
         [],
         [],
+        [],
         $transferRecommendations,
         [],
         []
@@ -638,6 +639,7 @@ $laterSnapshot =
         $syntheticEntryId,
         $capturedAt,
         $deadlineTime,
+        [],
         [],
         [],
         [],

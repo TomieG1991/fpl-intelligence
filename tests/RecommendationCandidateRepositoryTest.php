@@ -276,7 +276,68 @@ function buildCandidateEvidence(
     float $projectedPoints
 ): array {
 
-    return [
+        return [
+
+        'player_rankings' => [
+
+            [
+                'player_id' =>
+                    101,
+
+                'fpl_player_id' =>
+                    1001,
+
+                'name' =>
+                    'Ranked Player ' . $label,
+
+                'position' =>
+                    'MID',
+
+                'team_id' =>
+                    1,
+
+                'price' =>
+                    8.0,
+
+                'intelligence_score' =>
+                    $projectedPoints
+                    * 10.0,
+
+                'rank' =>
+                    1
+            ],
+
+            [
+                'player_id' =>
+                    102,
+
+                'fpl_player_id' =>
+                    1002,
+
+                'name' =>
+                    'Second Ranked Player ' . $label,
+
+                'position' =>
+                    'FWD',
+
+                'team_id' =>
+                    2,
+
+                'price' =>
+                    9.0,
+
+                'intelligence_score' =>
+                    (
+                        $projectedPoints
+                        * 10.0
+                    )
+                    -
+                    5.0,
+
+                'rank' =>
+                    2
+            ]
+        ],
 
         'player_projections' => [
 
@@ -400,6 +461,9 @@ function buildCandidate(
             $entryId,
             $generatedAt,
             $deadlineTime,
+            $evidence[
+                'player_rankings'
+            ],
             $evidence[
                 'player_projections'
             ],
@@ -581,6 +645,41 @@ $earlyEvidence =
         'EARLY',
         7.25
     );
+    
+    
+candidateRepositoryAssert(
+    (
+        $stored[
+            'player_rankings'
+        ]
+        ?? null
+    )
+    ===
+    $earlyEvidence[
+        'player_rankings'
+    ],
+    'Player rankings survive exact persistence round trip.'
+);
+
+
+candidateRepositoryAssert(
+    (
+        $stored[
+            'player_rankings'
+        ]
+        ?? null
+    )
+    !==
+    (
+        $stored[
+            'player_projections'
+        ]
+        ?? null
+    ),
+    'Player rankings remain separate from player projection evidence.'
+);
+
+
 
 
 candidateRepositoryAssert(
@@ -752,6 +851,23 @@ candidateRepositoryAssert(
 );
 
 
+candidateRepositoryAssert(
+    (
+        $storedLater[
+            'player_rankings'
+        ]
+        ?? null
+    )
+    ===
+    $laterEvidence[
+        'player_rankings'
+    ],
+    'Newer player ranking evidence replaces older ranking evidence.'
+);
+
+
+
+
 /*
  * ============================================================
  * E. OLDER CANDIDATE CANNOT REPLACE NEWER CANDIDATE
@@ -824,6 +940,23 @@ candidateRepositoryAssert(
 );
 
 
+candidateRepositoryAssert(
+    (
+        $storedAfterOlder[
+            'player_rankings'
+        ]
+        ?? null
+    )
+    ===
+    $laterEvidence[
+        'player_rankings'
+    ],
+    'Older candidate does not replace newer player ranking evidence.'
+);
+
+
+
+
 /*
  * ============================================================
  * F. SAME TIMESTAMP DOES NOT REPLACE EXISTING CANDIDATE
@@ -881,6 +1014,23 @@ candidateRepositoryAssert(
     ],
     'Same-time candidate does not replace existing evidence.'
 );
+
+
+candidateRepositoryAssert(
+    (
+        $storedAfterSameTime[
+            'player_rankings'
+        ]
+        ?? null
+    )
+    ===
+    $laterEvidence[
+        'player_rankings'
+    ],
+    'Same-time candidate does not replace existing player ranking evidence.'
+);
+
+
 
 
 /*
@@ -1278,6 +1428,23 @@ candidateRepositoryAssert(
     ),
     'Ready candidate preserves entry identity.'
 );
+
+
+candidateRepositoryAssert(
+    (
+        $readyEntryOne[
+            'player_rankings'
+        ]
+        ?? null
+    )
+    ===
+    $laterEvidence[
+        'player_rankings'
+    ],
+    'Ready candidate preserves latest player ranking evidence.'
+);
+
+
 
 
 candidateRepositoryAssert(

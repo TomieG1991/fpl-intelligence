@@ -656,13 +656,14 @@ try {
             $syntheticEntryId,
             $capturedAt,
             $deadlineTime,
+            [],
             $playerProjections,
             $startingXI,
             $captainRecommendation,
             $transferRecommendations,
             $gameweekDecision,
             $chipRecommendations
-        );
+            );
 
 
     backtestingEvidenceIntegrationResult(

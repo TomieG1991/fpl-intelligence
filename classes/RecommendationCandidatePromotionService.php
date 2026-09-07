@@ -131,8 +131,11 @@ class RecommendationCandidatePromotionService
                 (string) $candidate[
                     'generated_at'
                 ],
-                (string) $candidate[
+                $candidate[
                     'deadline_time'
+                ],
+                $candidate[
+                    'player_rankings'
                 ],
                 $candidate[
                     'player_projections'

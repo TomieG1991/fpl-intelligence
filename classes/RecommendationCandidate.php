@@ -34,6 +34,8 @@ class RecommendationCandidate
 
     private string $deadlineTime;
 
+    private array $playerRankings;
+
     private array $playerProjections;
 
     private array $startingXI;
@@ -52,6 +54,7 @@ class RecommendationCandidate
         int $entryId,
         string $generatedAt,
         string $deadlineTime,
+        array $playerRankings,
         array $playerProjections,
         array $startingXI,
         array $captainRecommendation,
@@ -193,6 +196,10 @@ class RecommendationCandidate
             $deadlineTime;
 
 
+        $this->playerRankings =
+            $playerRankings;
+
+
         $this->playerProjections =
             $playerProjections;
 
@@ -250,6 +257,15 @@ class RecommendationCandidate
         return
             $this->deadlineTime;
     }
+    
+    
+    public function getPlayerRankings(): array
+    {
+        return
+            $this->playerRankings;
+    }
+
+
 
 
     public function getPlayerProjections(): array
@@ -315,6 +331,9 @@ class RecommendationCandidate
 
             'deadline_time' =>
                 $this->deadlineTime,
+
+            'player_rankings' =>
+                $this->playerRankings,
 
             'player_projections' =>
                 $this->playerProjections,

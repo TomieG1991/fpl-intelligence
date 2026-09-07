@@ -505,6 +505,7 @@ $snapshot =
         $syntheticEntryId,
         $capturedAt,
         $deadlineTime,
+        [],
         $playerProjections,
         [],
         [],

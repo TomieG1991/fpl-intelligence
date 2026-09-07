@@ -22,6 +22,9 @@ class RecommendationCandidateProductionService
     private object $playerIntelligenceService;
 
 
+    private PlayerRankingEvidence $playerRankingEvidence;
+
+
     private PlayerProjectionEvidence $playerProjectionEvidence;
 
 
@@ -33,6 +36,7 @@ class RecommendationCandidateProductionService
 
     public function __construct(
         object $playerIntelligenceService,
+        PlayerRankingEvidence $playerRankingEvidence,
         PlayerProjectionEvidence $playerProjectionEvidence,
         ChipRecommendationEvidence $chipRecommendationEvidence,
         object $captureService
@@ -40,6 +44,10 @@ class RecommendationCandidateProductionService
 
         $this->playerIntelligenceService =
             $playerIntelligenceService;
+
+
+        $this->playerRankingEvidence =
+            $playerRankingEvidence;
 
 
         $this->playerProjectionEvidence =
@@ -319,8 +327,18 @@ class RecommendationCandidateProductionService
 
         /*
          * ========================================================
-         * EXISTING PLAYER PROJECTION EVIDENCE
+         * EXISTING PLAYER INTELLIGENCE SUMMARIES
          * ========================================================
+         *
+         * These summaries represent the full player pool.
+         *
+         * They are used for two different historical evidence
+         * purposes:
+         *
+         * 1. Player Ranking Evidence uses the complete player pool.
+         *
+         * 2. Player Projection Evidence remains restricted to the
+         *    manager's mapped FPL squad.
          */
 
         $playerSummaries =
@@ -344,6 +362,35 @@ class RecommendationCandidateProductionService
             );
         }
 
+
+        /*
+         * ========================================================
+         * PLAYER RANKING EVIDENCE
+         * ========================================================
+         *
+         * Preserve the full player-pool Intelligence Score ranking
+         * exactly as it existed before the deadline.
+         *
+         * Do not filter this evidence to the manager's squad.
+         */
+
+        $playerRankings =
+            $this
+                ->playerRankingEvidence
+                ->build(
+                    $playerSummaries
+                );
+
+
+        /*
+         * ========================================================
+         * EXISTING PLAYER PROJECTION EVIDENCE
+         * ========================================================
+         *
+         * Projection evidence deliberately remains manager-squad
+         * specific because existing projection backtesting compares
+         * the recommendations made for the owned squad.
+         */
 
         $playerProjections =
             $this
@@ -393,6 +440,7 @@ class RecommendationCandidateProductionService
                     $entryId,
                     $generatedAt,
                     $deadlineTime,
+                    $playerRankings,
                     $playerProjections,
                     $gameweekDecisionResult,
                     $chipRecommendations

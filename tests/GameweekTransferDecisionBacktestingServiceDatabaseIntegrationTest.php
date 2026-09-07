@@ -684,6 +684,7 @@ $snapshot =
         [],
         [],
         [],
+        [],
         $transferRecommendations,
         $gameweekDecision,
         []
@@ -1383,6 +1384,7 @@ try {
             $syntheticEntryId,
             $capturedAt,
             $deadlineTime,
+            [],
             [],
             [],
             [],
