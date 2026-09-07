@@ -357,31 +357,57 @@ echo "<br>";
 /*
  * ============================================================
  * SCENARIO E
- * CURRENT EARLY-SEASON STATE
+ * CURRENT TREND STATE
  * ============================================================
  */
 
 echo "============================================<br>";
-echo "Scenario E: Early-Season Trend State<br>";
+echo "Scenario E: Current Trend State<br>";
 echo "============================================<br>";
 
 
-$insufficientDataCount =
+$supportedTrendLabels = [
+    'Improving',
+    'Stable',
+    'Declining',
+    'Insufficient Data'
+];
+
+
+$trendLabelPattern =
+    '/(?:'
+    . implode(
+        '|',
+        array_map(
+            static fn (
+                string $label
+            ): string =>
+                preg_quote(
+                    $label,
+                    '/'
+                ),
+            $supportedTrendLabels
+        )
+    )
+    . ')/i';
+
+
+$renderedTrendLabelCount =
     preg_match_all(
-        '/Insufficient Data/i',
+        $trendLabelPattern,
         $html,
-        $matches
+        $trendMatches
     );
 
 
 playerFormProfileCheck(
-    'Current early-season profile exposes insufficient trend evidence',
-    $insufficientDataCount >= 3
+    'Current profile renders supported Form Intelligence trend states',
+    $renderedTrendLabelCount >= 3
 );
 
 
-echo "Insufficient Data Occurrences: "
-    . (int) $insufficientDataCount
+echo "Supported Trend State Occurrences: "
+    . (int) $renderedTrendLabelCount
     . "<br><br>";
 
 

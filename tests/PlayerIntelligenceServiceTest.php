@@ -5891,98 +5891,128 @@ testPass(
 
 
     /*
-     * ============================================================
-     * CURRENT EARLY-SEASON TREND CONTRACT
-     * ============================================================
-     *
-     * Current real historical data contains only GW1.
-     *
-     * A player with fewer than five stored fixture-history rows
-     * must not claim a full Form Trend yet.
+ * ============================================================
+ * CURRENT FORM TREND EVIDENCE CONTRACT
+ * ============================================================
+ *
+ * Form Trend and fixture-based trends deliberately use
+ * different evidence requirements.
+ *
+ * Form Trend:
+ * - requires sufficient appearance evidence.
+ *
+ * Participation / Minutes:
+ * - require the complete fixture trend sample.
+ */
+
+$currentTrendStateValid =
+    true;
+
+
+foreach (
+    $summaries
+    as $summary
+) {
+
+    $fixtureSampleSize =
+        (int) (
+            $summary[
+                'form_fixture_sample_size'
+            ]
+            ??
+            0
+        );
+
+
+    $appearanceSampleSize =
+        (int) (
+            $summary[
+                'form_appearance_sample_size'
+            ]
+            ??
+            0
+        );
+
+
+    /*
+     * Long-window Form Trend requires at least three
+     * genuine appearance rows.
      */
 
-    $currentTrendStateValid =
-        true;
-
-
-    foreach (
-        $summaries
-        as $summary
+    if (
+        $appearanceSampleSize < 3
+        &&
+        (
+            $summary[
+                'form_trend'
+            ]
+            ??
+            null
+        )
+        !==
+        'Insufficient Data'
     ) {
 
-        $fixtureSampleSize =
-            (int) (
-                $summary[
-                    'form_fixture_sample_size'
-                ]
-                ?? 0
-            );
+        $currentTrendStateValid =
+            false;
 
-
-        if (
-            $fixtureSampleSize < 5
-        ) {
-
-            if (
-                (
-                    $summary[
-                        'form_trend'
-                    ]
-                    ?? null
-                )
-                !==
-                'Insufficient Data'
-            ) {
-
-                $currentTrendStateValid =
-                    false;
-
-                break;
-            }
-
-
-            if (
-                (
-                    $summary[
-                        'participation_trend'
-                    ]
-                    ?? null
-                )
-                !==
-                'Insufficient Data'
-            ) {
-
-                $currentTrendStateValid =
-                    false;
-
-                break;
-            }
-
-
-            if (
-                (
-                    $summary[
-                        'minutes_trend'
-                    ]
-                    ?? null
-                )
-                !==
-                'Insufficient Data'
-            ) {
-
-                $currentTrendStateValid =
-                    false;
-
-                break;
-            }
-        }
+        break;
     }
 
 
-    testPass(
-        'Current early-season Form trends remain Insufficient Data where history is incomplete',
-        $currentTrendStateValid
-    );
+    /*
+     * Participation and Minutes trends require the full
+     * five-fixture history window.
+     */
+
+    if (
+        $fixtureSampleSize < 5
+    ) {
+
+        if (
+            (
+                $summary[
+                    'participation_trend'
+                ]
+                ??
+                null
+            )
+            !==
+            'Insufficient Data'
+        ) {
+
+            $currentTrendStateValid =
+                false;
+
+            break;
+        }
+
+
+        if (
+            (
+                $summary[
+                    'minutes_trend'
+                ]
+                ??
+                null
+            )
+            !==
+            'Insufficient Data'
+        ) {
+
+            $currentTrendStateValid =
+                false;
+
+            break;
+        }
+    }
+}
+
+
+testPass(
+    'Current Form trends respect appearance and fixture evidence requirements',
+    $currentTrendStateValid
+);
 
 
     echo "<br>";

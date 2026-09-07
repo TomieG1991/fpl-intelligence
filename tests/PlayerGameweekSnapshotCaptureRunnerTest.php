@@ -5,7 +5,7 @@ require_once __DIR__
 
 
 echo "============================================<br>";
-echo "Player Gameweek Snapshot Capture Runner Test<br>";
+echo "Player Gameweek Snapshot Capture Runner Retirement Test<br>";
 echo "============================================<br><br>";
 
 
@@ -32,9 +32,7 @@ function snapshotCaptureRunnerCheck(
     global $failed;
 
 
-    if (
-        $condition
-    ) {
+    if ($condition) {
 
         echo "PASS: "
             . htmlspecialchars(
@@ -65,12 +63,12 @@ function snapshotCaptureRunnerCheck(
 /*
  * ============================================================
  * SCENARIO A
- * RUNNER FILE FOUNDATION
+ * LEGACY ENTRY POINT REMAINS SAFE
  * ============================================================
  */
 
 echo "============================================<br>";
-echo "Scenario A: Runner File Foundation<br>";
+echo "Scenario A: Legacy Entry Point Remains Safe<br>";
 echo "============================================<br>";
 
 
@@ -90,7 +88,7 @@ $runnerSource =
 
 
 snapshotCaptureRunnerCheck(
-    'Snapshot capture runner exists',
+    'Legacy snapshot capture entry point still exists during migration',
     is_string(
         $runnerSource
     )
@@ -111,7 +109,7 @@ if (
 
 
 snapshotCaptureRunnerCheck(
-    'Runner loads project autoloader',
+    'Legacy entry point still loads project autoloader',
     str_contains(
         $runnerSource,
         "require_once __DIR__"
@@ -120,19 +118,10 @@ snapshotCaptureRunnerCheck(
 
 
 snapshotCaptureRunnerCheck(
-    'Runner constructs PlayerGameweekSnapshotCapture service',
+    'Legacy entry point is explicitly marked RETIRED',
     str_contains(
         $runnerSource,
-        'new PlayerGameweekSnapshotCapture'
-    )
-);
-
-
-snapshotCaptureRunnerCheck(
-    'Runner invokes captureLatestCompletedGameweek()',
-    str_contains(
-        $runnerSource,
-        'captureLatestCompletedGameweek'
+        'RETIRED'
     )
 );
 
@@ -143,52 +132,47 @@ echo "<br>";
 /*
  * ============================================================
  * SCENARIO B
- * IMMUTABLE WRITE PATH
+ * RETROSPECTIVE RECONSTRUCTION IS DISABLED
  * ============================================================
  */
 
 echo "============================================<br>";
-echo "Scenario B: Immutable Write Path<br>";
+echo "Scenario B: Retrospective Reconstruction Is Disabled<br>";
 echo "============================================<br>";
 
 
 snapshotCaptureRunnerCheck(
-    'Runner does not construct PlayerGameweekSnapshotRepository directly',
+    'Legacy entry point does not construct retrospective capture service',
     !str_contains(
         $runnerSource,
-        'new PlayerGameweekSnapshotRepository'
+        'new PlayerGameweekSnapshotCapture'
     )
 );
 
 
 snapshotCaptureRunnerCheck(
-    'Runner does not call snapshot upsert directly',
+    'Legacy entry point does not invoke completed-gameweek reconstruction',
     !str_contains(
-        $runnerSource,
-        '->upsert('
-    )
-);
-
-
-snapshotCaptureRunnerCheck(
-    'Runner does not call insertIfAbsent directly',
-    !str_contains(
-        $runnerSource,
-        '->insertIfAbsent('
-    )
-);
-
-
-snapshotCaptureRunnerCheck(
-    'Runner delegates all snapshot writes to capture service',
-    str_contains(
-        $runnerSource,
-        'PlayerGameweekSnapshotCapture'
-    )
-    &&
-    str_contains(
         $runnerSource,
         'captureLatestCompletedGameweek'
+    )
+);
+
+
+snapshotCaptureRunnerCheck(
+    'Legacy entry point does not construct current player repository',
+    !str_contains(
+        $runnerSource,
+        'new PlayerRepository'
+    )
+);
+
+
+snapshotCaptureRunnerCheck(
+    'Legacy entry point has no fixture-history dependency',
+    !str_contains(
+        $runnerSource,
+        'player_fixture_history'
     )
 );
 
@@ -199,84 +183,75 @@ echo "<br>";
 /*
  * ============================================================
  * SCENARIO C
- * OUTPUT CONTRACT
+ * NO DATABASE WRITE PATH
  * ============================================================
  */
 
 echo "============================================<br>";
-echo "Scenario C: Output Contract<br>";
+echo "Scenario C: No Database Write Path<br>";
 echo "============================================<br>";
 
 
 snapshotCaptureRunnerCheck(
-    'Runner reports gameweek',
-    str_contains(
+    'Retired entry point does not construct Database',
+    !str_contains(
         $runnerSource,
-        'Gameweek: GW'
+        'new Database'
     )
 );
 
 
 snapshotCaptureRunnerCheck(
-    'Runner reports finished state',
-    str_contains(
+    'Retired entry point does not construct immutable snapshot repository',
+    !str_contains(
         $runnerSource,
-        'Finished: '
+        'new PlayerGameweekSnapshotRepository'
     )
 );
 
 
 snapshotCaptureRunnerCheck(
-    'Runner reports data-checked state',
-    str_contains(
+    'Retired entry point does not call snapshot upsert',
+    !str_contains(
         $runnerSource,
-        'Data Checked: '
+        '->upsert('
     )
 );
 
 
 snapshotCaptureRunnerCheck(
-    'Runner reports players considered',
-    str_contains(
+    'Retired entry point does not call immutable insert',
+    !str_contains(
         $runnerSource,
-        'Players Considered: '
+        '->insertIfAbsent('
     )
 );
 
 
 snapshotCaptureRunnerCheck(
-    'Runner reports inserted snapshots',
-    str_contains(
+    'Retired entry point contains no INSERT statement',
+    stripos(
         $runnerSource,
-        'Snapshots Inserted: '
-    )
+        'INSERT INTO'
+    ) === false
 );
 
 
 snapshotCaptureRunnerCheck(
-    'Runner reports existing snapshots',
-    str_contains(
+    'Retired entry point contains no UPDATE statement',
+    stripos(
         $runnerSource,
-        'Snapshots Already Present: '
-    )
+        'UPDATE '
+    ) === false
 );
 
 
 snapshotCaptureRunnerCheck(
-    'Runner reports skipped snapshots',
-    str_contains(
+    'Retired entry point contains no DELETE statement',
+    stripos(
         $runnerSource,
-        'Snapshots Skipped: '
-    )
-);
-
-
-snapshotCaptureRunnerCheck(
-    'Runner reports successful completion',
-    str_contains(
-        $runnerSource,
-        'RESULT: SNAPSHOT CAPTURE COMPLETE'
-    )
+        'DELETE FROM'
+    ) === false
 );
 
 
@@ -286,44 +261,47 @@ echo "<br>";
 /*
  * ============================================================
  * SCENARIO D
- * ACCOUNTING VALIDATION
+ * NEW LIFECYCLE GUIDANCE
  * ============================================================
  */
 
 echo "============================================<br>";
-echo "Scenario D: Accounting Validation<br>";
+echo "Scenario D: New Lifecycle Guidance<br>";
 echo "============================================<br>";
 
 
 snapshotCaptureRunnerCheck(
-    'Runner validates players considered against result counts',
+    'Retired entry point directs capture to pre-deadline candidate lifecycle',
     str_contains(
         $runnerSource,
-        '$playersConsidered'
-    )
-    &&
-    str_contains(
-        $runnerSource,
-        '$inserted'
-    )
-    &&
-    str_contains(
-        $runnerSource,
-        '$existing'
-    )
-    &&
-    str_contains(
-        $runnerSource,
-        '$skipped'
+        'capturePlayerGameweekSnapshotCandidates.php'
     )
 );
 
 
 snapshotCaptureRunnerCheck(
-    'Runner throws when accounting does not match',
+    'Retired entry point directs freezing to deadline promotion lifecycle',
     str_contains(
         $runnerSource,
-        'Snapshot capture accounting does not match players considered'
+        'promotePlayerGameweekSnapshotCandidates.php'
+    )
+);
+
+
+snapshotCaptureRunnerCheck(
+    'Retired entry point explains that no historical snapshots are written',
+    str_contains(
+        $runnerSource,
+        'No historical snapshots have been written'
+    )
+);
+
+
+snapshotCaptureRunnerCheck(
+    'Retired entry point exposes explicit retirement result',
+    str_contains(
+        $runnerSource,
+        'RESULT: SNAPSHOT CAPTURE RETIRED'
     )
 );
 
@@ -334,115 +312,53 @@ echo "<br>";
 /*
  * ============================================================
  * SCENARIO E
- * REAL SERVICE REGRESSION
+ * TEST-SUITE SAFETY CONTRACT
  * ============================================================
+ *
+ * This test deliberately performs static inspection only.
+ *
+ * It must never instantiate PlayerGameweekSnapshotCapture or
+ * execute completed-gameweek reconstruction against the real
+ * database.
  */
 
 echo "============================================<br>";
-echo "Scenario E: Real Service Regression<br>";
+echo "Scenario E: Test-Suite Safety Contract<br>";
 echo "============================================<br>";
 
 
-$database =
-    new Database();
-
-
-$connection =
-    $database
-        ->getConnection();
-
-
-$capture =
-    new PlayerGameweekSnapshotCapture(
-        $connection
+$thisTestSource =
+    file_get_contents(
+        __FILE__
     );
 
 
-$result =
-    $capture
-        ->captureLatestCompletedGameweek();
-
-
 snapshotCaptureRunnerCheck(
-    'Real capture service still returns result array',
-    is_array(
-        $result
+    'Runner retirement test performs no database construction',
+    !str_contains(
+        $thisTestSource,
+        'new ' . 'Database('
     )
 );
 
 
 snapshotCaptureRunnerCheck(
-    'Real capture service reports complete status',
-    (
-        $result[
-            'status'
-        ]
-        ?? null
-    )
-    ===
-    'Complete'
-);
-
-
-$playersConsidered =
-    (int) (
-        $result[
-            'players_considered'
-        ]
-        ?? -1
-    );
-
-
-$inserted =
-    (int) (
-        $result[
-            'inserted'
-        ]
-        ?? -1
-    );
-
-
-$existing =
-    (int) (
-        $result[
-            'existing'
-        ]
-        ?? -1
-    );
-
-
-$skipped =
-    (int) (
-        $result[
-            'skipped'
-        ]
-        ?? -1
-    );
-
-
-snapshotCaptureRunnerCheck(
-    'Real capture accounting remains consistent',
-    $playersConsidered
-    ===
-    (
-        $inserted
-        +
-        $existing
-        +
-        $skipped
+    'Runner retirement test does not instantiate retrospective capture service',
+    !str_contains(
+        $thisTestSource,
+        'new '
+        . 'PlayerGameweekSnapshotCapture('
     )
 );
 
 
 snapshotCaptureRunnerCheck(
-    'Real capture does not duplicate existing gameweek snapshots',
-    $inserted === 0
-);
-
-
-snapshotCaptureRunnerCheck(
-    'Real capture recognises existing snapshots',
-    $existing > 0
+    'Runner retirement test does not execute completed-gameweek reconstruction',
+    !str_contains(
+        $thisTestSource,
+        '->'
+        . 'captureLatestCompletedGameweek('
+    )
 );
 
 
@@ -452,65 +368,21 @@ echo "<br>";
 /*
  * ============================================================
  * SCENARIO F
- * RUNNER DIAGNOSTIC
+ * RETIREMENT DIAGNOSTIC
  * ============================================================
  */
 
 echo "============================================<br>";
-echo "Scenario F: Capture Runner Diagnostic<br>";
+echo "Scenario F: Retirement Diagnostic<br>";
 echo "============================================<br><br>";
 
 
-echo "Capture Status: "
-    . htmlspecialchars(
-        (string) (
-            $result[
-                'status'
-            ]
-            ?? 'Unknown'
-        ),
-        ENT_QUOTES,
-        'UTF-8'
-    )
-    . "<br>";
-
-
-echo "Gameweek: GW"
-    . (
-        $result[
-            'fpl_gameweek_id'
-        ]
-        ?? '—'
-    )
-    . "<br>";
-
-
-echo "Players Considered: "
-    . number_format(
-        $playersConsidered
-    )
-    . "<br>";
-
-
-echo "Inserted: "
-    . number_format(
-        $inserted
-    )
-    . "<br>";
-
-
-echo "Existing: "
-    . number_format(
-        $existing
-    )
-    . "<br>";
-
-
-echo "Skipped: "
-    . number_format(
-        $skipped
-    )
-    . "<br><br>";
+echo "Legacy Entry Point: Present<br>";
+echo "Operational Status: RETIRED<br>";
+echo "Database Access: Disabled<br>";
+echo "Retrospective Reconstruction: Disabled<br>";
+echo "Replacement Capture: Pre-Deadline Candidates<br>";
+echo "Replacement Freeze: Deadline Promotion<br><br>";
 
 
 /*
@@ -520,7 +392,7 @@ echo "Skipped: "
  */
 
 echo "============================================<br>";
-echo "Player Gameweek Snapshot Capture Runner Test Summary<br>";
+echo "Player Gameweek Snapshot Capture Runner Retirement Test Summary<br>";
 echo "============================================<br>";
 
 
@@ -538,7 +410,7 @@ if (
     $failed === 0
 ) {
 
-    echo "RESULT: TESTS PASSED ✅";
+    echo "RESULT: ALL TESTS PASSED ✅";
 
 } else {
 

@@ -739,12 +739,553 @@ echo "<br>";
 /*
  * ============================================================
  * SCENARIO F
+ * PRE-DEADLINE CANDIDATE CAPTURE LIFECYCLE
+ * ============================================================
+ *
+ * Historical player state must now originate from evidence
+ * captured before the target gameweek deadline.
+ *
+ * The operational capture entry point stages mutable
+ * candidates only. It must not write immutable snapshots
+ * directly.
+ */
+
+echo "============================================<br>";
+echo "Scenario F: Pre-Deadline Candidate Capture Lifecycle<br>";
+echo "============================================<br>";
+
+
+$candidateCaptureFile =
+    __DIR__
+    . '/../cron/capturePlayerGameweekSnapshotCandidates.php';
+
+
+$candidateCaptureSource =
+    is_file(
+        $candidateCaptureFile
+    )
+        ? file_get_contents(
+            $candidateCaptureFile
+        )
+        : false;
+
+
+snapshotLifecycleCheck(
+    'Pre-deadline player snapshot candidate capture cron exists',
+    is_string(
+        $candidateCaptureSource
+    )
+);
+
+
+snapshotLifecycleCheck(
+    'Candidate capture uses production capture orchestration',
+    is_string(
+        $candidateCaptureSource
+    )
+    &&
+    str_contains(
+        $candidateCaptureSource,
+        'new PlayerGameweekSnapshotCandidateProductionCapture'
+    )
+);
+
+
+snapshotLifecycleCheck(
+    'Candidate capture persists through mutable candidate repository',
+    is_string(
+        $candidateCaptureSource
+    )
+    &&
+    str_contains(
+        $candidateCaptureSource,
+        'new PlayerGameweekSnapshotCandidateRepository'
+    )
+);
+
+
+snapshotLifecycleCheck(
+    'Candidate capture does not construct immutable snapshot repository',
+    is_string(
+        $candidateCaptureSource
+    )
+    &&
+    !str_contains(
+        $candidateCaptureSource,
+        'new PlayerGameweekSnapshotRepository'
+    )
+);
+
+
+snapshotLifecycleCheck(
+    'Candidate capture has no fixture-history dependency',
+    is_string(
+        $candidateCaptureSource
+    )
+    &&
+    !str_contains(
+        $candidateCaptureSource,
+        'player_fixture_history'
+    )
+);
+
+
+echo "<br>";
+
+
+/*
+ * ============================================================
+ * SCENARIO G
+ * DEADLINE PROMOTION LIFECYCLE
+ * ============================================================
+ *
+ * Immutable player snapshots are created by promoting the
+ * latest pre-deadline candidate at or after its preserved
+ * deadline.
+ */
+
+echo "============================================<br>";
+echo "Scenario G: Deadline Promotion Lifecycle<br>";
+echo "============================================<br>";
+
+
+$candidatePromotionFile =
+    __DIR__
+    . '/../cron/promotePlayerGameweekSnapshotCandidates.php';
+
+
+$candidatePromotionSource =
+    is_file(
+        $candidatePromotionFile
+    )
+        ? file_get_contents(
+            $candidatePromotionFile
+        )
+        : false;
+
+
+snapshotLifecycleCheck(
+    'Player snapshot candidate promotion cron exists',
+    is_string(
+        $candidatePromotionSource
+    )
+);
+
+
+snapshotLifecycleCheck(
+    'Promotion cron uses candidate promotion runner',
+    is_string(
+        $candidatePromotionSource
+    )
+    &&
+    str_contains(
+        $candidatePromotionSource,
+        'new PlayerGameweekSnapshotCandidatePromotionRunner'
+    )
+);
+
+
+snapshotLifecycleCheck(
+    'Promotion cron uses candidate promotion service',
+    is_string(
+        $candidatePromotionSource
+    )
+    &&
+    str_contains(
+        $candidatePromotionSource,
+        'new PlayerGameweekSnapshotCandidatePromotionService'
+    )
+);
+
+
+snapshotLifecycleCheck(
+    'Promotion cron reads mutable candidate repository',
+    is_string(
+        $candidatePromotionSource
+    )
+    &&
+    str_contains(
+        $candidatePromotionSource,
+        'new PlayerGameweekSnapshotCandidateRepository'
+    )
+);
+
+
+snapshotLifecycleCheck(
+    'Promotion cron writes through immutable snapshot repository',
+    is_string(
+        $candidatePromotionSource
+    )
+    &&
+    str_contains(
+        $candidatePromotionSource,
+        'new PlayerGameweekSnapshotRepository'
+    )
+);
+
+
+snapshotLifecycleCheck(
+    'Promotion lifecycle has no fixture-history dependency',
+    is_string(
+        $candidatePromotionSource
+    )
+    &&
+    !str_contains(
+        $candidatePromotionSource,
+        'player_fixture_history'
+    )
+);
+
+
+echo "<br>";
+
+
+/*
+ * ============================================================
+ * SCENARIO H
+ * OPERATIONAL LIFECYCLE BOUNDARY
+ * ============================================================
+ *
+ * Current-state import, candidate capture and immutable
+ * promotion are deliberately separate operational concerns.
+ *
+ * updateFPLData.php refreshes current state.
+ *
+ * capturePlayerGameweekSnapshotCandidates.php preserves the
+ * latest pre-deadline evidence.
+ *
+ * promotePlayerGameweekSnapshotCandidates.php freezes that
+ * evidence after the deadline.
+ */
+
+echo "============================================<br>";
+echo "Scenario H: Operational Lifecycle Boundary<br>";
+echo "============================================<br>";
+
+
+snapshotLifecycleCheck(
+    'Live updater remains separate from candidate capture',
+    !str_contains(
+        $updateSource,
+        'PlayerGameweekSnapshotCandidateProductionCapture'
+    )
+);
+
+
+snapshotLifecycleCheck(
+    'Live updater remains separate from candidate promotion',
+    !str_contains(
+        $updateSource,
+        'PlayerGameweekSnapshotCandidatePromotionRunner'
+    )
+);
+
+
+snapshotLifecycleCheck(
+    'Candidate capture and promotion use separate operational entry points',
+    is_string(
+        $candidateCaptureSource
+    )
+    &&
+    is_string(
+        $candidatePromotionSource
+    )
+    &&
+    realpath(
+        $candidateCaptureFile
+    )
+    !==
+    realpath(
+        $candidatePromotionFile
+    )
+);
+
+
+snapshotLifecycleCheck(
+    'Candidate capture cannot directly perform deadline promotion',
+    is_string(
+        $candidateCaptureSource
+    )
+    &&
+    !str_contains(
+        $candidateCaptureSource,
+        'PlayerGameweekSnapshotCandidatePromotionService'
+    )
+    &&
+    !str_contains(
+        $candidateCaptureSource,
+        'PlayerGameweekSnapshotCandidatePromotionRunner'
+    )
+);
+
+
+snapshotLifecycleCheck(
+    'Candidate promotion does not reconstruct state from current players',
+    is_string(
+        $candidatePromotionSource
+    )
+    &&
+    !str_contains(
+        $candidatePromotionSource,
+        'new PlayerRepository'
+    )
+);
+
+
+echo "<br>";
+
+
+/*
+ * ============================================================
+ * SCENARIO I
+ * RETROSPECTIVE CAPTURE RETIREMENT
+ * ============================================================
+ *
+ * Historical player snapshots must no longer be reconstructed
+ * after a gameweek has completed from the current live player
+ * pool.
+ *
+ * The old completed-gameweek capture entry point may remain
+ * temporarily while migration work is completed, but it must
+ * be explicitly retired and must not execute retrospective
+ * reconstruction.
+ */
+
+echo "============================================<br>";
+echo "Scenario I: Retrospective Capture Retirement<br>";
+echo "============================================<br>";
+
+
+$legacyCaptureFile =
+    __DIR__
+    . '/../cron/capturePlayerGameweekSnapshots.php';
+
+
+$legacyCaptureSource =
+    is_file(
+        $legacyCaptureFile
+    )
+        ? file_get_contents(
+            $legacyCaptureFile
+        )
+        : false;
+
+
+/*
+ * During migration we deliberately allow the old file to
+ * remain present.
+ *
+ * What matters is that it can no longer invoke retrospective
+ * reconstruction.
+ */
+
+snapshotLifecycleCheck(
+    'Legacy completed-gameweek capture entry point remains identifiable during migration',
+    is_string(
+        $legacyCaptureSource
+    )
+);
+
+
+snapshotLifecycleCheck(
+    'Legacy capture entry point no longer constructs retrospective capture service',
+    is_string(
+        $legacyCaptureSource
+    )
+    &&
+    !str_contains(
+        $legacyCaptureSource,
+        'new PlayerGameweekSnapshotCapture'
+    )
+);
+
+
+snapshotLifecycleCheck(
+    'Legacy capture entry point no longer invokes completed-gameweek reconstruction',
+    is_string(
+        $legacyCaptureSource
+    )
+    &&
+    !str_contains(
+        $legacyCaptureSource,
+        'captureLatestCompletedGameweek'
+    )
+);
+
+
+snapshotLifecycleCheck(
+    'Legacy capture entry point explains that retrospective capture is retired',
+    is_string(
+        $legacyCaptureSource
+    )
+    &&
+    str_contains(
+        $legacyCaptureSource,
+        'RETIRED'
+    )
+);
+
+
+echo "<br>";
+
+
+/*
+ * ============================================================
+ * SCENARIO J
+ * FIXTURE-HISTORY IMPORT ISOLATION
+ * ============================================================
+ *
+ * Completed fixture-history import provides factual outcome
+ * evidence only.
+ *
+ * It must not reconstruct historical player snapshots from
+ * the current live player pool.
+ *
+ * Player snapshot history now comes exclusively from the
+ * pre-deadline candidate capture and deadline promotion
+ * lifecycle.
+ */
+
+echo "============================================<br>";
+echo "Scenario J: Fixture-History Import Isolation<br>";
+echo "============================================<br>";
+
+
+$fixtureHistoryUpdaterFile =
+    __DIR__
+    . '/../cron/updatePlayerFixtureHistory.php';
+
+
+$fixtureHistoryUpdaterSource =
+    is_file(
+        $fixtureHistoryUpdaterFile
+    )
+        ? file_get_contents(
+            $fixtureHistoryUpdaterFile
+        )
+        : false;
+
+
+snapshotLifecycleCheck(
+    'Player fixture-history updater exists',
+    is_string(
+        $fixtureHistoryUpdaterSource
+    )
+);
+
+
+snapshotLifecycleCheck(
+    'Fixture-history updater no longer constructs retrospective snapshot capture service',
+    is_string(
+        $fixtureHistoryUpdaterSource
+    )
+    &&
+    !str_contains(
+        $fixtureHistoryUpdaterSource,
+        'new PlayerGameweekSnapshotCapture('
+    )
+);
+
+
+snapshotLifecycleCheck(
+    'Fixture-history updater no longer invokes completed-gameweek reconstruction',
+    is_string(
+        $fixtureHistoryUpdaterSource
+    )
+    &&
+    !str_contains(
+        $fixtureHistoryUpdaterSource,
+        'captureLatestCompletedGameweek'
+    )
+);
+
+
+snapshotLifecycleCheck(
+    'Fixture-history updater no longer uses retrospective snapshot capture gate',
+    is_string(
+        $fixtureHistoryUpdaterSource
+    )
+    &&
+    !str_contains(
+        $fixtureHistoryUpdaterSource,
+        'new PlayerGameweekSnapshotCaptureGate'
+    )
+);
+
+
+snapshotLifecycleCheck(
+    'Fixture-history updater does not construct immutable player snapshot repository',
+    is_string(
+        $fixtureHistoryUpdaterSource
+    )
+    &&
+    !str_contains(
+        $fixtureHistoryUpdaterSource,
+        'new PlayerGameweekSnapshotRepository'
+    )
+);
+
+
+echo "<br>";
+
+
+/*
+ * ============================================================
+ * SCENARIO K
+ * LEGACY RETROSPECTIVE SERVICE RETIREMENT
+ * ============================================================
+ *
+ * The old retrospective snapshot reconstruction service and
+ * its automatic-capture gate are no longer part of the player
+ * snapshot architecture.
+ *
+ * Historical player snapshots must originate from the
+ * pre-deadline candidate lifecycle only.
+ */
+
+echo "============================================<br>";
+echo "Scenario K: Legacy Retrospective Service Retirement<br>";
+echo "============================================<br>";
+
+
+$legacyCaptureServiceFile =
+    __DIR__
+    . '/../classes/PlayerGameweekSnapshotCapture.php';
+
+
+$legacyCaptureGateFile =
+    __DIR__
+    . '/../classes/PlayerGameweekSnapshotCaptureGate.php';
+
+
+snapshotLifecycleCheck(
+    'Legacy retrospective snapshot capture service has been removed',
+    !is_file(
+        $legacyCaptureServiceFile
+    )
+);
+
+
+snapshotLifecycleCheck(
+    'Legacy automatic snapshot capture gate has been removed',
+    !is_file(
+        $legacyCaptureGateFile
+    )
+);
+
+
+echo "<br>";
+
+
+/*
+ * ============================================================
+ * SCENARIO L
  * SNAPSHOT LIFECYCLE DIAGNOSTIC
  * ============================================================
  */
 
 echo "============================================<br>";
-echo "Scenario F: Snapshot Lifecycle Diagnostic<br>";
+echo "Scenario L: Snapshot Lifecycle Diagnostic<br>";
 echo "============================================<br><br>";
 
 

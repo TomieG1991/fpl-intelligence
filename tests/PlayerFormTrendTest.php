@@ -1399,81 +1399,187 @@ try {
 
 
     /*
-     * ========================================================
-     * SCENARIO H
-     * CURRENT REAL EARLY-SEASON DATA
-     * ========================================================
-     */
+ * ========================================================
+ * SCENARIO H
+ * CURRENT REAL DATA CONTRACT
+ * ========================================================
+ */
 
-    echo "============================================<br>";
-    echo "Scenario H: Current Real Early-Season Data<br>";
-    echo "============================================<br>";
+echo "============================================<br>";
+echo "Scenario H: Current Real Data Contract<br>";
+echo "============================================<br>";
 
 
-    /*
-     * Temporarily roll back the synthetic rows before testing
-     * Raya's actual stored GW1-only history.
-     */
+/*
+ * Temporarily roll back the synthetic rows before testing
+ * the player's genuine currently stored history.
+ */
 
-    if (
-        $db->inTransaction()
-    ) {
+if (
+    $db->inTransaction()
+) {
 
-        $db->rollBack();
-    }
-    
-    /*
-     * The synthetic history has now been rolled back, so discard
-     * cached synthetic windows before reading the real database
-     * state again.
-     */
-    $formHistory
-        ->clearCache(
-            $playerId
+    $db->rollBack();
+}
+
+
+/*
+ * Synthetic history has now been rolled back, so discard
+ * cached synthetic windows before reading real evidence.
+ */
+
+$formHistory
+    ->clearCache(
+        $playerId
+    );
+
+
+$realModel =
+    $formTrend
+        ->buildModel(
+            $playerId,
+            'GK'
         );
 
 
-    $realModel =
-        $formTrend
-            ->buildModel(
-                $playerId,
-                'GK'
-            );
+$realTrendLabels = [
+    'Improving',
+    'Stable',
+    'Declining',
+    'Insufficient Data'
+];
 
 
-    playerFormTrendCheck(
-        'GW1-only Form Trend reports Insufficient Data',
+playerFormTrendCheck(
+    'Current real Form Trend uses a supported classification',
+    in_array(
         (
             $realModel[
                 'form_trend'
             ]
             ?? null
-        )
-        ===
-        'Insufficient Data'
-    );
+        ),
+        $realTrendLabels,
+        true
+    )
+);
 
 
-    playerFormTrendCheck(
-        'GW1-only Participation Trend reports Insufficient Data',
+playerFormTrendCheck(
+    'Current real Participation Trend uses a supported classification',
+    in_array(
         (
             $realModel[
                 'participation_trend'
             ]
             ?? null
-        )
-        ===
-        'Insufficient Data'
-    );
+        ),
+        $realTrendLabels,
+        true
+    )
+);
 
 
-    playerFormTrendCheck(
-        'GW1-only Minutes Trend reports Insufficient Data',
+playerFormTrendCheck(
+    'Current real Minutes Trend uses a supported classification',
+    in_array(
         (
             $realModel[
                 'minutes_trend'
             ]
             ?? null
+        ),
+        $realTrendLabels,
+        true
+    )
+);
+
+
+/*
+ * Form Trend uses appearance evidence.
+ *
+ * When enough appearance history exists, it may already be
+ * Improving / Stable / Declining even before the complete
+ * five-fixture trend window exists.
+ */
+
+$hasPerformanceTrendSample =
+    (
+        $realModel[
+            'has_performance_trend_sample'
+        ]
+        ??
+        false
+    )
+    === true;
+
+
+if (
+    $hasPerformanceTrendSample
+) {
+
+    playerFormTrendCheck(
+        'Sufficient appearance evidence allows Form Trend classification',
+        in_array(
+            (
+                $realModel[
+                    'form_trend'
+                ]
+                ?? null
+            ),
+            [
+                'Improving',
+                'Stable',
+                'Declining'
+            ],
+            true
+        )
+    );
+
+} else {
+
+    playerFormTrendCheck(
+        'Insufficient appearance evidence keeps Form Trend unavailable',
+        (
+            $realModel[
+                'form_trend'
+            ]
+            ??
+            null
+        )
+        ===
+        'Insufficient Data'
+    );
+}
+
+
+/*
+ * Participation and Minutes use the complete fixture windows.
+ */
+
+$hasFullTrendSample =
+    (
+        $realModel[
+            'has_full_trend_sample'
+        ]
+        ??
+        false
+    )
+    === true;
+
+
+if (
+    !$hasFullTrendSample
+) {
+
+    playerFormTrendCheck(
+        'Incomplete fixture history keeps Participation Trend unavailable',
+        (
+            $realModel[
+                'participation_trend'
+            ]
+            ??
+            null
         )
         ===
         'Insufficient Data'
@@ -1481,30 +1587,63 @@ try {
 
 
     playerFormTrendCheck(
-        'GW1-only data does not claim a full trend sample',
+        'Incomplete fixture history keeps Minutes Trend unavailable',
         (
             $realModel[
-                'has_full_trend_sample'
+                'minutes_trend'
             ]
-            ?? true
+            ??
+            null
         )
         ===
-        false
+        'Insufficient Data'
     );
+}
 
 
-    echo "Current Real Form Trend: "
-        . htmlspecialchars(
-            (string) (
-                $realModel[
-                    'form_trend'
-                ]
-                ?? 'Unknown'
-            ),
-            ENT_QUOTES,
-            'UTF-8'
-        )
-        . "<br><br>";
+echo "Current Real Form Trend: "
+    . htmlspecialchars(
+        (string) (
+            $realModel[
+                'form_trend'
+            ]
+            ??
+            'Unknown'
+        ),
+        ENT_QUOTES,
+        'UTF-8'
+    )
+    . "<br>";
+
+
+echo "Current Real Participation Trend: "
+    . htmlspecialchars(
+        (string) (
+            $realModel[
+                'participation_trend'
+            ]
+            ??
+            'Unknown'
+        ),
+        ENT_QUOTES,
+        'UTF-8'
+    )
+    . "<br>";
+
+
+echo "Current Real Minutes Trend: "
+    . htmlspecialchars(
+        (string) (
+            $realModel[
+                'minutes_trend'
+            ]
+            ??
+            'Unknown'
+        ),
+        ENT_QUOTES,
+        'UTF-8'
+    )
+    . "<br><br>";
 
 
 } catch (

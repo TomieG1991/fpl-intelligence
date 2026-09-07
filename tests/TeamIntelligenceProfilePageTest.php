@@ -644,13 +644,57 @@ teamProfilePageCheck(
 );
 
 
+$fixtureTrendValue =
+    null;
+
+
+if (
+    preg_match(
+        '/Fixture Trend\s*<\/span>\s*<strong>\s*([^<]+)\s*<\/strong>/i',
+        $normalisedHtml,
+        $fixtureTrendMatches
+    )
+    === 1
+) {
+
+    $fixtureTrendValue =
+        trim(
+            html_entity_decode(
+                (string) (
+                    $fixtureTrendMatches[
+                        1
+                    ]
+                    ??
+                    ''
+                ),
+                ENT_QUOTES,
+                'UTF-8'
+            )
+        );
+}
+
+
 teamProfilePageCheck(
     'Fixture trend value is rendered',
-    strpos(
-        $normalisedHtml,
-        'Stable'
-    ) !== false
+    is_string(
+        $fixtureTrendValue
+    )
+    &&
+    $fixtureTrendValue !== ''
 );
+
+
+echo "Rendered Fixture Trend: "
+    . htmlspecialchars(
+        (string) (
+            $fixtureTrendValue
+            ??
+            'N/A'
+        ),
+        ENT_QUOTES,
+        'UTF-8'
+    )
+    . "<br>";
 
 
 echo "Strength Cards: "

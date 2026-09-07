@@ -329,6 +329,10 @@ CREATE TABLE IF NOT EXISTS `player_gameweek_snapshots` (
         decimal(4,1)
         DEFAULT NULL,
 
+    `selected`
+        bigint(20) unsigned
+        DEFAULT NULL,
+
     `selected_by_percent`
         decimal(5,2)
         DEFAULT NULL,
@@ -434,6 +438,167 @@ CREATE TABLE IF NOT EXISTS `player_gameweek_snapshots` (
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci;
+  
+
+/*
+ * ============================================================
+ * PLAYER GAMEWEEK SNAPSHOT CANDIDATES
+ * ============================================================
+ *
+ * Stores the latest mutable pre-deadline player-state
+ * candidate for each player and gameweek.
+ *
+ * Candidates may be refreshed before the deadline. At or after
+ * the preserved deadline, the latest candidate is promoted into
+ * player_gameweek_snapshots through the immutable
+ * insertIfAbsent contract.
+ *
+ * Candidate capture is deliberately independent of completed
+ * fixture history so Blank Gameweeks remain supported.
+ */
+
+CREATE TABLE IF NOT EXISTS `player_gameweek_snapshot_candidates` (
+
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+
+    `gameweek_id` int(11) NOT NULL,
+
+    `player_id` int(11) NOT NULL,
+
+    `fpl_player_id` int(11) NOT NULL,
+
+    `team_id` int(11) NOT NULL,
+
+    `generated_at`
+        datetime
+        NOT NULL,
+
+    `deadline_time`
+        datetime
+        NOT NULL,
+
+    `position`
+        varchar(3)
+        DEFAULT NULL,
+
+    `price`
+        decimal(4,1)
+        DEFAULT NULL,
+
+    `selected`
+        int(11)
+        DEFAULT NULL,
+
+    `selected_by_percent`
+        decimal(5,2)
+        DEFAULT NULL,
+
+    `chance_of_playing`
+        int(11)
+        DEFAULT NULL,
+
+    `status`
+        varchar(10)
+        DEFAULT NULL,
+
+    `news`
+        text,
+
+    `minutes`
+        int(11)
+        NOT NULL
+        DEFAULT 0,
+
+    `goals`
+        int(11)
+        NOT NULL
+        DEFAULT 0,
+
+    `assists`
+        int(11)
+        NOT NULL
+        DEFAULT 0,
+
+    `clean_sheets`
+        int(11)
+        NOT NULL
+        DEFAULT 0,
+
+    `bonus`
+        int(11)
+        NOT NULL
+        DEFAULT 0,
+
+    `bps`
+        int(11)
+        NOT NULL
+        DEFAULT 0,
+
+    `ict_index`
+        decimal(7,2)
+        DEFAULT NULL,
+
+    `expected_goals`
+        decimal(7,2)
+        DEFAULT NULL,
+
+    `expected_assists`
+        decimal(7,2)
+        DEFAULT NULL,
+
+    `expected_goal_involvements`
+        decimal(7,2)
+        DEFAULT NULL,
+
+    `created_at`
+        timestamp NOT NULL
+        DEFAULT CURRENT_TIMESTAMP,
+
+    `updated_at`
+        timestamp NOT NULL
+        DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (`id`),
+
+    UNIQUE KEY `unique_player_gameweek_snapshot_candidate`
+        (`gameweek_id`, `player_id`),
+
+    KEY `idx_snapshot_candidate_gameweek`
+        (`gameweek_id`),
+
+    KEY `idx_snapshot_candidate_player`
+        (`player_id`),
+
+    KEY `idx_snapshot_candidate_team`
+        (`team_id`),
+
+    KEY `idx_snapshot_candidate_deadline`
+        (`deadline_time`),
+
+    CONSTRAINT `fk_snapshot_candidate_gameweek`
+        FOREIGN KEY (`gameweek_id`)
+        REFERENCES `gameweeks` (`id`)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+
+    CONSTRAINT `fk_snapshot_candidate_player`
+        FOREIGN KEY (`player_id`)
+        REFERENCES `players` (`id`)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+
+    CONSTRAINT `fk_snapshot_candidate_team`
+        FOREIGN KEY (`team_id`)
+        REFERENCES `teams` (`id`)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;  
+  
+  
   
   /*
  * ============================================================
