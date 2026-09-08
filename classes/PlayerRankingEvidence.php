@@ -158,6 +158,24 @@ class PlayerRankingEvidence
                     ]
                     ?? null,
 
+                'strength_rating' =>
+                    $summary[
+                        'strength_rating'
+                    ]
+                    ?? null,
+
+                'fixture_rating' =>
+                    $summary[
+                        'fixture_rating'
+                    ]
+                    ?? null,
+
+                'availability_multiplier' =>
+                    $summary[
+                        'availability_multiplier'
+                    ]
+                    ?? null,
+
                 'intelligence_score' =>
                     (float) $summary[
                         'intelligence_score'

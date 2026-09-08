@@ -160,6 +160,9 @@ $playerSummaries = [
         'position' => 'MID',
         'team_id' => 3,
         'price' => 8.5,
+        'strength_rating' => 74.0,
+        'fixture_rating' => 69.71,
+        'availability_multiplier' => 1.00,
         'intelligence_score' => 72.5,
         'projected_points' => 5.8
     ],
@@ -171,6 +174,9 @@ $playerSummaries = [
         'position' => 'FWD',
         'team_id' => 1,
         'price' => 10.0,
+        'strength_rating' => 94.0,
+        'fixture_rating' => 85.43,
+        'availability_multiplier' => 1.00,
         'intelligence_score' => 91.0,
         'projected_points' => 8.4
     ],
@@ -182,6 +188,9 @@ $playerSummaries = [
         'position' => 'DEF',
         'team_id' => 2,
         'price' => 6.0,
+        'strength_rating' => 84.0,
+        'fixture_rating' => 75.43,
+        'availability_multiplier' => 1.00,
         'intelligence_score' => 81.0,
         'projected_points' => 6.2
     ]
@@ -435,6 +444,45 @@ playerRankingEvidenceCheck(
 
 
 playerRankingEvidenceCheck(
+    'Recommendation-time Player Strength rating is preserved',
+    (
+        $first[
+            'strength_rating'
+        ]
+        ??
+        null
+    )
+    === 94.0
+);
+
+
+playerRankingEvidenceCheck(
+    'Recommendation-time Fixture rating is preserved',
+    (
+        $first[
+            'fixture_rating'
+        ]
+        ??
+        null
+    )
+    === 85.43
+);
+
+
+playerRankingEvidenceCheck(
+    'Recommendation-time Availability multiplier is preserved',
+    (
+        $first[
+            'availability_multiplier'
+        ]
+        ??
+        null
+    )
+    === 1.00
+);
+
+
+playerRankingEvidenceCheck(
     'Unrelated Player Intelligence fields are not copied automatically',
     !array_key_exists(
         'projected_points',
@@ -646,6 +694,118 @@ playerRankingEvidenceCheck(
     $playerSummaries
     ===
     $sourceEvidence
+);
+
+
+echo "<br>";
+
+
+/*
+ * ============================================================
+ * SCENARIO H
+ * OPTIONAL CALIBRATION EVIDENCE
+ * ============================================================
+ */
+
+echo "============================================<br>";
+echo "Scenario H: Optional Calibration Evidence<br>";
+echo "============================================<br>";
+
+
+$missingCalibrationEvidence =
+    $service
+        ->build(
+            [
+                [
+                    'player_id' => 300,
+                    'fpl_player_id' => 1300,
+                    'name' => 'Missing Calibration Components',
+                    'position' => 'MID',
+                    'team_id' => 3,
+                    'price' => 7.5,
+                    'intelligence_score' => 75.0
+                ]
+            ]
+        );
+
+
+playerRankingEvidenceCheck(
+    'Player remains valid ranking evidence when calibration components are unavailable',
+    count(
+        $missingCalibrationEvidence
+    )
+    === 1
+    &&
+    (
+        $missingCalibrationEvidence[
+            0
+        ][
+            'player_id'
+        ]
+        ??
+        null
+    )
+    === 300
+);
+
+
+playerRankingEvidenceCheck(
+    'Unavailable Player Strength calibration evidence is preserved explicitly as null',
+    array_key_exists(
+        'strength_rating',
+        $missingCalibrationEvidence[
+            0
+        ]
+        ??
+        []
+    )
+    &&
+    $missingCalibrationEvidence[
+        0
+    ][
+        'strength_rating'
+    ]
+    === null
+);
+
+
+playerRankingEvidenceCheck(
+    'Unavailable Fixture calibration evidence is preserved explicitly as null',
+    array_key_exists(
+        'fixture_rating',
+        $missingCalibrationEvidence[
+            0
+        ]
+        ??
+        []
+    )
+    &&
+    $missingCalibrationEvidence[
+        0
+    ][
+        'fixture_rating'
+    ]
+    === null
+);
+
+
+playerRankingEvidenceCheck(
+    'Unavailable Availability multiplier calibration evidence is preserved explicitly as null',
+    array_key_exists(
+        'availability_multiplier',
+        $missingCalibrationEvidence[
+            0
+        ]
+        ??
+        []
+    )
+    &&
+    $missingCalibrationEvidence[
+        0
+    ][
+        'availability_multiplier'
+    ]
+    === null
 );
 
 

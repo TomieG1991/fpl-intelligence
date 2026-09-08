@@ -231,6 +231,15 @@ $generatedAt =
         'price' =>
             8.0,
 
+        'strength_rating' =>
+            86.0,
+
+        'fixture_rating' =>
+            76.0,
+
+        'availability_multiplier' =>
+            0.95,
+
         'intelligence_score' =>
             82.5,
 
@@ -254,8 +263,17 @@ $generatedAt =
         'team_id' =>
             2,
 
-        'price' =>
+       'price' =>
             9.0,
+
+        'strength_rating' =>
+            79.0,
+
+        'fixture_rating' =>
+            70.0,
+
+        'availability_multiplier' =>
+            0.85,
 
         'intelligence_score' =>
             76.0,
