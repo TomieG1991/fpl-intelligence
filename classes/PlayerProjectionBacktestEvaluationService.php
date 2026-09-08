@@ -32,13 +32,16 @@ class PlayerProjectionBacktestEvaluationService
     private object $backtestService;
 
     private object $metricsService;
+    
+    private object $intelligenceScoreMetricsService;
 
 
     public function __construct(
         object $snapshotRepository,
         object $outcomeService,
         object $backtestService,
-        object $metricsService
+        object $metricsService,
+        object $intelligenceScoreMetricsService
     ) {
 
         $this->snapshotRepository =
@@ -55,6 +58,9 @@ class PlayerProjectionBacktestEvaluationService
 
         $this->metricsService =
             $metricsService;
+            
+        $this->intelligenceScoreMetricsService =
+            $intelligenceScoreMetricsService;
     }
 
 
@@ -201,6 +207,12 @@ class PlayerProjectionBacktestEvaluationService
                 ->summarise(
                     $playerBacktest
                 );
+                
+                
+        $intelligenceScoreMetrics =
+            $this->intelligenceScoreMetricsService->summarise(
+                $playerBacktest
+            );
 
 
         /*
@@ -227,7 +239,10 @@ class PlayerProjectionBacktestEvaluationService
                 $playerBacktest,
 
             'metrics' =>
-                $metrics
+                $metrics,
+
+            'intelligence_score_metrics' =>
+                $intelligenceScoreMetrics
         ];
     }
 }

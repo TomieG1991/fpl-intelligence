@@ -247,6 +247,37 @@ class PlayerProjectionBacktestEvaluationMetricsServiceStub
 }
 
 
+class PlayerProjectionBacktestEvaluationIntelligenceScoreMetricsServiceStub
+{
+    public array $result;
+
+    public array $calls =
+        [];
+
+
+    public function __construct(
+        array $result
+    ) {
+
+        $this->result =
+            $result;
+    }
+
+
+    public function summarise(
+        array $backtestRows
+    ): array {
+
+        $this->calls[] =
+            $backtestRows;
+
+
+        return
+            $this->result;
+    }
+}
+
+
 /*
  * ============================================================
  * SHARED EVIDENCE
@@ -531,6 +562,21 @@ $metrics = [
 ];
 
 
+$intelligenceScoreMetrics = [
+
+    'total_players' =>
+        2,
+
+    'comparable_players' =>
+        2,
+
+    'unavailable_players' =>
+        0,
+
+    'correlation' =>
+        1.0
+];
+
 /*
  * ============================================================
  * A. SERVICE EXISTS
@@ -614,12 +660,19 @@ $metricsService =
     );
 
 
+$intelligenceScoreMetricsService =
+    new PlayerProjectionBacktestEvaluationIntelligenceScoreMetricsServiceStub(
+        $intelligenceScoreMetrics
+    );
+
+
 $service =
     new PlayerProjectionBacktestEvaluationService(
         $repository,
         $outcomeService,
         $backtestService,
-        $metricsService
+        $metricsService,
+        $intelligenceScoreMetricsService
     );
 
 
@@ -721,12 +774,19 @@ $missingMetricsService =
     );
 
 
+$missingIntelligenceScoreMetricsService =
+    new PlayerProjectionBacktestEvaluationIntelligenceScoreMetricsServiceStub(
+        $intelligenceScoreMetrics
+    );
+
+
 $missingService =
     new PlayerProjectionBacktestEvaluationService(
         $missingRepository,
         $missingOutcomeService,
         $missingBacktestService,
-        $missingMetricsService
+        $missingMetricsService,
+        $missingIntelligenceScoreMetricsService
     );
 
 
@@ -788,6 +848,14 @@ playerProjectionBacktestEvaluationAssert(
 );
 
 
+playerProjectionBacktestEvaluationAssert(
+    $missingIntelligenceScoreMetricsService->calls
+    ===
+    [],
+    'Intelligence Score metrics are not calculated when no historical snapshot exists.'
+);
+
+
 /*
  * ============================================================
  * E. COMPLETE ORCHESTRATION
@@ -823,12 +891,19 @@ $metricsService =
     );
 
 
+$intelligenceScoreMetricsService =
+    new PlayerProjectionBacktestEvaluationIntelligenceScoreMetricsServiceStub(
+        $intelligenceScoreMetrics
+    );
+
+
 $service =
     new PlayerProjectionBacktestEvaluationService(
         $repository,
         $outcomeService,
         $backtestService,
-        $metricsService
+        $metricsService,
+        $intelligenceScoreMetricsService
     );
 
 
@@ -928,6 +1003,27 @@ playerProjectionBacktestEvaluationAssert(
 );
 
 
+playerProjectionBacktestEvaluationAssert(
+    count(
+        $intelligenceScoreMetricsService->calls
+    )
+    ===
+    1,
+    'Intelligence Score metrics are calculated exactly once.'
+);
+
+
+playerProjectionBacktestEvaluationAssert(
+    (
+        $intelligenceScoreMetricsService->calls[0]
+        ?? null
+    )
+    ===
+    $backtestRows,
+    'Intelligence Score metrics receive exact player-level backtest evidence.'
+);
+
+
 /*
  * ============================================================
  * F. OUTPUT CONTRACT
@@ -958,9 +1054,10 @@ playerProjectionBacktestEvaluationAssert(
         'snapshot',
         'player_outcomes',
         'player_backtest',
-        'metrics'
+        'metrics',
+        'intelligence_score_metrics'
     ],
-    'Evaluation exposes only the defined initial orchestration contract.'
+    'Evaluation exposes only the defined historical backtest orchestration contract.'
 );
 
 
@@ -1024,6 +1121,28 @@ playerProjectionBacktestEvaluationAssert(
 );
 
 
+playerProjectionBacktestEvaluationAssert(
+    array_key_exists(
+        'intelligence_score_metrics',
+        $result
+    ),
+    'Evaluation exposes Intelligence Score backtest metrics.'
+);
+
+
+playerProjectionBacktestEvaluationAssert(
+    (
+        $result[
+            'intelligence_score_metrics'
+        ]
+        ?? null
+    )
+    ===
+    $intelligenceScoreMetrics,
+    'Evaluation returns Intelligence Score metrics unchanged.'
+);
+
+
 /*
  * ============================================================
  * G. SNAPSHOT PROJECTION EVIDENCE IS NOT RECONSTRUCTED
@@ -1079,12 +1198,19 @@ $preservationMetricsService =
     );
 
 
+$preservationIntelligenceScoreMetricsService =
+    new PlayerProjectionBacktestEvaluationIntelligenceScoreMetricsServiceStub(
+        $intelligenceScoreMetrics
+    );
+
+
 $preservationService =
     new PlayerProjectionBacktestEvaluationService(
         $preservationRepository,
         $preservationOutcomeService,
         $preservationBacktestService,
-        $preservationMetricsService
+        $preservationMetricsService,
+        $preservationIntelligenceScoreMetricsService
     );
 
 
@@ -1157,12 +1283,19 @@ $immutabilityMetricsService =
     );
 
 
+$immutabilityIntelligenceScoreMetricsService =
+    new PlayerProjectionBacktestEvaluationIntelligenceScoreMetricsServiceStub(
+        $intelligenceScoreMetrics
+    );
+
+
 $immutabilityService =
     new PlayerProjectionBacktestEvaluationService(
         $immutabilityRepository,
         $immutabilityOutcomeService,
         $immutabilityBacktestService,
-        $immutabilityMetricsService
+        $immutabilityMetricsService,
+        $immutabilityIntelligenceScoreMetricsService
     );
 
 

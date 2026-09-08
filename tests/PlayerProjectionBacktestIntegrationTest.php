@@ -186,6 +186,14 @@ try {
         ),
         'PlayerProjectionBacktestService is available.'
     );
+    
+    
+    playerProjectionBacktestIntegrationAssert(
+        class_exists(
+            'IntelligenceScoreBacktestMetricsService'
+        ),
+        'IntelligenceScoreBacktestMetricsService is available.'
+    );
 
 
     /*
@@ -1494,12 +1502,104 @@ try {
     
     /*
      * ========================================================
-     * P. PRODUCTION EVALUATION ORCHESTRATION
+     * P. INTELLIGENCE SCORE CORRELATION METRICS
      * ========================================================
      */
 
     playerProjectionBacktestIntegrationSection(
-        'P. Production Evaluation Orchestration'
+        'P. Intelligence Score Correlation Metrics'
+    );
+
+
+    /*
+     * Historical Intelligence Score and realised-return evidence:
+     *
+     * Player One:
+     *     Intelligence Score 82
+     *     actual points 12
+     *
+     * Player Two:
+     *     Intelligence Score 70
+     *     actual points -1
+     *
+     * Player Three:
+     *     Intelligence Score 61
+     *     no realised outcome
+     *     unavailable
+     *
+     * The two comparable observations form a perfect positive
+     * linear relationship, so Pearson correlation is +1.
+     */
+
+    $intelligenceScoreMetricsService =
+        new IntelligenceScoreBacktestMetricsService();
+
+
+    $intelligenceScoreMetrics =
+        $intelligenceScoreMetricsService
+            ->summarise(
+                $backtest
+            );
+
+
+    playerProjectionBacktestIntegrationAssert(
+        $intelligenceScoreMetrics[
+            'total_players'
+        ]
+        ===
+        3,
+        'Intelligence Score metrics include all three historical player projections.'
+    );
+
+
+    playerProjectionBacktestIntegrationAssert(
+        $intelligenceScoreMetrics[
+            'comparable_players'
+        ]
+        ===
+        2,
+        'Intelligence Score metrics identify two players with historical score and realised-return evidence.'
+    );
+
+
+    playerProjectionBacktestIntegrationAssert(
+        $intelligenceScoreMetrics[
+            'unavailable_players'
+        ]
+        ===
+        1,
+        'Intelligence Score metrics preserve one player with unavailable realised-return evidence.'
+    );
+
+
+    playerProjectionBacktestIntegrationAssert(
+        $intelligenceScoreMetrics[
+            'correlation'
+        ]
+        !==
+        null
+        &&
+        abs(
+            $intelligenceScoreMetrics[
+                'correlation'
+            ]
+            -
+            1.0
+        )
+        <
+        0.000000001,
+        'Intelligence Score correlation is calculated from persisted historical scores and realised returns.'
+    );
+    
+    
+    /*
+     * ========================================================
+     * Q. PRODUCTION EVALUATION ORCHESTRATION
+     * ========================================================
+     */
+
+    playerProjectionBacktestIntegrationSection(
+        'Q. Production Evaluation Orchestration'
     );
 
 
@@ -1508,7 +1608,8 @@ try {
             $snapshotRepository,
             $outcomeService,
             $backtestService,
-            $metricsService
+            $metricsService,
+            $intelligenceScoreMetricsService
         );
 
 
@@ -1686,6 +1787,65 @@ try {
         73.5,
         'Production evaluation returns the expected gameweek Mean Absolute Minutes Error.'
     );
+    
+    playerProjectionBacktestIntegrationAssert(
+        $evaluation[
+            'intelligence_score_metrics'
+        ][
+            'total_players'
+        ]
+        ===
+        3,
+        'Production evaluation Intelligence Score metrics include all historical player evidence.'
+    );
+
+
+    playerProjectionBacktestIntegrationAssert(
+        $evaluation[
+            'intelligence_score_metrics'
+        ][
+            'comparable_players'
+        ]
+        ===
+        2,
+        'Production evaluation identifies the two comparable Intelligence Score players.'
+    );
+
+
+    playerProjectionBacktestIntegrationAssert(
+        $evaluation[
+            'intelligence_score_metrics'
+        ][
+            'unavailable_players'
+        ]
+        ===
+        1,
+        'Production evaluation preserves the unavailable Intelligence Score comparison.'
+    );
+
+
+    playerProjectionBacktestIntegrationAssert(
+        $evaluation[
+            'intelligence_score_metrics'
+        ][
+            'correlation'
+        ]
+        !==
+        null
+        &&
+        abs(
+            $evaluation[
+                'intelligence_score_metrics'
+            ][
+                'correlation'
+            ]
+            -
+            1.0
+        )
+        <
+        0.000000001,
+        'Production evaluation returns the expected Intelligence Score correlation.'
+    );
 
 
     $snapshotAfterEvaluation =
@@ -1708,7 +1868,7 @@ try {
 
     /*
      * ========================================================
-     * Q. ROLLBACK
+     * R. ROLLBACK
      * ========================================================
      */
 
@@ -1719,7 +1879,7 @@ try {
 
 
     playerProjectionBacktestIntegrationSection(
-        'Q. Cleanup'
+        'R. Cleanup'
     );
 
 
