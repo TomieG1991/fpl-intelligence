@@ -170,6 +170,30 @@ class PlayerRankingEvidence
                     ]
                     ?? null,
 
+                'next_fixture_rating' =>
+                    $summary[
+                        'next_fixture_rating'
+                    ]
+                    ?? null,
+
+                'base_next_fixture_rating' =>
+                    $summary[
+                        'base_next_fixture_rating'
+                    ]
+                    ?? null,
+
+                'next_opponent_attack_rating' =>
+                    $summary[
+                        'next_opponent_attack_rating'
+                    ]
+                    ?? null,
+
+                'next_opponent_defence_rating' =>
+                    $summary[
+                        'next_opponent_defence_rating'
+                    ]
+                    ?? null,
+
                 'availability_multiplier' =>
                     $summary[
                         'availability_multiplier'

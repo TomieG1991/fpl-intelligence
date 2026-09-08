@@ -237,6 +237,18 @@ $generatedAt =
         'fixture_rating' =>
             76.0,
 
+        'next_fixture_rating' =>
+            82.0,
+            
+        'base_next_fixture_rating' =>
+            78.0,
+
+        'next_opponent_attack_rating' =>
+            35.0,
+
+        'next_opponent_defence_rating' =>
+            28.0,
+
         'availability_multiplier' =>
             0.95,
 
@@ -271,6 +283,18 @@ $generatedAt =
 
         'fixture_rating' =>
             70.0,
+
+        'next_fixture_rating' =>
+            68.0,
+
+        'base_next_fixture_rating' =>
+            72.0,
+
+        'next_opponent_attack_rating' =>
+            48.0,
+
+        'next_opponent_defence_rating' =>
+            56.0,
 
         'availability_multiplier' =>
             0.85,

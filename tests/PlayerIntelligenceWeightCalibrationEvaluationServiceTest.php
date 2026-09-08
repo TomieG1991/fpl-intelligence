@@ -274,6 +274,18 @@ $playerRankings = [
         'fixture_rating' =>
             76.0,
 
+        'next_fixture_rating' =>
+            82.0,
+
+        'base_next_fixture_rating' =>
+            78.0,
+
+        'next_opponent_attack_rating' =>
+            35.0,
+
+        'next_opponent_defence_rating' =>
+            28.0,
+
         'availability_multiplier' =>
             0.95,
 
@@ -303,6 +315,18 @@ $playerRankings = [
         'fixture_rating' =>
             70.0,
 
+        'next_fixture_rating' =>
+            68.0,
+
+        'base_next_fixture_rating' =>
+            72.0,
+
+        'next_opponent_attack_rating' =>
+            48.0,
+
+        'next_opponent_defence_rating' =>
+            56.0,
+
         'availability_multiplier' =>
             0.85,
 
@@ -331,6 +355,18 @@ $playerRankings = [
 
         'fixture_rating' =>
             65.0,
+
+        'next_fixture_rating' =>
+            null,
+
+        'base_next_fixture_rating' =>
+            null,
+
+        'next_opponent_attack_rating' =>
+            null,
+
+        'next_opponent_defence_rating' =>
+            null,
 
         'availability_multiplier' =>
             1.00,
@@ -892,6 +928,68 @@ playerIntelligenceCalibrationEvaluationAssert(
     'Historical Fixture rating comes from immutable ranking evidence.'
 );
 
+playerIntelligenceCalibrationEvaluationAssert(
+    (
+        $historicalRows[
+            0
+        ][
+            'next_fixture_rating'
+        ]
+        ??
+        null
+    )
+    ===
+    82.0,
+    'Historical position-aware next Fixture rating comes from immutable ranking evidence.'
+);
+
+playerIntelligenceCalibrationEvaluationAssert(
+    (
+        $historicalRows[
+            0
+        ][
+            'base_next_fixture_rating'
+        ]
+        ??
+        null
+    )
+    ===
+    78.0,
+    'Historical base next Fixture rating comes from immutable ranking evidence.'
+);
+
+
+playerIntelligenceCalibrationEvaluationAssert(
+    (
+        $historicalRows[
+            0
+        ][
+            'next_opponent_attack_rating'
+        ]
+        ??
+        null
+    )
+    ===
+    35.0,
+    'Historical next opponent Attack rating comes from immutable ranking evidence.'
+);
+
+
+playerIntelligenceCalibrationEvaluationAssert(
+    (
+        $historicalRows[
+            0
+        ][
+            'next_opponent_defence_rating'
+        ]
+        ??
+        null
+    )
+    ===
+    28.0,
+    'Historical next opponent Defence rating comes from immutable ranking evidence.'
+);
+
 
 playerIntelligenceCalibrationEvaluationAssert(
     (
@@ -929,6 +1027,88 @@ playerIntelligenceCalibrationEvaluationAssert(
     'Missing historical Strength evidence remains null rather than being reconstructed.'
 );
 
+playerIntelligenceCalibrationEvaluationAssert(
+    array_key_exists(
+        'next_fixture_rating',
+        $historicalRows[
+            2
+        ]
+        ??
+        []
+    )
+    &&
+    $historicalRows[
+        2
+    ][
+        'next_fixture_rating'
+    ]
+    ===
+    null,
+    'Missing historical position-aware next Fixture evidence remains null rather than being reconstructed.'
+);
+
+
+playerIntelligenceCalibrationEvaluationAssert(
+    array_key_exists(
+        'base_next_fixture_rating',
+        $historicalRows[
+            2
+        ]
+        ??
+        []
+    )
+    &&
+    $historicalRows[
+        2
+    ][
+        'base_next_fixture_rating'
+    ]
+    ===
+    null,
+    'Missing historical base next Fixture evidence remains null rather than being reconstructed.'
+);
+
+
+playerIntelligenceCalibrationEvaluationAssert(
+    array_key_exists(
+        'next_opponent_attack_rating',
+        $historicalRows[
+            2
+        ]
+        ??
+        []
+    )
+    &&
+    $historicalRows[
+        2
+    ][
+        'next_opponent_attack_rating'
+    ]
+    ===
+    null,
+    'Missing historical next opponent Attack evidence remains null rather than being reconstructed.'
+);
+
+
+playerIntelligenceCalibrationEvaluationAssert(
+    array_key_exists(
+        'next_opponent_defence_rating',
+        $historicalRows[
+            2
+        ]
+        ??
+        []
+    )
+    &&
+    $historicalRows[
+        2
+    ][
+        'next_opponent_defence_rating'
+    ]
+    ===
+    null,
+    'Missing historical next opponent Defence evidence remains null rather than being reconstructed.'
+);
 
 /*
  * ============================================================

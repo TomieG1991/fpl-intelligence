@@ -162,6 +162,11 @@ $playerSummaries = [
         'price' => 8.5,
         'strength_rating' => 74.0,
         'fixture_rating' => 69.71,
+        'next_fixture_rating' => 72.40,
+        'base_next_fixture_rating' => 70.00,
+        'next_fixture_rating' => 72.40,
+        'next_opponent_attack_rating' => 44.00,
+        'next_opponent_defence_rating' => 40.40,
         'availability_multiplier' => 1.00,
         'intelligence_score' => 72.5,
         'projected_points' => 5.8
@@ -176,6 +181,11 @@ $playerSummaries = [
         'price' => 10.0,
         'strength_rating' => 94.0,
         'fixture_rating' => 85.43,
+        'next_fixture_rating' => 91.25,
+        'base_next_fixture_rating' => 88.00,
+        'next_fixture_rating' => 91.25,
+        'next_opponent_attack_rating' => 30.00,
+        'next_opponent_defence_rating' => 25.00,
         'availability_multiplier' => 1.00,
         'intelligence_score' => 91.0,
         'projected_points' => 8.4
@@ -190,6 +200,11 @@ $playerSummaries = [
         'price' => 6.0,
         'strength_rating' => 84.0,
         'fixture_rating' => 75.43,
+        'next_fixture_rating' => 68.75,
+        'base_next_fixture_rating' => 65.00,
+        'next_fixture_rating' => 68.75,
+        'next_opponent_attack_rating' => 45.00,
+        'next_opponent_defence_rating' => 50.00,
         'availability_multiplier' => 1.00,
         'intelligence_score' => 81.0,
         'projected_points' => 6.2
@@ -466,6 +481,56 @@ playerRankingEvidenceCheck(
         null
     )
     === 85.43
+);
+
+playerRankingEvidenceCheck(
+    'Recommendation-time position-aware next Fixture rating is preserved',
+    (
+        $first[
+            'next_fixture_rating'
+        ]
+        ??
+        null
+    )
+    === 91.25
+);
+
+playerRankingEvidenceCheck(
+    'Recommendation-time base next Fixture rating is preserved',
+    (
+        $first[
+            'base_next_fixture_rating'
+        ]
+        ??
+        null
+    )
+    === 88.00
+);
+
+
+playerRankingEvidenceCheck(
+    'Recommendation-time next opponent Attack rating is preserved',
+    (
+        $first[
+            'next_opponent_attack_rating'
+        ]
+        ??
+        null
+    )
+    === 30.00
+);
+
+
+playerRankingEvidenceCheck(
+    'Recommendation-time next opponent Defence rating is preserved',
+    (
+        $first[
+            'next_opponent_defence_rating'
+        ]
+        ??
+        null
+    )
+    === 25.00
 );
 
 
@@ -790,6 +855,26 @@ playerRankingEvidenceCheck(
 
 
 playerRankingEvidenceCheck(
+    'Unavailable position-aware next Fixture calibration evidence is preserved explicitly as null',
+    array_key_exists(
+        'next_fixture_rating',
+        $missingCalibrationEvidence[
+            0
+        ]
+        ??
+        []
+    )
+    &&
+    $missingCalibrationEvidence[
+        0
+    ][
+        'next_fixture_rating'
+    ]
+    === null
+);
+
+
+playerRankingEvidenceCheck(
     'Unavailable Availability multiplier calibration evidence is preserved explicitly as null',
     array_key_exists(
         'availability_multiplier',
@@ -804,6 +889,65 @@ playerRankingEvidenceCheck(
         0
     ][
         'availability_multiplier'
+    ]
+    === null
+);
+
+playerRankingEvidenceCheck(
+    'Unavailable base next Fixture calibration evidence is preserved explicitly as null',
+    array_key_exists(
+        'base_next_fixture_rating',
+        $missingCalibrationEvidence[
+            0
+        ]
+        ??
+        []
+    )
+    &&
+    $missingCalibrationEvidence[
+        0
+    ][
+        'base_next_fixture_rating'
+    ]
+    === null
+);
+
+
+playerRankingEvidenceCheck(
+    'Unavailable next opponent Attack calibration evidence is preserved explicitly as null',
+    array_key_exists(
+        'next_opponent_attack_rating',
+        $missingCalibrationEvidence[
+            0
+        ]
+        ??
+        []
+    )
+    &&
+    $missingCalibrationEvidence[
+        0
+    ][
+        'next_opponent_attack_rating'
+    ]
+    === null
+);
+
+
+playerRankingEvidenceCheck(
+    'Unavailable next opponent Defence calibration evidence is preserved explicitly as null',
+    array_key_exists(
+        'next_opponent_defence_rating',
+        $missingCalibrationEvidence[
+            0
+        ]
+        ??
+        []
+    )
+    &&
+    $missingCalibrationEvidence[
+        0
+    ][
+        'next_opponent_defence_rating'
     ]
     === null
 );

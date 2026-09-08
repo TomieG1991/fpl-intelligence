@@ -301,6 +301,32 @@ try {
             0;
 
 
+        /*
+         * ========================================================
+         * POSITION-AWARE FIXTURE CALIBRATION EVIDENCE
+         * ========================================================
+         */
+
+        $completePositionAwareRows =
+            0;
+
+
+        $missingPositionAwareFixture =
+            0;
+
+
+        $missingBaseNextFixture =
+            0;
+
+
+        $missingOpponentAttack =
+            0;
+
+
+        $missingOpponentDefence =
+            0;
+
+
         foreach (
             $playerRankings
             as $ranking
@@ -361,6 +387,73 @@ try {
                         'availability_multiplier'
                     ]
                 );
+                
+            $hasPositionAwareFixture =
+                array_key_exists(
+                    'next_fixture_rating',
+                    $ranking
+                )
+                &&
+                $ranking[
+                    'next_fixture_rating'
+                ] !== null
+                &&
+                is_numeric(
+                    $ranking[
+                        'next_fixture_rating'
+                    ]
+                );
+
+
+            $hasBaseNextFixture =
+                array_key_exists(
+                    'base_next_fixture_rating',
+                    $ranking
+                )
+                &&
+                $ranking[
+                    'base_next_fixture_rating'
+                ] !== null
+                &&
+                is_numeric(
+                    $ranking[
+                        'base_next_fixture_rating'
+                    ]
+                );
+
+
+            $hasOpponentAttack =
+                array_key_exists(
+                    'next_opponent_attack_rating',
+                    $ranking
+                )
+                &&
+                $ranking[
+                    'next_opponent_attack_rating'
+                ] !== null
+                &&
+                is_numeric(
+                    $ranking[
+                        'next_opponent_attack_rating'
+                    ]
+                );
+
+
+            $hasOpponentDefence =
+                array_key_exists(
+                    'next_opponent_defence_rating',
+                    $ranking
+                )
+                &&
+                $ranking[
+                    'next_opponent_defence_rating'
+                ] !== null
+                &&
+                is_numeric(
+                    $ranking[
+                        'next_opponent_defence_rating'
+                    ]
+                );
 
 
             if (!$hasStrength) {
@@ -378,6 +471,44 @@ try {
             if (!$hasAvailability) {
 
                 $missingAvailability++;
+            }
+
+
+            if (!$hasPositionAwareFixture) {
+
+                $missingPositionAwareFixture++;
+            }
+
+
+            if (!$hasBaseNextFixture) {
+
+                $missingBaseNextFixture++;
+            }
+
+
+            if (!$hasOpponentAttack) {
+
+                $missingOpponentAttack++;
+            }
+
+
+            if (!$hasOpponentDefence) {
+
+                $missingOpponentDefence++;
+            }
+
+
+            if (
+                $hasPositionAwareFixture
+                &&
+                $hasBaseNextFixture
+                &&
+                $hasOpponentAttack
+                &&
+                $hasOpponentDefence
+            ) {
+
+                $completePositionAwareRows++;
             }
 
 
@@ -411,9 +542,37 @@ try {
             . "<br>";
 
 
+        echo "<br>";
+
+        echo "Complete position-aware Fixture calibration rows: "
+            . $completePositionAwareRows
+            . "<br>";
+
+        echo "Rows missing Position-Aware Next Fixture: "
+            . $missingPositionAwareFixture
+            . "<br>";
+
+        echo "Rows missing Base Next Fixture: "
+            . $missingBaseNextFixture
+            . "<br>";
+
+        echo "Rows missing Opponent Attack: "
+            . $missingOpponentAttack
+            . "<br>";
+
+        echo "Rows missing Opponent Defence: "
+            . $missingOpponentDefence
+            . "<br>";
+
+
         candidateCalibrationEvidenceResult(
             $completeRows > 0,
             'Candidate contains at least one complete Strength/Fixture/Availability calibration row.'
+        );
+        
+        candidateCalibrationEvidenceResult(
+            $completePositionAwareRows > 0,
+            'Candidate contains at least one complete position-aware Fixture calibration row.'
         );
 
 
@@ -502,6 +661,82 @@ try {
                         ? number_format(
                             (float) $ranking[
                                 'fixture_rating'
+                            ],
+                            2
+                        )
+                        : 'N/A'
+                );
+                
+                
+            echo " | Position-Aware Next: "
+                . (
+                    is_numeric(
+                        $ranking[
+                            'next_fixture_rating'
+                        ]
+                        ??
+                        null
+                    )
+                        ? number_format(
+                            (float) $ranking[
+                                'next_fixture_rating'
+                            ],
+                            2
+                        )
+                        : 'N/A'
+                );
+
+
+            echo " | Base Next: "
+                . (
+                    is_numeric(
+                        $ranking[
+                            'base_next_fixture_rating'
+                        ]
+                        ??
+                        null
+                    )
+                        ? number_format(
+                            (float) $ranking[
+                                'base_next_fixture_rating'
+                            ],
+                            2
+                        )
+                        : 'N/A'
+                );
+
+
+            echo " | Opp Attack: "
+                . (
+                    is_numeric(
+                        $ranking[
+                            'next_opponent_attack_rating'
+                        ]
+                        ??
+                        null
+                    )
+                        ? number_format(
+                            (float) $ranking[
+                                'next_opponent_attack_rating'
+                            ],
+                            2
+                        )
+                        : 'N/A'
+                );
+
+
+            echo " | Opp Defence: "
+                . (
+                    is_numeric(
+                        $ranking[
+                            'next_opponent_defence_rating'
+                        ]
+                        ??
+                        null
+                    )
+                        ? number_format(
+                            (float) $ranking[
+                                'next_opponent_defence_rating'
                             ],
                             2
                         )

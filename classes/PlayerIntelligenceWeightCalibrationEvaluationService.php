@@ -335,6 +335,30 @@ class PlayerIntelligenceWeightCalibrationEvaluationService
                     ]
                     ?? null,
 
+                'next_fixture_rating' =>
+                    $ranking[
+                        'next_fixture_rating'
+                    ]
+                    ?? null,
+
+                'base_next_fixture_rating' =>
+                    $ranking[
+                        'base_next_fixture_rating'
+                    ]
+                    ?? null,
+
+                'next_opponent_attack_rating' =>
+                    $ranking[
+                        'next_opponent_attack_rating'
+                    ]
+                    ?? null,
+
+                'next_opponent_defence_rating' =>
+                    $ranking[
+                        'next_opponent_defence_rating'
+                    ]
+                    ?? null,
+
                 'availability_multiplier' =>
                     $ranking[
                         'availability_multiplier'

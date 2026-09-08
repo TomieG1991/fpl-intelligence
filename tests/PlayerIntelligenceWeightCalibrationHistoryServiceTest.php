@@ -475,6 +475,18 @@ $gameweekOneRows = [
         'fixture_rating' =>
             76.0,
 
+        'next_fixture_rating' =>
+            82.0,
+
+        'base_next_fixture_rating' =>
+            78.0,
+
+        'next_opponent_attack_rating' =>
+            35.0,
+
+        'next_opponent_defence_rating' =>
+            28.0,
+
         'availability_multiplier' =>
             0.95,
 
@@ -491,6 +503,18 @@ $gameweekOneRows = [
 
         'fixture_rating' =>
             70.0,
+
+        'next_fixture_rating' =>
+            68.0,
+
+        'base_next_fixture_rating' =>
+            72.0,
+
+        'next_opponent_attack_rating' =>
+            48.0,
+
+        'next_opponent_defence_rating' =>
+            56.0,
 
         'availability_multiplier' =>
             0.85,
@@ -513,6 +537,18 @@ $gameweekThreeRows = [
         'fixture_rating' =>
             60.0,
 
+        'next_fixture_rating' =>
+            55.0,
+
+        'base_next_fixture_rating' =>
+            58.0,
+
+        'next_opponent_attack_rating' =>
+            62.0,
+
+        'next_opponent_defence_rating' =>
+            70.0,
+
         'availability_multiplier' =>
             1.00,
 
@@ -529,6 +565,18 @@ $gameweekThreeRows = [
 
         'fixture_rating' =>
             90.0,
+
+        'next_fixture_rating' =>
+            94.0,
+
+        'base_next_fixture_rating' =>
+            88.0,
+
+        'next_opponent_attack_rating' =>
+            20.0,
+
+        'next_opponent_defence_rating' =>
+            12.0,
 
         'availability_multiplier' =>
             0.95,
@@ -1030,6 +1078,212 @@ playerIntelligenceCalibrationHistoryAssert(
     ===
     103,
     'Combined sample preserves player evidence and ordering within each historical gameweek.'
+);
+
+playerIntelligenceCalibrationHistoryAssert(
+    (
+        $combinedRows[
+            0
+        ][
+            'next_fixture_rating'
+        ]
+        ??
+        null
+    )
+    ===
+    82.0
+    &&
+    (
+        $combinedRows[
+            1
+        ][
+            'next_fixture_rating'
+        ]
+        ??
+        null
+    )
+    ===
+    68.0
+    &&
+    (
+        $combinedRows[
+            2
+        ][
+            'next_fixture_rating'
+        ]
+        ??
+        null
+    )
+    ===
+    55.0
+    &&
+    (
+        $combinedRows[
+            3
+        ][
+            'next_fixture_rating'
+        ]
+        ??
+        null
+    )
+    ===
+    94.0,
+    'Combined historical sample preserves position-aware next Fixture evidence unchanged.'
+);
+
+playerIntelligenceCalibrationHistoryAssert(
+    (
+        $combinedRows[
+            0
+        ][
+            'base_next_fixture_rating'
+        ]
+        ??
+        null
+    )
+    ===
+    78.0
+    &&
+    (
+        $combinedRows[
+            1
+        ][
+            'base_next_fixture_rating'
+        ]
+        ??
+        null
+    )
+    ===
+    72.0
+    &&
+    (
+        $combinedRows[
+            2
+        ][
+            'base_next_fixture_rating'
+        ]
+        ??
+        null
+    )
+    ===
+    58.0
+    &&
+    (
+        $combinedRows[
+            3
+        ][
+            'base_next_fixture_rating'
+        ]
+        ??
+        null
+    )
+    ===
+    88.0,
+    'Combined historical sample preserves base next Fixture evidence unchanged.'
+);
+
+
+playerIntelligenceCalibrationHistoryAssert(
+    (
+        $combinedRows[
+            0
+        ][
+            'next_opponent_attack_rating'
+        ]
+        ??
+        null
+    )
+    ===
+    35.0
+    &&
+    (
+        $combinedRows[
+            1
+        ][
+            'next_opponent_attack_rating'
+        ]
+        ??
+        null
+    )
+    ===
+    48.0
+    &&
+    (
+        $combinedRows[
+            2
+        ][
+            'next_opponent_attack_rating'
+        ]
+        ??
+        null
+    )
+    ===
+    62.0
+    &&
+    (
+        $combinedRows[
+            3
+        ][
+            'next_opponent_attack_rating'
+        ]
+        ??
+        null
+    )
+    ===
+    20.0,
+    'Combined historical sample preserves next opponent Attack evidence unchanged.'
+);
+
+
+playerIntelligenceCalibrationHistoryAssert(
+    (
+        $combinedRows[
+            0
+        ][
+            'next_opponent_defence_rating'
+        ]
+        ??
+        null
+    )
+    ===
+    28.0
+    &&
+    (
+        $combinedRows[
+            1
+        ][
+            'next_opponent_defence_rating'
+        ]
+        ??
+        null
+    )
+    ===
+    56.0
+    &&
+    (
+        $combinedRows[
+            2
+        ][
+            'next_opponent_defence_rating'
+        ]
+        ??
+        null
+    )
+    ===
+    70.0
+    &&
+    (
+        $combinedRows[
+            3
+        ][
+            'next_opponent_defence_rating'
+        ]
+        ??
+        null
+    )
+    ===
+    12.0,
+    'Combined historical sample preserves next opponent Defence evidence unchanged.'
 );
 
 
