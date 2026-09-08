@@ -44,6 +44,12 @@ class PlayerProjectionBacktestMetricsService
 
         $totalAbsoluteError =
             0.0;
+              
+        $minutesComparablePlayers =
+            0;
+
+        $totalAbsoluteMinutesError =
+            0.0;
 
 
         /*
@@ -142,35 +148,130 @@ class PlayerProjectionBacktestMetricsService
              */
 
             if (
-                $projectedPoints === null
-                ||
-                $actualPoints === null
+                $projectedPoints !== null
+                &&
+                $actualPoints !== null
             ) {
 
-                continue;
+                $comparablePlayers++;
+
+
+                /*
+                 * ====================================================
+                 * ABSOLUTE POINTS ERROR
+                 * ====================================================
+                 *
+                 * Derive this directly from the primary evidence.
+                 *
+                 * Do not trust a supplied absolute_points_error field,
+                 * because that field is itself derived evidence.
+                 */
+
+                $totalAbsoluteError +=
+                    abs(
+                        $actualPoints
+                        -
+                        $projectedPoints
+                    );
             }
-
-
-            $comparablePlayers++;
 
 
             /*
              * ====================================================
-             * ABSOLUTE ERROR
+             * HISTORICAL PROJECTED MINUTES
              * ====================================================
-             *
-             * Derive this directly from the primary evidence.
-             *
-             * Do not trust a supplied absolute_points_error field,
-             * because that field is itself derived evidence.
              */
 
-            $totalAbsoluteError +=
-                abs(
-                    $actualPoints
-                    -
-                    $projectedPoints
-                );
+            $projectedMinutes =
+                array_key_exists(
+                    'projected_minutes',
+                    $row
+                )
+                &&
+                $row[
+                    'projected_minutes'
+                ] !== null
+                &&
+                is_numeric(
+                    $row[
+                        'projected_minutes'
+                    ]
+                )
+                    ? (float) $row[
+                        'projected_minutes'
+                    ]
+                    : null;
+
+
+            /*
+             * ====================================================
+             * REALISED MINUTES
+             * ====================================================
+             *
+             * A genuine zero-minute appearance is valid realised
+             * evidence and must remain distinguishable from missing
+             * outcome evidence.
+             */
+
+            $actualMinutes =
+                array_key_exists(
+                    'actual_minutes',
+                    $row
+                )
+                &&
+                $row[
+                    'actual_minutes'
+                ] !== null
+                &&
+                is_numeric(
+                    $row[
+                        'actual_minutes'
+                    ]
+                )
+                    ? (float) $row[
+                        'actual_minutes'
+                    ]
+                    : null;
+
+
+            /*
+             * ====================================================
+             * COMPARABLE MINUTES SAMPLE
+             * ====================================================
+             *
+             * Points and minutes availability are deliberately
+             * independent. Missing points evidence must not prevent
+             * valid minutes evidence from being evaluated.
+             */
+
+            if (
+                $projectedMinutes !== null
+                &&
+                $actualMinutes !== null
+            ) {
+
+                $minutesComparablePlayers++;
+
+
+                /*
+                 * =================================================
+                 * ABSOLUTE MINUTES ERROR
+                 * =================================================
+                 *
+                 * Derive this directly from the primary preserved
+                 * and realised evidence.
+                 *
+                 * Do not trust any supplied derived minutes-error
+                 * field.
+                 */
+
+                $totalAbsoluteMinutesError +=
+                    abs(
+                        $actualMinutes
+                        -
+                        $projectedMinutes
+                    );
+            }
         }
 
 
@@ -201,6 +302,35 @@ class PlayerProjectionBacktestMetricsService
                     /
                     $comparablePlayers
                 : null;
+                
+                
+        /*
+         * ========================================================
+         * MINUTES SAMPLE
+         * ========================================================
+         */
+
+        $minutesUnavailablePlayers =
+            $totalPlayers
+            -
+            $minutesComparablePlayers;
+
+
+        /*
+         * ========================================================
+         * MEAN ABSOLUTE MINUTES ERROR
+         * ========================================================
+         *
+         * No comparable minutes evidence means the metric is
+         * unavailable, not zero.
+         */
+
+        $meanAbsoluteMinutesError =
+            $minutesComparablePlayers > 0
+                ? $totalAbsoluteMinutesError
+                    /
+                    $minutesComparablePlayers
+                : null;
 
 
         /*
@@ -221,7 +351,16 @@ class PlayerProjectionBacktestMetricsService
                 $unavailablePlayers,
 
             'mean_absolute_error' =>
-                $meanAbsoluteError
+                $meanAbsoluteError,
+
+            'minutes_comparable_players' =>
+                $minutesComparablePlayers,
+
+            'minutes_unavailable_players' =>
+                $minutesUnavailablePlayers,
+
+            'mean_absolute_minutes_error' =>
+                $meanAbsoluteMinutesError
         ];
     }
 }

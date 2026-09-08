@@ -1437,11 +1437,278 @@ try {
         5.25,
         'Gameweek MAE is calculated from persisted historical projections and realised outcomes.'
     );
+    
+    /*
+     * Projected-minutes evaluation uses the same preserved
+     * historical projection evidence and realised gameweek
+     * outcomes.
+     *
+     * Player One:
+     *     projected 90
+     *     actual 162
+     *     absolute error 72
+     *
+     * Player Two:
+     *     projected 75
+     *     actual 0
+     *     absolute error 75
+     *
+     * Player Three:
+     *     projected 35
+     *     no realised outcome
+     *     unavailable
+     *
+     * Minutes MAE:
+     *     (72 + 75) / 2 = 73.5
+     */
+
+    playerProjectionBacktestIntegrationAssert(
+        $metrics[
+            'minutes_comparable_players'
+        ]
+        ===
+        2,
+        'Metrics identify two players with comparable projected and realised minutes.'
+    );
+
+
+    playerProjectionBacktestIntegrationAssert(
+        $metrics[
+            'minutes_unavailable_players'
+        ]
+        ===
+        1,
+        'Metrics preserve one unavailable projected-minutes comparison.'
+    );
+
+
+    playerProjectionBacktestIntegrationAssert(
+        $metrics[
+            'mean_absolute_minutes_error'
+        ]
+        ===
+        73.5,
+        'Gameweek Mean Absolute Minutes Error is calculated from persisted projections and realised outcomes.'
+    );
+    
+    
+    /*
+     * ========================================================
+     * P. PRODUCTION EVALUATION ORCHESTRATION
+     * ========================================================
+     */
+
+    playerProjectionBacktestIntegrationSection(
+        'P. Production Evaluation Orchestration'
+    );
+
+
+    $evaluationService =
+        new PlayerProjectionBacktestEvaluationService(
+            $snapshotRepository,
+            $outcomeService,
+            $backtestService,
+            $metricsService
+        );
+
+
+    $evaluation =
+        $evaluationService
+            ->evaluate(
+                $entryId,
+                $gameweekId
+            );
+
+
+    playerProjectionBacktestIntegrationAssert(
+        is_array(
+            $evaluation
+        ),
+        'Production evaluation service returns a complete historical backtest.'
+    );
+
+
+    playerProjectionBacktestIntegrationAssert(
+        $evaluation[
+            'entry_id'
+        ]
+        ===
+        $entryId,
+        'Production evaluation preserves the requested entry ID.'
+    );
+
+
+    playerProjectionBacktestIntegrationAssert(
+        $evaluation[
+            'gameweek_id'
+        ]
+        ===
+        $gameweekId,
+        'Production evaluation preserves the requested local gameweek ID.'
+    );
+
+
+    playerProjectionBacktestIntegrationAssert(
+        $evaluation[
+            'snapshot'
+        ][
+            'player_projections'
+        ]
+        ===
+        $historicalPlayerProjections,
+        'Production evaluation loads exact persisted historical projection evidence.'
+    );
+
+
+    playerProjectionBacktestIntegrationAssert(
+        count(
+            $evaluation[
+                'player_outcomes'
+            ]
+        )
+        ===
+        2,
+        'Production evaluation loads aggregated realised outcomes through the real outcome service.'
+    );
+
+
+    playerProjectionBacktestIntegrationAssert(
+        $evaluation[
+            'player_outcomes'
+        ]
+        ===
+        $outcomes,
+        'Production evaluation preserves the already-proven realised outcome evidence.'
+    );
+
+
+    playerProjectionBacktestIntegrationAssert(
+        count(
+            $evaluation[
+                'player_backtest'
+            ]
+        )
+        ===
+        3,
+        'Production evaluation backtests all three preserved historical player projections.'
+    );
+
+
+    playerProjectionBacktestIntegrationAssert(
+        $evaluation[
+            'player_backtest'
+        ]
+        ===
+        $backtest,
+        'Production evaluation produces the already-proven player-level backtest evidence.'
+    );
+
+
+    playerProjectionBacktestIntegrationAssert(
+        $evaluation[
+            'metrics'
+        ][
+            'total_players'
+        ]
+        ===
+        3,
+        'Production evaluation metrics include all historical projection evidence.'
+    );
+
+
+    playerProjectionBacktestIntegrationAssert(
+        $evaluation[
+            'metrics'
+        ][
+            'comparable_players'
+        ]
+        ===
+        2,
+        'Production evaluation metrics identify the two comparable players.'
+    );
+
+
+    playerProjectionBacktestIntegrationAssert(
+        $evaluation[
+            'metrics'
+        ][
+            'unavailable_players'
+        ]
+        ===
+        1,
+        'Production evaluation metrics preserve the unavailable comparison.'
+    );
+
+
+    playerProjectionBacktestIntegrationAssert(
+        $evaluation[
+            'metrics'
+        ][
+            'mean_absolute_error'
+        ]
+        ===
+        5.25,
+        'Production evaluation returns the expected gameweek Mean Absolute Error.'
+    );
+    
+    
+    playerProjectionBacktestIntegrationAssert(
+        $evaluation[
+            'metrics'
+        ][
+            'minutes_comparable_players'
+        ]
+        ===
+        2,
+        'Production evaluation identifies the two comparable projected-minutes players.'
+    );
+
+
+    playerProjectionBacktestIntegrationAssert(
+        $evaluation[
+            'metrics'
+        ][
+            'minutes_unavailable_players'
+        ]
+        ===
+        1,
+        'Production evaluation preserves the unavailable projected-minutes comparison.'
+    );
+
+
+    playerProjectionBacktestIntegrationAssert(
+        $evaluation[
+            'metrics'
+        ][
+            'mean_absolute_minutes_error'
+        ]
+        ===
+        73.5,
+        'Production evaluation returns the expected gameweek Mean Absolute Minutes Error.'
+    );
+
+
+    $snapshotAfterEvaluation =
+        $snapshotRepository
+            ->getByEntryAndGameweek(
+                $entryId,
+                $gameweekId
+            );
+
+
+    playerProjectionBacktestIntegrationAssert(
+        $snapshotAfterEvaluation[
+            'player_projections'
+        ]
+        ===
+        $historicalPlayerProjections,
+        'Production evaluation leaves immutable historical projection evidence unchanged.'
+    );
 
 
     /*
      * ========================================================
-     * P. ROLLBACK
+     * Q. ROLLBACK
      * ========================================================
      */
 
@@ -1452,7 +1719,7 @@ try {
 
 
     playerProjectionBacktestIntegrationSection(
-        'P. Cleanup'
+        'Q. Cleanup'
     );
 
 

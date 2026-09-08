@@ -1194,12 +1194,14 @@ playerProjectionBacktestMetricsSection(
 
 
 $expectedKeys = [
-
-    'total_players',
-    'comparable_players',
-    'unavailable_players',
-    'mean_absolute_error'
-];
+        'total_players',
+        'comparable_players',
+        'unavailable_players',
+        'mean_absolute_error',
+        'minutes_comparable_players',
+        'minutes_unavailable_players',
+        'mean_absolute_minutes_error'
+    ];
 
 
 playerProjectionBacktestMetricsAssert(
@@ -1208,9 +1210,707 @@ playerProjectionBacktestMetricsAssert(
     )
     ===
     $expectedKeys,
-    'Metrics summary exposes only the defined initial evaluation contract.'
+    'Metrics summary exposes only the defined projected-points and projected-minutes evaluation contract.'
 );
 
+
+/*
+ * ============================================================
+ * P. PROJECTED MINUTES — SINGLE COMPARABLE PLAYER
+ * ============================================================
+ */
+
+playerProjectionBacktestMetricsSection(
+    'P. Projected Minutes — Single Comparable Player'
+);
+
+
+$minutesSingleRows = [
+
+    [
+        'projected_points' =>
+            6.5,
+
+        'actual_points' =>
+            8,
+
+        'projected_minutes' =>
+            80.0,
+
+        'actual_minutes' =>
+            90
+    ]
+];
+
+
+$minutesSingleResult =
+    $service->summarise(
+        $minutesSingleRows
+    );
+
+
+playerProjectionBacktestMetricsAssert(
+    array_key_exists(
+        'minutes_comparable_players',
+        $minutesSingleResult
+    ),
+    'Metrics expose projected-minutes comparable player count.'
+);
+
+
+playerProjectionBacktestMetricsAssert(
+    array_key_exists(
+        'minutes_unavailable_players',
+        $minutesSingleResult
+    ),
+    'Metrics expose projected-minutes unavailable player count.'
+);
+
+
+playerProjectionBacktestMetricsAssert(
+    array_key_exists(
+        'mean_absolute_minutes_error',
+        $minutesSingleResult
+    ),
+    'Metrics expose Mean Absolute Minutes Error.'
+);
+
+
+playerProjectionBacktestMetricsAssert(
+    $minutesSingleResult[
+        'minutes_comparable_players'
+    ]
+    ===
+    1,
+    'Player with projected and actual minutes is comparable.'
+);
+
+
+playerProjectionBacktestMetricsAssert(
+    $minutesSingleResult[
+        'minutes_unavailable_players'
+    ]
+    ===
+    0,
+    'Comparable minutes evidence is not marked unavailable.'
+);
+
+
+playerProjectionBacktestMetricsAssert(
+    $minutesSingleResult[
+        'mean_absolute_minutes_error'
+    ]
+    ===
+    10.0,
+    'Mean Absolute Minutes Error is derived from projected and actual minutes.'
+);
+
+
+/*
+ * ============================================================
+ * Q. GENUINE ZERO ACTUAL MINUTES
+ * ============================================================
+ */
+
+playerProjectionBacktestMetricsSection(
+    'Q. Genuine Zero Actual Minutes'
+);
+
+
+$zeroMinutesRows = [
+
+    [
+        'projected_points' =>
+            5.0,
+
+        'actual_points' =>
+            0,
+
+        'projected_minutes' =>
+            70.0,
+
+        'actual_minutes' =>
+            0
+    ]
+];
+
+
+$zeroMinutesResult =
+    $service->summarise(
+        $zeroMinutesRows
+    );
+
+
+playerProjectionBacktestMetricsAssert(
+    $zeroMinutesResult[
+        'minutes_comparable_players'
+    ]
+    ===
+    1,
+    'Genuine zero actual minutes remain comparable evidence.'
+);
+
+
+playerProjectionBacktestMetricsAssert(
+    $zeroMinutesResult[
+        'minutes_unavailable_players'
+    ]
+    ===
+    0,
+    'Genuine zero actual minutes are not treated as missing.'
+);
+
+
+playerProjectionBacktestMetricsAssert(
+    $zeroMinutesResult[
+        'mean_absolute_minutes_error'
+    ]
+    ===
+    70.0,
+    'Zero-minute appearance produces the correct absolute minutes error.'
+);
+
+
+/*
+ * ============================================================
+ * R. MISSING PROJECTED MINUTES
+ * ============================================================
+ */
+
+playerProjectionBacktestMetricsSection(
+    'R. Missing Projected Minutes'
+);
+
+
+$missingProjectedMinutesRows = [
+
+    [
+        'projected_points' =>
+            5.0,
+
+        'actual_points' =>
+            4,
+
+        'projected_minutes' =>
+            null,
+
+        'actual_minutes' =>
+            90
+    ]
+];
+
+
+$missingProjectedMinutesResult =
+    $service->summarise(
+        $missingProjectedMinutesRows
+    );
+
+
+playerProjectionBacktestMetricsAssert(
+    $missingProjectedMinutesResult[
+        'minutes_comparable_players'
+    ]
+    ===
+    0,
+    'Missing projected minutes are not comparable.'
+);
+
+
+playerProjectionBacktestMetricsAssert(
+    $missingProjectedMinutesResult[
+        'minutes_unavailable_players'
+    ]
+    ===
+    1,
+    'Missing projected minutes are counted as unavailable.'
+);
+
+
+playerProjectionBacktestMetricsAssert(
+    $missingProjectedMinutesResult[
+        'mean_absolute_minutes_error'
+    ]
+    ===
+    null,
+    'Minutes MAE remains unavailable when projected minutes are missing.'
+);
+
+
+/*
+ * ============================================================
+ * S. MISSING ACTUAL MINUTES
+ * ============================================================
+ */
+
+playerProjectionBacktestMetricsSection(
+    'S. Missing Actual Minutes'
+);
+
+
+$missingActualMinutesRows = [
+
+    [
+        'projected_points' =>
+            5.0,
+
+        'actual_points' =>
+            null,
+
+        'projected_minutes' =>
+            75.0,
+
+        'actual_minutes' =>
+            null
+    ]
+];
+
+
+$missingActualMinutesResult =
+    $service->summarise(
+        $missingActualMinutesRows
+    );
+
+
+playerProjectionBacktestMetricsAssert(
+    $missingActualMinutesResult[
+        'minutes_comparable_players'
+    ]
+    ===
+    0,
+    'Missing actual minutes are not comparable.'
+);
+
+
+playerProjectionBacktestMetricsAssert(
+    $missingActualMinutesResult[
+        'minutes_unavailable_players'
+    ]
+    ===
+    1,
+    'Missing actual minutes are counted as unavailable.'
+);
+
+
+playerProjectionBacktestMetricsAssert(
+    $missingActualMinutesResult[
+        'mean_absolute_minutes_error'
+    ]
+    ===
+    null,
+    'Minutes MAE remains unavailable when realised minutes are missing.'
+);
+
+
+/*
+ * ============================================================
+ * T. POINTS AND MINUTES HAVE INDEPENDENT AVAILABILITY
+ * ============================================================
+ */
+
+playerProjectionBacktestMetricsSection(
+    'T. Independent Points And Minutes Availability'
+);
+
+
+$independentRows = [
+
+    /*
+     * Comparable for both points and minutes.
+     */
+    [
+        'projected_points' =>
+            7.0,
+
+        'actual_points' =>
+            9,
+
+        'projected_minutes' =>
+            80.0,
+
+        'actual_minutes' =>
+            90
+    ],
+
+    /*
+     * Comparable for points, unavailable for minutes.
+     */
+    [
+        'projected_points' =>
+            5.0,
+
+        'actual_points' =>
+            3,
+
+        'projected_minutes' =>
+            null,
+
+        'actual_minutes' =>
+            60
+    ],
+
+    /*
+     * Unavailable for points, comparable for minutes.
+     */
+    [
+        'projected_points' =>
+            null,
+
+        'actual_points' =>
+            null,
+
+        'projected_minutes' =>
+            45.0,
+
+        'actual_minutes' =>
+            30
+    ]
+];
+
+
+$independentResult =
+    $service->summarise(
+        $independentRows
+    );
+
+
+playerProjectionBacktestMetricsAssert(
+    $independentResult[
+        'total_players'
+    ]
+    ===
+    3,
+    'Total player sample remains shared across points and minutes metrics.'
+);
+
+
+playerProjectionBacktestMetricsAssert(
+    $independentResult[
+        'comparable_players'
+    ]
+    ===
+    2,
+    'Existing points comparable count remains based only on points evidence.'
+);
+
+
+playerProjectionBacktestMetricsAssert(
+    $independentResult[
+        'unavailable_players'
+    ]
+    ===
+    1,
+    'Existing points unavailable count remains based only on points evidence.'
+);
+
+
+playerProjectionBacktestMetricsAssert(
+    $independentResult[
+        'mean_absolute_error'
+    ]
+    ===
+    2.0,
+    'Existing points MAE remains calculated independently of minutes evidence.'
+);
+
+
+playerProjectionBacktestMetricsAssert(
+    $independentResult[
+        'minutes_comparable_players'
+    ]
+    ===
+    2,
+    'Minutes comparable count is based only on minutes evidence.'
+);
+
+
+playerProjectionBacktestMetricsAssert(
+    $independentResult[
+        'minutes_unavailable_players'
+    ]
+    ===
+    1,
+    'Minutes unavailable count is independent of points availability.'
+);
+
+
+playerProjectionBacktestMetricsAssert(
+    $independentResult[
+        'mean_absolute_minutes_error'
+    ]
+    ===
+    12.5,
+    'Minutes MAE is calculated independently from comparable minutes evidence.'
+);
+
+
+/*
+ * ============================================================
+ * U. DERIVED MINUTES ERROR IS NOT TRUSTED
+ * ============================================================
+ */
+
+playerProjectionBacktestMetricsSection(
+    'U. Derived Minutes Error Is Not Trusted'
+);
+
+
+$derivedMinutesRows = [
+
+    [
+        'projected_points' =>
+            6.0,
+
+        'actual_points' =>
+            6,
+
+        'projected_minutes' =>
+            70.0,
+
+        'actual_minutes' =>
+            90,
+
+        /*
+         * Deliberately wrong derived evidence.
+         *
+         * The metrics service must ignore this and derive the
+         * absolute error from the primary evidence itself.
+         */
+        'absolute_minutes_error' =>
+            999.0
+    ]
+];
+
+
+$derivedMinutesResult =
+    $service->summarise(
+        $derivedMinutesRows
+    );
+
+
+playerProjectionBacktestMetricsAssert(
+    $derivedMinutesResult[
+        'mean_absolute_minutes_error'
+    ]
+    ===
+    20.0,
+    'Minutes MAE is derived from primary evidence rather than supplied derived error.'
+);
+
+
+/*
+ * ============================================================
+ * V. MULTIPLE COMPARABLE MINUTES
+ * ============================================================
+ */
+
+playerProjectionBacktestMetricsSection(
+    'V. Multiple Comparable Minutes'
+);
+
+
+$multipleMinutesRows = [
+
+    [
+        'projected_points' =>
+            7.0,
+
+        'actual_points' =>
+            8,
+
+        'projected_minutes' =>
+            90.0,
+
+        'actual_minutes' =>
+            90
+    ],
+
+    [
+        'projected_points' =>
+            5.0,
+
+        'actual_points' =>
+            4,
+
+        'projected_minutes' =>
+            75.0,
+
+        'actual_minutes' =>
+            60
+    ],
+
+    [
+        'projected_points' =>
+            3.0,
+
+        'actual_points' =>
+            2,
+
+        'projected_minutes' =>
+            30.0,
+
+        'actual_minutes' =>
+            0
+    ]
+];
+
+
+$multipleMinutesResult =
+    $service->summarise(
+        $multipleMinutesRows
+    );
+
+
+playerProjectionBacktestMetricsAssert(
+    $multipleMinutesResult[
+        'minutes_comparable_players'
+    ]
+    ===
+    3,
+    'All players with both minutes values are included in the minutes sample.'
+);
+
+
+playerProjectionBacktestMetricsAssert(
+    $multipleMinutesResult[
+        'minutes_unavailable_players'
+    ]
+    ===
+    0,
+    'No minutes evidence is unavailable when every player has both values.'
+);
+
+
+playerProjectionBacktestMetricsAssert(
+    $multipleMinutesResult[
+        'mean_absolute_minutes_error'
+    ]
+    ===
+    15.0,
+    'Minutes MAE is the arithmetic mean of absolute minutes errors.'
+);
+
+
+/*
+ * ============================================================
+ * W. MALFORMED ROWS DO NOT AFFECT MINUTES SAMPLE
+ * ============================================================
+ */
+
+playerProjectionBacktestMetricsSection(
+    'W. Malformed Rows'
+);
+
+
+$malformedMinutesRows = [
+
+    'invalid',
+
+    [
+        'projected_points' =>
+            4.0,
+
+        'actual_points' =>
+            5,
+
+        'projected_minutes' =>
+            60.0,
+
+        'actual_minutes' =>
+            90
+    ]
+];
+
+
+$malformedMinutesResult =
+    $service->summarise(
+        $malformedMinutesRows
+    );
+
+
+playerProjectionBacktestMetricsAssert(
+    $malformedMinutesResult[
+        'total_players'
+    ]
+    ===
+    1,
+    'Malformed rows remain excluded from the total player sample.'
+);
+
+
+playerProjectionBacktestMetricsAssert(
+    $malformedMinutesResult[
+        'minutes_comparable_players'
+    ]
+    ===
+    1,
+    'Malformed rows do not affect the comparable minutes sample.'
+);
+
+
+playerProjectionBacktestMetricsAssert(
+    $malformedMinutesResult[
+        'minutes_unavailable_players'
+    ]
+    ===
+    0,
+    'Malformed rows do not create unavailable minutes evidence.'
+);
+
+
+playerProjectionBacktestMetricsAssert(
+    $malformedMinutesResult[
+        'mean_absolute_minutes_error'
+    ]
+    ===
+    30.0,
+    'Minutes MAE ignores malformed rows.'
+);
+
+
+/*
+ * ============================================================
+ * X. SOURCE EVIDENCE REMAINS UNCHANGED
+ * ============================================================
+ */
+
+playerProjectionBacktestMetricsSection(
+    'X. Minutes Source Evidence Remains Unchanged'
+);
+
+
+$minutesImmutabilityRows = [
+
+    [
+        'projected_points' =>
+            5.0,
+
+        'actual_points' =>
+            6,
+
+        'projected_minutes' =>
+            75.0,
+
+        'actual_minutes' =>
+            90
+    ]
+];
+
+
+$minutesImmutabilityBefore =
+    $minutesImmutabilityRows;
+
+
+$service->summarise(
+    $minutesImmutabilityRows
+);
+
+
+playerProjectionBacktestMetricsAssert(
+    $minutesImmutabilityRows
+    ===
+    $minutesImmutabilityBefore,
+    'Calculating projected-minutes metrics does not mutate backtest evidence.'
+);
 
 /*
  * ============================================================
