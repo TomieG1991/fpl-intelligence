@@ -58,40 +58,9 @@ function outcomeIntegrationResult(
 
 /*
  * ============================================================
- * SYNTHETIC TEST IDENTITY
- * ============================================================
- *
- * These FPL identities are deliberately outside the normal
- * live FPL identity range.
- *
- * The database primary keys themselves remain genuine local
- * gameweek/player/fixture/team identities so all existing
- * foreign-key constraints remain respected.
- */
-
-$syntheticFplPlayerId =
-    935008001;
-
-
-$syntheticFplFixtureIdOne =
-    935008101;
-
-
-$syntheticFplFixtureIdTwo =
-    935008102;
-
-
-/*
- * ============================================================
- * SETUP
+ * DATABASE
  * ============================================================
  */
-
-echo "<br>";
-echo "============================================<br>";
-echo "Scenario A: Real Production Stack<br>";
-echo "============================================<br>";
-
 
 $database =
     new Database();
@@ -102,868 +71,680 @@ $db =
         ->getConnection();
 
 
-outcomeIntegrationResult(
-    $db instanceof PDO,
-    'Real database connection is available.'
-);
-
-
-$historyRepository =
-    new PlayerFixtureHistoryRepository(
-        $db
-    );
-
-
-$service =
-    new PlayerGameweekOutcomeService(
-        $historyRepository
-    );
-
-
-outcomeIntegrationResult(
-    $historyRepository
-        instanceof PlayerFixtureHistoryRepository,
-    'Real PlayerFixtureHistoryRepository is available.'
-);
-
-
-outcomeIntegrationResult(
-    $service
-        instanceof PlayerGameweekOutcomeService,
-    'Real PlayerGameweekOutcomeService is available.'
-);
-
-
-/*
- * ============================================================
- * RESOLVE EXISTING PARENT IDENTITIES
- * ============================================================
- *
- * We reuse genuine local parent rows.
- *
- * Only player_fixture_history rows created by this test are
- * synthetic and therefore require cleanup.
- */
-
-$gameweekStatement =
-    $db->query(
-        "
-            SELECT
-                id,
-                fpl_gameweek_id
-            FROM
-                gameweeks
-            ORDER BY
-                fpl_gameweek_id ASC
-            LIMIT 1
-        "
-    );
-
-
-$gameweek =
-    $gameweekStatement
-        ->fetch(
-            PDO::FETCH_ASSOC
-        );
-
-
-$playerStatement =
-    $db->query(
-        "
-            SELECT
-                id,
-                fpl_player_id
-            FROM
-                players
-            WHERE
-                fpl_player_id > 0
-            ORDER BY
-                id ASC
-            LIMIT 1
-        "
-    );
-
-
-$player =
-    $playerStatement
-        ->fetch(
-            PDO::FETCH_ASSOC
-        );
-
-
-$fixtureStatement =
-    $db->query(
-        "
-            SELECT
-                id,
-                fpl_fixture_id,
-                home_team_id,
-                away_team_id
-            FROM
-                fixtures
-            WHERE
-                home_team_id > 0
-                AND away_team_id > 0
-                AND home_team_id <> away_team_id
-            ORDER BY
-                id ASC
-            LIMIT 2
-        "
-    );
-
-
-$fixtures =
-    $fixtureStatement
-        ->fetchAll(
-            PDO::FETCH_ASSOC
-        );
-
-
-outcomeIntegrationResult(
-    is_array(
-        $gameweek
-    )
-    &&
-    (int) (
-        $gameweek[
-            'id'
-        ]
-        ?? 0
-    ) > 0,
-    'A genuine local gameweek is available for the test.'
-);
-
-
-outcomeIntegrationResult(
-    is_array(
-        $player
-    )
-    &&
-    (int) (
-        $player[
-            'id'
-        ]
-        ?? 0
-    ) > 0,
-    'A genuine local player is available for the test.'
-);
-
-
-outcomeIntegrationResult(
-    count(
-        $fixtures
-    ) === 2,
-    'Two genuine local fixtures are available for the test.'
-);
-
-
-if (
-    !is_array(
-        $gameweek
-    )
-    ||
-    !is_array(
-        $player
-    )
-    ||
-    count(
-        $fixtures
-    ) !== 2
-) {
-
-    echo "<br>";
-    echo "RESULT: TESTS FAILED ❌<br>";
-
-    exit;
-}
-
-
-$gameweekId =
-    (int) $gameweek[
-        'id'
-    ];
-
-
-$playerId =
-    (int) $player[
-        'id'
-    ];
-
-
-/*
- * ============================================================
- * IMPORTANT TEST ISOLATION
- * ============================================================
- *
- * We cannot insert another history row for the genuine player
- * and genuine fixture if that (player_id, fixture_id) pair
- * already exists.
- *
- * Therefore find two fixture identities for which this player
- * does not currently have fixture-history evidence.
- */
-
-$availableFixtureStatement =
-    $db->prepare(
-        "
-            SELECT
-                f.id,
-                f.fpl_fixture_id,
-                f.home_team_id,
-                f.away_team_id
-            FROM
-                fixtures f
-            LEFT JOIN
-                player_fixture_history pfh
-                    ON pfh.fixture_id = f.id
-                    AND pfh.player_id = :player_id
-            WHERE
-                pfh.id IS NULL
-                AND f.home_team_id > 0
-                AND f.away_team_id > 0
-                AND f.home_team_id <> f.away_team_id
-            ORDER BY
-                f.id ASC
-            LIMIT 2
-        "
-    );
-
-
-$availableFixtureStatement
-    ->execute([
-
-        ':player_id' =>
-            $playerId
-    ]);
-
-
-$availableFixtures =
-    $availableFixtureStatement
-        ->fetchAll(
-            PDO::FETCH_ASSOC
-        );
-
-
-outcomeIntegrationResult(
-    count(
-        $availableFixtures
-    ) === 2,
-    'Two unused genuine fixture identities are available for synthetic history.'
-);
-
-
-if (
-    count(
-        $availableFixtures
-    ) !== 2
-) {
-
-    echo "<br>";
-    echo "RESULT: TESTS FAILED ❌<br>";
-
-    exit;
-}
-
-
-$fixtureOne =
-    $availableFixtures[0];
-
-
-$fixtureTwo =
-    $availableFixtures[1];
-
-
-$fixtureOneId =
-    (int) $fixtureOne[
-        'id'
-    ];
-
-
-$fixtureTwoId =
-    (int) $fixtureTwo[
-        'id'
-    ];
-
-
-/*
- * ============================================================
- * CLEANUP HELPER
- * ============================================================
- */
-
-$cleanupStatement =
-    $db->prepare(
-        "
-            DELETE FROM
-                player_fixture_history
-            WHERE
-                player_id = :player_id
-                AND fixture_id IN (
-                    :fixture_one,
-                    :fixture_two
-                )
-        "
-    );
-
-
-$cleanup =
-    static function () use (
-        $cleanupStatement,
-        $playerId,
-        $fixtureOneId,
-        $fixtureTwoId
-    ): void {
-
-        $cleanupStatement
-            ->execute([
-
-                ':player_id' =>
-                    $playerId,
-
-                ':fixture_one' =>
-                    $fixtureOneId,
-
-                ':fixture_two' =>
-                    $fixtureTwoId
-            ]);
-    };
-
-
-/*
- * Remove remnants from an interrupted previous execution.
- */
-
-$cleanup();
+$transactionStarted = false;
 
 
 try {
 
     /*
      * ========================================================
-     * SCENARIO B
-     * SINGLE FIXTURE THROUGH REAL REPOSITORY
+     * BEGIN CONTROLLED TRANSACTION
      * ========================================================
      */
 
+    $db->beginTransaction();
+
+    $transactionStarted = true;
+
+
     echo "<br>";
     echo "============================================<br>";
-    echo "Scenario B: Single Fixture Persistence<br>";
+    echo "A. Database And Services<br>";
     echo "============================================<br>";
+
+
+    outcomeIntegrationResult(
+        $db instanceof PDO,
+        'Database connection is available.'
+    );
+
+
+    outcomeIntegrationResult(
+        class_exists(
+            'PlayerFixtureHistoryRepository'
+        )
+        &&
+        class_exists(
+            'PlayerGameweekOutcomeService'
+        ),
+        'Real fixture history repository and outcome service are available.'
+    );
+
+
+    /*
+     * ========================================================
+     * SYNTHETIC IDENTIFIERS
+     * ========================================================
+     *
+     * Use deliberately high FPL IDs so they cannot collide
+     * with imported production data.
+     */
+
+    $fplGameweekId =
+        990001;
+
+
+    $fplTeamOneId =
+        990001;
+
+
+    $fplTeamTwoId =
+        990002;
+
+
+    $fplPlayerOneId =
+        990001;
+
+
+    $fplPlayerTwoId =
+        990002;
+
+
+    $fplFixtureOneId =
+        990001;
+
+
+    $fplFixtureTwoId =
+        990002;
+
+
+    /*
+     * ========================================================
+     * GAMEWEEK
+     * ========================================================
+     */
+
+    $statement =
+        $db->prepare(
+            "
+                INSERT INTO gameweeks (
+                    fpl_gameweek_id,
+                    name,
+                    deadline_time,
+                    finished,
+                    data_checked,
+                    is_previous,
+                    is_current,
+                    is_next
+                )
+                VALUES (
+                    :fpl_gameweek_id,
+                    :name,
+                    :deadline_time,
+                    1,
+                    1,
+                    0,
+                    0,
+                    0
+                )
+            "
+        );
+
+
+    $statement->execute([
+        ':fpl_gameweek_id' =>
+            $fplGameweekId,
+
+        ':name' =>
+            'Integration Outcome Test',
+
+        ':deadline_time' =>
+            '2026-09-01 17:30:00'
+    ]);
+
+
+    $gameweekId =
+        (int) $db->lastInsertId();
+
+
+    /*
+     * ========================================================
+     * TEAMS
+     * ========================================================
+     */
+
+    foreach (
+        [
+            [
+                $fplTeamOneId,
+                'Integration Team One'
+            ],
+            [
+                $fplTeamTwoId,
+                'Integration Team Two'
+            ]
+        ]
+        as $team
+    ) {
+
+        $statement =
+            $db->prepare(
+                "
+                    INSERT INTO teams (
+                        fpl_team_id,
+                        name,
+                        short_name
+                    )
+                    VALUES (
+                        :fpl_team_id,
+                        :name,
+                        :short_name
+                    )
+                "
+            );
+
+
+        $statement->execute([
+            ':fpl_team_id' =>
+                $team[0],
+
+            ':name' =>
+                $team[1],
+
+            ':short_name' =>
+                'INT'
+        ]);
+    }
 
 
     $teamOneId =
-        (int) $fixtureOne[
-            'home_team_id'
-        ];
-
-
-    $opponentOneId =
-        (int) $fixtureOne[
-            'away_team_id'
-        ];
-
-
-    $historyRepository
-        ->upsert([
-
-            'gameweek_id' =>
-                $gameweekId,
-
-            'player_id' =>
-                $playerId,
-
-            'fpl_player_id' =>
-                $syntheticFplPlayerId,
-
-            'fixture_id' =>
-                $fixtureOneId,
-
-            'fpl_fixture_id' =>
-                $syntheticFplFixtureIdOne,
-
-            'team_id' =>
-                $teamOneId,
-
-            'opponent_team_id' =>
-                $opponentOneId,
-
-            'was_home' =>
-                true,
-
-            'total_points' =>
-                8,
-
-            'minutes' =>
-                90,
-
-            'starts' =>
-                1,
-
-            'goals' =>
-                1,
-
-            'assists' =>
-                0,
-
-            'clean_sheets' =>
-                1,
-
-            'bonus' =>
-                2
-        ]);
-
-
-    $storedOne =
-        $historyRepository
-            ->getByPlayerAndFixture(
-                $playerId,
-                $fixtureOneId
-            );
-
-
-    outcomeIntegrationResult(
-        is_array(
-            $storedOne
-        ),
-        'Synthetic fixture history is persisted through the real repository.'
-    );
-
-
-    outcomeIntegrationResult(
-        (
-            (int) (
-                $storedOne[
-                    'total_points'
-                ]
-                ?? 0
-            )
-        ) === 8,
-        'Real repository preserves synthetic realised points.'
-    );
-
-
-    outcomeIntegrationResult(
-        (
-            (int) (
-                $storedOne[
-                    'minutes'
-                ]
-                ?? 0
-            )
-        ) === 90,
-        'Real repository preserves synthetic realised minutes.'
-    );
-
-
-    /*
-     * ========================================================
-     * SCENARIO C
-     * SERVICE READS REAL DATABASE EVIDENCE
-     * ========================================================
-     */
-
-    echo "<br>";
-    echo "============================================<br>";
-    echo "Scenario C: Real Database Outcome Aggregation<br>";
-    echo "============================================<br>";
-
-
-    $outcomes =
-        $service
-            ->getByGameweekId(
-                $gameweekId
-            );
-
-
-    $playerOutcome =
-        null;
-
-
-    foreach (
-        $outcomes
-        as $outcome
-    ) {
-
-        if (
-            (int) (
-                $outcome[
-                    'player_id'
-                ]
-                ?? 0
-            )
-            ===
-            $playerId
-        ) {
-
-            $playerOutcome =
-                $outcome;
-
-            break;
-        }
-    }
-
-
-    outcomeIntegrationResult(
-        is_array(
-            $playerOutcome
-        ),
-        'Outcome service reads evidence through the real repository.'
-    );
-
-
-    /*
-     * ========================================================
-     * SCENARIO D
-     * SECOND FIXTURE / DGW AGGREGATION
-     * ========================================================
-     */
-
-    echo "<br>";
-    echo "============================================<br>";
-    echo "Scenario D: Multi-Fixture Aggregation<br>";
-    echo "============================================<br>";
+        (int) $db->query(
+            "
+                SELECT id
+                FROM teams
+                WHERE fpl_team_id = {$fplTeamOneId}
+            "
+        )->fetchColumn();
 
 
     $teamTwoId =
-        (int) $fixtureTwo[
-            'home_team_id'
-        ];
+        (int) $db->query(
+            "
+                SELECT id
+                FROM teams
+                WHERE fpl_team_id = {$fplTeamTwoId}
+            "
+        )->fetchColumn();
 
 
-    $opponentTwoId =
-        (int) $fixtureTwo[
-            'away_team_id'
-        ];
+    /*
+     * ========================================================
+     * PLAYERS
+     * ========================================================
+     */
 
+    foreach (
+        [
+            [
+                $fplPlayerOneId,
+                $teamOneId,
+                'Outcome Player One'
+            ],
+            [
+                $fplPlayerTwoId,
+                $teamOneId,
+                'Outcome Player Two'
+            ]
+        ]
+        as $player
+    ) {
 
-    $historyRepository
-        ->upsert([
-
-            'gameweek_id' =>
-                $gameweekId,
-
-            'player_id' =>
-                $playerId,
-
-            'fpl_player_id' =>
-                $syntheticFplPlayerId,
-
-            'fixture_id' =>
-                $fixtureTwoId,
-
-            'fpl_fixture_id' =>
-                $syntheticFplFixtureIdTwo,
-
-            'team_id' =>
-                $teamTwoId,
-
-            'opponent_team_id' =>
-                $opponentTwoId,
-
-            'was_home' =>
-                true,
-
-            'total_points' =>
-                5,
-
-            'minutes' =>
-                72,
-
-            'starts' =>
-                1,
-
-            'goals' =>
-                0,
-
-            'assists' =>
-                1,
-
-            'clean_sheets' =>
-                0,
-
-            'bonus' =>
-                1
-        ]);
-
-
-    $outcomes =
-        $service
-            ->getByGameweekId(
-                $gameweekId
+        $statement =
+            $db->prepare(
+                "
+                    INSERT INTO players (
+                        fpl_player_id,
+                        team_id,
+                        position,
+                        web_name
+                    )
+                    VALUES (
+                        :fpl_player_id,
+                        :team_id,
+                        'MID',
+                        :web_name
+                    )
+                "
             );
 
 
-    $playerOutcome =
-        null;
+        $statement->execute([
+            ':fpl_player_id' =>
+                $player[0],
 
+            ':team_id' =>
+                $player[1],
 
-    foreach (
-        $outcomes
-        as $outcome
-    ) {
-
-        if (
-            (int) (
-                $outcome[
-                    'player_id'
-                ]
-                ?? 0
-            )
-            ===
-            $playerId
-        ) {
-
-            $playerOutcome =
-                $outcome;
-
-            break;
-        }
+            ':web_name' =>
+                $player[2]
+        ]);
     }
 
 
-    outcomeIntegrationResult(
-        is_array(
-            $playerOutcome
-        ),
-        'Player outcome remains available after second fixture evidence is stored.'
-    );
+    $playerOneId =
+        (int) $db->query(
+            "
+                SELECT id
+                FROM players
+                WHERE fpl_player_id = {$fplPlayerOneId}
+            "
+        )->fetchColumn();
+
+
+    $playerTwoId =
+        (int) $db->query(
+            "
+                SELECT id
+                FROM players
+                WHERE fpl_player_id = {$fplPlayerTwoId}
+            "
+        )->fetchColumn();
 
 
     /*
-     * We deliberately do not assert fixture_count = 2 here.
-     *
-     * This is a genuine existing player/gameweek identity and
-     * may already contain legitimate history rows for other
-     * fixtures in this gameweek.
-     *
-     * Instead verify that the two synthetic rows themselves
-     * are represented in the real repository.
+     * ========================================================
+     * FIXTURES
+     * ========================================================
      */
 
-    $storedTwo =
-        $historyRepository
-            ->getByPlayerAndFixture(
-                $playerId,
-                $fixtureTwoId
+    foreach (
+        [
+            $fplFixtureOneId,
+            $fplFixtureTwoId
+        ]
+        as $fixtureFplId
+    ) {
+
+        $statement =
+            $db->prepare(
+                "
+                    INSERT INTO fixtures (
+                        fpl_fixture_id,
+                        gameweek,
+                        home_team_id,
+                        away_team_id,
+                        finished,
+                        finished_provisional
+                    )
+                    VALUES (
+                        :fpl_fixture_id,
+                        :gameweek,
+                        :home_team_id,
+                        :away_team_id,
+                        1,
+                        1
+                    )
+                "
             );
 
 
-    outcomeIntegrationResult(
-        is_array(
-            $storedTwo
-        ),
-        'Second synthetic fixture row is persisted through the real repository.'
-    );
+        $statement->execute([
+            ':fpl_fixture_id' =>
+                $fixtureFplId,
+
+            ':gameweek' =>
+                $fplGameweekId,
+
+            ':home_team_id' =>
+                $teamOneId,
+
+            ':away_team_id' =>
+                $teamTwoId
+        ]);
+    }
 
 
-    outcomeIntegrationResult(
-        (
-            (int) (
-                $storedTwo[
-                    'total_points'
-                ]
-                ?? 0
-            )
-        ) === 5,
-        'Second fixture realised points are preserved.'
-    );
+    $fixtureOneId =
+        (int) $db->query(
+            "
+                SELECT id
+                FROM fixtures
+                WHERE fpl_fixture_id = {$fplFixtureOneId}
+            "
+        )->fetchColumn();
 
 
-    outcomeIntegrationResult(
-        (
-            (int) (
-                $storedTwo[
-                    'minutes'
-                ]
-                ?? 0
-            )
-        ) === 72,
-        'Second fixture realised minutes are preserved.'
-    );
+    $fixtureTwoId =
+        (int) $db->query(
+            "
+                SELECT id
+                FROM fixtures
+                WHERE fpl_fixture_id = {$fplFixtureTwoId}
+            "
+        )->fetchColumn();
 
 
     /*
      * ========================================================
-     * SCENARIO E
-     * ZERO-MINUTE AND NEGATIVE EVIDENCE
+     * FIXTURE HISTORY
      * ========================================================
      */
 
-    echo "<br>";
-    echo "============================================<br>";
-    echo "Scenario E: Zero-Minute and Negative Evidence<br>";
-    echo "============================================<br>";
+    $historyRows = [
+
+        [
+            $playerOneId,
+            $fplPlayerOneId,
+            $fixtureOneId,
+            $fplFixtureOneId,
+            6,
+            90,
+            1,
+            1,
+            0,
+            1,
+            1
+        ],
+
+        [
+            $playerOneId,
+            $fplPlayerOneId,
+            $fixtureTwoId,
+            $fplFixtureTwoId,
+            7,
+            78,
+            1,
+            0,
+            1,
+            0,
+            2
+        ],
+
+        [
+            $playerTwoId,
+            $fplPlayerTwoId,
+            $fixtureOneId,
+            $fplFixtureOneId,
+            -2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+        ]
+    ];
 
 
-    $historyRepository
-        ->upsert([
+    foreach (
+        $historyRows
+        as $row
+    ) {
 
-            'gameweek_id' =>
+        $statement =
+            $db->prepare(
+                "
+                    INSERT INTO player_fixture_history (
+                        gameweek_id,
+                        player_id,
+                        fpl_player_id,
+                        fixture_id,
+                        fpl_fixture_id,
+                        team_id,
+                        opponent_team_id,
+                        was_home,
+                        total_points,
+                        minutes,
+                        starts,
+                        goals,
+                        assists,
+                        clean_sheets,
+                        bonus
+                    )
+                    VALUES (
+                        :gameweek_id,
+                        :player_id,
+                        :fpl_player_id,
+                        :fixture_id,
+                        :fpl_fixture_id,
+                        :team_id,
+                        :opponent_team_id,
+                        1,
+                        :total_points,
+                        :minutes,
+                        :starts,
+                        :goals,
+                        :assists,
+                        :clean_sheets,
+                        :bonus
+                    )
+                "
+            );
+
+
+        $statement->execute([
+            ':gameweek_id' =>
                 $gameweekId,
 
-            'player_id' =>
-                $playerId,
+            ':player_id' =>
+                $row[0],
 
-            'fpl_player_id' =>
-                $syntheticFplPlayerId,
+            ':fpl_player_id' =>
+                $row[1],
 
-            'fixture_id' =>
-                $fixtureTwoId,
+            ':fixture_id' =>
+                $row[2],
 
-            'fpl_fixture_id' =>
-                $syntheticFplFixtureIdTwo,
+            ':fpl_fixture_id' =>
+                $row[3],
 
-            'team_id' =>
+            ':team_id' =>
+                $teamOneId,
+
+            ':opponent_team_id' =>
                 $teamTwoId,
 
-            'opponent_team_id' =>
-                $opponentTwoId,
+            ':total_points' =>
+                $row[4],
 
-            'was_home' =>
-                true,
+            ':minutes' =>
+                $row[5],
 
-            'total_points' =>
-                -1,
+            ':starts' =>
+                $row[6],
 
-            'minutes' =>
-                0,
+            ':goals' =>
+                $row[7],
 
-            'starts' =>
-                0,
+            ':assists' =>
+                $row[8],
 
-            'goals' =>
-                0,
+            ':clean_sheets' =>
+                $row[9],
 
-            'assists' =>
-                0,
-
-            'clean_sheets' =>
-                0,
-
-            'bonus' =>
-                0
+            ':bonus' =>
+                $row[10]
         ]);
-
-
-    $zeroMinuteRow =
-        $historyRepository
-            ->getByPlayerAndFixture(
-                $playerId,
-                $fixtureTwoId
-            );
-
-
-    outcomeIntegrationResult(
-        (int) (
-            $zeroMinuteRow[
-                'minutes'
-            ]
-            ?? -1
-        ) === 0,
-        'Real repository preserves an official zero-minute outcome.'
-    );
-
-
-    outcomeIntegrationResult(
-        (int) (
-            $zeroMinuteRow[
-                'total_points'
-            ]
-            ?? 0
-        ) === -1,
-        'Real repository preserves negative realised FPL points.'
-    );
+    }
 
 
     /*
      * ========================================================
-     * SCENARIO F
-     * CLEANUP
+     * REAL REPOSITORY + SERVICE
+     * ========================================================
+     */
+
+    $repository =
+        new PlayerFixtureHistoryRepository(
+            $db
+        );
+
+
+    $service =
+        new PlayerGameweekOutcomeService(
+            $repository
+        );
+
+
+    $result =
+        $service->getByGameweekId(
+            $gameweekId
+        );
+
+
+    /*
+     * ========================================================
+     * ASSERTIONS
      * ========================================================
      */
 
     echo "<br>";
     echo "============================================<br>";
-    echo "Scenario F: Synthetic Evidence Cleanup<br>";
+    echo "B. Real MySQL Aggregation<br>";
     echo "============================================<br>";
 
 
-    $cleanup();
-
-
-    $remainingOne =
-        $historyRepository
-            ->getByPlayerAndFixture(
-                $playerId,
-                $fixtureOneId
-            );
-
-
-    $remainingTwo =
-        $historyRepository
-            ->getByPlayerAndFixture(
-                $playerId,
-                $fixtureTwoId
-            );
-
-
     outcomeIntegrationResult(
-        $remainingOne === null,
-        'First synthetic fixture-history row is removed.'
+        count($result) === 2,
+        'Real fixture history rows aggregate into two player outcomes.'
     );
 
 
     outcomeIntegrationResult(
-        $remainingTwo === null,
-        'Second synthetic fixture-history row is removed.'
+        array_column(
+            $result,
+            'player_id'
+        ) === [
+            $playerOneId,
+            $playerTwoId
+        ],
+        'Real MySQL outcomes are ordered by local player ID.'
     );
+
+
+    $playerOneOutcome =
+        $result[0];
+
+
+    $playerTwoOutcome =
+        $result[1];
+
+
+    outcomeIntegrationResult(
+        $playerOneOutcome['fixture_count'] === 2,
+        'Real Double Gameweek fixture count is two.'
+    );
+
+
+    outcomeIntegrationResult(
+        $playerOneOutcome['total_points'] === 13,
+        'Real Double Gameweek points are summed.'
+    );
+
+
+    outcomeIntegrationResult(
+        $playerOneOutcome['minutes'] === 168,
+        'Real Double Gameweek minutes are summed.'
+    );
+
+
+    outcomeIntegrationResult(
+        $playerOneOutcome['starts'] === 2,
+        'Real Double Gameweek starts are summed.'
+    );
+
+
+    outcomeIntegrationResult(
+        $playerOneOutcome['goals'] === 1,
+        'Real Double Gameweek goals are summed.'
+    );
+
+
+    outcomeIntegrationResult(
+        $playerOneOutcome['assists'] === 1,
+        'Real Double Gameweek assists are summed.'
+    );
+
+
+    outcomeIntegrationResult(
+        $playerOneOutcome['clean_sheets'] === 1,
+        'Real Double Gameweek clean sheets are summed.'
+    );
+
+
+    outcomeIntegrationResult(
+        $playerOneOutcome['bonus'] === 3,
+        'Real Double Gameweek bonus is summed.'
+    );
+
+
+    outcomeIntegrationResult(
+        $playerTwoOutcome['fixture_count'] === 1,
+        'Zero-minute official history row remains one known fixture.'
+    );
+
+
+    outcomeIntegrationResult(
+        $playerTwoOutcome['minutes'] === 0,
+        'Zero-minute official history preserves zero minutes.'
+    );
+
+
+    outcomeIntegrationResult(
+        $playerTwoOutcome['total_points'] === -2,
+        'Negative realised FPL points survive the real database path.'
+    );
+
+
+    /*
+     * ========================================================
+     * ROLLBACK
+     * ========================================================
+     */
+
+    $db->rollBack();
+
+    $transactionStarted = false;
+
+
+    echo "<br>";
+    echo "============================================<br>";
+    echo "C. Cleanup<br>";
+    echo "============================================<br>";
+
+
+    outcomeIntegrationResult(
+        true,
+        'Controlled synthetic database evidence was rolled back.'
+    );
+
 
 } catch (
     Throwable $exception
 ) {
 
-    /*
-     * Always attempt cleanup before reporting an unexpected
-     * integration failure.
-     */
-
-    try {
-
-        $cleanup();
-
-    } catch (
-        Throwable $cleanupException
+    if (
+        $transactionStarted
+        &&
+        $db->inTransaction()
     ) {
 
-        echo "CLEANUP ERROR: "
-            . htmlspecialchars(
-                $cleanupException
-                    ->getMessage(),
-                ENT_QUOTES,
-                'UTF-8'
-            )
-            . "<br>";
+        $db->rollBack();
     }
 
 
-    outcomeIntegrationResult(
-        false,
-        'Unexpected integration exception: '
-            . $exception
-                ->getMessage()
-    );
+    echo "ERROR: "
+        . htmlspecialchars(
+            $exception->getMessage(),
+            ENT_QUOTES,
+            'UTF-8'
+        )
+        . "<br>";
+
+
+    $failed++;
 }
 
 
 /*
  * ============================================================
- * TEST SUMMARY
+ * SUMMARY
  * ============================================================
  */
 
 echo "<br>";
 echo "============================================<br>";
-echo "TEST SUMMARY<br>";
+echo "Player Gameweek Outcome Service Integration Test Summary<br>";
 echo "============================================<br>";
 
 
@@ -979,9 +760,9 @@ echo "Failed: "
 
 if ($failed === 0) {
 
-    echo "RESULT: ALL TESTS PASSED ✅<br>";
+    echo "RESULT: ALL TESTS PASSED ✅";
 
 } else {
 
-    echo "RESULT: TESTS FAILED ❌<br>";
+    echo "RESULT: TESTS FAILED ❌";
 }
