@@ -232,6 +232,7 @@ if (
             $recommendationCandidateProductionService =
                 new RecommendationCandidateProductionService(
                     $playerIntelligenceService,
+                    new PlayerRankingEvidence(),
                     new PlayerProjectionEvidence(),
                     new ChipRecommendationEvidence(),
                     $recommendationCandidateCaptureService

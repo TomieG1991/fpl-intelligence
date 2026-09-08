@@ -172,6 +172,46 @@ if ($testPlayer !== null) {
     );
 }
 
+/*
+ * ============================================================
+ * SUMMARY CALIBRATION EVIDENCE
+ * ============================================================
+ *
+ * Recommendation history must preserve the exact availability
+ * multiplier used by Player Intelligence at recommendation time.
+ *
+ * PlayerIntelligenceScore already calculates this value.
+ * The application-level Player Intelligence summary must expose
+ * it so PlayerRankingEvidence can preserve it historically.
+ */
+
+if ($testPlayer !== null) {
+
+    testPass(
+        'Player summary contains availability multiplier',
+        array_key_exists(
+            'availability_multiplier',
+            $testPlayer
+        )
+    );
+
+
+    testPass(
+        'Player summary availability multiplier is numeric',
+        isset(
+            $testPlayer[
+                'availability_multiplier'
+            ]
+        )
+        &&
+        is_numeric(
+            $testPlayer[
+                'availability_multiplier'
+            ]
+        )
+    );
+}
+
 
 /*
  * ============================================================

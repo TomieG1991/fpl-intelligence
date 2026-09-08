@@ -239,6 +239,12 @@ class PlayerIntelligenceEngine
                     'availability_rating'
                 ]
                 ?? null,
+                
+            'availability_multiplier' =>
+                $intelligence[
+                    'availability_multiplier'
+                ]
+                ?? null,
 
             'reliability_rating' =>
                 $availability[
