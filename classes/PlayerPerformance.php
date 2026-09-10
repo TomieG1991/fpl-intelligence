@@ -514,6 +514,66 @@ class PlayerPerformance
     
     
     /**
+     * Calculate the player's share of currently available
+     * team Premier League minutes.
+     *
+     * A null result means the player's team has not yet
+     * produced any current-season participation evidence.
+     */
+    public function calculateParticipationRate(
+        int $minutes,
+        int $availableMinutes
+    ): ?float {
+
+        $minutes =
+            max(
+                0,
+                $minutes
+            );
+
+
+        $availableMinutes =
+            max(
+                0,
+                $availableMinutes
+            );
+
+
+        if (
+            $availableMinutes <= 0
+        ) {
+
+            return null;
+        }
+
+
+        $participationMinutes =
+            min(
+                $minutes,
+                $availableMinutes
+            );
+
+
+        $participationRate =
+            $participationMinutes
+            /
+            $availableMinutes;
+
+
+        return round(
+            max(
+                0.0,
+                min(
+                    1.0,
+                    $participationRate
+                )
+            ),
+            4
+        );
+    }
+    
+    
+    /**
      * Calculate effective decision confidence.
      *
      * Sample confidence measures how mature the player's
@@ -570,17 +630,6 @@ class PlayerPerformance
 
 
         /*
-         * A player's participation cannot exceed the amount
-         * of league football currently available to the team.
-         */
-        $participationMinutes =
-            min(
-                $minutes,
-                $availableMinutes
-            );
-
-
-        /*
          * Existing season-sample maturity.
          *
          * 900 minutes remains full statistical confidence.
@@ -594,25 +643,15 @@ class PlayerPerformance
         /*
          * Current participation reliability.
          *
-         * Example during GW1:
-         *
-         * 90 / 90 = 100%
-         * 45 / 90 = 50%
-         *  5 / 90 = 5.6%
+         * Participation calculation is owned by
+         * calculateParticipationRate() so the same raw
+         * recommendation-time evidence can be exposed
+         * independently for historical calibration.
          */
         $participationConfidence =
-            $participationMinutes
-            /
-            $availableMinutes;
-
-
-        $participationConfidence =
-            max(
-                0.0,
-                min(
-                    1.0,
-                    $participationConfidence
-                )
+            $this->calculateParticipationRate(
+                $minutes,
+                $availableMinutes
             );
 
 
@@ -902,19 +941,13 @@ class PlayerPerformance
             );
 
 
-        /*
-         * --------------------------------------------------------
-         * EFFECTIVE DECISION CONFIDENCE
-         * --------------------------------------------------------
-         *
-         * When team-level available minutes are supplied by the
-         * application service, use them to distinguish established
-         * current starters from substitutes during small early-season
-         * samples.
-         *
-         * If that context is unavailable, preserve the existing
-         * sample-confidence behaviour for backwards compatibility.
-         */
+        $performance['participation_rate'] =
+            $availableMinutes !== null
+                ? $this->calculateParticipationRate(
+                    $minutes,
+                    $availableMinutes
+                )
+                : null;
 
         $performance['effective_confidence'] =
             $availableMinutes !== null

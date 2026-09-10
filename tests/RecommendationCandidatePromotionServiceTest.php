@@ -252,6 +252,12 @@ $generatedAt =
         'availability_multiplier' =>
             0.95,
 
+        'sample_confidence' =>
+            0.40,
+
+        'participation_rate' =>
+            0.90,
+
         'intelligence_score' =>
             82.5,
 
@@ -298,6 +304,12 @@ $generatedAt =
 
         'availability_multiplier' =>
             0.85,
+
+        'sample_confidence' =>
+            0.30,
+
+        'participation_rate' =>
+            0.65,
 
         'intelligence_score' =>
             76.0,

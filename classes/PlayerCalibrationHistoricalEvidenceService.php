@@ -263,6 +263,65 @@ class PlayerCalibrationHistoricalEvidenceService
                         'total_points'
                     ] + 0;
             }
+            
+            
+            $actualMinutes =
+                null;
+
+
+            if (
+                is_array($outcome)
+                &&
+                array_key_exists(
+                    'minutes',
+                    $outcome
+                )
+                &&
+                $outcome[
+                    'minutes'
+                ] !== null
+                &&
+                is_numeric(
+                    $outcome[
+                        'minutes'
+                    ]
+                )
+            ) {
+
+                $actualMinutes =
+                    $outcome[
+                        'minutes'
+                    ] + 0;
+            }
+            
+            $actualFixtureCount =
+                null;
+
+
+            if (
+                is_array($outcome)
+                &&
+                array_key_exists(
+                    'fixture_count',
+                    $outcome
+                )
+                &&
+                $outcome[
+                    'fixture_count'
+                ] !== null
+                &&
+                is_numeric(
+                    $outcome[
+                        'fixture_count'
+                    ]
+                )
+            ) {
+
+                $actualFixtureCount =
+                    $outcome[
+                        'fixture_count'
+                    ] + 0;
+            }
 
 
             /*
@@ -321,6 +380,25 @@ class PlayerCalibrationHistoricalEvidenceService
                         'availability_multiplier'
                     ]
                     ?? null,
+                    
+                /*
+                 * Effective Confidence calibration evidence.
+                 *
+                 * Preserve the raw recommendation-time inputs needed
+                 * to replay alternative confidence blends historically.
+                 */
+
+                'sample_confidence' =>
+                    $ranking[
+                        'sample_confidence'
+                    ]
+                    ?? null,
+
+                'participation_rate' =>
+                    $ranking[
+                        'participation_rate'
+                    ]
+                    ?? null,
 
                 /*
                  * Position-aware immediate Fixture calibration
@@ -356,7 +434,13 @@ class PlayerCalibrationHistoricalEvidenceService
                  */
 
                 'actual_points' =>
-                    $actualPoints
+                    $actualPoints,
+
+                'actual_minutes' =>
+                    $actualMinutes,
+
+                'actual_fixture_count' =>
+                    $actualFixtureCount
             ];
         }
 

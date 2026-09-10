@@ -139,6 +139,20 @@ if (
     exit;
 }
 
+$participationMethodAvailable =
+    method_exists(
+        $performance,
+        'calculateParticipationRate'
+    );
+
+
+effectiveConfidenceCheck(
+    'Player Performance exposes calculateParticipationRate()',
+    $participationMethodAvailable
+);
+
+
+
 
 echo "<br>";
 
@@ -278,6 +292,35 @@ $shortCameo =
         );
 
 
+$fullParticipationRate =
+    $participationMethodAvailable
+        ? $performance
+            ->calculateParticipationRate(
+                90,
+                90
+            )
+        : null;
+
+
+$halfParticipationRate =
+    $participationMethodAvailable
+        ? $performance
+            ->calculateParticipationRate(
+                45,
+                90
+            )
+        : null;
+
+
+$shortParticipationRate =
+    $participationMethodAvailable
+        ? $performance
+            ->calculateParticipationRate(
+                5,
+                90
+            )
+        : null;
+
 effectiveConfidenceCheck(
     '45 of 90 available minutes produces approximately 32% effective confidence',
     is_numeric(
@@ -319,6 +362,57 @@ effectiveConfidenceCheck(
     $halfMatch
     >
     $shortCameo
+);
+
+
+effectiveConfidenceCheck(
+    '90 of 90 available minutes produces 100% participation rate',
+    is_numeric(
+        $fullParticipationRate
+    )
+    &&
+    abs(
+        $fullParticipationRate
+        -
+        1.00
+    )
+    <
+    0.0001
+);
+
+
+effectiveConfidenceCheck(
+    '45 of 90 available minutes produces 50% participation rate',
+    is_numeric(
+        $halfParticipationRate
+    )
+    &&
+    abs(
+        $halfParticipationRate
+        -
+        0.50
+    )
+    <
+    0.0001
+);
+
+
+effectiveConfidenceCheck(
+    'Five of 90 available minutes produces the expected participation rate',
+    is_numeric(
+        $shortParticipationRate
+    )
+    &&
+    abs(
+        $shortParticipationRate
+        -
+        round(
+            5 / 90,
+            4
+        )
+    )
+    <
+    0.0001
 );
 
 
@@ -405,6 +499,15 @@ $noTeamEvidence =
             0
         );
 
+$noTeamParticipationRate =
+    $participationMethodAvailable
+        ? $performance
+            ->calculateParticipationRate(
+                0,
+                0
+            )
+        : null;
+
 
 effectiveConfidenceCheck(
     'No available team minutes returns null effective confidence',
@@ -425,6 +528,37 @@ echo "0 / 0 Effective Confidence: "
             . '%'
     )
     . "<br><br>";
+
+
+effectiveConfidenceCheck(
+    'No available team minutes returns null participation rate',
+    $noTeamParticipationRate === null
+);
+
+$boundedParticipationRate =
+    $participationMethodAvailable
+        ? $performance
+            ->calculateParticipationRate(
+                120,
+                90
+            )
+        : null;
+
+
+effectiveConfidenceCheck(
+    'Participation rate cannot exceed 100%',
+    is_numeric(
+        $boundedParticipationRate
+    )
+    &&
+    abs(
+        $boundedParticipationRate
+        -
+        1.00
+    )
+    <
+    0.0001
+);
 
 
 /*
@@ -680,6 +814,118 @@ effectiveConfidenceCheck(
     $confidence60
     <
     $confidence90
+);
+
+
+echo "<br>";
+
+
+/*
+ * ============================================================
+ * SCENARIO L
+ * BUILD MODEL PRESERVES CONFIDENCE INPUTS
+ * ============================================================
+ */
+
+echo "============================================<br>";
+echo "Scenario L: Build Model Confidence Evidence<br>";
+echo "============================================<br>";
+
+
+$confidenceEvidenceModel =
+    $performance
+        ->buildModel(
+            [
+                'id' => 9001,
+                'fpl_player_id' => 19001,
+                'team_id' => 1,
+                'position' => 'MID',
+                'web_name' => 'Confidence Evidence Player',
+                'price' => 7.5,
+                'minutes' => 45,
+                'goals' => 0,
+                'assists' => 0,
+                'clean_sheets' => 0,
+                'bonus' => 0,
+                'bps' => 0,
+                'ict_index' => 0,
+                'expected_goals' => 0,
+                'expected_assists' => 0,
+                'expected_goal_involvements' => 0,
+                'chance_of_playing' => 100,
+                'status' => 'a',
+                'news' => ''
+            ],
+            90
+        );
+
+
+effectiveConfidenceCheck(
+    'Build model preserves Sample Confidence',
+    array_key_exists(
+        'sample_confidence',
+        $confidenceEvidenceModel
+    )
+    &&
+    abs(
+        (
+            $confidenceEvidenceModel[
+                'sample_confidence'
+            ]
+            ??
+            -1
+        )
+        -
+        0.05
+    )
+    <
+    0.0001
+);
+
+
+effectiveConfidenceCheck(
+    'Build model exposes recommendation-time Participation Rate',
+    array_key_exists(
+        'participation_rate',
+        $confidenceEvidenceModel
+    )
+    &&
+    abs(
+        (
+            $confidenceEvidenceModel[
+                'participation_rate'
+            ]
+            ??
+            -1
+        )
+        -
+        0.50
+    )
+    <
+    0.0001
+);
+
+
+effectiveConfidenceCheck(
+    'Build model preserves Effective Confidence derived from the same raw evidence',
+    array_key_exists(
+        'effective_confidence',
+        $confidenceEvidenceModel
+    )
+    &&
+    abs(
+        (
+            $confidenceEvidenceModel[
+                'effective_confidence'
+            ]
+            ??
+            -1
+        )
+        -
+        0.32
+    )
+    <
+    0.0001
 );
 
 

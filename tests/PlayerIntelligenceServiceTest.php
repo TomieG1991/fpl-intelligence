@@ -212,6 +212,100 @@ if ($testPlayer !== null) {
     );
 }
 
+if ($testPlayer !== null) {
+
+    testPass(
+        'Player summary contains Sample Confidence',
+        array_key_exists(
+            'sample_confidence',
+            $testPlayer
+        )
+    );
+
+
+    testPass(
+        'Player summary Sample Confidence is numeric',
+        isset(
+            $testPlayer[
+                'sample_confidence'
+            ]
+        )
+        &&
+        is_numeric(
+            $testPlayer[
+                'sample_confidence'
+            ]
+        )
+    );
+
+
+    testPass(
+        'Player summary contains Participation Rate',
+        array_key_exists(
+            'participation_rate',
+            $testPlayer
+        )
+    );
+
+
+    testPass(
+        'Player summary Participation Rate is numeric when team participation evidence exists',
+        (
+            (
+                $testPlayer[
+                    'team_available_minutes'
+                ]
+                ??
+                0
+            )
+            <= 0
+        )
+        ||
+        (
+            isset(
+                $testPlayer[
+                    'participation_rate'
+                ]
+            )
+            &&
+            is_numeric(
+                $testPlayer[
+                    'participation_rate'
+                ]
+            )
+        )
+    );
+
+
+    testPass(
+        'Player summary Participation Rate remains between 0 and 1 when available',
+        (
+            $testPlayer[
+                'participation_rate'
+            ]
+            ??
+            null
+        )
+        === null
+        ||
+        (
+            (
+                (float) $testPlayer[
+                    'participation_rate'
+                ]
+            )
+            >= 0.0
+            &&
+            (
+                (float) $testPlayer[
+                    'participation_rate'
+                ]
+            )
+            <= 1.0
+        )
+    );
+}
+
 
 /*
  * ============================================================

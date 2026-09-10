@@ -168,6 +168,8 @@ $playerSummaries = [
         'next_opponent_attack_rating' => 44.00,
         'next_opponent_defence_rating' => 40.40,
         'availability_multiplier' => 1.00,
+        'sample_confidence' => 0.30,
+        'participation_rate' => 0.80,
         'intelligence_score' => 72.5,
         'projected_points' => 5.8
     ],
@@ -187,6 +189,8 @@ $playerSummaries = [
         'next_opponent_attack_rating' => 30.00,
         'next_opponent_defence_rating' => 25.00,
         'availability_multiplier' => 1.00,
+        'sample_confidence' => 0.40,
+        'participation_rate' => 1.00,
         'intelligence_score' => 91.0,
         'projected_points' => 8.4
     ],
@@ -206,6 +210,8 @@ $playerSummaries = [
         'next_opponent_attack_rating' => 45.00,
         'next_opponent_defence_rating' => 50.00,
         'availability_multiplier' => 1.00,
+        'sample_confidence' => 0.35,
+        'participation_rate' => 0.75,
         'intelligence_score' => 81.0,
         'projected_points' => 6.2
     ]
@@ -539,6 +545,31 @@ playerRankingEvidenceCheck(
     (
         $first[
             'availability_multiplier'
+        ]
+        ??
+        null
+    )
+    === 1.00
+);
+
+playerRankingEvidenceCheck(
+    'Recommendation-time Sample Confidence is preserved',
+    (
+        $first[
+            'sample_confidence'
+        ]
+        ??
+        null
+    )
+    === 0.40
+);
+
+
+playerRankingEvidenceCheck(
+    'Recommendation-time Participation Rate is preserved',
+    (
+        $first[
+            'participation_rate'
         ]
         ??
         null
@@ -889,6 +920,45 @@ playerRankingEvidenceCheck(
         0
     ][
         'availability_multiplier'
+    ]
+    === null
+);
+
+playerRankingEvidenceCheck(
+    'Unavailable Sample Confidence calibration evidence is preserved explicitly as null',
+    array_key_exists(
+        'sample_confidence',
+        $missingCalibrationEvidence[
+            0
+        ]
+        ??
+        []
+    )
+    &&
+    $missingCalibrationEvidence[
+        0
+    ][
+        'sample_confidence'
+    ]
+    === null
+);
+
+
+playerRankingEvidenceCheck(
+    'Unavailable Participation Rate calibration evidence is preserved explicitly as null',
+    array_key_exists(
+        'participation_rate',
+        $missingCalibrationEvidence[
+            0
+        ]
+        ??
+        []
+    )
+    &&
+    $missingCalibrationEvidence[
+        0
+    ][
+        'participation_rate'
     ]
     === null
 );

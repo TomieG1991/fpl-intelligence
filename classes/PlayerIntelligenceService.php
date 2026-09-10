@@ -683,29 +683,6 @@ class PlayerIntelligenceService
                 );
 
 
-            /*
-             * Participation rate is deliberately null when the team has
-             * not completed a league match yet.
-             *
-             * This distinguishes:
-             *
-             * 0 / 0  → no evidence
-             *
-             * from:
-             *
-             * 0 / 90 → player had available team minutes but played none.
-             */
-            $participationRate =
-                $availableMinutes > 0
-                    ? min(
-                        1.0,
-                        $playerMinutes
-                        /
-                        $availableMinutes
-                    )
-                    : null;
-
-
             $fixtureRating =
                 $teamFixtureRatings[$teamId]
                 ?? null;
@@ -915,6 +892,12 @@ class PlayerIntelligenceService
                     $profile[
                         'performance'
                     ]['effective_confidence']
+                    ?? null;
+                    
+                $participationRate =
+                    $profile[
+                        'performance'
+                    ]['participation_rate']
                     ?? null;
 
                 /*

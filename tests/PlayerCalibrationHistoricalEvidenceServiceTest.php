@@ -256,7 +256,10 @@ $snapshot = [
             'next_opponent_attack_rating' => 35.0,
             'next_opponent_defence_rating' => 28.0,
 
-            'availability_multiplier' => 0.95
+            'availability_multiplier' => 0.95,
+
+            'sample_confidence' => 0.40,
+            'participation_rate' => 0.90
         ],
 
         [
@@ -273,7 +276,10 @@ $snapshot = [
             'next_opponent_attack_rating' => 48.0,
             'next_opponent_defence_rating' => 56.0,
 
-            'availability_multiplier' => 0.85
+            'availability_multiplier' => 0.85,
+
+            'sample_confidence' => 0.30,
+            'participation_rate' => 0.65
         ],
 
         [
@@ -290,7 +296,10 @@ $snapshot = [
             'next_opponent_attack_rating' => null,
             'next_opponent_defence_rating' => null,
 
-            'availability_multiplier' => 1.00
+            'availability_multiplier' => 1.00,
+
+            'sample_confidence' => null,
+            'participation_rate' => null
         ]
     ]
 ];
@@ -300,13 +309,17 @@ $outcomes = [
 
     [
         'player_id' => 101,
-        'total_points' => 10
+        'total_points' => 10,
+        'minutes' => 150,
+        'fixture_count' => 2
     ],
 
     [
         'player_id' => 102,
-        'total_points' => 0
-    ]
+        'total_points' => 0,
+        'minutes' => 0,
+        'fixture_count' => 1
+    ],
 
     /*
      * Player 103 deliberately has no realised outcome.
@@ -655,6 +668,178 @@ playerCalibrationHistoricalEvidenceCheck(
 
 echo "<br>";
 
+
+/*
+ * ============================================================
+ * EFFECTIVE CONFIDENCE CALIBRATION EVIDENCE
+ * ============================================================
+ */
+
+echo "============================================<br>";
+echo "Effective Confidence Calibration Evidence<br>";
+echo "============================================<br>";
+
+
+playerCalibrationHistoricalEvidenceCheck(
+    'Recommendation-time Sample Confidence is preserved',
+    (
+        $historicalRows[
+            0
+        ]['sample_confidence']
+        ??
+        null
+    )
+    ===
+    0.40
+);
+
+
+playerCalibrationHistoricalEvidenceCheck(
+    'Recommendation-time Participation Rate is preserved',
+    (
+        $historicalRows[
+            0
+        ]['participation_rate']
+        ??
+        null
+    )
+    ===
+    0.90
+);
+
+
+playerCalibrationHistoricalEvidenceCheck(
+    'Unavailable Effective Confidence inputs remain explicitly null',
+    array_key_exists(
+        'sample_confidence',
+        $historicalRows[
+            2
+        ]
+        ??
+        []
+    )
+    &&
+    $historicalRows[
+        2
+    ]['sample_confidence']
+    ===
+    null
+    &&
+    array_key_exists(
+        'participation_rate',
+        $historicalRows[
+            2
+        ]
+        ??
+        []
+    )
+    &&
+    $historicalRows[
+        2
+    ]['participation_rate']
+    ===
+    null
+);
+
+
+playerCalibrationHistoricalEvidenceCheck(
+    'Realised minutes are joined by local player ID',
+    (
+        $historicalRows[
+            0
+        ]['actual_minutes']
+        ??
+        null
+    )
+    ===
+    150
+);
+
+playerCalibrationHistoricalEvidenceCheck(
+    'Realised fixture count is joined by local player ID',
+    (
+        $historicalRows[
+            0
+        ]['actual_fixture_count']
+        ??
+        null
+    )
+    ===
+    2
+);
+
+
+playerCalibrationHistoricalEvidenceCheck(
+    'Single-fixture realised fixture count is preserved',
+    (
+        $historicalRows[
+            1
+        ]['actual_fixture_count']
+        ??
+        null
+    )
+    ===
+    1
+);
+
+
+playerCalibrationHistoricalEvidenceCheck(
+    'Missing realised outcome leaves realised fixture count null',
+    array_key_exists(
+        'actual_fixture_count',
+        $historicalRows[
+            2
+        ]
+        ??
+        []
+    )
+    &&
+    $historicalRows[
+        2
+    ]['actual_fixture_count']
+    ===
+    null
+);
+
+playerCalibrationHistoricalEvidenceCheck(
+    'Genuine zero realised minutes are preserved',
+    array_key_exists(
+        'actual_minutes',
+        $historicalRows[
+            1
+        ]
+        ??
+        []
+    )
+    &&
+    $historicalRows[
+        1
+    ]['actual_minutes']
+    ===
+    0
+);
+
+
+playerCalibrationHistoricalEvidenceCheck(
+    'Missing realised outcome leaves realised minutes null',
+    array_key_exists(
+        'actual_minutes',
+        $historicalRows[
+            2
+        ]
+        ??
+        []
+    )
+    &&
+    $historicalRows[
+        2
+    ]['actual_minutes']
+    ===
+    null
+);
+
+
+echo "<br>";
 
 /*
  * ============================================================

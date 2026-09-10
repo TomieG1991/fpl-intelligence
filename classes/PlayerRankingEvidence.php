@@ -200,6 +200,18 @@ class PlayerRankingEvidence
                     ]
                     ?? null,
 
+                'sample_confidence' =>
+                    $summary[
+                        'sample_confidence'
+                    ]
+                    ?? null,
+
+                'participation_rate' =>
+                    $summary[
+                        'participation_rate'
+                    ]
+                    ?? null,
+
                 'intelligence_score' =>
                     (float) $summary[
                         'intelligence_score'
