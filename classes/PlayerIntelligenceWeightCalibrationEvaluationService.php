@@ -30,12 +30,15 @@ class PlayerIntelligenceWeightCalibrationEvaluationService
     private object $outcomeService;
 
     private object $calibrationService;
+    
+    private object $historicalEvidenceService;
 
 
     public function __construct(
         object $snapshotRepository,
         object $outcomeService,
-        object $calibrationService
+        object $calibrationService,
+        ?object $historicalEvidenceService = null
     ) {
 
         $this->snapshotRepository =
@@ -48,6 +51,20 @@ class PlayerIntelligenceWeightCalibrationEvaluationService
 
         $this->calibrationService =
             $calibrationService;
+
+
+        /*
+         * Preserve compatibility with all existing callers while
+         * allowing the historical evidence boundary to be injected
+         * directly for testing and alternative calibration workflows.
+         */
+        $this->historicalEvidenceService =
+            $historicalEvidenceService
+            ??
+            new PlayerCalibrationHistoricalEvidenceService(
+                $snapshotRepository,
+                $outcomeService
+            );
     }
 
 
@@ -92,292 +109,75 @@ class PlayerIntelligenceWeightCalibrationEvaluationService
 
         /*
          * ========================================================
-         * LOAD IMMUTABLE HISTORICAL SNAPSHOT
+         * BUILD REUSABLE HISTORICAL EVIDENCE
          * ========================================================
+         *
+         * Snapshot loading, realised-outcome lookup and historical
+         * row assembly are owned by the shared historical evidence
+         * service.
+         *
+         * This evaluator now owns only Strength / Fixture
+         * calibration orchestration.
          */
 
-        $snapshot =
-            $this->snapshotRepository
-                ->getByEntryAndGameweek(
+        $historicalEvidence =
+            $this->historicalEvidenceService
+                ->build(
                     $entryId,
                     $gameweekId
                 );
 
 
         /*
-         * No immutable historical recommendation means there is
-         * nothing legitimate to calibrate.
+         * Missing immutable recommendation evidence remains
+         * unavailable.
          *
-         * Do not reconstruct from current application state.
+         * Do not reconstruct historical evidence.
          */
 
-        if ($snapshot === null) {
+        if ($historicalEvidence === null) {
 
             return null;
         }
 
 
-        /*
-         * ========================================================
-         * PRESERVED PLAYER RANKING EVIDENCE
-         * ========================================================
-         *
-         * Legacy snapshots may legitimately contain no historical
-         * ranking evidence.
-         *
-         * Missing ranking evidence remains an empty historical
-         * sample rather than being reconstructed.
-         */
+        $snapshot =
+            $historicalEvidence[
+                'snapshot'
+            ]
+            ?? null;
 
-        $playerRankings =
+
+        $playerOutcomes =
             is_array(
-                $snapshot[
-                    'player_rankings'
+                $historicalEvidence[
+                    'player_outcomes'
                 ]
                 ?? null
             )
-                ? $snapshot[
-                    'player_rankings'
+                ? $historicalEvidence[
+                    'player_outcomes'
+                ]
+                : [];
+
+
+        $historicalRows =
+            is_array(
+                $historicalEvidence[
+                    'historical_rows'
+                ]
+                ?? null
+            )
+                ? $historicalEvidence[
+                    'historical_rows'
                 ]
                 : [];
 
 
         /*
          * ========================================================
-         * REALISED GAMEWEEK OUTCOMES
+         * RUN STRENGTH / FIXTURE CALIBRATION
          * ========================================================
-         *
-         * PlayerGameweekOutcomeService owns aggregation of factual
-         * fixture-history evidence.
-         *
-         * This orchestration layer must not query or aggregate
-         * fixture history directly.
-         */
-
-        $playerOutcomes =
-            $this->outcomeService
-                ->getByGameweekId(
-                    $gameweekId
-                );
-
-
-        /*
-         * ========================================================
-         * INDEX REALISED OUTCOMES BY LOCAL PLAYER ID
-         * ========================================================
-         */
-
-        $outcomesByPlayerId =
-            [];
-
-
-        foreach (
-            $playerOutcomes
-            as $outcome
-        ) {
-
-            if (!is_array($outcome)) {
-
-                continue;
-            }
-
-
-            $playerId =
-                (int) (
-                    $outcome[
-                        'player_id'
-                    ]
-                    ?? 0
-                );
-
-
-            if ($playerId <= 0) {
-
-                continue;
-            }
-
-
-            $outcomesByPlayerId[
-                $playerId
-            ] =
-                $outcome;
-        }
-
-
-        /*
-         * ========================================================
-         * BUILD HISTORICAL CALIBRATION ROWS
-         * ========================================================
-         *
-         * Historical ranking membership and ordering come from the
-         * immutable recommendation snapshot.
-         *
-         * Realised outcomes enrich those rows by local player ID.
-         */
-
-        $historicalRows =
-            [];
-
-
-        foreach (
-            $playerRankings
-            as $ranking
-        ) {
-
-            if (!is_array($ranking)) {
-
-                continue;
-            }
-
-
-            $playerId =
-                (int) (
-                    $ranking[
-                        'player_id'
-                    ]
-                    ?? 0
-                );
-
-
-            if ($playerId <= 0) {
-
-                continue;
-            }
-
-
-            $outcome =
-                $outcomesByPlayerId[
-                    $playerId
-                ]
-                ??
-                null;
-
-
-            /*
-             * Missing realised outcome remains null.
-             *
-             * Genuine historical zero points remain zero.
-             */
-
-            $actualPoints =
-                null;
-
-
-            if (
-                is_array($outcome)
-                &&
-                array_key_exists(
-                    'total_points',
-                    $outcome
-                )
-                &&
-                $outcome[
-                    'total_points'
-                ] !== null
-                &&
-                is_numeric(
-                    $outcome[
-                        'total_points'
-                    ]
-                )
-            ) {
-
-                $actualPoints =
-                    $outcome[
-                        'total_points'
-                    ] + 0;
-            }
-
-
-            /*
-             * ====================================================
-             * HISTORICAL CALIBRATION EVIDENCE
-             * ====================================================
-             *
-             * Preserve only recommendation-time evidence that was
-             * actually captured.
-             *
-             * Missing component evidence remains null.
-             */
-
-            $historicalRows[] = [
-
-                'player_id' =>
-                    $playerId,
-
-                'fpl_player_id' =>
-                    $ranking[
-                        'fpl_player_id'
-                    ]
-                    ?? null,
-
-                'name' =>
-                    $ranking[
-                        'name'
-                    ]
-                    ?? null,
-
-                'position' =>
-                    $ranking[
-                        'position'
-                    ]
-                    ?? null,
-
-                'strength_rating' =>
-                    $ranking[
-                        'strength_rating'
-                    ]
-                    ?? null,
-
-                'fixture_rating' =>
-                    $ranking[
-                        'fixture_rating'
-                    ]
-                    ?? null,
-
-                'next_fixture_rating' =>
-                    $ranking[
-                        'next_fixture_rating'
-                    ]
-                    ?? null,
-
-                'base_next_fixture_rating' =>
-                    $ranking[
-                        'base_next_fixture_rating'
-                    ]
-                    ?? null,
-
-                'next_opponent_attack_rating' =>
-                    $ranking[
-                        'next_opponent_attack_rating'
-                    ]
-                    ?? null,
-
-                'next_opponent_defence_rating' =>
-                    $ranking[
-                        'next_opponent_defence_rating'
-                    ]
-                    ?? null,
-
-                'availability_multiplier' =>
-                    $ranking[
-                        'availability_multiplier'
-                    ]
-                    ?? null,
-
-                'actual_points' =>
-                    $actualPoints
-            ];
-        }
-
-
-        /*
-         * ========================================================
-         * RUN CALIBRATION
-         * ========================================================
-         *
-         * Candidate score calculation and objective metrics remain
-         * the responsibility of PlayerIntelligenceWeightCalibrationService.
          */
 
         $calibration =
@@ -390,7 +190,7 @@ class PlayerIntelligenceWeightCalibrationEvaluationService
 
         /*
          * ========================================================
-         * STABLE INITIAL ORCHESTRATION CONTRACT
+         * PRESERVE EXISTING PUBLIC RESULT CONTRACT
          * ========================================================
          */
 
