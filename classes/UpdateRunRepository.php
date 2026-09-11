@@ -367,6 +367,84 @@ class UpdateRunRepository
             $row
         );
     }
+    
+    
+    /*
+     * ========================================================
+     * GET LATEST SUCCESSFUL BY TYPE
+     * ========================================================
+     */
+
+    public function getLatestSuccessfulByType(
+        string $updateType
+    ): ?array {
+
+        $updateType =
+            trim(
+                $updateType
+            );
+
+
+        if ($updateType === '') {
+
+            throw new InvalidArgumentException(
+                'Update type cannot be empty.'
+            );
+        }
+
+
+        $statement =
+            $this->db->prepare(
+                "
+                SELECT
+                    id,
+                    update_type,
+                    status,
+                    started_at,
+                    completed_at,
+                    records_received,
+                    records_updated,
+                    records_skipped,
+                    records_failed,
+                    duration_ms,
+                    error_message,
+                    created_at
+                FROM update_runs
+                WHERE
+                    update_type = :update_type
+                    AND status = 'Success'
+                ORDER BY
+                    started_at DESC,
+                    id DESC
+                LIMIT 1
+                "
+            );
+
+
+        $statement->execute(
+            [
+                'update_type' =>
+                    $updateType
+            ]
+        );
+
+
+        $row =
+            $statement->fetch(
+                PDO::FETCH_ASSOC
+            );
+
+
+        if ($row === false) {
+
+            return null;
+        }
+
+
+        return $this->hydrate(
+            $row
+        );
+    }
 
 
     /*

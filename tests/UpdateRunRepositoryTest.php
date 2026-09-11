@@ -929,12 +929,117 @@ updateRunRepositoryCheck(
 /*
  * ============================================================
  * SCENARIO G
+ * LATEST SUCCESSFUL RUN BY TYPE
+ * ============================================================
+ */
+
+updateRunRepositorySection(
+    'Scenario G: Latest Successful Run By Type'
+);
+
+
+$latestSuccessfulBootstrap =
+    $repository
+        ->getLatestSuccessfulByType(
+            $bootstrapType
+        );
+
+
+updateRunRepositoryCheck(
+    'Latest successful bootstrap run can be retrieved.',
+    is_array(
+        $latestSuccessfulBootstrap
+    )
+);
+
+
+updateRunRepositoryCheck(
+    'Latest-successful-by-type ignores newer Partial and Failed runs.',
+    (
+        $latestSuccessfulBootstrap[
+            'id'
+        ]
+        ?? null
+    )
+    ===
+    $runIdOne
+);
+
+
+updateRunRepositoryCheck(
+    'Latest-successful-by-type returns a Success run.',
+    (
+        $latestSuccessfulBootstrap[
+            'status'
+        ]
+        ?? null
+    )
+    ===
+    'Success'
+);
+
+
+updateRunRepositoryCheck(
+    'Latest-successful-by-type preserves the successful completion timestamp.',
+    (
+        $latestSuccessfulBootstrap[
+            'completed_at'
+        ]
+        ?? null
+    )
+    ===
+    $completedOne
+);
+
+
+$latestSuccessfulFixture =
+    $repository
+        ->getLatestSuccessfulByType(
+            $fixtureType
+        );
+
+
+updateRunRepositoryCheck(
+    'Latest-successful-by-type remains isolated between update types.',
+    $latestSuccessfulFixture === null
+);
+
+
+$emptySuccessfulTypeRejected =
+    false;
+
+
+try {
+
+    $repository
+        ->getLatestSuccessfulByType(
+            ''
+        );
+
+} catch (
+    InvalidArgumentException $exception
+) {
+
+    $emptySuccessfulTypeRejected =
+        true;
+}
+
+
+updateRunRepositoryCheck(
+    'getLatestSuccessfulByType rejects an empty update type.',
+    $emptySuccessfulTypeRejected
+);
+
+
+/*
+ * ============================================================
+ * SCENARIO H
  * RECENT RUNS
  * ============================================================
  */
 
 updateRunRepositorySection(
-    'Scenario G: Recent Runs'
+    'Scenario H: Recent Runs'
 );
 
 
@@ -996,13 +1101,13 @@ updateRunRepositoryCheck(
 
 /*
  * ============================================================
- * SCENARIO H
+ * SCENARIO I
  * INVALID START INPUT
  * ============================================================
  */
 
 updateRunRepositorySection(
-    'Scenario H: Invalid Start Input'
+    'Scenario I: Invalid Start Input'
 );
 
 
@@ -1062,13 +1167,13 @@ updateRunRepositoryCheck(
 
 /*
  * ============================================================
- * SCENARIO I
+ * SCENARIO J
  * INVALID COMPLETE INPUT
  * ============================================================
  */
 
 updateRunRepositorySection(
-    'Scenario I: Invalid Complete Input'
+    'Scenario J: Invalid Complete Input'
 );
 
 
@@ -1380,13 +1485,13 @@ updateRunRepositoryCheck(
 
 /*
  * ============================================================
- * SCENARIO J
+ * SCENARIO K
  * INVALID RETRIEVAL INPUT
  * ============================================================
  */
 
 updateRunRepositorySection(
-    'Scenario J: Invalid Retrieval Input'
+    'Scenario K: Invalid Retrieval Input'
 );
 
 
@@ -1498,13 +1603,13 @@ updateRunRepositoryCheck(
 
 /*
  * ============================================================
- * SCENARIO K
+ * SCENARIO L
  * CLEANUP
  * ============================================================
  */
 
 updateRunRepositorySection(
-    'Scenario K: Cleanup'
+    'Scenario L: Cleanup'
 );
 
 
