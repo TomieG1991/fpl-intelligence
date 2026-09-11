@@ -998,3 +998,57 @@ CREATE TABLE recommendation_candidates (
         ON DELETE RESTRICT
 ) ENGINE=InnoDB
 DEFAULT CHARSET=utf8mb4;
+
+/*
+ * ============================================================
+ * UPDATE RUNS
+ * ============================================================
+ *
+ * Persistent operational history for FPL data update attempts.
+ *
+ * A run is created with Running status before update work begins
+ * and completed later as Success, Partial or Failed.
+ *
+ * This allows application health to be determined from genuine
+ * update history rather than inferred from individual data-row
+ * timestamps.
+ */
+
+CREATE TABLE IF NOT EXISTS update_runs (
+
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+
+    update_type VARCHAR(100) NOT NULL,
+
+    status VARCHAR(20) NOT NULL DEFAULT 'Running',
+
+    started_at DATETIME NOT NULL,
+
+    completed_at DATETIME NULL,
+
+    records_received INT UNSIGNED NOT NULL DEFAULT 0,
+
+    records_updated INT UNSIGNED NOT NULL DEFAULT 0,
+
+    records_skipped INT UNSIGNED NOT NULL DEFAULT 0,
+
+    records_failed INT UNSIGNED NOT NULL DEFAULT 0,
+
+    duration_ms INT UNSIGNED NULL,
+
+    error_message TEXT NULL,
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id),
+
+    INDEX idx_update_runs_type_started (
+        update_type,
+        started_at
+    ),
+
+    INDEX idx_update_runs_status (
+        status
+    )
+
+);
