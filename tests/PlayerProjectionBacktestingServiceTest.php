@@ -266,13 +266,37 @@ $expectedSingleEvaluation = [
 
     [
         'player_id' => 101,
+
+        'fpl_player_id' => 501,
+
+        'name' => 'Player One',
+
+        'position' => 'MID',
+
+        'projection_confidence' => 0.80,
+
+        'projection_confidence_percent' => 80.0,
+
+        'projection_confidence_label' => 'High',
+
+        'projected_points_components' => [],
+
+        'projected_points_inputs' => [],
+
         'projected_points' => 6.5,
+
         'actual_points' => 8,
+
         'points_error' => 1.5,
+
         'absolute_points_error' => 1.5,
+
         'projected_minutes' => 90,
+
         'actual_minutes' => 90,
+
         'minutes_error' => 0.0,
+
         'absolute_minutes_error' => 0.0
     ]
 ];
@@ -1115,6 +1139,219 @@ playerProjectionBacktestingTestResult(
         $firstEvaluation
     ),
     'Player evaluator does not calculate transfer recommendation success.'
+);
+
+
+/*
+ * ============================================================
+ * SCENARIO Q
+ * PRESERVE PROJECTION CALIBRATION EVIDENCE
+ * ============================================================
+ */
+
+echo "<br>";
+echo "============================================<br>";
+echo "Scenario Q: Projection Calibration Evidence<br>";
+echo "============================================<br>";
+
+
+$calibrationProjection =
+    $standardProjections[
+        0
+    ];
+
+
+$calibrationProjection[
+    'projected_points_components'
+] = [
+
+    'appearance' =>
+        2.0,
+
+    'goals' =>
+        1.5,
+
+    'assists' =>
+        0.9,
+
+    'clean_sheet' =>
+        0.6,
+
+    'goals_conceded' =>
+        0.0,
+
+    'saves' =>
+        0.0,
+
+    'bonus' =>
+        0.8,
+
+    'defensive_contributions' =>
+        0.7
+];
+
+
+$calibrationProjection[
+    'projected_points_inputs'
+] = [
+
+    'expected_goals' =>
+        0.30,
+
+    'expected_assists' =>
+        0.30,
+
+    'clean_sheet_probability' =>
+        30.0,
+
+    'expected_saves' =>
+        0.0,
+
+    'expected_bonus' =>
+        0.8,
+
+    'expected_defensive_contribution_points' =>
+        0.7,
+
+    'expected_goals_conceded_points' =>
+        0.0
+];
+
+
+$result =
+    $service->evaluate(
+        [
+            $calibrationProjection
+        ],
+        [
+            $standardOutcomes[
+                0
+            ]
+        ]
+    );
+
+
+playerProjectionBacktestingTestResult(
+    (
+        $result[
+            0
+        ][
+            'position'
+        ]
+        ?? null
+    )
+    ===
+    'MID',
+    'Recommendation-time player position is preserved for projection calibration.'
+);
+
+
+playerProjectionBacktestingTestResult(
+    (
+        $result[
+            0
+        ][
+            'projection_confidence'
+        ]
+        ?? null
+    )
+    ===
+    0.80,
+    'Recommendation-time Projection Confidence is preserved.'
+);
+
+
+playerProjectionBacktestingTestResult(
+    (
+        $result[
+            0
+        ][
+            'projection_confidence_percent'
+        ]
+        ?? null
+    )
+    ===
+    80.0,
+    'Recommendation-time Projection Confidence percent is preserved.'
+);
+
+
+playerProjectionBacktestingTestResult(
+    (
+        $result[
+            0
+        ][
+            'projection_confidence_label'
+        ]
+        ?? null
+    )
+    ===
+    'High',
+    'Recommendation-time Projection Confidence label is preserved.'
+);
+
+
+playerProjectionBacktestingTestResult(
+    (
+        $result[
+            0
+        ][
+            'projected_points_components'
+        ]
+        ?? null
+    )
+    ===
+    $calibrationProjection[
+        'projected_points_components'
+    ],
+    'Recommendation-time projected-points component breakdown is preserved unchanged.'
+);
+
+
+playerProjectionBacktestingTestResult(
+    (
+        $result[
+            0
+        ][
+            'projected_points_inputs'
+        ]
+        ?? null
+    )
+    ===
+    $calibrationProjection[
+        'projected_points_inputs'
+    ],
+    'Recommendation-time projected-points input evidence is preserved unchanged.'
+);
+
+
+playerProjectionBacktestingTestResult(
+    (
+        $result[
+            0
+        ][
+            'fpl_player_id'
+        ]
+        ?? null
+    )
+    ===
+    501,
+    'FPL player identity is preserved for projection calibration diagnostics.'
+);
+
+
+playerProjectionBacktestingTestResult(
+    (
+        $result[
+            0
+        ][
+            'name'
+        ]
+        ?? null
+    )
+    ===
+    'Player One',
+    'Player name is preserved for projection calibration diagnostics.'
 );
 
 

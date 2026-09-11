@@ -291,11 +291,79 @@ class PlayerProjectionBacktestingService
 
             $evaluations[] = [
 
-                'player_id' =>
-                    $playerId,
+            'player_id' =>
+                $playerId,
 
-                'projected_points' =>
-                    $projectedPoints,
+            /*
+             * Preserve recommendation-time projection context required
+             * for later calibration diagnostics.
+             *
+             * These values are copied from immutable historical
+             * projection evidence. They are not recalculated from live
+             * player state.
+             */
+            'fpl_player_id' =>
+                $projection[
+                    'fpl_player_id'
+                ]
+                ?? null,
+
+            'name' =>
+                $projection[
+                    'name'
+                ]
+                ?? null,
+
+            'position' =>
+                $projection[
+                    'position'
+                ]
+                ?? null,
+
+            'projection_confidence' =>
+                $projection[
+                    'projection_confidence'
+                ]
+                ?? null,
+
+            'projection_confidence_percent' =>
+                $projection[
+                    'projection_confidence_percent'
+                ]
+                ?? null,
+
+            'projection_confidence_label' =>
+                $projection[
+                    'projection_confidence_label'
+                ]
+                ?? null,
+
+            'projected_points_components' =>
+                is_array(
+                    $projection[
+                        'projected_points_components'
+                    ]
+                    ?? null
+                )
+                    ? $projection[
+                        'projected_points_components'
+                    ]
+                    : [],
+
+            'projected_points_inputs' =>
+                is_array(
+                    $projection[
+                        'projected_points_inputs'
+                    ]
+                    ?? null
+                )
+                    ? $projection[
+                        'projected_points_inputs'
+                    ]
+                    : [],
+
+            'projected_points' =>
+                $projectedPoints,
 
                 'actual_points' =>
                     $actualPoints,
