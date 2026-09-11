@@ -8,84 +8,48 @@ echo "Starting FPL Data Update...\n\n";
 
 try {
 
-    /*
-     * ========================================================
-     * DATABASE
-     * ========================================================
-     */
+        /*
+         * ========================================================
+         * DATABASE
+         * ========================================================
+         */
 
-    $database =
-        new Database();
+        $database =
+            new Database();
 
-    $db =
-        $database->getConnection();
-
-
-    echo "Database connection successful\n";
+        $db =
+            $database->getConnection();
 
 
-    /*
-     * ========================================================
-     * API
-     * ========================================================
-     */
-
-    $fpl =
-        new FPLApi();
+        echo "Database connection successful\n";
 
 
-    $data =
-        $fpl->getBootstrapData();
+        /*
+         * ========================================================
+         * API
+         * ========================================================
+         */
+
+        $fpl =
+            new FPLApi();
 
 
-    echo "FPL API connection successful\n\n";
+        $data =
+            $fpl->getBootstrapData();
 
 
-    /*
+        echo "FPL API connection successful\n\n";
+
+
+        /*
      * ========================================================
      * VALIDATE BOOTSTRAP DATA
      * ========================================================
      */
 
-    if (
-        !isset($data['teams'])
-        ||
-        !is_array($data['teams'])
-    ) {
-
-        throw new RuntimeException(
-            'FPL bootstrap data does not contain teams'
-        );
-    }
-
-
-    if (
-        !isset($data['elements'])
-        ||
-        !is_array($data['elements'])
-    ) {
-
-        throw new RuntimeException(
-            'FPL bootstrap data does not contain players'
-        );
-    }
-    
-    /*
-     * ========================================================
-     * VALIDATE GAMEWEEK DATA
-     * ========================================================
-     */
-
-    if (
-        !isset($data['events'])
-        ||
-        !is_array($data['events'])
-    ) {
-
-        throw new RuntimeException(
-            'FPL bootstrap data does not contain gameweeks'
-        );
-    }
+    BootstrapDataValidator::validate(
+        $data
+    );
 
 
     /*
