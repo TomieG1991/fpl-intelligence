@@ -38,7 +38,7 @@ The system should remain explainable, testable and robust throughout:
 
 Current stable release:
 
-**v0.35.0 — Recommendation History & Backtesting**
+**v0.36.0 — Model Calibration & Intelligence Quality**
 
 GitHub `main` is the authoritative code baseline after every completed commit.
 
@@ -46,34 +46,35 @@ GitHub `main` is the authoritative code baseline after every completed commit.
 
 Current development milestone:
 
-**v0.36.0 — Model Calibration & Intelligence Quality — NOT STARTED**
+**v0.37.0 — Data Update Reliability & Application Health — NOT STARTED**
 
-v0.35.0 completes Recommendation History & Backtesting.
+v0.36.0 completes the Model Calibration & Intelligence Quality framework.
 
-The completed milestone preserves what FPL Intelligence genuinely knew and
-recommended before each gameweek deadline through mutable pre-deadline
-recommendation candidates and immutable deadline-promoted recommendation
-snapshots.
+The completed milestone adds evidence-led historical calibration for:
 
-Completed-gameweek backtesting now evaluates:
+- Player Intelligence Strength / Fixture weighting
+- Position-Aware Fixture weighting
+- Effective Confidence weighting
+- Captain Intelligence weighting
+- Gameweek Starting XI weighting
+- incoming Transfer Decision weighting
+- outgoing Transfer Priority weighting
+- projection accuracy and calibration diagnostics
 
-- projected points
-- projected minutes
-- Starting XI selection
-- Captain Intelligence
-- transfer recommendations
-- Transfer Decision Intelligence
-- Player Intelligence Scores
-- Player Intelligence rankings
+Calibration uses immutable recommendation-time evidence together with authoritative
+realised FPL outcomes.
 
-Player Intelligence ranking evaluation compares preserved full-player-pool
-historical ranking evidence with authoritative realised FPL outcomes using
-Pearson correlation and Spearman rank correlation.
+Missing historical evidence is not reconstructed from later live model state.
 
-v0.35.0 measures existing model behaviour without tuning model weights.
+The framework currently has insufficient authoritative Ready gameweeks to justify
+production weight changes, so existing production weights remain unchanged.
 
-The next development milestone is v0.36.0, which will use accumulated
-backtesting evidence to investigate Model Calibration & Intelligence Quality.
+Projection diagnostics can now measure projected-points and projected-minutes error
+overall, by player position and by preserved recommendation-time Projection
+Confidence.
+
+The next development milestone is v0.37.0, which will focus on Data Update
+Reliability & Application Health.
 
 
 ## Current Data Foundation
@@ -2885,28 +2886,225 @@ results and protected by regression tests.
 
 ## v0.36.0 — Model Calibration & Intelligence Quality
 
+### Status
+
+**COMPLETE**
+
 ### Dependency
 
-Requires historical/backtesting data.
+Requires v0.35.0 Recommendation History & Backtesting.
 
 ### Goal
 
-Tune model weights using evidence rather than intuition alone.
+Build an evidence-led calibration framework that can evaluate model assumptions
+against preserved recommendation-time intelligence and authoritative realised FPL
+outcomes.
 
-### Planned Work
+Calibration must use historical evidence rather than intuition and must not
+retrospectively reconstruct evidence that did not exist at the recommendation
+deadline.
 
-Evaluate:
+### Delivered
 
-- Player Strength weighting
-- Fixture weighting
-- Position-Aware Fixture weighting
-- Effective Confidence weighting
-- Captain weighting
-- Gameweek weighting
-- transfer weighting
-- projection accuracy
+Added Player Intelligence Strength / Fixture weight calibration using preserved:
 
-Changes must be supported by historical results and regression tests.
+- Strength Rating
+- Fixture Rating
+- Availability Multiplier
+- realised FPL points
+
+Added Position-Aware Fixture weight calibration using preserved
+recommendation-time fixture and opponent evidence.
+
+Added Effective Confidence calibration while preserving the architectural
+separation between:
+
+- Sample Confidence
+- participation evidence
+- Effective Confidence
+- Player Form
+
+Added Captain Intelligence weight calibration across the existing captain model
+components.
+
+Added Gameweek Starting XI weight calibration across the existing top-level:
+
+- Intelligence weight
+- Strength weight
+- Fixture weight
+
+Added historical bench preservation so Starting XI calibration can evaluate the
+complete recommendation-time 15-player squad rather than reconstructing later
+squad state.
+
+Added incoming Transfer Decision calibration across:
+
+- Intelligence movement
+- Fixture movement
+- Value movement
+- Strength movement
+- budget benefit
+- Confidence movement
+
+Added outgoing Transfer Priority calibration across:
+
+- Intelligence weakness
+- Value weakness
+- Fixture weakness
+- Availability weakness
+
+Incoming and outgoing transfer calibration remain deliberately separate because
+they model different decisions.
+
+Added projection-calibration diagnostics using preserved historical player
+projection evidence and authoritative realised outcomes.
+
+Projection diagnostics evaluate:
+
+- overall projected-points error
+- overall projected-minutes error
+- position-specific projection error
+- recommendation-time Projection Confidence cohorts
+
+Added historical calibration orchestration so only gameweeks classified as
+authoritative `Ready` evidence can contribute observations.
+
+### Historical Evidence
+
+Extended recommendation-time Player Ranking Evidence with calibration inputs
+including:
+
+- Strength Rating
+- Value Rating
+- Availability Rating
+- Fixture Rating
+- Availability Multiplier
+- Position-Aware Fixture evidence
+- Sample Confidence
+- participation rate
+
+Extended recommendation history with preserved bench evidence.
+
+Extended historical player projection backtesting with:
+
+- player identity
+- position
+- Projection Confidence
+- Projection Confidence percentage
+- Projection Confidence label
+- projected-points components
+- projected-points inputs
+
+Calibration evidence remains tied to what FPL Intelligence genuinely knew at the
+recommendation deadline.
+
+Missing historical evidence remains unavailable.
+
+It is never reconstructed from the later live model.
+
+### Architecture Decisions
+
+Calibration services remain analytical and do not directly modify production
+model weights.
+
+Candidate weight sets are supplied explicitly to calibration services.
+
+Current production weights remain represented as candidates where appropriate so
+their historical performance can eventually be compared with alternatives.
+
+No calibration service automatically selects or applies a preferred model.
+
+No synthetic overall model-quality score was introduced.
+
+Player Intelligence, Position-Aware Fixture, Effective Confidence, Captain,
+Gameweek and Transfer models retain their existing architectural boundaries.
+
+Incoming Transfer Decision calibration and outgoing Transfer Priority calibration
+remain separate.
+
+Projection calibration reuses the existing Expected Points, Expected Minutes and
+backtesting architecture rather than introducing a competing projection engine.
+
+Official FPL scoring constants are not calibration parameters.
+
+Recommendation-time Projection Confidence classifications are preserved rather
+than retrospectively recalculated using later model thresholds.
+
+### Current Real-Data State
+
+The historical database currently contains:
+
+- 38 stored gameweeks
+- 0 authoritative Ready calibration gameweeks
+- 0 pooled projection-calibration observations
+
+GW1-GW3 pre-date the required immutable recommendation snapshots.
+
+Those gameweeks remain unavailable for calibration rather than being
+retrospectively reconstructed.
+
+Later gameweeks remain unavailable until their recommendation snapshots have been
+deadline-promoted and their outcomes become authoritative.
+
+The framework therefore currently provides calibration infrastructure and
+diagnostics without claiming that an alternative production weighting has been
+historically proven superior.
+
+No production model weights have been changed as part of v0.36.0.
+
+### Testing
+
+Added controlled, historical and real-data regression coverage across:
+
+- Player Intelligence weight calibration
+- Position-Aware Fixture calibration
+- Effective Confidence calibration
+- Captain weight calibration
+- Gameweek weight calibration
+- incoming Transfer Decision calibration
+- outgoing Transfer Priority calibration
+- projection-calibration diagnostics
+- historical calibration orchestration
+- recommendation-time evidence preservation
+- unavailable historical evidence
+- malformed evidence
+- source-evidence immutability
+- deterministic calibration behaviour
+- protection against synthetic model selection
+
+The completed v0.36.0 regression suite passes with:
+
+- 315 test files
+- 315 test files passed
+- 0 test files failed
+- 0 test files with errors
+- 9,521 assertions passed
+- 0 assertions failed
+
+Complete regression-suite runtime:
+
+- 434.839 seconds
+
+### Completion Notes
+
+v0.36.0 completes the Model Calibration & Intelligence Quality framework.
+
+FPL Intelligence can now evaluate alternative model weightings against genuine
+historical recommendation evidence while preserving the original recommendation
+record.
+
+The system deliberately distinguishes between having a calibration framework and
+having sufficient evidence to change a production model.
+
+Until authoritative historical Ready coverage accumulates, existing production
+weights remain unchanged.
+
+As the 2026/27 season progresses, newly promoted recommendation snapshots and
+authoritative realised outcomes can flow naturally into the completed calibration
+framework without reconstructing earlier gameweeks.
+
+The project is now ready to move to v0.37.0 — Data Update Reliability &
+Application Health.
 
 
 ---
