@@ -154,7 +154,12 @@ class RecommendationCandidatePromotionService
                 ],
                 $candidate[
                     'chip_recommendations'
+                ],
+                $candidate[
+                    'bench'
                 ]
+                ??
+                []
             );
 
 

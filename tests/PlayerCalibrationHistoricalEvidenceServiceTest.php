@@ -249,6 +249,8 @@ $snapshot = [
             'position' => 'DEF',
 
             'strength_rating' => 86.0,
+            'value_rating' => 78.0,
+            'availability_rating' => 90.0,
             'fixture_rating' => 76.0,
 
             'next_fixture_rating' => 82.0,
@@ -269,6 +271,8 @@ $snapshot = [
             'position' => 'MID',
 
             'strength_rating' => 79.0,
+            'value_rating' => 72.0,
+            'availability_rating' => 75.0,
             'fixture_rating' => 70.0,
 
             'next_fixture_rating' => 68.0,
@@ -289,6 +293,8 @@ $snapshot = [
             'position' => 'FWD',
 
             'strength_rating' => null,
+            'value_rating' => null,
+            'availability_rating' => null,
             'fixture_rating' => 65.0,
 
             'next_fixture_rating' => null,
@@ -583,6 +589,17 @@ playerCalibrationHistoricalEvidenceCheck(
     ($historicalRows[0]['strength_rating'] ?? null) === 86.0
 );
 
+playerCalibrationHistoricalEvidenceCheck(
+    'Value rating is preserved',
+    ($historicalRows[0]['value_rating'] ?? null) === 78.0
+);
+
+
+playerCalibrationHistoricalEvidenceCheck(
+    'Availability rating is preserved',
+    ($historicalRows[0]['availability_rating'] ?? null) === 90.0
+);
+
 
 playerCalibrationHistoricalEvidenceCheck(
     'Fixture rating is preserved',
@@ -593,6 +610,23 @@ playerCalibrationHistoricalEvidenceCheck(
 playerCalibrationHistoricalEvidenceCheck(
     'Availability multiplier is preserved',
     ($historicalRows[0]['availability_multiplier'] ?? null) === 0.95
+);
+
+playerCalibrationHistoricalEvidenceCheck(
+    'Unavailable Transfer calibration ratings remain explicitly null',
+    array_key_exists(
+        'value_rating',
+        $historicalRows[2] ?? []
+    )
+    &&
+    $historicalRows[2]['value_rating'] === null
+    &&
+    array_key_exists(
+        'availability_rating',
+        $historicalRows[2] ?? []
+    )
+    &&
+    $historicalRows[2]['availability_rating'] === null
 );
 
 

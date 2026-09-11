@@ -639,6 +639,8 @@ CREATE TABLE IF NOT EXISTS `recommendation_snapshots` (
     `starting_xi`
         longtext
         NOT NULL,
+        
+    `bench` LONGTEXT DEFAULT NOT NULL,
 
     `captain_recommendation`
         longtext
@@ -960,6 +962,8 @@ CREATE TABLE recommendation_candidates (
     player_projections LONGTEXT NOT NULL,
 
     starting_xi LONGTEXT NOT NULL,
+    
+    bench LONGTEXT DEFAULT NOT NULL,
 
     captain_recommendation LONGTEXT NOT NULL,
 

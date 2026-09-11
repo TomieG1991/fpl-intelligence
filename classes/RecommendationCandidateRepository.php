@@ -57,6 +57,7 @@ class RecommendationCandidateRepository
                     player_rankings,
                     player_projections,
                     starting_xi,
+                    bench,
                     captain_recommendation,
                     transfer_recommendations,
                     gameweek_decision,
@@ -123,6 +124,7 @@ class RecommendationCandidateRepository
                     player_rankings,
                     player_projections,
                     starting_xi,
+                    bench,
                     captain_recommendation,
                     transfer_recommendations,
                     gameweek_decision,
@@ -427,6 +429,7 @@ class RecommendationCandidateRepository
                     player_rankings,
                     player_projections,
                     starting_xi,
+                    bench,
                     captain_recommendation,
                     transfer_recommendations,
                     gameweek_decision,
@@ -439,6 +442,7 @@ class RecommendationCandidateRepository
                     :player_rankings,
                     :player_projections,
                     :starting_xi,
+                    :bench,
                     :captain_recommendation,
                     :transfer_recommendations,
                     :gameweek_decision,
@@ -501,6 +505,7 @@ class RecommendationCandidateRepository
                     player_rankings = :player_rankings,
                     player_projections = :player_projections,
                     starting_xi = :starting_xi,
+                    bench = :bench,
                     captain_recommendation = :captain_recommendation,
                     transfer_recommendations = :transfer_recommendations,
                     gameweek_decision = :gameweek_decision,
@@ -581,6 +586,12 @@ class RecommendationCandidateRepository
                 $this->encodeEvidence(
                     $candidate
                         ->getStartingXI()
+                ),
+
+            'bench' =>
+                $this->encodeEvidence(
+                    $candidate
+                        ->getBench()
                 ),
 
             'captain_recommendation' =>
@@ -701,6 +712,27 @@ class RecommendationCandidateRepository
                         'starting_xi'
                     ]
                 ),
+                
+            'bench' =>
+                (
+                    isset(
+                        $row[
+                            'bench'
+                        ]
+                    )
+                    &&
+                    $row[
+                        'bench'
+                    ]
+                    !==
+                    ''
+                )
+                    ? $this->decodeEvidence(
+                        (string) $row[
+                            'bench'
+                        ]
+                    )
+                    : [],
 
             'captain_recommendation' =>
                 $this->decodeEvidence(

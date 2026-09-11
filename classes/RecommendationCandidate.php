@@ -40,6 +40,8 @@ class RecommendationCandidate
 
     private array $startingXI;
 
+    private array $bench;
+
     private array $captainRecommendation;
 
     private array $transferRecommendations;
@@ -60,7 +62,8 @@ class RecommendationCandidate
         array $captainRecommendation,
         array $transferRecommendations,
         array $gameweekDecision,
-        array $chipRecommendations
+        array $chipRecommendations,
+        array $bench = []
     ) {
 
         /*
@@ -208,6 +211,10 @@ class RecommendationCandidate
             $startingXI;
 
 
+        $this->bench =
+            $bench;
+
+
         $this->captainRecommendation =
             $captainRecommendation;
 
@@ -280,6 +287,12 @@ class RecommendationCandidate
         return
             $this->startingXI;
     }
+    
+    public function getBench(): array
+    {
+        return
+            $this->bench;
+    }
 
 
     public function getCaptainRecommendation(): array
@@ -340,6 +353,9 @@ class RecommendationCandidate
 
             'starting_xi' =>
                 $this->startingXI,
+
+            'bench' =>
+                $this->bench,
 
             'captain_recommendation' =>
                 $this->captainRecommendation,

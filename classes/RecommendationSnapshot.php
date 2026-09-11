@@ -35,6 +35,8 @@ class RecommendationSnapshot
 
     private array $startingXI;
 
+    private array $bench;
+
     private array $captainRecommendation;
 
     private array $transferRecommendations;
@@ -61,7 +63,8 @@ class RecommendationSnapshot
         array $captainRecommendation,
         array $transferRecommendations,
         array $gameweekDecision,
-        array $chipRecommendations
+        array $chipRecommendations,
+        array $bench = []
     ) {
 
         /*
@@ -172,6 +175,10 @@ class RecommendationSnapshot
             $startingXI;
 
 
+        $this->bench =
+            $bench;
+
+
         $this->captainRecommendation =
             $captainRecommendation;
 
@@ -248,6 +255,13 @@ class RecommendationSnapshot
         return
             $this->startingXI;
     }
+    
+    
+    public function getBench(): array
+    {
+        return
+            $this->bench;
+    }
 
 
     public function getCaptainRecommendation(): array
@@ -308,6 +322,9 @@ class RecommendationSnapshot
 
             'starting_xi' =>
                 $this->startingXI,
+
+            'bench' =>
+                $this->bench,
 
             'captain_recommendation' =>
                 $this->captainRecommendation,

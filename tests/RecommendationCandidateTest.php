@@ -212,6 +212,31 @@ $startingXI = [
     ]
 ];
 
+$bench = [
+
+    [
+        'player_id' =>
+            103,
+
+        'position' =>
+            'DEF',
+
+        'gameweek_score' =>
+            54.25
+    ],
+
+    [
+        'player_id' =>
+            104,
+
+        'position' =>
+            'MID',
+
+        'gameweek_score' =>
+            51.75
+    ]
+];
+
 
 $captainRecommendation = [
 
@@ -327,7 +352,8 @@ $candidate =
         $captainRecommendation,
         $transferRecommendations,
         $gameweekDecision,
-        $chipRecommendations
+        $chipRecommendations,
+        $bench
     );
 
 
@@ -656,6 +682,11 @@ recommendationCandidateAssert(
     'Candidate preserves Starting XI evidence.'
 );
 
+recommendationCandidateAssert(
+    $candidate->getBench() === $bench,
+    'Candidate preserves bench evidence.'
+);
+
 
 recommendationCandidateAssert(
     $candidate->getCaptainRecommendation()
@@ -726,6 +757,9 @@ $expectedExport = [
 
     'starting_xi' =>
         $startingXI,
+
+    'bench' =>
+        $bench,
 
     'captain_recommendation' =>
         $captainRecommendation,

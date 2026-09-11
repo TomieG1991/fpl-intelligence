@@ -164,6 +164,18 @@ class PlayerRankingEvidence
                     ]
                     ?? null,
 
+                'value_rating' =>
+                    $summary[
+                        'value_rating'
+                    ]
+                    ?? null,
+
+                'availability_rating' =>
+                    $summary[
+                        'availability_rating'
+                    ]
+                    ?? null,
+
                 'fixture_rating' =>
                     $summary[
                         'fixture_rating'

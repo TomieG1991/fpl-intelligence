@@ -161,6 +161,8 @@ $playerSummaries = [
         'team_id' => 3,
         'price' => 8.5,
         'strength_rating' => 74.0,
+        'value_rating' => 68.0,
+        'availability_rating' => 90.0,
         'fixture_rating' => 69.71,
         'next_fixture_rating' => 72.40,
         'base_next_fixture_rating' => 70.00,
@@ -182,6 +184,8 @@ $playerSummaries = [
         'team_id' => 1,
         'price' => 10.0,
         'strength_rating' => 94.0,
+        'value_rating' => 88.0,
+        'availability_rating' => 100.0,
         'fixture_rating' => 85.43,
         'next_fixture_rating' => 91.25,
         'base_next_fixture_rating' => 88.00,
@@ -203,6 +207,8 @@ $playerSummaries = [
         'team_id' => 2,
         'price' => 6.0,
         'strength_rating' => 84.0,
+        'value_rating' => 76.0,
+        'availability_rating' => 75.0,
         'fixture_rating' => 75.43,
         'next_fixture_rating' => 68.75,
         'base_next_fixture_rating' => 65.00,
@@ -474,6 +480,31 @@ playerRankingEvidenceCheck(
         null
     )
     === 94.0
+);
+
+playerRankingEvidenceCheck(
+    'Recommendation-time Value rating is preserved',
+    (
+        $first[
+            'value_rating'
+        ]
+        ??
+        null
+    )
+    === 88.0
+);
+
+
+playerRankingEvidenceCheck(
+    'Recommendation-time Availability rating is preserved',
+    (
+        $first[
+            'availability_rating'
+        ]
+        ??
+        null
+    )
+    === 100.0
 );
 
 

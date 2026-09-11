@@ -369,6 +369,18 @@ class PlayerCalibrationHistoricalEvidenceService
                     ]
                     ?? null,
 
+                'value_rating' =>
+                    $ranking[
+                        'value_rating'
+                    ]
+                    ?? null,
+
+                'availability_rating' =>
+                    $ranking[
+                        'availability_rating'
+                    ]
+                    ?? null,
+
                 'fixture_rating' =>
                     $ranking[
                         'fixture_rating'

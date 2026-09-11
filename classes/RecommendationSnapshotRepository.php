@@ -163,6 +163,7 @@ class RecommendationSnapshotRepository
                     player_rankings,
                     player_projections,
                     starting_xi,
+                    bench,
                     captain_recommendation,
                     transfer_recommendations,
                     gameweek_decision,
@@ -176,6 +177,7 @@ class RecommendationSnapshotRepository
                     :player_rankings,
                     :player_projections,
                     :starting_xi,
+                    :bench,
                     :captain_recommendation,
                     :transfer_recommendations,
                     :gameweek_decision,
@@ -217,6 +219,13 @@ class RecommendationSnapshotRepository
                 $this->encodeJson(
                     $snapshotData[
                         'starting_xi'
+                    ]
+                ),
+                
+            ':bench' =>
+                $this->encodeJson(
+                    $snapshotData[
+                        'bench'
                     ]
                 ),
 
@@ -340,6 +349,8 @@ class RecommendationSnapshotRepository
             'player_projections',
 
             'starting_xi',
+            
+            'bench',
 
             'captain_recommendation',
 
@@ -356,16 +367,35 @@ class RecommendationSnapshotRepository
             as $field
         ) {
 
+            if (
+                !isset(
+                    $snapshot[
+                        $field
+                    ]
+                )
+                ||
+                $snapshot[
+                    $field
+                ]
+                ===
+                ''
+            ) {
+
+                $snapshot[
+                    $field
+                ] = [];
+
+                continue;
+            }
+
+
             $snapshot[
                 $field
             ] =
                 json_decode(
-                    (string) (
-                        $snapshot[
-                            $field
-                        ]
-                        ?? '[]'
-                    ),
+                    (string) $snapshot[
+                        $field
+                    ],
                     true,
                     512,
                     JSON_THROW_ON_ERROR

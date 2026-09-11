@@ -141,6 +141,13 @@ class RecommendationCandidateCaptureService
                 'Starting XI evidence is required.'
             );
         }
+        
+        $bench =
+            $gameweek[
+                'bench'
+            ]
+            ??
+            [];
 
 
         $captainRecommendation =
@@ -246,7 +253,8 @@ class RecommendationCandidateCaptureService
                 $captainRecommendation,
                 $transferRecommendations,
                 $gameweekDecision,
-                $chipRecommendations
+                $chipRecommendations,
+                $bench
             );
 
 

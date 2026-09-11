@@ -234,6 +234,12 @@ $generatedAt =
         'strength_rating' =>
             86.0,
 
+        'value_rating' =>
+            78.0,
+
+        'availability_rating' =>
+            90.0,
+
         'fixture_rating' =>
             76.0,
 
@@ -286,6 +292,12 @@ $generatedAt =
 
         'strength_rating' =>
             79.0,
+
+        'value_rating' =>
+            72.0,
+
+        'availability_rating' =>
+            75.0,
 
         'fixture_rating' =>
             70.0,
@@ -369,6 +381,173 @@ $startingXI = [
 
         'projected_points' =>
             6.25
+    ]
+];
+
+$bench = [
+
+    [
+        'player_id' =>
+            103,
+
+        'position' =>
+            'GK',
+
+        'gameweek_score' =>
+            48.25,
+
+        'gameweek_components' => [
+
+            'intelligence' =>
+                55.0,
+
+            'strength' =>
+                52.0,
+
+            'raw_fixture' =>
+                45.0,
+
+            'fixture' =>
+                47.0,
+
+            'availability' =>
+                100.0,
+
+            'confidence' =>
+                80.0,
+
+            'core_score' =>
+                51.10,
+
+            'confidence_modifier' =>
+                0.96,
+
+            'availability_modifier' =>
+                1.00
+        ]
+    ],
+
+    [
+        'player_id' =>
+            104,
+
+        'position' =>
+            'DEF',
+
+        'gameweek_score' =>
+            44.75,
+
+        'gameweek_components' => [
+
+            'intelligence' =>
+                50.0,
+
+            'strength' =>
+                48.0,
+
+            'raw_fixture' =>
+                40.0,
+
+            'fixture' =>
+                44.0,
+
+            'availability' =>
+                90.0,
+
+            'confidence' =>
+                75.0,
+
+            'core_score' =>
+                47.70,
+
+            'confidence_modifier' =>
+                0.95,
+
+            'availability_modifier' =>
+                0.93
+        ]
+    ],
+
+    [
+        'player_id' =>
+            105,
+
+        'position' =>
+            'MID',
+
+        'gameweek_score' =>
+            42.50,
+
+        'gameweek_components' => [
+
+            'intelligence' =>
+                48.0,
+
+            'strength' =>
+                46.0,
+
+            'raw_fixture' =>
+                38.0,
+
+            'fixture' =>
+                42.0,
+
+            'availability' =>
+                85.0,
+
+            'confidence' =>
+                70.0,
+
+            'core_score' =>
+                45.70,
+
+            'confidence_modifier' =>
+                0.948,
+
+            'availability_modifier' =>
+                0.895
+        ]
+    ],
+
+    [
+        'player_id' =>
+            106,
+
+        'position' =>
+            'FWD',
+
+        'gameweek_score' =>
+            40.25,
+
+        'gameweek_components' => [
+
+            'intelligence' =>
+                45.0,
+
+            'strength' =>
+                44.0,
+
+            'raw_fixture' =>
+                35.0,
+
+            'fixture' =>
+                41.0,
+
+            'availability' =>
+                80.0,
+
+            'confidence' =>
+                65.0,
+
+            'core_score' =>
+                43.55,
+
+            'confidence_modifier' =>
+                0.936,
+
+            'availability_modifier' =>
+                0.86
+        ]
     ]
 ];
 
@@ -564,7 +743,8 @@ $candidate =
         $captainRecommendation,
         $transferRecommendations,
         $gameweekDecision,
-        $chipRecommendations
+        $chipRecommendations,
+        $bench
     );
 
 
@@ -788,6 +968,29 @@ candidatePromotionAssert(
     'Starting XI evidence is promoted unchanged.'
 );
 
+/*
+ * ============================================================
+ * F2. BENCH PRESERVED EXACTLY
+ * ============================================================
+ */
+
+candidatePromotionSection(
+    'F2. Bench Evidence'
+);
+
+
+candidatePromotionAssert(
+    (
+        $snapshot[
+            'bench'
+        ]
+        ?? null
+    )
+    ===
+    $bench,
+    'Bench evidence is promoted unchanged.'
+);
+
 
 /*
  * ============================================================
@@ -911,6 +1114,18 @@ candidatePromotionAssert(
     'Promotion does not delete candidate staging evidence.'
 );
 
+candidatePromotionAssert(
+    (
+        $candidateAfterPromotion[
+            'bench'
+        ]
+        ?? null
+    )
+    ===
+    $bench,
+    'Candidate repository preserves bench evidence unchanged.'
+);
+
 
 /*
  * ============================================================
@@ -983,6 +1198,17 @@ candidatePromotionAssert(
     'Duplicate promotion leaves original player ranking evidence unchanged.'
 );
 
+candidatePromotionAssert(
+    (
+        $snapshotAfterDuplicate[
+            'bench'
+        ]
+        ?? null
+    )
+    ===
+    $bench,
+    'Duplicate promotion leaves original bench evidence unchanged.'
+);
 
 
 
