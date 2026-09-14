@@ -6,6 +6,25 @@ require_once __DIR__ . '/../classes/autoload.php';
 echo "Starting FPL Data Update...\n\n";
 
 
+$updateRunLifecycle =
+    null;
+
+$updateRunId =
+    null;
+
+$updateStartedMicrotime =
+    null;
+
+$recordsReceived =
+    0;
+
+$recordsUpdated =
+    0;
+
+$recordsSkipped =
+    0;
+
+
 try {
 
         /*
@@ -26,6 +45,44 @@ try {
 
         /*
          * ========================================================
+         * UPDATE RUN TRACKING
+         * ========================================================
+         */
+
+        $updateRunRepository =
+            new UpdateRunRepository(
+                $db
+            );
+
+
+        $updateRunLifecycle =
+            new UpdateRunLifecycleService(
+                $updateRunRepository
+            );
+
+
+        $updateStartedAt =
+            date(
+                'Y-m-d H:i:s'
+            );
+
+
+        $updateStartedMicrotime =
+            microtime(
+                true
+            );
+
+
+        $updateRunId =
+            $updateRunLifecycle
+                ->start(
+                    'bootstrap',
+                    $updateStartedAt
+                );
+
+
+        /*
+         * ========================================================
          * API
          * ========================================================
          */
@@ -42,14 +99,34 @@ try {
 
 
         /*
-     * ========================================================
-     * VALIDATE BOOTSTRAP DATA
-     * ========================================================
-     */
+         * ========================================================
+         * VALIDATE BOOTSTRAP DATA
+         * ========================================================
+         */
 
-    BootstrapDataValidator::validate(
+        BootstrapDataValidator::validate(
         $data
     );
+
+
+    $recordsReceived =
+        count(
+            $data[
+                'events'
+            ]
+        )
+        +
+        count(
+            $data[
+                'teams'
+            ]
+        )
+        +
+        count(
+            $data[
+                'elements'
+            ]
+        );
 
 
     /*
@@ -637,13 +714,62 @@ try {
      * ========================================================
      */
 
+    $recordsUpdated =
+        $gameweeksImported
+        +
+        $teamsImported
+        +
+        $playersImported;
+
+
+    $recordsSkipped =
+        $playersSkipped;
+
+
+    $updateCompletedAt =
+        date(
+            'Y-m-d H:i:s'
+        );
+
+
+    $updateDurationMs =
+        (int) round(
+            (
+                microtime(
+                    true
+                )
+                -
+                $updateStartedMicrotime
+            )
+            *
+            1000
+        );
+
+
+    /*
+     * Complete the persisted update run inside the same
+     * transaction as the imported FPL data.
+     *
+     * This ensures that the data update and its successful
+     * run status either commit together or roll back together.
+     */
+    $updateRunLifecycle
+        ->succeed(
+            $updateRunId,
+            $updateCompletedAt,
+            $recordsReceived,
+            $recordsUpdated,
+            $recordsSkipped,
+            $updateDurationMs
+        );
+
+
     $db->commit();
 
 
     echo "Players imported: "
         . $playersImported
         . "\n";
-
 
 
     echo "Players skipped: "
@@ -668,6 +794,68 @@ try {
     ) {
 
         $db->rollBack();
+    }
+
+
+    /*
+     * Persist the failed updater attempt when run tracking
+     * was successfully established.
+     */
+    if (
+        $updateRunLifecycle
+            instanceof UpdateRunLifecycleService
+        &&
+        is_int(
+            $updateRunId
+        )
+        &&
+        $updateRunId > 0
+        &&
+        is_float(
+            $updateStartedMicrotime
+        )
+    ) {
+
+        $updateCompletedAt =
+            date(
+                'Y-m-d H:i:s'
+            );
+
+
+        $updateDurationMs =
+            (int) round(
+                (
+                    microtime(
+                        true
+                    )
+                    -
+                    $updateStartedMicrotime
+                )
+                *
+                1000
+            );
+
+
+        try {
+
+            $updateRunLifecycle
+                ->fail(
+                    $updateRunId,
+                    $updateCompletedAt,
+                    $recordsReceived,
+                    0,
+                    $recordsSkipped,
+                    1,
+                    $updateDurationMs,
+                    $exception->getMessage()
+                );
+
+        } catch (Throwable $trackingException) {
+
+            echo "UPDATE TRACKING ERROR: "
+                . $trackingException->getMessage()
+                . "\n";
+        }
     }
 
 
