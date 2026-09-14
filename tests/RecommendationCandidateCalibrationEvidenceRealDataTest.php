@@ -226,14 +226,6 @@ try {
             );
 
 
-    candidateCalibrationEvidenceResult(
-        is_array(
-            $candidate
-        ),
-        'Recommendation candidate exists for the next deadline.'
-    );
-
-
     if (
         !is_array(
             $candidate
@@ -241,9 +233,19 @@ try {
     ) {
 
         echo "<br>";
-        echo "No recommendation candidate currently exists for this entry/gameweek.<br>";
+
+        echo "SKIP: No recommendation candidate currently exists "
+            . "for this entry/gameweek.<br>";
+
+        echo "Calibration evidence cannot be inspected until "
+            . "recommendation candidate capture has occurred.<br>";
 
     } else {
+
+        candidateCalibrationEvidenceResult(
+            true,
+            'Recommendation candidate exists for the next deadline.'
+        );
 
         /*
          * ====================================================
