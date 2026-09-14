@@ -147,6 +147,25 @@ echo "API request delay: "
 
 /*
  * ============================================================
+ * UPDATE RUN TRACKING
+ * ============================================================
+ */
+
+$updateRunLifecycle =
+    null;
+
+$updateRunId =
+    null;
+
+$updateStartedMicrotime =
+    null;
+
+$recordsReceived =
+    0;
+
+
+/*
+ * ============================================================
  * SETUP
  * ============================================================
  */
@@ -163,6 +182,38 @@ try {
 
 
     echo "Database connection successful\n";
+
+
+    $updateRunRepository =
+        new UpdateRunRepository(
+            $db
+        );
+
+
+    $updateRunLifecycle =
+        new UpdateRunLifecycleService(
+            $updateRunRepository
+        );
+
+
+    $updateStartedAt =
+        date(
+            'Y-m-d H:i:s'
+        );
+
+
+    $updateStartedMicrotime =
+        microtime(
+            true
+        );
+
+
+    $updateRunId =
+        $updateRunLifecycle
+            ->start(
+                'player_fixture_history',
+                $updateStartedAt
+            );
 
 
     $fplApi =
@@ -187,6 +238,67 @@ try {
     Throwable $exception
 ) {
 
+    if (
+        $updateRunLifecycle
+            instanceof UpdateRunLifecycleService
+        &&
+        is_int(
+            $updateRunId
+        )
+        &&
+        $updateRunId > 0
+        &&
+        is_float(
+            $updateStartedMicrotime
+        )
+    ) {
+
+        $updateCompletedAt =
+            date(
+                'Y-m-d H:i:s'
+            );
+
+
+        $updateDurationMs =
+            (int) round(
+                (
+                    microtime(
+                        true
+                    )
+                    -
+                    $updateStartedMicrotime
+                )
+                *
+                1000
+            );
+
+
+        try {
+
+            $updateRunLifecycle
+                ->fail(
+                    $updateRunId,
+                    $updateCompletedAt,
+                    0,
+                    0,
+                    0,
+                    1,
+                    $updateDurationMs,
+                    $exception->getMessage()
+                );
+
+        } catch (
+            Throwable $trackingException
+        ) {
+
+            echo "UPDATE TRACKING ERROR: "
+                . $trackingException
+                    ->getMessage()
+                . "\n";
+        }
+    }
+
+
     echo "SETUP FAILED ❌\n";
 
 
@@ -194,10 +306,11 @@ try {
         ->getMessage();
 
 
-    exit;
+    exit(1);
 }
 
 
+try {
 /*
  * ============================================================
  * LOAD PLAYER POOL
@@ -289,6 +402,12 @@ $players =
         );
 
 
+$recordsReceived =
+    count(
+        $players
+    );
+
+
 echo "Total eligible players: "
     . $totalPlayerCount
     . "\n";
@@ -306,6 +425,37 @@ if (
         $players
     )
 ) {
+
+    $updateCompletedAt =
+        date(
+            'Y-m-d H:i:s'
+        );
+
+
+    $updateDurationMs =
+        (int) round(
+            (
+                microtime(
+                    true
+                )
+                -
+                $updateStartedMicrotime
+            )
+            *
+            1000
+        );
+
+
+    $updateRunLifecycle
+        ->succeed(
+            $updateRunId,
+            $updateCompletedAt,
+            0,
+            0,
+            0,
+            $updateDurationMs
+        );
+
 
     echo "No players found for this import.\n";
 
@@ -1177,6 +1327,67 @@ foreach (
 
 /*
  * ============================================================
+ * COMPLETE UPDATE RUN
+ * ============================================================
+ */
+
+$updateCompletedAt =
+    date(
+        'Y-m-d H:i:s'
+    );
+
+
+$updateDurationMs =
+    (int) round(
+        (
+            microtime(
+                true
+            )
+            -
+            $updateStartedMicrotime
+        )
+        *
+        1000
+    );
+
+
+if (
+    $playersFailed > 0
+) {
+
+    $updateRunLifecycle
+        ->partial(
+            $updateRunId,
+            $updateCompletedAt,
+            $recordsReceived,
+            $historyRowsImported,
+            $historyRowsSkipped,
+            $playersFailed,
+            $updateDurationMs,
+            $playersFailed
+                . (
+                    $playersFailed === 1
+                        ? ' player failed during processing.'
+                        : ' players failed during processing.'
+                )
+        );
+
+} else {
+
+    $updateRunLifecycle
+        ->succeed(
+            $updateRunId,
+            $updateCompletedAt,
+            $recordsReceived,
+            $historyRowsImported,
+            $historyRowsSkipped,
+            $updateDurationMs
+        );
+}
+
+
+/*
+ * ============================================================
  * SUMMARY
  * ============================================================
  */
@@ -1236,3 +1447,77 @@ echo "Import mode: "
 
 echo "<br>";
 echo "Update complete<br>";
+
+} catch (
+    Throwable $exception
+) {
+
+    $updateCompletedAt =
+        date(
+            'Y-m-d H:i:s'
+        );
+
+
+    $updateDurationMs =
+        (int) round(
+            (
+                microtime(
+                    true
+                )
+                -
+                $updateStartedMicrotime
+            )
+            *
+            1000
+        );
+
+
+    /*
+     * Unlike the bootstrap and fixture updaters, this updater
+     * does not wrap the complete import in one transaction.
+     *
+     * Earlier successful history upserts may therefore remain
+     * persisted if a later run-level failure occurs, so preserve
+     * the actual progress counters.
+     */
+    try {
+
+        $updateRunLifecycle
+            ->fail(
+                $updateRunId,
+                $updateCompletedAt,
+                $recordsReceived,
+                $historyRowsImported
+                    ?? 0,
+                $historyRowsSkipped
+                    ?? 0,
+                max(
+                    1,
+                    $playersFailed
+                        ?? 0
+                ),
+                $updateDurationMs,
+                $exception->getMessage()
+            );
+
+    } catch (
+        Throwable $trackingException
+    ) {
+
+        echo "UPDATE TRACKING ERROR: "
+            . $trackingException
+                ->getMessage()
+            . "\n";
+    }
+
+
+    echo "\nUPDATE FAILED ❌\n";
+
+
+    echo $exception
+        ->getMessage()
+        . "\n";
+
+
+    exit(1);
+}

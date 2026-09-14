@@ -49,6 +49,31 @@ class UpdateRunLifecycleService
                 null
             );
     }
+    
+    public function partial(
+        int $runId,
+        string $completedAt,
+        int $recordsReceived,
+        int $recordsUpdated,
+        int $recordsSkipped,
+        int $recordsFailed,
+        int $durationMs,
+        ?string $errorMessage = null
+    ): bool {
+
+        return $this->repository
+            ->complete(
+                $runId,
+                'Partial',
+                $completedAt,
+                $recordsReceived,
+                $recordsUpdated,
+                $recordsSkipped,
+                $recordsFailed,
+                $durationMs,
+                $errorMessage
+            );
+    }
 
 
     public function fail(

@@ -142,6 +142,10 @@ $successType =
 
 $failedType =
     'test_lifecycle_failed';
+    
+    
+$partialType =
+    'test_lifecycle_partial';
 
 
 /*
@@ -156,7 +160,8 @@ $cleanupStatement =
         DELETE FROM update_runs
         WHERE update_type IN (
             :success_type,
-            :failed_type
+            :failed_type,
+            :partial_type
         )
         "
     );
@@ -169,7 +174,10 @@ $cleanupStatement
                 $successType,
 
             'failed_type' =>
-                $failedType
+                $failedType,
+
+            'partial_type' =>
+                $partialType
         ]
     );
 
@@ -513,12 +521,150 @@ updateRunLifecycleCheck(
 /*
  * ============================================================
  * SCENARIO E
+ * COMPLETE PARTIAL
+ * ============================================================
+ */
+
+updateRunLifecycleSection(
+    'Scenario E: Complete Partial'
+);
+
+
+$partialRunId =
+    $service
+        ->start(
+            $partialType,
+            '2026-09-14 12:20:00'
+        );
+
+
+$partialResult =
+    $service
+        ->partial(
+            $partialRunId,
+            '2026-09-14 12:20:08',
+            25,
+            22,
+            1,
+            2,
+            8000,
+            'Two player summary requests failed.'
+        );
+
+
+updateRunLifecycleCheck(
+    'Partial lifecycle completion returns true.',
+    $partialResult === true
+);
+
+
+$partialRun =
+    $repository
+        ->getById(
+            $partialRunId
+        );
+
+
+updateRunLifecycleCheck(
+    'Partial lifecycle stores Partial status.',
+    (
+        $partialRun[
+            'status'
+        ]
+        ?? null
+    )
+    ===
+    'Partial'
+);
+
+
+updateRunLifecycleCheck(
+    'Partial lifecycle preserves received count.',
+    (
+        $partialRun[
+            'records_received'
+        ]
+        ?? null
+    )
+    ===
+    25
+);
+
+
+updateRunLifecycleCheck(
+    'Partial lifecycle preserves updated count.',
+    (
+        $partialRun[
+            'records_updated'
+        ]
+        ?? null
+    )
+    ===
+    22
+);
+
+
+updateRunLifecycleCheck(
+    'Partial lifecycle preserves skipped count.',
+    (
+        $partialRun[
+            'records_skipped'
+        ]
+        ?? null
+    )
+    ===
+    1
+);
+
+
+updateRunLifecycleCheck(
+    'Partial lifecycle preserves failed record count.',
+    (
+        $partialRun[
+            'records_failed'
+        ]
+        ?? null
+    )
+    ===
+    2
+);
+
+
+updateRunLifecycleCheck(
+    'Partial lifecycle preserves duration.',
+    (
+        $partialRun[
+            'duration_ms'
+        ]
+        ?? null
+    )
+    ===
+    8000
+);
+
+
+updateRunLifecycleCheck(
+    'Partial lifecycle preserves error message.',
+    (
+        $partialRun[
+            'error_message'
+        ]
+        ?? null
+    )
+    ===
+    'Two player summary requests failed.'
+);
+
+
+/*
+ * ============================================================
+ * SCENARIO F
  * CLEANUP
  * ============================================================
  */
 
 updateRunLifecycleSection(
-    'Scenario E: Cleanup'
+    'Scenario F: Cleanup'
 );
 
 
@@ -529,7 +675,10 @@ $cleanupStatement
                 $successType,
 
             'failed_type' =>
-                $failedType
+                $failedType,
+
+            'partial_type' =>
+                $partialType
         ]
     );
 
@@ -541,7 +690,8 @@ $remainingStatement =
         FROM update_runs
         WHERE update_type IN (
             :success_type,
-            :failed_type
+            :failed_type,
+            :partial_type
         )
         "
     );
@@ -554,7 +704,10 @@ $remainingStatement
                 $successType,
 
             'failed_type' =>
-                $failedType
+                $failedType,
+
+            'partial_type' =>
+                $partialType
         ]
     );
 
