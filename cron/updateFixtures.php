@@ -16,6 +16,25 @@ $database = null;
 $db = null;
 
 
+$updateRunLifecycle =
+    null;
+
+$updateRunId =
+    null;
+
+$updateStartedMicrotime =
+    null;
+
+$recordsReceived =
+    0;
+
+$recordsUpdated =
+    0;
+
+$recordsSkipped =
+    0;
+
+
 try {
 
     /*
@@ -33,6 +52,44 @@ try {
 
 
     echo "Database connection successful\n";
+
+
+    /*
+     * --------------------------------------------------------
+     * UPDATE RUN TRACKING
+     * --------------------------------------------------------
+     */
+
+    $updateRunRepository =
+        new UpdateRunRepository(
+            $db
+        );
+
+
+    $updateRunLifecycle =
+        new UpdateRunLifecycleService(
+            $updateRunRepository
+        );
+
+
+    $updateStartedAt =
+        date(
+            'Y-m-d H:i:s'
+        );
+
+
+    $updateStartedMicrotime =
+        microtime(
+            true
+        );
+
+
+    $updateRunId =
+        $updateRunLifecycle
+            ->start(
+                'fixtures',
+                $updateStartedAt
+            );
 
 
     /*
@@ -70,8 +127,14 @@ try {
     echo "FPL API connection successful\n";
 
 
+    $recordsReceived =
+        count(
+            $fixtures
+        );
+
+
     echo "Fixtures received: "
-        . count($fixtures)
+        . $recordsReceived
         . "\n\n";
 
 
@@ -170,6 +233,49 @@ try {
     }
 
 
+    $recordsUpdated =
+        $updated;
+
+
+    $recordsSkipped =
+        $skipped;
+
+
+    $updateCompletedAt =
+        date(
+            'Y-m-d H:i:s'
+        );
+
+
+    $updateDurationMs =
+        (int) round(
+            (
+                microtime(
+                    true
+                )
+                -
+                $updateStartedMicrotime
+            )
+            *
+            1000
+        );
+
+
+    /*
+     * Complete the persisted update run inside the same
+     * transaction as the imported fixture data.
+     */
+    $updateRunLifecycle
+        ->succeed(
+            $updateRunId,
+            $updateCompletedAt,
+            $recordsReceived,
+            $recordsUpdated,
+            $recordsSkipped,
+            $updateDurationMs
+        );
+
+
     $db->commit();
 
 
@@ -204,6 +310,68 @@ try {
     ) {
 
         $db->rollBack();
+    }
+
+
+   /*
+     * Persist the failed updater attempt when run tracking
+     * was successfully established.
+     */
+    if (
+        $updateRunLifecycle
+            instanceof UpdateRunLifecycleService
+        &&
+        is_int(
+            $updateRunId
+        )
+        &&
+        $updateRunId > 0
+        &&
+        is_float(
+            $updateStartedMicrotime
+        )
+    ) {
+
+        $updateCompletedAt =
+            date(
+                'Y-m-d H:i:s'
+            );
+
+
+        $updateDurationMs =
+            (int) round(
+                (
+                    microtime(
+                        true
+                    )
+                    -
+                    $updateStartedMicrotime
+                )
+                *
+                1000
+            );
+
+
+        try {
+
+            $updateRunLifecycle
+                ->fail(
+                    $updateRunId,
+                    $updateCompletedAt,
+                    $recordsReceived,
+                    0,
+                    $skipped ?? 0,
+                    1,
+                    $updateDurationMs,
+                    $exception->getMessage()
+                );
+
+        } catch (Throwable $trackingException) {
+
+            echo "UPDATE TRACKING ERROR: "
+                . $trackingException->getMessage()
+                . "\n";
+        }
     }
 
 
