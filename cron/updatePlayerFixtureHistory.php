@@ -11,7 +11,6 @@ echo "Starting Player Fixture History Update...\n";
  * ============================================================
  * IMPORT CONFIGURATION
  * ============================================================
- *
  * Supported browser examples:
  *
  * Small diagnostic batch:
@@ -23,83 +22,37 @@ echo "Starting Player Fixture History Update...\n";
  * Process the entire current player pool:
  * ?full=1
  *
- * A small delay is applied between live FPL player-summary
- * requests to avoid sending hundreds of requests back-to-back.
+ * Supported CLI examples:
+ *
+ * php updatePlayerFixtureHistory.php --limit=25 --offset=0
+ * php updatePlayerFixtureHistory.php --limit=25 --offset=100
+ * php updatePlayerFixtureHistory.php --full
  */
+
+$updateOptions =
+    PlayerFixtureHistoryUpdateOptions::resolve(
+        $_GET,
+        $argv
+            ?? []
+    );
+
 
 $fullImport =
-    isset(
-        $_GET[
-            'full'
-        ]
-    )
-    &&
-    (
-        (string) $_GET[
-            'full'
-        ]
-    )
-    ===
-    '1';
+    $updateOptions[
+        'full'
+    ];
 
 
 $limit =
-    isset(
-        $_GET[
-            'limit'
-        ]
-    )
-    &&
-    is_numeric(
-        $_GET[
-            'limit'
-        ]
-    )
-        ? (int) $_GET[
-            'limit'
-        ]
-        : 25;
+    $updateOptions[
+        'limit'
+    ];
 
 
 $offset =
-    isset(
-        $_GET[
-            'offset'
-        ]
-    )
-    &&
-    is_numeric(
-        $_GET[
-            'offset'
-        ]
-    )
-        ? (int) $_GET[
-            'offset'
-        ]
-        : 0;
-
-
-/*
- * Normal manual batches stay capped at 100.
- *
- * Full mode ignores the manual batch limit and resolves the
- * entire player pool after the database connection is ready.
- */
-$limit =
-    max(
-        1,
-        min(
-            100,
-            $limit
-        )
-    );
-
-
-$offset =
-    max(
-        0,
-        $offset
-    );
+    $updateOptions[
+        'offset'
+    ];
 
 
 /*
