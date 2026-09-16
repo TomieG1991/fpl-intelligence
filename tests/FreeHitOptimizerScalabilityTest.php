@@ -588,6 +588,36 @@ testResult(
 );
 
 
+testResult(
+    abs(
+        (float) (
+            $result[
+                'starting_xi_projected_points'
+            ]
+            ??
+            0.0
+        )
+        -
+        102.613
+    )
+    <
+    0.0001,
+    'Large-pool optimization preserves the deterministic Starting XI projected points'
+);
+
+
+testResult(
+    abs(
+        $totalPrice
+        -
+        99.1
+    )
+    <
+    0.0001,
+    'Large-pool optimization preserves the deterministic squad price'
+);
+
+
 echo "Optimized Squad Price: £"
     . number_format(
         $totalPrice,

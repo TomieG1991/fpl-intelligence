@@ -5695,6 +5695,192 @@ class FreeHitOptimizer
             ]
             ??
             0;
+            
+        
+        /*
+         * ============================================================
+         * REMAINING BENCH BUDGET PRUNING
+         * ============================================================
+         *
+         * Before exploring this branch, determine an optimistic lower
+         * bound for all bench places that still need to be filled.
+         *
+         * Duplicate-player and club-limit conflicts are deliberately
+         * ignored when calculating this bound. This means the value can
+         * only underestimate the true completion cost, so rejecting a
+         * branch here cannot remove a genuinely affordable squad.
+         */
+
+        $remainingMinimumPrice =
+            0.0;
+
+
+        $remainingPositionCounts =
+            [];
+
+
+        for (
+            $remainingSlotIndex = $slotIndex;
+            $remainingSlotIndex
+                <
+                count(
+                    $benchSlots
+                );
+            $remainingSlotIndex++
+        ) {
+
+            $remainingPosition =
+                $benchSlots[
+                    $remainingSlotIndex
+                ];
+
+
+            $remainingPositionCounts[
+                $remainingPosition
+            ] =
+                (
+                    $remainingPositionCounts[
+                        $remainingPosition
+                    ]
+                    ??
+                    0
+                )
+                +
+                1;
+        }
+
+
+        foreach (
+            $remainingPositionCounts
+            as $remainingPosition =>
+                $requiredCount
+        ) {
+
+            $found =
+                0;
+
+
+            $remainingStartIndex =
+                $minimumIndexes[
+                    $remainingPosition
+                ]
+                ??
+                0;
+
+
+            foreach (
+                $benchPools[
+                    $remainingPosition
+                ]
+                ??
+                []
+                as $candidateIndex =>
+                    $candidate
+            ) {
+
+                if (
+                    $candidateIndex
+                    <
+                    $remainingStartIndex
+                ) {
+
+                    continue;
+                }
+
+
+                $candidatePlayerId =
+                    $candidate[
+                        'player_id'
+                    ]
+                    ??
+                    null;
+
+
+                $candidatePrice =
+                    $candidate[
+                        'price'
+                    ]
+                    ??
+                    null;
+
+
+                if (
+                    !is_numeric(
+                        $candidatePlayerId
+                    )
+                    ||
+                    !is_numeric(
+                        $candidatePrice
+                    )
+                ) {
+
+                    continue;
+                }
+
+
+                $candidatePlayerId =
+                    (int) $candidatePlayerId;
+
+
+                if (
+                    $candidatePlayerId <= 0
+                    ||
+                    isset(
+                        $state[
+                            'player_ids'
+                        ][
+                            $candidatePlayerId
+                        ]
+                    )
+                ) {
+
+                    continue;
+                }
+
+
+                $remainingMinimumPrice +=
+                    (float) $candidatePrice;
+
+
+                $found++;
+
+
+                if (
+                    $found
+                    >=
+                    $requiredCount
+                ) {
+
+                    break;
+                }
+            }
+
+
+            if (
+                $found
+                <
+                $requiredCount
+            ) {
+
+                return
+                    null;
+            }
+        }
+
+
+        if (
+            (float) $state[
+                'price'
+            ]
+            +
+            $remainingMinimumPrice
+            >
+            $budget
+        ) {
+
+            return
+                null;
+        }
 
 
         foreach (
