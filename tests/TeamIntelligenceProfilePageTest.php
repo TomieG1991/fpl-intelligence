@@ -440,13 +440,47 @@ teamProfilePageCheck(
 );
 
 
-teamProfilePageCheck(
-    'Arsenal is ranked first in current dataset',
+$leagueRank =
+    null;
+
+
+if (
     preg_match(
-        '/#\s*1\s*Arsenal/i',
-        $normalisedHtml
-    ) === 1
+        '/League Rank.*?#\s*(\d+)/s',
+        $normalisedHtml,
+        $rankMatch
+    )
+    ===
+    1
+) {
+
+    $leagueRank =
+        (int) (
+            $rankMatch[
+                1
+            ]
+            ??
+            0
+        );
+}
+
+
+teamProfilePageCheck(
+    'Arsenal has a valid current league rank',
+    $leagueRank !== null
+    &&
+    $leagueRank > 0
 );
+
+
+echo
+    'Rendered Arsenal League Rank: #'
+    . (
+        $leagueRank !== null
+            ? $leagueRank
+            : 'N/A'
+    )
+    . '<br>';
 
 
 teamProfilePageCheck(

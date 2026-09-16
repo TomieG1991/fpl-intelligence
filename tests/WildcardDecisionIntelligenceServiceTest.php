@@ -80,7 +80,8 @@ class WildcardDecisionSquadHorizonStub
 
     public function buildForImportedSquad(
         array $importedSquad,
-        int $horizon = 3
+        int $horizon = 3,
+        ?int $targetGameweek = null
     ): array {
 
         $this->buildCallCount++;

@@ -49,7 +49,8 @@ class SquadHorizonIntelligenceService
      */
     public function buildForImportedSquad(
         array $importedSquad,
-        int $horizon = 3
+        int $horizon = 3,
+        ?int $targetGameweek = null
     ): array {
 
         /*
@@ -304,7 +305,8 @@ class SquadHorizonIntelligenceService
         return
             $this->buildForResolvedSquad(
                 $resolvedPlayers,
-                $horizon
+                $horizon,
+                $targetGameweek
             );
     }
 
@@ -317,9 +319,10 @@ class SquadHorizonIntelligenceService
      * including WildcardOptimizer, to reuse the same projection
      * and Squad Horizon pipeline.
      */
-        public function buildForResolvedSquad(
+    public function buildForResolvedSquad(
         array $resolvedPlayers,
-        int $horizon = 3
+        int $horizon = 3,
+        ?int $targetGameweek = null
     ): array {
 
         /*
@@ -721,6 +724,31 @@ class SquadHorizonIntelligenceService
 
                 if (
                     $gameweek <= 0
+                ) {
+
+                    continue;
+                }
+                
+                
+                /*
+                 * --------------------------------------------------------
+                 * OPTIONAL TARGET GAMEWEEK
+                 * --------------------------------------------------------
+                 *
+                 * Deadline-sensitive callers may request one explicit FPL
+                 * gameweek.
+                 *
+                 * When supplied, projection evidence for every other
+                 * gameweek is excluded before Squad Horizon calculation.
+                 *
+                 * A null target preserves the existing untargeted horizon
+                 * behaviour for all current callers.
+                 */
+
+                if (
+                    $targetGameweek !== null
+                    &&
+                    $gameweek !== $targetGameweek
                 ) {
 
                     continue;

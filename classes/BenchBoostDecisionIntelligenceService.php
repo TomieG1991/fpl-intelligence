@@ -22,7 +22,8 @@ class BenchBoostDecisionIntelligenceService
 
 
     public function build(
-        array $importedSquad
+        array $importedSquad,
+        ?int $targetGameweek = null
     ): array {
 
         /*
@@ -35,7 +36,8 @@ class BenchBoostDecisionIntelligenceService
             $this->squadHorizonIntelligenceService
                 ->buildForImportedSquad(
                     $importedSquad,
-                    1
+                    1,
+                    $targetGameweek
                 );
 
 

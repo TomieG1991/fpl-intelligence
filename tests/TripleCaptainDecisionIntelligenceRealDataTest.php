@@ -126,6 +126,17 @@ $playerIntelligenceService =
     new PlayerIntelligenceService(
         $db
     );
+    
+$gameweekRepository =
+    new GameweekRepository(
+        $db
+    );
+
+
+$actionableGameweekResolver =
+    new ActionableGameweekResolver(
+        $gameweekRepository
+    );
 
 
 $squadHorizonIntelligence =
@@ -563,6 +574,35 @@ tripleCaptainRealHeading(
     'Scenario D: Real Triple Captain Decision Pipeline'
 );
 
+$generatedAt =
+    gmdate(
+        'Y-m-d H:i:s'
+    );
+
+
+$actionableGameweek =
+    $actionableGameweekResolver
+        ->resolve(
+            $generatedAt
+        );
+
+
+echo
+    'Actionable Gameweek: '
+    . (
+        $actionableGameweek !== null
+            ? $actionableGameweek
+            : 'N/A'
+    )
+    . '<br>';
+
+
+tripleCaptainRealCheck(
+    'An actionable gameweek is available',
+    $actionableGameweek !== null
+    &&
+    $actionableGameweek > 0
+);
 
 $decisionStart =
     microtime(
@@ -573,9 +613,9 @@ $decisionStart =
 $result =
     $tripleCaptainDecisionService
         ->build(
-            $importedSquad
+            $importedSquad,
+            $actionableGameweek
         );
-
 
 $decisionRuntime =
     microtime(
@@ -687,6 +727,15 @@ tripleCaptainRealCheck(
     $gameweekNumber
     >
     0
+);
+
+
+tripleCaptainRealCheck(
+    'Real Triple Captain horizon represents the actionable gameweek',
+    $actionableGameweek !== null
+    &&
+    $gameweekNumber ===
+    $actionableGameweek
 );
 
 

@@ -20,8 +20,11 @@ $playerCount =
 
 $fixtureCount =
     0;
-    
-$topPlayers = 
+
+$topPlayers =
+    [];
+
+$updateHealth =
     [];
 
 
@@ -43,6 +46,62 @@ try {
 
     $databaseConnected =
         true;
+        
+        
+    /*
+     * --------------------------------------------------------
+     * UPDATE HEALTH
+     * --------------------------------------------------------
+     */
+
+    $updateRunRepository =
+        new UpdateRunRepository(
+            $db
+        );
+
+
+    $updateHealthService =
+        new UpdateHealthService(
+            $updateRunRepository
+        );
+
+
+    $healthNow =
+        date(
+            'Y-m-d H:i:s'
+        );
+
+
+    $healthFreshnessSeconds =
+        86400;
+
+
+    $updateHealth = [
+
+        'bootstrap' =>
+            $updateHealthService
+                ->evaluate(
+                    'bootstrap',
+                    $healthNow,
+                    $healthFreshnessSeconds
+                ),
+
+        'fixtures' =>
+            $updateHealthService
+                ->evaluate(
+                    'fixtures',
+                    $healthNow,
+                    $healthFreshnessSeconds
+                ),
+
+        'player_fixture_history' =>
+            $updateHealthService
+                ->evaluate(
+                    'player_fixture_history',
+                    $healthNow,
+                    $healthFreshnessSeconds
+                )
+    ];
 
 
     /*
@@ -669,6 +728,16 @@ $activeNav = 'dashboard';
                     </article>
 
                 </section>
+
+
+                <!-- ==========================================
+                     DATA HEALTH
+                     ========================================== -->
+
+                <?php
+                    require __DIR__
+                        . '/includes/update-health.php';
+                ?>
 
 
                 <!-- ==========================================

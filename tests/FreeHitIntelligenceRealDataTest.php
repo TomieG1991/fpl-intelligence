@@ -134,6 +134,18 @@ try {
         );
 
 
+    $gameweekRepository =
+        new GameweekRepository(
+            $db
+        );
+
+
+    $actionableGameweekResolver =
+        new ActionableGameweekResolver(
+            $gameweekRepository
+        );
+
+
     freeHitRealCheck(
         'Real database connection is available',
         $db instanceof PDO
@@ -511,6 +523,39 @@ freeHitRealHeading(
 );
 
 
+$evaluationTimestamp =
+    gmdate(
+        'Y-m-d H:i:s'
+    );
+
+
+$actionableGameweek =
+    $actionableGameweekResolver
+        ->resolve(
+            $evaluationTimestamp
+        );
+
+
+echo
+    'Actionable Gameweek: '
+    . (
+        $actionableGameweek
+        !==
+        null
+            ? $actionableGameweek
+            : 'N/A'
+    )
+    . '<br>';
+
+
+freeHitRealCheck(
+    'An actionable gameweek is available',
+    $actionableGameweek
+    !==
+    null
+);
+
+
 $freeHitStartedAt =
     microtime(
         true
@@ -523,7 +568,8 @@ try {
         $freeHitService
             ->build(
                 $candidates,
-                100.0
+                100.0,
+                $actionableGameweek
             );
 
 } catch (

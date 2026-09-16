@@ -44,7 +44,8 @@ class FreeHitIntelligenceService
      */
     public function build(
         array $players,
-        float $budget = 100.0
+        float $budget = 100.0,
+        ?int $targetGameweek = null
     ): array {
 
         /*
@@ -53,10 +54,26 @@ class FreeHitIntelligenceService
          * --------------------------------------------------------
          */
 
-        $projectedPlayers =
+        $projectionCandidates =
             [];
 
 
+        $explicitTargetGameweek =
+            $targetGameweek !== null;
+
+
+        /*
+         * --------------------------------------------------------
+         * COLLECT CANDIDATE PROJECTION EVIDENCE
+         * --------------------------------------------------------
+         *
+         * Individual players may expose different earliest
+         * represented gameweeks while an FPL gameweek is partially
+         * complete.
+         *
+         * We must first inspect the complete candidate population so
+         * Free Hit optimization can use one common FPL gameweek.
+         */
         foreach (
             $players
             as $player
@@ -98,12 +115,6 @@ class FreeHitIntelligenceService
              * ----------------------------------------------------
              * REQUEST EXISTING EXPECTED POINTS
              * ----------------------------------------------------
-             *
-             * Keep the existing six-fixture source horizon.
-             *
-             * MultiGameweekExpectedPoints owns fixture grouping,
-             * including multiple fixtures belonging to one FPL
-             * gameweek.
              */
 
             $projection =
@@ -123,12 +134,6 @@ class FreeHitIntelligenceService
                 continue;
             }
 
-
-            /*
-             * ----------------------------------------------------
-             * REQUIRE GAMEWEEK PROJECTION EVIDENCE
-             * ----------------------------------------------------
-             */
 
             $projectionGameweeks =
                 isset(
@@ -160,24 +165,12 @@ class FreeHitIntelligenceService
 
             /*
              * ----------------------------------------------------
-             * FIND EARLIEST REPRESENTED GAMEWEEK
+             * NORMALISE USABLE GAMEWEEK PROJECTIONS
              * ----------------------------------------------------
-             *
-             * Free Hit is a one-gameweek chip.
-             *
-             * We therefore use the earliest valid FPL gameweek
-             * represented by the existing projection response.
-             *
-             * We do not sum future gameweeks and we do not split
-             * Double Gameweeks back into individual fixtures.
              */
 
-            $earliestGameweek =
-                null;
-
-
-            $earliestGameweekProjection =
-                null;
+            $usableGameweeks =
+                [];
 
 
             foreach (
@@ -245,106 +238,152 @@ class FreeHitIntelligenceService
                 }
 
 
+                $usableGameweeks[
+                    $gameweek
+                ] =
+                    $gameweekProjection;
+
+
                 if (
-                    $earliestGameweek === null
-                    ||
-                    $gameweek < $earliestGameweek
+                    !$explicitTargetGameweek
+                    &&
+                    (
+                        $targetGameweek === null
+                        ||
+                        $gameweek < $targetGameweek
+                    )
                 ) {
 
-                    $earliestGameweek =
+                    $targetGameweek =
                         $gameweek;
-
-
-                    $earliestGameweekProjection =
-                        $gameweekProjection;
                 }
             }
 
 
-            /*
-             * ----------------------------------------------------
-             * UNSUPPORTED PROJECTION
-             * ----------------------------------------------------
-             *
-             * Never manufacture zero Expected Points.
-             *
-             * A candidate without usable projection evidence is
-             * omitted from the Free Hit optimizer pool.
-             */
-
             if (
-                $earliestGameweekProjection === null
+                empty(
+                    $usableGameweeks
+                )
             ) {
 
                 continue;
             }
 
 
-            $projectedPoints =
-                $earliestGameweekProjection[
+            $projectionCandidates[] = [
+
+                'player' =>
+                    $player,
+
+                'gameweeks' =>
+                    $usableGameweeks
+            ];
+        }
+
+
+        /*
+         * --------------------------------------------------------
+         * BUILD COMMON-GAMEWEEK FREE HIT CANDIDATE POOL
+         * --------------------------------------------------------
+         *
+         * Free Hit is a one-gameweek chip.
+         *
+         * Every optimizer candidate must therefore represent the same
+         * FPL gameweek. A player without projection evidence for that
+         * gameweek is omitted rather than substituted with a later
+         * gameweek projection.
+         */
+
+        $projectedPlayers =
+            [];
+
+
+        if (
+            $targetGameweek !== null
+        ) {
+
+            foreach (
+                $projectionCandidates
+                as $projectionCandidate
+            ) {
+
+                $gameweekProjection =
+                    $projectionCandidate[
+                        'gameweeks'
+                    ][
+                        $targetGameweek
+                    ]
+                    ?? null;
+
+
+                if (
+                    !is_array(
+                        $gameweekProjection
+                    )
+                ) {
+
+                    continue;
+                }
+
+
+                $projectedPoints =
+                    $gameweekProjection[
+                        'projected_points'
+                    ]
+                    ?? null;
+
+
+                if (
+                    !is_numeric(
+                        $projectedPoints
+                    )
+                ) {
+
+                    continue;
+                }
+
+
+                $projectedPlayer =
+                    $projectionCandidate[
+                        'player'
+                    ];
+
+
+                $projectedPlayer[
                     'projected_points'
-                ];
+                ] =
+                    (float) $projectedPoints;
 
 
-            if (
-                !is_numeric(
-                    $projectedPoints
-                )
-            ) {
+                $projectedPlayer[
+                    'projection_gameweek'
+                ] =
+                    $targetGameweek;
 
-                continue;
+
+                $projectedPlayer[
+                    'projection_confidence'
+                ] =
+                    isset(
+                        $gameweekProjection[
+                            'projection_confidence'
+                        ]
+                    )
+                    &&
+                    is_numeric(
+                        $gameweekProjection[
+                            'projection_confidence'
+                        ]
+                    )
+                        ? (float) $gameweekProjection[
+                            'projection_confidence'
+                        ]
+                        : null;
+
+
+                $projectedPlayers[] =
+                    $projectedPlayer;
             }
-
-
-            /*
-             * ----------------------------------------------------
-             * ADAPT PLAYER CONTRACT
-             * ----------------------------------------------------
-             *
-             * Preserve the complete existing candidate row and add
-             * only the one-gameweek Expected Points value required
-             * by FreeHitOptimizer.
-             */
-
-            $projectedPlayer =
-                $player;
-
-
-            $projectedPlayer[
-                'projected_points'
-            ] =
-                (float) $projectedPoints;
-
-
-            $projectedPlayer[
-                'projection_gameweek'
-            ] =
-                (int) $earliestGameweek;
-
-
-            $projectedPlayer[
-                'projection_confidence'
-            ] =
-                isset(
-                    $earliestGameweekProjection[
-                        'projection_confidence'
-                    ]
-                )
-                &&
-                is_numeric(
-                    $earliestGameweekProjection[
-                        'projection_confidence'
-                    ]
-                )
-                    ? (float) $earliestGameweekProjection[
-                        'projection_confidence'
-                    ]
-                    : null;
-
-
-            $projectedPlayers[] =
-                $projectedPlayer;
-
         }
         
         /*

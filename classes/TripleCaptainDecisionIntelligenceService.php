@@ -49,7 +49,8 @@ class TripleCaptainDecisionIntelligenceService
      */
 
     public function build(
-        array $importedSquad
+        array $importedSquad,
+        ?int $targetGameweek = null
     ): array {
 
         /*
@@ -63,7 +64,8 @@ class TripleCaptainDecisionIntelligenceService
                 ->squadHorizonIntelligenceService
                 ->buildForImportedSquad(
                     $importedSquad,
-                    1
+                    1,
+                    $targetGameweek
                 );
 
 

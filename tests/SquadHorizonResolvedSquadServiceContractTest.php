@@ -180,12 +180,12 @@ $parameters =
 
 
 resolvedSquadServiceCheck(
-    'buildForResolvedSquad() has exactly two parameters',
+    'buildForResolvedSquad() has exactly three parameters',
     count(
         $parameters
     )
     ===
-    2
+    3
 );
 
 

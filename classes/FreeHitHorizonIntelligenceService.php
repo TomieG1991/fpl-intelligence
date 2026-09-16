@@ -45,7 +45,8 @@ class FreeHitHorizonIntelligenceService
      */
     public function build(
         array $players,
-        float $budget = 100.0
+        float $budget = 100.0,
+        ?int $targetGameweek = null
     ): array {
 
         /*
@@ -58,7 +59,8 @@ class FreeHitHorizonIntelligenceService
             $this->freeHitIntelligenceService
                 ->build(
                     $players,
-                    $budget
+                    $budget,
+                    $targetGameweek
                 );
 
 

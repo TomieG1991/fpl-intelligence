@@ -131,6 +131,21 @@ class TripleCaptainSquadHorizonServiceStub
     private array $result;
 
 
+    public array
+        $receivedImportedSquad =
+            [];
+
+
+    public ?int
+        $receivedHorizon =
+            null;
+
+
+    public ?int
+        $receivedTargetGameweek =
+            null;
+
+
     public function __construct(
         array $result
     ) {
@@ -142,8 +157,21 @@ class TripleCaptainSquadHorizonServiceStub
 
     public function buildForImportedSquad(
         array $importedSquad,
-        int $horizon = 3
+        int $horizon = 3,
+        ?int $targetGameweek = null
     ): array {
+
+        $this->receivedImportedSquad =
+            $importedSquad;
+
+
+        $this->receivedHorizon =
+            $horizon;
+
+
+        $this->receivedTargetGameweek =
+            $targetGameweek;
+
 
         return
             $this->result;
@@ -1307,6 +1335,65 @@ tripleCaptainServiceCheck(
     <
     0.001
 );
+
+/*
+ * ============================================================
+ * SCENARIO N
+ * EXPLICIT TARGET GAMEWEEK
+ * ============================================================
+ */
+
+tripleCaptainServiceHeading(
+    'Scenario N: Explicit Target Gameweek'
+);
+
+
+$targetHorizonService =
+    new TripleCaptainSquadHorizonServiceStub(
+        buildTripleCaptainHorizonResult()
+    );
+
+
+$targetService =
+    new TripleCaptainDecisionIntelligenceService(
+
+        $targetHorizonService,
+
+        new TripleCaptainPlayerIntelligenceServiceStub(
+            buildTripleCaptainPlayerSummaries()
+        ),
+
+        new TripleCaptainCaptainIntelligenceStub(
+            buildTripleCaptainCaptainResult()
+        ),
+
+        new TripleCaptainIntelligence()
+    );
+
+
+$targetService->build(
+    buildTripleCaptainImportedSquad(),
+    5
+);
+
+
+tripleCaptainServiceCheck(
+    'Triple Captain forwards explicit target gameweek to Squad Horizon service',
+    $targetHorizonService
+        ->receivedTargetGameweek
+    ===
+    5
+);
+
+
+tripleCaptainServiceCheck(
+    'Explicit target gameweek still requests exactly one gameweek',
+    $targetHorizonService
+        ->receivedHorizon
+    ===
+    1
+);
+
 
 
 /*

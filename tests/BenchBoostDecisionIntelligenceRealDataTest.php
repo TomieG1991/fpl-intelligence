@@ -125,6 +125,17 @@ $playerIntelligenceService =
     new PlayerIntelligenceService(
         $db
     );
+    
+$gameweekRepository =
+    new GameweekRepository(
+        $db
+    );
+
+
+$actionableGameweekResolver =
+    new ActionableGameweekResolver(
+        $gameweekRepository
+    );
 
 
 $squadHorizonIntelligence =
@@ -554,6 +565,39 @@ benchBoostRealHeading(
 );
 
 
+
+
+$generatedAt =
+    gmdate(
+        'Y-m-d H:i:s'
+    );
+
+
+$actionableGameweek =
+    $actionableGameweekResolver
+        ->resolve(
+            $generatedAt
+        );
+
+
+echo
+    'Actionable Gameweek: '
+    . (
+        $actionableGameweek !== null
+            ? $actionableGameweek
+            : 'N/A'
+    )
+    . '<br>';
+
+
+benchBoostRealCheck(
+    'An actionable gameweek is available',
+    $actionableGameweek !== null
+    &&
+    $actionableGameweek > 0
+);
+
+
 $decisionStart =
     microtime(
         true
@@ -563,7 +607,8 @@ $decisionStart =
 $result =
     $benchBoostDecisionService
         ->build(
-            $importedSquad
+            $importedSquad,
+            $actionableGameweek
         );
 
 
@@ -674,6 +719,15 @@ echo
 benchBoostRealCheck(
     'Real Bench Boost gameweek is positive',
     $gameweekNumber > 0
+);
+
+
+benchBoostRealCheck(
+    'Real Bench Boost horizon represents the actionable gameweek',
+    $actionableGameweek !== null
+    &&
+    $gameweekNumber ===
+    $actionableGameweek
 );
 
 

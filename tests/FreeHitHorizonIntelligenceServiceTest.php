@@ -69,6 +69,10 @@ class FreeHitHorizonFreeHitServiceStub
         $receivedBudget = null;
 
 
+    public ?int
+        $receivedTargetGameweek = null;
+
+
     public array
         $result = [];
 
@@ -80,7 +84,8 @@ class FreeHitHorizonFreeHitServiceStub
 
     public function build(
         array $players,
-        float $budget = 100.0
+        float $budget = 100.0,
+        ?int $targetGameweek = null
     ): array {
 
         $this->buildCallCount++;
@@ -92,6 +97,9 @@ class FreeHitHorizonFreeHitServiceStub
 
         $this->receivedBudget =
             $budget;
+            
+        $this->receivedTargetGameweek =
+            $targetGameweek;
 
 
         return
@@ -390,7 +398,8 @@ if ($classExists) {
         $service
             ->build(
                 $playerPool,
-                99.5
+                99.5,
+                5
             );
 
 
@@ -426,6 +435,14 @@ if ($classExists) {
         )
         <
         0.0001
+    );
+    
+    freeHitHorizonCheck(
+        'Explicit target GW5 is passed to Free Hit service',
+        $freeHitService
+            ->receivedTargetGameweek
+        ===
+        5
     );
 
 

@@ -99,6 +99,10 @@ class FreeHitDecisionCurrentHorizonStub
         $receivedHorizon = null;
 
 
+    public ?int
+        $receivedTargetGameweek = null;
+
+
     public array
         $result = [];
 
@@ -110,7 +114,8 @@ class FreeHitDecisionCurrentHorizonStub
 
     public function buildForImportedSquad(
         array $importedSquad,
-        int $horizon = 3
+        int $horizon = 3,
+        ?int $targetGameweek = null
     ): array {
 
         $this->buildCallCount++;
@@ -122,6 +127,9 @@ class FreeHitDecisionCurrentHorizonStub
 
         $this->receivedHorizon =
             $horizon;
+            
+        $this->receivedTargetGameweek =
+            $targetGameweek;
 
 
         return
@@ -146,6 +154,10 @@ class FreeHitDecisionHorizonStub
         $receivedBudget = null;
 
 
+    public ?int
+        $receivedTargetGameweek = null;
+
+
     public array
         $result = [];
 
@@ -157,7 +169,8 @@ class FreeHitDecisionHorizonStub
 
     public function build(
         array $players,
-        float $budget = 100.0
+        float $budget = 100.0,
+        ?int $targetGameweek = null
     ): array {
 
         $this->buildCallCount++;
@@ -169,6 +182,10 @@ class FreeHitDecisionHorizonStub
 
         $this->receivedBudget =
             $budget;
+            
+        
+        $this->receivedTargetGameweek =
+            $targetGameweek;
 
 
         return
@@ -1205,6 +1222,108 @@ freeHitDecisionServiceCheck(
         ->decisionCallCount
     ===
     0
+);
+
+
+/*
+ * ============================================================
+ * SCENARIO: EXPLICIT ACTIONABLE GAMEWEEK
+ * ============================================================
+ *
+ * Deadline-sensitive Free Hit analysis must compare the current
+ * squad and candidate Free Hit squad for the same explicitly
+ * requested FPL gameweek.
+ */
+
+freeHitDecisionServiceHeading(
+    'Scenario: Explicit Actionable Gameweek'
+);
+
+
+$targetCurrentHorizonStub =
+    new FreeHitDecisionCurrentHorizonStub();
+
+
+$targetFreeHitHorizonStub =
+    new FreeHitDecisionHorizonStub();
+
+
+$targetDecisionStub =
+    new FreeHitDecisionIntelligenceStub();
+
+
+$targetCurrentHorizonStub->result = [
+
+    'status' =>
+        'Available',
+
+    'horizon_result' => [
+
+        'gameweeks' => [
+
+            5 => [
+
+                'gameweek' =>
+                    5,
+
+                'starting_xi_projected_points' =>
+                    60.0,
+
+                'starting_xi_projection_confidence' =>
+                    0.80
+            ]
+        ]
+    ]
+];
+
+
+$targetFreeHitHorizonStub->result = [
+
+    'status' =>
+        'Unavailable',
+
+    'horizon_result' =>
+        null
+];
+
+
+$targetService =
+    new FreeHitDecisionIntelligenceService(
+        $targetCurrentHorizonStub,
+        $targetFreeHitHorizonStub,
+        $targetDecisionStub
+    );
+
+
+$targetService->build(
+    [
+        'status' =>
+            'success',
+
+        'players' =>
+            []
+    ],
+    [],
+    100.0,
+    5
+);
+
+
+freeHitDecisionServiceCheck(
+    'Current squad horizon receives explicit target GW5',
+    $targetCurrentHorizonStub
+        ->receivedTargetGameweek
+    ===
+    5
+);
+
+
+freeHitDecisionServiceCheck(
+    'Free Hit horizon receives explicit target GW5',
+    $targetFreeHitHorizonStub
+        ->receivedTargetGameweek
+    ===
+    5
 );
 
 

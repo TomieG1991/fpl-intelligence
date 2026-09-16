@@ -1975,6 +1975,536 @@ squadHorizonServiceCheck(
 );
 
 
+/*
+ * ============================================================
+ * SCENARIO L: EXPLICIT TARGET GAMEWEEK
+ * ============================================================
+ *
+ * A deadline-sensitive caller must be able to request a squad
+ * horizon for one specific FPL gameweek.
+ *
+ * Player projections may still contain evidence for an earlier
+ * live gameweek as well as the next actionable gameweek.
+ *
+ * When a target gameweek is supplied, only projection evidence
+ * for that gameweek may reach SquadHorizonIntelligence.
+ */
+
+squadHorizonServiceHeading(
+    'Scenario L: Explicit Target Gameweek'
+);
+
+
+$targetGameweekRepositoryPlayers =
+    [];
+
+
+$targetGameweekProjections =
+    [];
+
+
+for (
+    $playerNumber = 1;
+    $playerNumber <= 15;
+    $playerNumber++
+) {
+
+    $fplPlayerId =
+        500
+        +
+        $playerNumber;
+
+
+    $position =
+        match (true) {
+
+            $playerNumber <= 2 =>
+                'GK',
+
+            $playerNumber <= 7 =>
+                'DEF',
+
+            $playerNumber <= 12 =>
+                'MID',
+
+            default =>
+                'FWD'
+        };
+
+
+    $targetGameweekRepositoryPlayers[
+        $fplPlayerId
+    ] = [
+
+        'id' =>
+            $playerNumber,
+
+        'fpl_player_id' =>
+            $fplPlayerId,
+
+        'web_name' =>
+            'Target Player '
+            . $playerNumber,
+
+        'position' =>
+            $position,
+
+        'team_id' =>
+            $playerNumber
+    ];
+
+
+    $targetGameweekProjections[
+        $playerNumber
+    ] = [
+
+        'status' =>
+            'Available',
+
+        'player_id' =>
+            $playerNumber,
+
+        'gameweeks' => [
+
+            4 => [
+
+                'gameweek' =>
+                    4,
+
+                'projected_points' =>
+                    1.0
+                    +
+                    $playerNumber,
+
+                'projection_confidence' =>
+                    0.50,
+
+                'fixture_count' =>
+                    1,
+
+                'schedule_type' =>
+                    'Single'
+            ],
+
+            5 => [
+
+                'gameweek' =>
+                    5,
+
+                'projected_points' =>
+                    5.0
+                    +
+                    $playerNumber,
+
+                'projection_confidence' =>
+                    0.80,
+
+                'fixture_count' =>
+                    1,
+
+                'schedule_type' =>
+                    'Single'
+            ]
+        ],
+
+        'fixtures' =>
+            []
+    ];
+}
+
+
+$targetGameweekImportedPlayers =
+    [];
+
+
+for (
+    $playerNumber = 1;
+    $playerNumber <= 15;
+    $playerNumber++
+) {
+
+    $targetGameweekImportedPlayers[] = [
+
+        'fpl_player_id' =>
+            500
+            +
+            $playerNumber,
+
+        'squad_position' =>
+            $playerNumber
+    ];
+}
+
+
+$targetGameweekRepositoryStub =
+    new SquadHorizonServicePlayerRepositoryStub(
+        $targetGameweekRepositoryPlayers
+    );
+
+
+$targetGameweekPlayerIntelligenceStub =
+    new SquadHorizonServicePlayerIntelligenceStub(
+        $targetGameweekProjections
+    );
+
+
+$targetGameweekModelStub =
+    new SquadHorizonServiceModelStub();
+
+
+$targetGameweekService =
+    new SquadHorizonIntelligenceService(
+        $targetGameweekRepositoryStub,
+        $targetGameweekPlayerIntelligenceStub,
+        $targetGameweekModelStub
+    );
+
+
+$targetGameweekImportedSquad = [
+
+    'status' =>
+        'success',
+
+    'players' =>
+        $targetGameweekImportedPlayers
+];
+
+
+/*
+ * The third argument is the explicit target FPL gameweek.
+ *
+ * Current production does not yet implement this contract.
+ */
+$targetGameweekService
+    ->buildForImportedSquad(
+        $targetGameweekImportedSquad,
+        1,
+        5
+    );
+
+
+$receivedTargetSquad =
+    $targetGameweekModelStub
+        ->receivedSquad;
+
+
+squadHorizonServiceCheck(
+    'Target gameweek still passes fifteen players to Squad Horizon',
+    count(
+        $receivedTargetSquad
+    )
+    ===
+    15
+);
+
+
+$allPlayersContainTargetGameweek =
+    true;
+
+
+$anyPlayerContainsEarlierGameweek =
+    false;
+
+
+foreach (
+    $receivedTargetSquad
+    as $receivedPlayer
+) {
+
+    $receivedGameweeks =
+        $receivedPlayer[
+            'gameweeks'
+        ]
+        ?? [];
+
+
+    if (
+        !isset(
+            $receivedGameweeks[
+                5
+            ]
+        )
+    ) {
+
+        $allPlayersContainTargetGameweek =
+            false;
+    }
+
+
+    if (
+        isset(
+            $receivedGameweeks[
+                4
+            ]
+        )
+    ) {
+
+        $anyPlayerContainsEarlierGameweek =
+            true;
+    }
+}
+
+
+squadHorizonServiceCheck(
+    'Every player preserves projection evidence for target GW5',
+    $allPlayersContainTargetGameweek
+);
+
+
+squadHorizonServiceCheck(
+    'Earlier GW4 projection evidence is excluded when GW5 is targeted',
+    !$anyPlayerContainsEarlierGameweek
+);
+
+
+/*
+ * ============================================================
+ * SCENARIO M: RESOLVED SQUAD EXPLICIT TARGET GAMEWEEK
+ * ============================================================
+ *
+ * The resolved-squad entry point must honour the same explicit
+ * target-gameweek contract as the imported-squad entry point.
+ *
+ * This protects non-imported squad sources that reuse the shared
+ * Squad Horizon orchestration pipeline.
+ */
+
+squadHorizonServiceHeading(
+    'Scenario M: Resolved Squad Explicit Target Gameweek'
+);
+
+
+$resolvedTargetPlayers =
+    [];
+
+
+$resolvedTargetProjections =
+    [];
+
+
+for (
+    $playerNumber = 1;
+    $playerNumber <= 15;
+    $playerNumber++
+) {
+
+    $position =
+        match (true) {
+
+            $playerNumber <= 2 =>
+                'GK',
+
+            $playerNumber <= 7 =>
+                'DEF',
+
+            $playerNumber <= 12 =>
+                'MID',
+
+            default =>
+                'FWD'
+        };
+
+
+    $resolvedTargetPlayers[] = [
+
+        'id' =>
+            $playerNumber,
+
+        'fpl_player_id' =>
+            600
+            +
+            $playerNumber,
+
+        'web_name' =>
+            'Resolved Target Player '
+            . $playerNumber,
+
+        'position' =>
+            $position,
+
+        'team_id' =>
+            $playerNumber
+    ];
+
+
+    $resolvedTargetProjections[
+        $playerNumber
+    ] = [
+
+        'status' =>
+            'Available',
+
+        'player_id' =>
+            $playerNumber,
+
+        'gameweeks' => [
+
+            4 => [
+
+                'gameweek' =>
+                    4,
+
+                'projected_points' =>
+                    2.0
+                    +
+                    $playerNumber,
+
+                'projection_confidence' =>
+                    0.55,
+
+                'fixture_count' =>
+                    1,
+
+                'schedule_type' =>
+                    'Single'
+            ],
+
+            5 => [
+
+                'gameweek' =>
+                    5,
+
+                'projected_points' =>
+                    6.0
+                    +
+                    $playerNumber,
+
+                'projection_confidence' =>
+                    0.85,
+
+                'fixture_count' =>
+                    1,
+
+                'schedule_type' =>
+                    'Single'
+            ]
+        ],
+
+        'fixtures' =>
+            []
+    ];
+}
+
+
+$resolvedTargetPlayerIntelligenceStub =
+    new SquadHorizonServicePlayerIntelligenceStub(
+        $resolvedTargetProjections
+    );
+
+
+$resolvedTargetModelStub =
+    new SquadHorizonServiceModelStub();
+
+
+$resolvedTargetRepositoryStub =
+    new SquadHorizonServicePlayerRepositoryStub(
+        []
+    );
+
+
+$resolvedTargetService =
+    new SquadHorizonIntelligenceService(
+        $resolvedTargetRepositoryStub,
+        $resolvedTargetPlayerIntelligenceStub,
+        $resolvedTargetModelStub
+    );
+
+
+$resolvedTargetResult =
+    $resolvedTargetService
+        ->buildForResolvedSquad(
+            $resolvedTargetPlayers,
+            1,
+            5
+        );
+
+
+$resolvedTargetReceivedSquad =
+    $resolvedTargetModelStub
+        ->receivedSquad;
+
+
+squadHorizonServiceCheck(
+    'Resolved target gameweek returns Available',
+    (
+        $resolvedTargetResult[
+            'status'
+        ]
+        ?? null
+    )
+    ===
+    'Available'
+);
+
+
+squadHorizonServiceCheck(
+    'Resolved target gameweek passes fifteen players to Squad Horizon',
+    count(
+        $resolvedTargetReceivedSquad
+    )
+    ===
+    15
+);
+
+
+$resolvedPlayersContainTargetGameweek =
+    true;
+
+
+$resolvedPlayersContainEarlierGameweek =
+    false;
+
+
+foreach (
+    $resolvedTargetReceivedSquad
+    as $receivedPlayer
+) {
+
+    $receivedGameweeks =
+        $receivedPlayer[
+            'gameweeks'
+        ]
+        ?? [];
+
+
+    if (
+        !isset(
+            $receivedGameweeks[
+                5
+            ]
+        )
+    ) {
+
+        $resolvedPlayersContainTargetGameweek =
+            false;
+    }
+
+
+    if (
+        isset(
+            $receivedGameweeks[
+                4
+            ]
+        )
+    ) {
+
+        $resolvedPlayersContainEarlierGameweek =
+            true;
+    }
+}
+
+
+squadHorizonServiceCheck(
+    'Resolved players preserve projection evidence for target GW5',
+    $resolvedPlayersContainTargetGameweek
+);
+
+
+squadHorizonServiceCheck(
+    'Resolved players exclude earlier GW4 projection evidence when GW5 is targeted',
+    !$resolvedPlayersContainEarlierGameweek
+);
+
 
 /*
  * ============================================================

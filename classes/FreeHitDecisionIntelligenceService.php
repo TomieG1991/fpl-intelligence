@@ -36,7 +36,8 @@ class FreeHitDecisionIntelligenceService
     public function build(
         array $importedSquad,
         array $players,
-        float $budget = 100.0
+        float $budget = 100.0,
+        ?int $targetGameweek = null
     ): array {
 
         /*
@@ -49,7 +50,8 @@ class FreeHitDecisionIntelligenceService
             $this->squadHorizonIntelligenceService
                 ->buildForImportedSquad(
                     $importedSquad,
-                    1
+                    1,
+                    $targetGameweek
                 );
 
 
@@ -95,7 +97,8 @@ class FreeHitDecisionIntelligenceService
             $this->freeHitHorizonIntelligenceService
                 ->build(
                     $players,
-                    $budget
+                    $budget,
+                    $targetGameweek
                 );
 
 

@@ -737,6 +737,252 @@ a {
 
 /*
  * ============================================================
+ * UPDATE HEALTH
+ * ============================================================
+ */
+
+.update-health-card {
+    margin-bottom:
+        20px;
+}
+
+
+.update-health-list {
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap:
+        14px;
+}
+
+
+.update-health-item {
+    min-width:
+        0;
+
+    padding:
+        16px;
+
+    background:
+        #111725;
+
+    border:
+        1px solid #273247;
+
+    border-radius:
+        9px;
+}
+
+
+.update-health-header {
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        space-between;
+
+    gap:
+        12px;
+
+    margin-bottom:
+        10px;
+}
+
+
+.update-health-label {
+    color:
+        #f0f3f9;
+
+    font-size:
+        14px;
+
+    font-weight:
+        700;
+}
+
+
+.update-health-status {
+    display:
+        inline-flex;
+
+    align-items:
+        center;
+
+    flex-shrink:
+        0;
+
+    padding:
+        5px
+        9px;
+
+    border-radius:
+        999px;
+
+    font-size:
+        10px;
+
+    font-weight:
+        700;
+}
+
+
+.update-health-status-healthy {
+    background:
+        rgba(85, 217, 154, 0.12);
+
+    border:
+        1px solid rgba(85, 217, 154, 0.28);
+
+    color:
+        #55d99a;
+}
+
+
+.update-health-status-stale,
+.update-health-status-partial,
+.update-health-status-running {
+    background:
+        rgba(230, 178, 95, 0.12);
+
+    border:
+        1px solid rgba(230, 178, 95, 0.28);
+
+    color:
+        #e6b25f;
+}
+
+
+.update-health-status-failed {
+    background:
+        rgba(239, 111, 123, 0.12);
+
+    border:
+        1px solid rgba(239, 111, 123, 0.28);
+
+    color:
+        #ef6f7b;
+}
+
+
+.update-health-status-unavailable {
+    background:
+        #2b3450;
+
+    border:
+        1px solid #465370;
+
+    color:
+        #c8d0df;
+}
+
+
+.update-health-reason {
+    min-height:
+        34px;
+
+    margin-bottom:
+        14px;
+
+    color:
+        #7d899e;
+
+    font-size:
+        11px;
+
+    line-height:
+        1.5;
+}
+
+
+.update-health-meta {
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap:
+        8px;
+
+    padding-top:
+        13px;
+
+    border-top:
+        1px solid #222c3f;
+
+    color:
+        #9eabc0;
+
+    font-size:
+        10px;
+}
+
+
+.update-health-meta > div:first-child {
+    grid-column:
+        1 / -1;
+}
+
+
+.update-health-meta strong {
+    display:
+        block;
+
+    margin-bottom:
+        3px;
+
+    color:
+        #68768e;
+
+    font-size:
+        9px;
+
+    font-weight:
+        600;
+
+    text-transform:
+        uppercase;
+
+    letter-spacing:
+        0.04em;
+}
+
+
+.update-health-error {
+    margin-top:
+        13px;
+
+    padding:
+        10px;
+
+    background:
+        rgba(239, 111, 123, 0.08);
+
+    border:
+        1px solid rgba(239, 111, 123, 0.2);
+
+    border-radius:
+        6px;
+
+    color:
+        #ef8b95;
+
+    font-size:
+        10px;
+
+    line-height:
+        1.5;
+}
+
+
+/*
+ * ============================================================
  * FOOTER
  * ============================================================
  */
@@ -782,6 +1028,11 @@ a {
     .system-grid {
         grid-template-columns:
             repeat(2, minmax(0, 1fr));
+    }
+    
+    .update-health-list {
+        grid-template-columns:
+            1fr;
     }
 }
 
@@ -886,6 +1137,26 @@ a {
     .data-status {
         display:
             none;
+    }
+    
+    .update-health-meta {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .update-health-meta > div:first-child {
+        grid-column:
+            auto;
+    }
+
+
+    .update-health-header {
+        align-items:
+            flex-start;
+
+        flex-direction:
+            column;
     }
 }
 
@@ -13230,3 +13501,4 @@ a {
     color:
         #f08b96;
 }
+

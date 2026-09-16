@@ -265,6 +265,11 @@ class BenchBoostServiceSquadHorizonStub
             null;
 
 
+    public ?int
+        $receivedTargetGameweek =
+            null;
+
+
     public function __construct(
         array $result
     ) {
@@ -275,7 +280,8 @@ class BenchBoostServiceSquadHorizonStub
 
     public function buildForImportedSquad(
         array $importedSquad,
-        int $horizon = 3
+        int $horizon = 3,
+        ?int $targetGameweek = null
     ): array {
 
         $this->receivedImportedSquad =
@@ -284,6 +290,10 @@ class BenchBoostServiceSquadHorizonStub
 
         $this->receivedHorizon =
             $horizon;
+
+
+        $this->receivedTargetGameweek =
+            $targetGameweek;
 
 
         return
@@ -897,6 +907,62 @@ benchBoostServiceCheck(
     )
     <
     0.001
+);
+
+
+/*
+ * ============================================================
+ * SCENARIO I
+ * EXPLICIT TARGET GAMEWEEK
+ * ============================================================
+ */
+
+benchBoostServiceHeading(
+    'Scenario I: Explicit Target Gameweek'
+);
+
+
+$targetHorizonStub =
+    new BenchBoostServiceSquadHorizonStub(
+        $availableHorizonResult
+    );
+
+
+$targetModelStub =
+    new BenchBoostServiceModelStub(
+        $analysisResult,
+        $decisionResult
+    );
+
+
+$targetService =
+    new BenchBoostDecisionIntelligenceService(
+        $targetHorizonStub,
+        $targetModelStub
+    );
+
+
+$targetService->build(
+    $importedSquad,
+    5
+);
+
+
+benchBoostServiceCheck(
+    'Bench Boost forwards explicit target gameweek to Squad Horizon service',
+    $targetHorizonStub
+        ->receivedTargetGameweek
+    ===
+    5
+);
+
+
+benchBoostServiceCheck(
+    'Explicit target gameweek still requests exactly one gameweek',
+    $targetHorizonStub
+        ->receivedHorizon
+    ===
+    1
 );
 
 

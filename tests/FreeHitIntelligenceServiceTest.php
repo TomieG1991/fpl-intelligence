@@ -1464,6 +1464,314 @@ freeHitIntelligenceServiceCheck(
 
 /*
  * ============================================================
+ * SCENARIO I: MIXED PLAYER HORIZONS USE ONE COMMON GAMEWEEK
+ * ============================================================
+ *
+ * During a partially completed FPL gameweek, players whose
+ * fixture has already finished may have projections beginning
+ * in the following gameweek, while players whose fixture is
+ * still outstanding may still represent the current gameweek.
+ *
+ * Free Hit optimization must never mix those independently
+ * selected gameweeks into one candidate pool.
+ *
+ * The earliest represented gameweek available anywhere in the
+ * candidate population defines the Free Hit gameweek.
+ *
+ * Players without projection evidence for that common gameweek
+ * must be omitted rather than substituted with a later
+ * gameweek projection.
+ */
+
+freeHitIntelligenceServiceHeading(
+    'Scenario I: Mixed Player Horizons Use One Common Gameweek'
+);
+
+
+$playerIntelligenceStub =
+    new FreeHitServicePlayerIntelligenceStub();
+
+
+$playerIntelligenceStub->results =
+    buildFreeHitServiceProjectionResults(
+        $candidatePool,
+        4
+    );
+
+
+/*
+ * Simulate Player 1 having already completed GW4.
+ *
+ * Their remaining projection horizon therefore begins at GW5.
+ */
+unset(
+    $playerIntelligenceStub->results[
+        1
+    ][
+        'gameweeks'
+    ][
+        4
+    ]
+);
+
+
+/*
+ * Player 2 still has GW4 projection evidence.
+ *
+ * Therefore GW4 remains the common Free Hit target gameweek.
+ */
+$optimizerStub =
+    new FreeHitServiceOptimizerStub();
+
+
+$optimizerStub->result = [
+
+    'status' =>
+        'success',
+
+    'squad' =>
+        $candidatePool
+];
+
+
+$service =
+    new FreeHitIntelligenceService(
+        $playerIntelligenceStub,
+        $optimizerStub
+    );
+
+
+$service->build(
+    $candidatePool,
+    100.0
+);
+
+
+$receivedPlayerIds =
+    array_map(
+        static function (
+            array $player
+        ): int {
+
+            return
+                (int) (
+                    $player[
+                        'player_id'
+                    ]
+                    ?? 0
+                );
+        },
+        $optimizerStub->receivedPlayers
+    );
+
+
+$receivedGameweeks =
+    array_values(
+        array_unique(
+            array_map(
+                static function (
+                    array $player
+                ): int {
+
+                    return
+                        (int) (
+                            $player[
+                                'projection_gameweek'
+                            ]
+                            ?? 0
+                        );
+                },
+                $optimizerStub->receivedPlayers
+            )
+        )
+    );
+
+
+freeHitIntelligenceServiceCheck(
+    'Mixed player horizons produce one common Free Hit gameweek',
+    $receivedGameweeks
+    ===
+    [
+        4
+    ]
+);
+
+
+freeHitIntelligenceServiceCheck(
+    'Player without projection evidence for the common Free Hit gameweek is omitted',
+    !in_array(
+        1,
+        $receivedPlayerIds,
+        true
+    )
+);
+
+
+freeHitIntelligenceServiceCheck(
+    'Players with projection evidence for the common Free Hit gameweek remain candidates',
+    in_array(
+        2,
+        $receivedPlayerIds,
+        true
+    )
+);
+
+
+/*
+ * ============================================================
+ * SCENARIO J: EXPLICIT TARGET GAMEWEEK
+ * ============================================================
+ *
+ * When the caller supplies an actionable gameweek, Free Hit
+ * candidate preparation must use projection evidence for that
+ * specific gameweek rather than independently choosing the
+ * earliest represented gameweek.
+ */
+
+freeHitIntelligenceServiceHeading(
+    'Scenario J: Explicit Target Gameweek'
+);
+
+
+$targetPlayers =
+    buildFreeHitServiceCandidatePool();
+
+
+$targetProjectionResults =
+    buildFreeHitServiceProjectionResults(
+        $targetPlayers,
+        4
+    );
+
+
+/*
+ * Give every candidate explicit GW5 evidence as well.
+ *
+ * GW4 deliberately remains present so the test proves that
+ * the requested GW5 wins over the earlier represented GW4.
+ */
+foreach (
+    $targetPlayers
+    as $targetPlayer
+) {
+
+    $targetPlayerId =
+        (int) (
+            $targetPlayer[
+                'player_id'
+            ]
+            ?? 0
+        );
+
+
+    if (
+        $targetPlayerId <= 0
+        ||
+        !isset(
+            $targetProjectionResults[
+                $targetPlayerId
+            ]
+        )
+    ) {
+
+        continue;
+    }
+
+
+    $targetProjectionResults[
+        $targetPlayerId
+    ][
+        'gameweeks'
+    ][
+        5
+    ] = [
+
+        'gameweek' =>
+            5,
+
+        'projected_points' =>
+            10.0
+            +
+            (
+                $targetPlayerId
+                /
+                10
+            ),
+
+        'projection_confidence' =>
+            0.90
+    ];
+}
+
+
+$targetPlayerIntelligence =
+    new FreeHitServicePlayerIntelligenceStub();
+
+
+$targetPlayerIntelligence->results =
+    $targetProjectionResults;
+
+
+$targetOptimizer =
+    new FreeHitServiceOptimizerStub();
+
+
+$targetService =
+    new FreeHitIntelligenceService(
+        $targetPlayerIntelligence,
+        $targetOptimizer
+    );
+
+
+$targetService->build(
+    $targetPlayers,
+    100.0,
+    5
+);
+
+
+$targetOptimizerPlayers =
+    $targetOptimizer
+        ->receivedPlayers;
+
+
+$targetProjectionGameweeks =
+    [];
+
+
+foreach (
+    $targetOptimizerPlayers
+    as $targetOptimizerPlayer
+) {
+
+    $targetProjectionGameweeks[] =
+        (int) (
+            $targetOptimizerPlayer[
+                'projection_gameweek'
+            ]
+            ?? 0
+        );
+}
+
+
+$targetProjectionGameweeks =
+    array_values(
+        array_unique(
+            $targetProjectionGameweeks
+        )
+    );
+
+
+freeHitIntelligenceServiceCheck(
+    'Explicit target GW5 produces only GW5 optimizer candidates',
+    $targetProjectionGameweeks
+    ===
+    [5]
+);
+
+
+/*
+ * ============================================================
  * TEST SUMMARY
  * ============================================================
  */

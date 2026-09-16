@@ -1661,7 +1661,7 @@ chipPageTest(
 
 
 chipPageTest(
-    'Chip Intelligence page uses GameweekRepository for recommendation deadline resolution',
+    'Chip Intelligence page uses GameweekRepository for deadline resolution',
     strpos(
         $chipsPageSource,
         'new GameweekRepository'
@@ -1669,6 +1669,47 @@ chipPageTest(
     !== false
 );
 
+
+chipPageTest(
+    'Chip Intelligence page uses ActionableGameweekResolver for chip targeting',
+    strpos(
+        $chipsPageSource,
+        'new ActionableGameweekResolver'
+    )
+    !== false
+);
+
+
+chipPageTest(
+    'Free Hit production decision receives the actionable gameweek',
+    preg_match(
+        '/\$freeHitDecisionIntelligenceService\s*->build\s*\(\s*\$importedSquad\s*,\s*\$playerPool\s*,\s*\$budget\s*,\s*\$actionableGameweek\s*\)/s',
+        $chipsPageSource
+    )
+    ===
+    1
+);
+
+
+chipPageTest(
+    'Bench Boost production decision receives the actionable gameweek',
+    preg_match(
+        '/\$benchBoostDecisionIntelligenceService\s*->build\s*\(\s*\$importedSquad\s*,\s*\$actionableGameweek\s*\)/s',
+        $chipsPageSource
+    )
+    ===
+    1
+);
+
+chipPageTest(
+    'Triple Captain production decision receives the actionable gameweek',
+    preg_match(
+        '/\$tripleCaptainDecisionIntelligenceService\s*->build\s*\(\s*\$importedSquad\s*,\s*\$actionableGameweek\s*\)/s',
+        $chipsPageSource
+    )
+    ===
+    1
+);
 
 chipPageTest(
     'Chip Intelligence page does not write recommendation_candidates with page-level SQL',

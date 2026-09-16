@@ -144,7 +144,8 @@ class WildcardHorizonSquadServiceStub
 
         public function buildForResolvedSquad(
             array $resolvedPlayers,
-            int $horizon = 3
+            int $horizon = 3,
+            ?int $targetGameweek = null
         ): array {
 
             $this->buildCallCount++;

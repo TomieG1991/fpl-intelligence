@@ -186,8 +186,20 @@ if (
             new PlayerRepository(
                 $db
             );
-            
-            
+
+
+        $gameweekRepository =
+            new GameweekRepository(
+                $db
+            );
+
+
+        $actionableGameweekResolver =
+            new ActionableGameweekResolver(
+                $gameweekRepository
+            );
+                    
+                    
         $fplSquadImporter =
             new FPLSquadImporter();
             
@@ -210,12 +222,6 @@ if (
             &&
             $entryId !== null
         ) {
-
-            $gameweekRepository =
-                new GameweekRepository(
-                    $db
-                );
-
 
             $recommendationCandidateRepository =
                 new RecommendationCandidateRepository(
@@ -1409,6 +1415,41 @@ if (
                 );
             }
         }
+        
+        
+        /*
+         * --------------------------------------------------------
+         * RESOLVE ACTIONABLE GAMEWEEK
+         * --------------------------------------------------------
+         *
+         * Chip decisions must target the first FPL gameweek whose
+         * deadline has not yet passed.
+         *
+         * Do not use FPL's current-gameweek flag here because the
+         * current event may remain live after its transfer deadline.
+         */
+
+        $generatedAt =
+            gmdate(
+                'Y-m-d H:i:s'
+            );
+
+
+        $actionableGameweek =
+            $actionableGameweekResolver
+                ->resolve(
+                    $generatedAt
+                );
+
+
+        if (
+            $actionableGameweek === null
+        ) {
+
+            throw new RuntimeException(
+                'No actionable FPL gameweek is currently available.'
+            );
+        }
 
 
         /*
@@ -1432,22 +1473,24 @@ if (
                 ->build(
                     $importedSquad,
                     $playerPool,
-                    $budget
+                    $budget,
+                    $actionableGameweek
                 );
-
 
         $benchBoostResult =
             $benchBoostDecisionIntelligenceService
                 ->build(
-                    $importedSquad
+                    $importedSquad,
+                    $actionableGameweek
                 );
 
 
-                $tripleCaptainResult =
-                    $tripleCaptainDecisionIntelligenceService
-                        ->build(
-                            $importedSquad
-                        );
+        $tripleCaptainResult =
+            $tripleCaptainDecisionIntelligenceService
+                ->build(
+                    $importedSquad,
+                    $actionableGameweek
+                );
 
 
                 /*

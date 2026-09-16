@@ -125,6 +125,18 @@ $playerIntelligenceService =
     );
 
 
+$gameweekRepository =
+    new GameweekRepository(
+        $db
+    );
+
+
+$actionableGameweekResolver =
+    new ActionableGameweekResolver(
+        $gameweekRepository
+    );
+
+
 $squadHorizonIntelligence =
     new SquadHorizonIntelligence();
 
@@ -658,6 +670,37 @@ freeHitDecisionRealHeading(
 );
 
 
+$generatedAt =
+    gmdate(
+        'Y-m-d H:i:s'
+    );
+
+
+$actionableGameweek =
+    $actionableGameweekResolver
+        ->resolve(
+            $generatedAt
+        );
+
+
+echo
+    'Actionable Gameweek: '
+    . (
+        $actionableGameweek !== null
+            ? $actionableGameweek
+            : 'N/A'
+    )
+    . '<br>';
+
+
+freeHitDecisionRealCheck(
+    'An actionable gameweek is available',
+    $actionableGameweek !== null
+    &&
+    $actionableGameweek > 0
+);
+
+
 $decisionStart =
     microtime(
         true
@@ -669,7 +712,8 @@ $result =
         ->build(
             $importedSquad,
             $candidates,
-            100.0
+            100.0,
+            $actionableGameweek
         );
 
 
@@ -782,15 +826,31 @@ $freeHitGameweek =
             'gameweek'
         ]
         : 0;
+        
+        
+        echo
+    'Current Squad Gameweek: '
+    . $currentGameweek
+    . '<br>';
+
+
+echo
+    'Free Hit Gameweek: '
+    . $freeHitGameweek
+    . '<br>';
 
 
 freeHitDecisionRealCheck(
-    'Current squad and Free Hit represent the same gameweek',
-    $currentGameweek > 0
+    'Current squad and Free Hit represent the actionable gameweek',
+    $actionableGameweek !== null
     &&
     $currentGameweek
     ===
+    $actionableGameweek
+    &&
     $freeHitGameweek
+    ===
+    $actionableGameweek
 );
 
 
