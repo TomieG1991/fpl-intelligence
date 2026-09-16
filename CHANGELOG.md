@@ -6,6 +6,222 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.37.0] - Data Update Reliability & Application Health
+
+### Added
+
+- Added persistent production data-update run tracking.
+- Added `UpdateRunRepository` for recording controlled updater execution,
+  status, counts, duration and failure information.
+- Added `UpdateRunLifecycleService` for consistent update-run lifecycle handling.
+- Added `UpdateHealthService` for evaluating the operational health of production
+  FPL data updates.
+- Added explicit update-health states covering:
+  - Healthy
+  - Stale
+  - Partial
+  - Running
+  - Failed
+  - Unavailable
+- Added stale-data detection using an explicit freshness threshold.
+- Added protection against indefinitely Running updates by treating excessively
+  old running executions as failed health evidence without rewriting their
+  persisted history.
+- Added Bootstrap response validation so invalid or empty critical FPL API
+  structures cannot silently replace valid production data.
+- Added controlled production update instrumentation for:
+  - Bootstrap player/team data
+  - Fixtures
+  - Player Fixture History
+- Added `DataUpdateCoordinator` for executing the controlled production update
+  pipeline in a defined order.
+- Added production CLI runner infrastructure covering:
+  - controlled coordinator launching
+  - PHP CLI executable discovery
+  - process execution
+  - player fixture-history update options
+- Added `cron/runDataUpdates.php` as the production entry point for the controlled
+  data-update pipeline.
+- Added an Application Health section to the main dashboard.
+- Added dashboard health cards for:
+  - Bootstrap
+  - Fixtures
+  - Player Fixture History
+- Added update-health presentation covering:
+  - current health state
+  - health reason
+  - last successful update
+  - received records
+  - updated records
+  - skipped records
+  - failed records
+  - update duration
+  - recorded error information where applicable
+- Added responsive Application Health dashboard styling.
+- Added `ActionableGameweekResolver` for resolving the first FPL gameweek whose
+  transfer deadline has not yet passed.
+- Added explicit target-gameweek support to Squad Horizon intelligence.
+- Added explicit actionable-gameweek targeting to:
+  - Free Hit Intelligence
+  - Free Hit Horizon Intelligence
+  - Free Hit Decision Intelligence
+  - Bench Boost Decision Intelligence
+  - Triple Captain Decision Intelligence
+- Added `DATA_UPDATES.md` documenting the production update runner, Windows Task
+  Scheduler configuration, manual execution, health verification and failure
+  investigation procedures.
+
+### Changed
+
+- Changed one-gameweek chip decisions to target the first gameweek with an
+  unpassed deadline rather than assuming FPL's current gameweek is still
+  actionable.
+- Extended `SquadHorizonIntelligenceService` with an optional explicit target
+  gameweek while preserving existing callers that do not supply one.
+- Extended Free Hit candidate projection so an explicitly supplied actionable
+  gameweek is evaluated consistently across the complete candidate pool.
+- Preserved common-gameweek fallback behaviour for Free Hit callers that do not
+  supply an explicit target.
+- Updated the Chip Intelligence page to resolve one actionable gameweek and pass
+  it consistently to Free Hit, Bench Boost and Triple Captain decisions.
+- Preserved existing Wildcard multi-gameweek timing semantics rather than
+  forcing the one-gameweek actionable-target behaviour onto Wildcard analysis.
+- Updated live-data Team Intelligence profile regression coverage so league rank
+  remains validated without assuming Arsenal must permanently occupy rank one.
+- Updated compatibility and contract tests for the optional Squad Horizon target
+  gameweek parameter.
+- Production data updates are now scheduled through Windows Task Scheduler to
+  run daily at 06:00.
+- Missed scheduled updates are configured to run as soon as possible after the
+  computer becomes available.
+- Overlapping scheduled production update instances are prevented.
+
+### Fixed
+
+- Prevented an FPL gameweek whose deadline has already passed from being treated
+  as the actionable gameweek for Free Hit, Bench Boost and Triple Captain
+  decisions merely because FPL still marks that event as current.
+- Fixed Free Hit real-data evaluation using stale current-gameweek projections
+  when the next actionable deadline belonged to a later gameweek.
+- Fixed Bench Boost real-data evaluation producing unavailable supporting
+  evidence when it was evaluating the already-locked current gameweek.
+- Fixed Triple Captain real-data evaluation targeting the already-locked current
+  gameweek.
+- Fixed stale test harnesses that did not forward the new explicit target
+  gameweek through real-data Free Hit evaluation.
+- Fixed Wildcard test doubles becoming incompatible with the extended optional
+  Squad Horizon service signatures.
+- Fixed an obsolete Squad Horizon contract assertion that still expected the
+  previous two-parameter method signature.
+- Removed a brittle live-data Team Intelligence assertion that assumed a fixed
+  current league ranking.
+- Confirmed Task Scheduler may require its interface to be refreshed after the
+  PHP process exits before the task status visibly returns from Running to Ready.
+
+### Architecture
+
+- Production update execution is coordinated through one controlled runner
+  rather than requiring independent manual execution of each updater.
+- Update execution history and public health evaluation remain separate concerns.
+- Health evaluation reports persisted operational evidence without rewriting
+  historical update-run state.
+- Empty or malformed critical API responses are rejected rather than being
+  treated as valid replacement data.
+- Application Health is an observability layer and does not alter Player
+  Intelligence or decision-model outputs.
+- The controlled update pipeline currently coordinates:
+  - Bootstrap player/team data
+  - Fixtures
+  - Player Fixture History
+- Recommendation capture, immutable recommendation snapshot promotion and other
+  deadline-sensitive historical evidence processes remain separate from the
+  general scheduled data-update pipeline.
+- Actionable gameweek identity is deadline-based:
+  the earliest gameweek with `deadline_time` later than the evaluation time.
+- FPL's current-gameweek flag and the application's actionable-gameweek concept
+  are deliberately distinct.
+- Actionable gameweek resolution returns official `fpl_gameweek_id` identity for
+  projection and chip-decision targeting.
+- Recommendation-history persistence continues to use the appropriate local
+  gameweek identity independently.
+- Free Hit, Bench Boost and Triple Captain are one-gameweek decisions and now
+  consume explicit actionable-gameweek context.
+- Wildcard remains a multi-gameweek timing decision and retains its existing
+  horizon semantics.
+- No production intelligence-model weights were changed in v0.37.0.
+
+### Production Validation
+
+- Successfully executed the complete controlled production update pipeline
+  through PHP CLI.
+- Successfully executed the same production runner through Windows Task
+  Scheduler.
+- Confirmed Task Scheduler returned successful result `0x0`.
+- Confirmed the scheduled production execution recorded Healthy status for all
+  three controlled update areas.
+- Production Task Scheduler verification on 16 September 2026 recorded:
+  - Bootstrap: 717 records received, 717 updated, 772 ms
+  - Fixtures: 380 records received, 380 updated, 489 ms
+  - Player Fixture History: 659 players received, 2,549 historical rows updated,
+    134,078 ms
+- Confirmed the Application Health dashboard reflects the persisted results of
+  the scheduled production execution.
+- Configured the production update task to run daily at 06:00 with missed-run
+  recovery and overlapping-instance protection.
+
+### Testing
+
+- Added dedicated regression coverage for:
+  - update-run persistence
+  - update-run lifecycle handling
+  - update-health evaluation
+  - Bootstrap response validation
+  - controlled updater instrumentation
+  - data-update coordination
+  - production coordinator launching
+  - PHP CLI process execution
+  - PHP CLI executable discovery
+  - Application Health presentation
+  - dashboard Application Health integration
+  - actionable-gameweek resolution
+  - explicit Squad Horizon target-gameweek behaviour
+  - Free Hit actionable-gameweek behaviour
+  - Bench Boost actionable-gameweek behaviour
+  - Triple Captain actionable-gameweek behaviour
+  - Chip Intelligence actionable-gameweek integration
+  - Wildcard compatibility with the extended Squad Horizon contract
+  - live-data Team Intelligence rank resilience
+- Re-ran the complete project regression suite after completing v0.37.0.
+- Confirmed all 328 of 328 test files pass.
+- Confirmed all 9,841 assertions pass.
+- Confirmed zero test failures.
+- Confirmed zero test execution errors.
+- Complete regression suite runtime: 482.884 seconds.
+
+### Completion Notes
+
+- v0.37.0 completes the Data Update Reliability & Application Health milestone.
+- FPL Intelligence now has a controlled, observable production data-update
+  pipeline with persistent execution history and dashboard health reporting.
+- Invalid critical Bootstrap responses cannot silently replace valid production
+  data.
+- The production update pipeline can be run manually or automatically through
+  the documented Windows Task Scheduler configuration.
+- Application Health makes stale, partial, failed, running and unavailable update
+  states visible rather than allowing data freshness problems to remain silent.
+- One-gameweek chip decisions now distinguish between FPL's currently active
+  event and the gameweek that is still actionable before its deadline.
+- Free Hit, Bench Boost and Triple Captain therefore evaluate the correct
+  actionable gameweek even while the preceding FPL event remains live.
+- Wildcard multi-gameweek timing behaviour remains deliberately unchanged.
+- No production model-weight changes were introduced during the reliability
+  milestone.
+- The project is now ready to move to v0.38.0 — Performance & Caching.
+
+
+---
+
+
 ## [0.36.0] - Model Calibration & Intelligence Quality
 
 ### Added

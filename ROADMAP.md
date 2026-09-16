@@ -38,7 +38,7 @@ The system should remain explainable, testable and robust throughout:
 
 Current stable release:
 
-**v0.36.0 — Model Calibration & Intelligence Quality**
+**v0.37.0 — Data Update Reliability & Application Health**
 
 GitHub `main` is the authoritative code baseline after every completed commit.
 
@@ -46,35 +46,55 @@ GitHub `main` is the authoritative code baseline after every completed commit.
 
 Current development milestone:
 
-**v0.37.0 — Data Update Reliability & Application Health — NOT STARTED**
+**v0.38.0 — Performance & Caching — NOT STARTED**
 
-v0.36.0 completes the Model Calibration & Intelligence Quality framework.
+v0.37.0 completes the Data Update Reliability & Application Health milestone.
 
-The completed milestone adds evidence-led historical calibration for:
+The completed milestone adds:
 
-- Player Intelligence Strength / Fixture weighting
-- Position-Aware Fixture weighting
-- Effective Confidence weighting
-- Captain Intelligence weighting
-- Gameweek Starting XI weighting
-- incoming Transfer Decision weighting
-- outgoing Transfer Priority weighting
-- projection accuracy and calibration diagnostics
+- persistent production update-run history
+- update lifecycle tracking
+- update-health evaluation
+- Healthy / Stale / Partial / Running / Failed / Unavailable health states
+- critical Bootstrap API-response validation
+- controlled Bootstrap, Fixtures and Player Fixture History instrumentation
+- a coordinated production data-update runner
+- PHP CLI production-runner infrastructure
+- dashboard Application Health visibility
+- daily Windows Task Scheduler automation
+- documented manual and automatic production update procedures
+- deadline-based actionable-gameweek resolution
+- explicit actionable-gameweek targeting for Free Hit, Bench Boost and Triple
+  Captain decisions
 
-Calibration uses immutable recommendation-time evidence together with authoritative
-realised FPL outcomes.
+The controlled production update pipeline is now observable from execution through
+to dashboard health reporting.
 
-Missing historical evidence is not reconstructed from later live model state.
+Invalid critical Bootstrap responses are rejected rather than silently replacing
+valid production data.
 
-The framework currently has insufficient authoritative Ready gameweeks to justify
-production weight changes, so existing production weights remain unchanged.
+The production updater has been verified both directly through PHP CLI and through
+Windows Task Scheduler, with all three controlled update areas recording Healthy
+results.
 
-Projection diagnostics can now measure projected-points and projected-minutes error
-overall, by player position and by preserved recommendation-time Projection
-Confidence.
+One-gameweek chip decisions now distinguish FPL's current event from the earliest
+gameweek whose transfer deadline has not passed.
 
-The next development milestone is v0.37.0, which will focus on Data Update
-Reliability & Application Health.
+Wildcard retains its existing multi-gameweek timing semantics.
+
+No production model weights were changed during v0.37.0.
+
+The complete v0.37.0 regression suite passes with:
+
+- 328 test files
+- 328 test files passed
+- 0 test files failed
+- 0 test files with errors
+- 9,841 assertions passed
+- 0 assertions failed
+
+The next development milestone is v0.38.0, which will focus on Performance &
+Caching.
 
 
 ## Current Data Foundation
@@ -3111,29 +3131,156 @@ Application Health.
 
 ## v0.37.0 — Data Update Reliability & Application Health
 
+### Status
+
+**COMPLETE**
+
 ### Goal
 
-Make the data pipeline safe and observable.
+Make the production data pipeline safe, observable and operationally reliable.
 
-### Planned Work
+### Delivered
 
-Add update health information:
+Added persistent update-run tracking for controlled production updates.
 
-- last successful FPL player update
-- last successful fixture update
-- number of players updated
-- number of fixtures updated
-- stale-data warning
-- API failure handling
+Added update-health intelligence covering:
+
+- Healthy
+- Stale
+- Partial
+- Running
+- Failed
+- Unavailable
+- last successful update
+- received records
+- updated records
+- skipped records
+- failed records
 - update duration
+- error information
 
-Potentially introduce one controlled updater that coordinates:
+Added protection against stale Running executions without rewriting persisted
+historical update-run state.
 
-- FPL player/team update
-- fixture update
-- history snapshot update
+Added critical Bootstrap response validation so empty or malformed FPL API
+structures cannot silently replace valid production data.
 
-Never silently replace valid data with an empty API response.
+Instrumented the controlled production updates for:
+
+- Bootstrap player/team data
+- Fixtures
+- Player Fixture History
+
+Added a controlled production coordinator and CLI runner through:
+
+- `DataUpdateCoordinator`
+- `DataUpdateCoordinatorLauncher`
+- `DataUpdateProcessRunner`
+- `PhpCliProcessExecutor`
+- `PhpCliExecutableLocator`
+- `PlayerFixtureHistoryUpdateOptions`
+- `cron/runDataUpdates.php`
+
+Added an Application Health section to the main dashboard so production data
+freshness and failures are visible from the application.
+
+Added `ActionableGameweekResolver` using the first FPL gameweek whose deadline has
+not yet passed.
+
+Extended Squad Horizon with explicit target-gameweek support.
+
+Updated one-gameweek chip decisions so:
+
+- Free Hit
+- Bench Boost
+- Triple Captain
+
+evaluate the actionable gameweek rather than blindly using FPL's current event.
+
+Wildcard retains its existing multi-gameweek horizon and timing semantics.
+
+Added operational documentation in `DATA_UPDATES.md`.
+
+Configured Windows Task Scheduler to execute the controlled production updater
+daily at 06:00 with:
+
+- missed-run recovery
+- network availability requirement
+- wake-from-sleep support
+- on-demand execution
+- overlapping-instance protection
+
+### Production Validation
+
+Successfully executed the complete controlled production pipeline through PHP CLI.
+
+Successfully executed the same pipeline through Windows Task Scheduler.
+
+Confirmed Task Scheduler completion result `0x0`.
+
+Confirmed Application Health reported all controlled update areas as Healthy.
+
+The scheduled production verification on 16 September 2026 recorded:
+
+- Bootstrap: 717 received / 717 updated
+- Fixtures: 380 received / 380 updated
+- Player Fixture History: 659 players received / 2,549 rows updated
+
+The Player Fixture History stage completed in approximately 134 seconds, confirming
+that multi-minute complete production updates can be legitimate.
+
+### Architecture Decisions
+
+Update execution history and public health evaluation remain separate concerns.
+
+Application Health observes update state but does not alter intelligence-model
+outputs.
+
+The controlled production updater does not absorb deadline-sensitive recommendation
+capture or immutable recommendation promotion.
+
+Actionable gameweek identity is deadline-based rather than current-event-based.
+
+FPL current gameweek and actionable gameweek are deliberately separate concepts.
+
+Free Hit, Bench Boost and Triple Captain consume explicit one-gameweek actionable
+context.
+
+Wildcard remains a multi-gameweek timing decision.
+
+No production intelligence-model weights were changed in v0.37.0.
+
+### Testing
+
+Added dedicated regression and integration coverage across update persistence,
+health evaluation, API validation, updater instrumentation, coordination, CLI
+execution, dashboard presentation, actionable-gameweek resolution and chip
+integration.
+
+The complete project regression suite passes with:
+
+- 328 test files
+- 328 test files passed
+- 0 test files failed
+- 0 test files with errors
+- 9,841 assertions passed
+- 0 assertions failed
+
+Complete regression runtime: 482.884 seconds.
+
+### Completion Notes
+
+v0.37.0 completes the Data Update Reliability & Application Health milestone.
+
+Production data updates are now controlled, persisted, observable, automatically
+scheduled and documented.
+
+Data-health problems can be surfaced explicitly instead of remaining silent.
+
+One-gameweek chip decisions now remain actionable correctly when FPL's current
+gameweek is still live after its transfer deadline.
+
+The project is now ready to move to v0.38.0 — Performance & Caching.
 
 
 ---
