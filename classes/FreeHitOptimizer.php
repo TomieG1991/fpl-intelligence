@@ -3018,6 +3018,11 @@ class FreeHitOptimizer
                     $slotIndex + 1
                 );
 
+            $expansionStartTime =
+                microtime(
+                    true
+                );
+
 
             $descriptors =
                 [];
@@ -3300,6 +3305,25 @@ class FreeHitOptimizer
             }
 
 
+$generationRuntime =
+    microtime(
+        true
+    )
+    -
+    $expansionStartTime;
+
+
+$descriptorCount =
+    count(
+        $descriptors
+    );
+
+
+$sortStartTime =
+    microtime(
+        true
+    );
+
             /*
              * ========================================================
              * ONE RANKING PASS PER SLOT
@@ -3379,7 +3403,12 @@ class FreeHitOptimizer
                         );
                 }
             );
-
+$sortRuntime =
+    microtime(
+        true
+    )
+    -
+    $sortStartTime;
 
             if (
                 count(
@@ -3405,13 +3434,19 @@ class FreeHitOptimizer
              */
 
             $nextStates =
-                [];
+            [];
 
 
-            foreach (
-                $descriptors
-                as $descriptor
-            ) {
+        $materializationStartTime =
+            microtime(
+                true
+            );
+
+
+        foreach (
+            $descriptors
+            as $descriptor
+        ) {
 
                 $parentState =
                     $states[
@@ -4899,93 +4934,21 @@ class FreeHitOptimizer
          *
          * Lower price wins equal-point ties because it preserves more
          * room for subsequent starters and the required bench.
+         *
+         * FreeHitDescriptorRanker preserves the exact existing ranking
+         * contract while avoiding a complete sort when only the bounded
+         * top beam is required.
          */
 
-        usort(
-            $descriptors,
-            static function (
-                array $a,
-                array $b
-            ): int {
-
-                $pointsA =
-                    (float) $a[
-                        'projected_points'
-                    ];
+        $descriptorRanker =
+            new FreeHitDescriptorRanker();
 
 
-                $pointsB =
-                    (float) $b[
-                        'projected_points'
-                    ];
-
-
-                if (
-                    $pointsA
-                    !==
-                    $pointsB
-                ) {
-
-                    return
-                        $pointsB
-                        <=>
-                        $pointsA;
-                }
-
-
-                $priceA =
-                    (float) $a[
-                        'price'
-                    ];
-
-
-                $priceB =
-                    (float) $b[
-                        'price'
-                    ];
-
-
-                if (
-                    $priceA
-                    !==
-                    $priceB
-                ) {
-
-                    return
-                        $priceA
-                        <=>
-                        $priceB;
-                }
-
-
-                return
-                    strcmp(
-                        (string) $a[
-                            'key'
-                        ],
-                        (string) $b[
-                            'key'
-                        ]
-                    );
-            }
-        );
-
-
-        if (
-            count(
-                $descriptors
-            )
-            >
-            $beamWidth
-        ) {
-
-            $descriptors =
-                array_slice(
-                    $descriptors,
-                    0,
-                    $beamWidth
-                );
-        }
+        $descriptors =
+            $descriptorRanker->selectTop(
+                $descriptors,
+                $beamWidth
+            );
 
 
         /*
