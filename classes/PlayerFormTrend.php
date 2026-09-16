@@ -33,7 +33,8 @@ class PlayerFormTrend
      */
     public function buildModel(
         int $playerId,
-        ?string $position = null
+        ?string $position = null,
+        ?array $preparedLongModel = null
     ): array {
 
         $shortModel =
@@ -47,6 +48,8 @@ class PlayerFormTrend
 
 
         $longModel =
+            $preparedLongModel
+            ??
             $this->playerForm
                 ->buildModel(
                     $playerId,

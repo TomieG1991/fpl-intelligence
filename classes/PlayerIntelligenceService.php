@@ -817,7 +817,8 @@ class PlayerIntelligenceService
                 $this->playerFormTrend
                     ->buildModel(
                         $playerId,
-                        $position
+                        $position,
+                        $formModel
                     );
 
 
@@ -3674,10 +3675,6 @@ class PlayerIntelligenceService
                 $lookupTeamName;
         }
 
-
-        $fixtures =
-            $this->fixtureRepository
-                ->getAll();
 
         $fixtures =
             $this->fixtureRepository
