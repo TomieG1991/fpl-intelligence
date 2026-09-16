@@ -2932,6 +2932,29 @@ class FreeHitOptimizer
         unset(
             $positionPool
         );
+        
+        
+        /*
+         * ============================================================
+         * PREPARE MINIMUM-PRICE SEARCH POOLS
+         * ============================================================
+         *
+         * The same cheapest-first player pools are used by every
+         * feasibility calculation during this formation search.
+         *
+         * Normalize them once here so the repeated hot-path calculation
+         * does not need to validate and convert the same candidate data
+         * hundreds of thousands of times.
+         */
+
+        $minimumPriceCalculator =
+            new FreeHitMinimumPriceCalculator();
+
+
+        $preparedMinimumPricePools =
+            $minimumPriceCalculator->preparePools(
+                $priceSortedSearchPools
+            );
 
 
         /*
@@ -3012,16 +3035,80 @@ class FreeHitOptimizer
                 );
 
 
-            $remainingSlots =
-                array_slice(
-                    $slots,
-                    $slotIndex + 1
-                );
+            /*
+             * ============================================================
+             * REMAINING POSITION REQUIREMENTS
+             * ============================================================
+             *
+             * Every candidate expanded at this slot has exactly the same
+             * remaining squad structure.
+             *
+             * Calculate those positional requirements once here rather than
+             * rebuilding them inside every feasibility calculation.
+             */
 
-            $expansionStartTime =
-                microtime(
-                    true
-                );
+            $requiredByPosition = [
+                'GK' =>
+                    0,
+
+                'DEF' =>
+                    0,
+
+                'MID' =>
+                    0,
+
+                'FWD' =>
+                    0
+            ];
+
+
+            for (
+                $remainingSlotIndex =
+                    $slotIndex + 1;
+
+                $remainingSlotIndex
+                    <
+                    count(
+                        $slots
+                    );
+
+                $remainingSlotIndex++
+            ) {
+
+                $remainingPosition =
+                    $slots[
+                        $remainingSlotIndex
+                    ][
+                        'position'
+                    ]
+                    ??
+                    null;
+
+
+                if (
+                    is_string(
+                        $remainingPosition
+                    )
+                    &&
+                    array_key_exists(
+                        $remainingPosition,
+                        $requiredByPosition
+                    )
+                ) {
+
+                    $requiredByPosition[
+                        $remainingPosition
+                    ]++;
+                }
+            }
+
+
+            $hasRemainingSlots =
+                array_sum(
+                    $requiredByPosition
+                )
+                >
+                0;
 
 
             $descriptors =
@@ -3204,19 +3291,15 @@ class FreeHitOptimizer
 
 
                     if (
-                        !empty(
-                            $remainingSlots
-                        )
+                        $hasRemainingSlots
                     ) {
 
                         $minimumRemainingPrice =
                             $this->calculateMinimumRemainingFreeHitPrice(
-                                [
-                                    'player_ids' =>
-                                        $nextPlayerIds
-                                ],
-                                $remainingSlots,
-                                $priceSortedSearchPools
+                                $nextPlayerIds,
+                                $requiredByPosition,
+                                $preparedMinimumPricePools,
+                                $minimumPriceCalculator
                             );
 
 
@@ -3305,126 +3388,30 @@ class FreeHitOptimizer
             }
 
 
-$generationRuntime =
-    microtime(
-        true
-    )
-    -
-    $expansionStartTime;
-
-
-$descriptorCount =
-    count(
-        $descriptors
-    );
-
-
-$sortStartTime =
-    microtime(
-        true
-    );
-
             /*
              * ========================================================
-             * ONE RANKING PASS PER SLOT
+             * BOUNDED RANKING PASS PER SLOT
              * ========================================================
              *
-             * Previous versions repeatedly sorted full PHP state
-             * structures during expansion.
+             * Preserve the existing small-path ordering exactly:
              *
-             * This sorts lightweight descriptors exactly once.
+             * 1. Starting XI projected points descending;
+             * 2. price ascending;
+             * 3. beam key ascending.
+             *
+             * Only the strongest bounded beam is required, so avoid
+             * sorting the complete descriptor collection.
              */
 
-            usort(
-                $descriptors,
-                static function (
-                    array $a,
-                    array $b
-                ): int {
-
-                    $startingPointsA =
-                        (float) $a[
-                            'starting_points'
-                        ];
+            $descriptorRanker =
+                new FreeHitDescriptorRanker();
 
 
-                    $startingPointsB =
-                        (float) $b[
-                            'starting_points'
-                        ];
-
-
-                    if (
-                        $startingPointsA
-                        !==
-                        $startingPointsB
-                    ) {
-
-                        return
-                            $startingPointsB
-                            <=>
-                            $startingPointsA;
-                    }
-
-
-                    $priceA =
-                        (float) $a[
-                            'price'
-                        ];
-
-
-                    $priceB =
-                        (float) $b[
-                            'price'
-                        ];
-
-
-                    if (
-                        $priceA
-                        !==
-                        $priceB
-                    ) {
-
-                        return
-                            $priceA
-                            <=>
-                            $priceB;
-                    }
-
-
-                    return
-                        strcmp(
-                            (string) $a[
-                                'beam_key'
-                            ],
-                            (string) $b[
-                                'beam_key'
-                            ]
-                        );
-                }
-            );
-$sortRuntime =
-    microtime(
-        true
-    )
-    -
-    $sortStartTime;
-
-            if (
-                count(
-                    $descriptors
-                )
-                >
-                $beamWidth
-            ) {
-
-                $descriptors =
-                    array_slice(
-                        $descriptors,
-                        0,
-                        $beamWidth
-                    );
-            }
+            $descriptors =
+                $descriptorRanker->selectTopStartingXI(
+                    $descriptors,
+                    $beamWidth
+                );
 
 
             /*
@@ -3435,12 +3422,6 @@ $sortRuntime =
 
             $nextStates =
             [];
-
-
-        $materializationStartTime =
-            microtime(
-                true
-            );
 
 
         foreach (
@@ -3633,223 +3614,36 @@ $sortRuntime =
     }
     
 
-
-    /*
-     * ============================================================
-     * MINIMUM REMAINING FREE HIT PRICE
-     * ============================================================
-     *
-     * Calculate an optimistic lower bound for completing the
-     * remaining slots.
-     *
-     * Duplicate-player and club-limit interactions are deliberately
-     * ignored here. That can only make the theoretical completion
-     * cheaper, making the bound safe for rejecting states that are
-     * already mathematically unable to fit inside the budget.
-     */
-
     private function calculateMinimumRemainingFreeHitPrice(
-        array $state,
-        array $remainingSlots,
-        array $priceSortedSearchPools
+        array $selectedPlayerIds,
+        array $requiredByPosition,
+        array $preparedMinimumPricePools,
+        FreeHitMinimumPriceCalculator $minimumPriceCalculator
     ): ?float {
 
         /*
-         * Count the number of remaining players required at each
-         * position.
+         * ============================================================
+         * MINIMUM REMAINING FREE HIT PRICE
+         * ============================================================
+         *
+         * Positional requirements and candidate normalization have
+         * already been calculated outside the repeated candidate
+         * feasibility check.
+         *
+         * This hot-path operation therefore only needs to exclude
+         * already-selected players and sum the cheapest available
+         * prepared prices.
          */
-        $requiredByPosition = [
-            'GK' =>
-                0,
-
-            'DEF' =>
-                0,
-
-            'MID' =>
-                0,
-
-            'FWD' =>
-                0
-        ];
-
-
-        foreach (
-            $remainingSlots
-            as $slot
-        ) {
-
-            $position =
-                $slot[
-                    'position'
-                ]
-                ??
-                null;
-
-
-            if (
-                !is_string(
-                    $position
-                )
-                ||
-                !array_key_exists(
-                    $position,
-                    $requiredByPosition
-                )
-            ) {
-
-                return
-                    null;
-            }
-
-
-            $requiredByPosition[
-                $position
-            ]++;
-        }
-
-
-        $minimumPrice =
-            0.0;
-
-
-        foreach (
-            $requiredByPosition
-            as $position =>
-                $requiredCount
-        ) {
-
-            if (
-                $requiredCount <= 0
-            ) {
-
-                continue;
-            }
-
-
-            if (
-                !isset(
-                    $priceSortedSearchPools[
-                        $position
-                    ]
-                )
-            ) {
-
-                return
-                    null;
-            }
-
-
-            /*
-             * The pool is already sorted cheapest-first.
-             *
-             * We therefore only need to walk forward until we have
-             * found the required number of distinct unused players.
-             *
-             * There is no need to build an intermediate price array
-             * and no need to sort on every call.
-             */
-            $foundCount =
-                0;
-
-
-            foreach (
-                $priceSortedSearchPools[
-                    $position
-                ]
-                as $candidate
-            ) {
-
-                $playerId =
-                    $candidate[
-                        'player_id'
-                    ]
-                    ??
-                    null;
-
-
-                $price =
-                    $candidate[
-                        'price'
-                    ]
-                    ??
-                    null;
-
-
-                if (
-                    !is_numeric(
-                        $playerId
-                    )
-                    ||
-                    !is_numeric(
-                        $price
-                    )
-                ) {
-
-                    continue;
-                }
-
-
-                $playerId =
-                    (int) $playerId;
-
-
-                if (
-                    $playerId <= 0
-                    ||
-                    isset(
-                        $state[
-                            'player_ids'
-                        ][
-                            $playerId
-                        ]
-                    )
-                ) {
-
-                    continue;
-                }
-
-
-                $minimumPrice +=
-                    (float) $price;
-
-
-                $foundCount++;
-
-
-                /*
-                 * Because the pool is already price ordered, once the
-                 * required number has been found we already know the
-                 * mathematically cheapest distinct completion for this
-                 * position.
-                 */
-                if (
-                    $foundCount
-                    >=
-                    $requiredCount
-                ) {
-
-                    break;
-                }
-            }
-
-
-            if (
-                $foundCount
-                <
-                $requiredCount
-            ) {
-
-                return
-                    null;
-            }
-        }
-
 
         return
-            $minimumPrice;
+            $minimumPriceCalculator->calculatePrepared(
+                $selectedPlayerIds,
+                $requiredByPosition,
+                $preparedMinimumPricePools
+            );
     }
     
-    
+
     /*
      * ============================================================
      * LARGE-POOL FREE HIT OPTIMIZER
