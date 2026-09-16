@@ -271,6 +271,116 @@ class PlayerFormHistory
     
     
     /**
+     * Prepare request-level recent-history caches from an
+     * already loaded multi-player history pool.
+     *
+     * Rows are expected to use the same chronological
+     * oldest-to-newest ordering returned by the repository's
+     * existing recent-history methods.
+     *
+     * Preparing a larger window also allows existing smaller
+     * requests to be satisfied by the normal cache slicing
+     * behaviour without further repository queries.
+     */
+    public function prepareHistoryPool(
+        array $fixtureHistory,
+        array $appearanceHistory,
+        int $fixtureLimit = 5,
+        int $appearanceLimit = 5
+    ): void {
+
+        $fixtureLimit =
+            $this->normaliseLimit(
+                $fixtureLimit
+            );
+
+
+        $appearanceLimit =
+            $this->normaliseLimit(
+                $appearanceLimit
+            );
+
+
+        foreach (
+            $fixtureHistory
+            as $playerId => $rows
+        ) {
+
+            $playerId =
+                (int) $playerId;
+
+
+            if (
+                $playerId <= 0
+                ||
+                !is_array(
+                    $rows
+                )
+            ) {
+
+                continue;
+            }
+
+
+            $this->fixtureHistoryCache[
+                $playerId
+            ] = [
+
+                'limit' =>
+                    $fixtureLimit,
+
+                'rows' =>
+                    $fixtureLimit > 0
+                        ? array_slice(
+                            $rows,
+                            -$fixtureLimit
+                        )
+                        : []
+            ];
+        }
+
+
+        foreach (
+            $appearanceHistory
+            as $playerId => $rows
+        ) {
+
+            $playerId =
+                (int) $playerId;
+
+
+            if (
+                $playerId <= 0
+                ||
+                !is_array(
+                    $rows
+                )
+            ) {
+
+                continue;
+            }
+
+
+            $this->appearanceHistoryCache[
+                $playerId
+            ] = [
+
+                'limit' =>
+                    $appearanceLimit,
+
+                'rows' =>
+                    $appearanceLimit > 0
+                        ? array_slice(
+                            $rows,
+                            -$appearanceLimit
+                        )
+                        : []
+            ];
+        }
+    }
+    
+    
+    /**
      * Clear cached historical windows.
      *
      * Normal application requests do not mutate historical data

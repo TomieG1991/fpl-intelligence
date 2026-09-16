@@ -955,6 +955,422 @@ class PlayerFixtureHistoryRepository
             $rows
         );
     }
+    
+    
+    /*
+     * ============================================================
+     * RECENT HISTORY FOR PLAYER POPULATION
+     * ============================================================
+     *
+     * Provides the recent fixture and appearance windows for a
+     * collection of players.
+     *
+     * The existing single-player retrieval methods remain the
+     * authoritative implementation at this stage. This boundary
+     * allows callers to request the complete population through
+     * one repository method without changing history semantics.
+     *
+     * A later optimisation may replace the internal retrieval
+     * strategy while preserving this exact result contract.
+     */
+
+    public function getRecentForPlayerIds(
+        array $playerIds,
+        int $fixtureLimit = 5,
+        int $appearanceLimit = 5
+    ): array {
+
+        /*
+         * Normalise the requested player population.
+         *
+         * Non-positive identities are ignored and duplicates
+         * are removed while preserving caller order.
+         */
+        $validPlayerIds =
+            [];
+
+
+        foreach (
+            $playerIds
+            as $playerId
+        ) {
+
+            $playerId =
+                (int) $playerId;
+
+
+            if ($playerId <= 0) {
+
+                continue;
+            }
+
+
+            if (
+                isset(
+                    $validPlayerIds[
+                        $playerId
+                    ]
+                )
+            ) {
+
+                continue;
+            }
+
+
+            $validPlayerIds[
+                $playerId
+            ] =
+                true;
+        }
+
+
+        $playerIds =
+            array_keys(
+                $validPlayerIds
+            );
+
+
+        /*
+         * Preserve the existing repository limit contract.
+         *
+         * A non-positive limit represents an empty window.
+         * Existing recent-history methods cap valid limits at 20.
+         */
+        $fixtureLimit =
+            $fixtureLimit > 0
+                ? min(
+                    $fixtureLimit,
+                    20
+                )
+                : 0;
+
+
+        $appearanceLimit =
+            $appearanceLimit > 0
+                ? min(
+                    $appearanceLimit,
+                    20
+                )
+                : 0;
+
+
+        $fixtureHistory =
+            [];
+
+        $appearanceHistory =
+            [];
+
+
+        /*
+         * Explicitly initialise every requested player.
+         *
+         * An empty array therefore means authoritative empty
+         * history rather than "this player was not loaded".
+         */
+        foreach (
+            $playerIds
+            as $playerId
+        ) {
+
+            $fixtureHistory[
+                $playerId
+            ] =
+                [];
+
+
+            $appearanceHistory[
+                $playerId
+            ] =
+                [];
+        }
+
+
+        if (empty($playerIds)) {
+
+            return [
+
+                'fixture_history' =>
+                    $fixtureHistory,
+
+                'appearance_history' =>
+                    $appearanceHistory
+            ];
+        }
+
+
+        /*
+         * PDO placeholders are generated from the validated
+         * integer player identities.
+         */
+        $placeholders =
+            [];
+
+
+        $parameters =
+            [];
+
+
+        foreach (
+            $playerIds
+            as $index => $playerId
+        ) {
+
+            $placeholder =
+                ':player_'
+                . $index;
+
+
+            $placeholders[] =
+                $placeholder;
+
+
+            $parameters[
+                $placeholder
+            ] =
+                $playerId;
+        }
+
+
+        $playerPlaceholderList =
+            implode(
+                ', ',
+                $placeholders
+            );
+
+
+        /*
+         * ====================================================
+         * FIXTURE HISTORY
+         * ====================================================
+         *
+         * Retrieve the population in exactly the same
+         * newest-first order used by getRecentByPlayerId().
+         *
+         * We retain only the requested number of rows for each
+         * player while iterating the ordered result.
+         */
+        if ($fixtureLimit > 0) {
+
+            $fixtureStatement =
+                $this->db
+                    ->prepare(
+                        "
+                        SELECT
+                            pfh.*
+                        FROM
+                            player_fixture_history pfh
+                        INNER JOIN
+                            gameweeks g
+                                ON g.id = pfh.gameweek_id
+                        INNER JOIN
+                            fixtures f
+                                ON f.id = pfh.fixture_id
+                        WHERE
+                            pfh.player_id IN (
+                                $playerPlaceholderList
+                            )
+                        ORDER BY
+                            pfh.player_id ASC,
+                            g.fpl_gameweek_id DESC,
+                            f.kickoff_time DESC,
+                            pfh.id DESC
+                        "
+                    );
+
+
+            $fixtureStatement
+                ->execute(
+                    $parameters
+                );
+
+
+            while (
+                $row =
+                    $fixtureStatement
+                        ->fetch(
+                            PDO::FETCH_ASSOC
+                        )
+            ) {
+
+                $playerId =
+                    (int) (
+                        $row[
+                            'player_id'
+                        ]
+                        ?? 0
+                    );
+
+
+                if (
+                    !array_key_exists(
+                        $playerId,
+                        $fixtureHistory
+                    )
+                ) {
+
+                    continue;
+                }
+
+
+                if (
+                    count(
+                        $fixtureHistory[
+                            $playerId
+                        ]
+                    )
+                    >=
+                    $fixtureLimit
+                ) {
+
+                    continue;
+                }
+
+
+                $fixtureHistory[
+                    $playerId
+                ][] =
+                    $row;
+            }
+
+
+            /*
+             * Single-player retrieval selects newest-first but
+             * returns the selected window chronologically.
+             */
+            foreach (
+                $fixtureHistory
+                as $playerId => $rows
+            ) {
+
+                $fixtureHistory[
+                    $playerId
+                ] =
+                    array_reverse(
+                        $rows
+                    );
+            }
+        }
+
+
+        /*
+         * ====================================================
+         * APPEARANCE HISTORY
+         * ====================================================
+         *
+         * This mirrors getRecentAppearancesByPlayerId(), with
+         * minutes > 0 applied before the per-player window is
+         * selected.
+         */
+        if ($appearanceLimit > 0) {
+
+            $appearanceStatement =
+                $this->db
+                    ->prepare(
+                        "
+                        SELECT
+                            pfh.*
+                        FROM
+                            player_fixture_history pfh
+                        INNER JOIN
+                            gameweeks g
+                                ON g.id = pfh.gameweek_id
+                        INNER JOIN
+                            fixtures f
+                                ON f.id = pfh.fixture_id
+                        WHERE
+                            pfh.player_id IN (
+                                $playerPlaceholderList
+                            )
+                            AND
+                            pfh.minutes > 0
+                        ORDER BY
+                            pfh.player_id ASC,
+                            g.fpl_gameweek_id DESC,
+                            f.kickoff_time DESC,
+                            pfh.id DESC
+                        "
+                    );
+
+
+            $appearanceStatement
+                ->execute(
+                    $parameters
+                );
+
+
+            while (
+                $row =
+                    $appearanceStatement
+                        ->fetch(
+                            PDO::FETCH_ASSOC
+                        )
+            ) {
+
+                $playerId =
+                    (int) (
+                        $row[
+                            'player_id'
+                        ]
+                        ?? 0
+                    );
+
+
+                if (
+                    !array_key_exists(
+                        $playerId,
+                        $appearanceHistory
+                    )
+                ) {
+
+                    continue;
+                }
+
+
+                if (
+                    count(
+                        $appearanceHistory[
+                            $playerId
+                        ]
+                    )
+                    >=
+                    $appearanceLimit
+                ) {
+
+                    continue;
+                }
+
+
+                $appearanceHistory[
+                    $playerId
+                ][] =
+                    $row;
+            }
+
+
+            foreach (
+                $appearanceHistory
+                as $playerId => $rows
+            ) {
+
+                $appearanceHistory[
+                    $playerId
+                ] =
+                    array_reverse(
+                        $rows
+                    );
+            }
+        }
+
+
+        return [
+
+            'fixture_history' =>
+                $fixtureHistory,
+
+            'appearance_history' =>
+                $appearanceHistory
+        ];
+    }
 
 
     /**

@@ -260,6 +260,81 @@ class PlayerIntelligenceService
                 ->getAll();
 
 
+        /*
+         * ========================================================
+         * PREPARE PLAYER FORM HISTORY
+         * ========================================================
+         *
+         * Player Form and Player Form Trend both consume recent
+         * fixture and appearance history for the complete player
+         * population.
+         *
+         * Prepare those five-row windows once before entering the
+         * player-intelligence loop so PlayerFormHistory can satisfy
+         * its normal 5/5 and 3/3 requests from its request-scoped
+         * cache.
+         *
+         * This changes only the retrieval strategy. PlayerForm,
+         * PlayerFormTrend and all downstream model calculations
+         * remain unchanged.
+         */
+
+        $playerIds =
+            [];
+
+
+        foreach (
+            $players
+            as $player
+        ) {
+
+            $playerId =
+                (int) (
+                    $player[
+                        'id'
+                    ]
+                    ?? 0
+                );
+
+
+            if ($playerId <= 0) {
+
+                continue;
+            }
+
+
+            $playerIds[] =
+                $playerId;
+        }
+
+
+        $recentHistory =
+            $this->playerFixtureHistoryRepository
+                ->getRecentForPlayerIds(
+                    $playerIds,
+                    5,
+                    5
+                );
+
+
+        $this->playerFormHistory
+            ->prepareHistoryPool(
+
+                $recentHistory[
+                    'fixture_history'
+                ]
+                ?? [],
+
+                $recentHistory[
+                    'appearance_history'
+                ]
+                ?? [],
+
+                5,
+                5
+            );
+
+
         $teams =
             $this->teamRepository
                 ->getAll();
