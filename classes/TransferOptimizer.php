@@ -6,12 +6,24 @@ class TransferOptimizer
 
     private TransferCombination $transferCombination;
 
+    private TransferDecision $transferDecision;
+
+    private TransferCombinationRanker $transferCombinationRanker;
+
 
     public function __construct()
     {
 
         $this->transferCombination =
             new TransferCombination();
+
+
+        $this->transferDecision =
+            new TransferDecision();
+            
+            
+        $this->transferCombinationRanker =
+            new TransferCombinationRanker();
     }
 
 
@@ -108,6 +120,18 @@ class TransferOptimizer
         $combinations = [];
 
 
+        /*
+         * Transfer B candidates are revisited for every valid
+         * Candidate A.
+         *
+         * Cache their deterministic TransferDecision results
+         * for this optimize() call only so each unique B
+         * decision is calculated once.
+         */
+        $decisionBCache =
+            [];
+
+
         foreach (
             $candidatePoolA
             as $candidateA
@@ -157,6 +181,26 @@ class TransferOptimizer
 
                 continue;
             }
+
+
+            /*
+             * =================================================
+             * PREPARE TRANSFER A DECISION
+             * =================================================
+             *
+             * Candidate A remains unchanged throughout the inner
+             * Candidate B loop.
+             *
+             * Calculate its deterministic TransferDecision once
+             * here rather than once for every A/B pair.
+             */
+
+            $decisionA =
+                $this->transferDecision
+                    ->evaluateTransfer(
+                        $currentPlayerA,
+                        $candidateA
+                    );
 
 
             foreach (
@@ -227,17 +271,53 @@ class TransferOptimizer
 
                 /*
                  * =================================================
+                 * PREPARE TRANSFER B DECISION
+                 * =================================================
+                 *
+                 * Candidate B is revisited for every Candidate A.
+                 * Reuse its deterministic decision after the first
+                 * calculation during this optimize() call.
+                 */
+
+                if (
+                    !array_key_exists(
+                        $candidateIdB,
+                        $decisionBCache
+                    )
+                ) {
+
+                    $decisionBCache[
+                        $candidateIdB
+                    ] =
+                        $this->transferDecision
+                            ->evaluateTransfer(
+                                $currentPlayerB,
+                                $candidateB
+                            );
+                }
+
+
+                $decisionB =
+                    $decisionBCache[
+                        $candidateIdB
+                    ];
+
+
+                /*
+                 * =================================================
                  * EVALUATE COMBINATION
                  * =================================================
+                 *
+                 * Both individual transfer decisions have already
+                 * been calculated. Preserve the complete Cartesian
+                 * search while avoiding duplicate decision work.
                  */
 
                 $combination =
                     $this->transferCombination
-                        ->evaluateCombination(
-                            $currentPlayerA,
-                            $candidateA,
-                            $currentPlayerB,
-                            $candidateB
+                        ->evaluatePreparedCombination(
+                            $decisionA,
+                            $decisionB
                         );
 
 
@@ -336,19 +416,12 @@ class TransferOptimizer
          * ====================================================
          */
 
-        usort(
-            $combinations,
-            function (
-                array $a,
-                array $b
-            ): int {
-
-                return $this->compareCombinations(
-                    $a,
-                    $b
+        $ranked =
+            $this->transferCombinationRanker
+                ->rank(
+                    $combinations,
+                    $limit
                 );
-            }
-        );
 
 
         /*
@@ -360,14 +433,6 @@ class TransferOptimizer
         $totalFound =
             count(
                 $combinations
-            );
-
-
-        $ranked =
-            array_slice(
-                $combinations,
-                0,
-                $limit
             );
 
 

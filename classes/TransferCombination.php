@@ -44,10 +44,31 @@ class TransferCombination
                 );
 
 
-        /*
-         * ====================================================
-         * COMBINED MOVEMENTS
-         * ====================================================
+        return
+            $this->evaluatePreparedCombination(
+                $decisionA,
+                $decisionB
+            );
+        }
+
+
+        /**
+         * Evaluate a linked two-transfer combination from
+         * already-calculated individual transfer decisions.
+         *
+         * This allows higher-level optimizers to reuse deterministic
+         * TransferDecision results without recalculating them for every
+         * candidate pair.
+         */
+        public function evaluatePreparedCombination(
+            array $decisionA,
+            array $decisionB
+        ): array {
+
+            /*
+             * ====================================================
+             * COMBINED MOVEMENTS
+             * ====================================================
          */
 
         $combinedIntelligenceMovement =
