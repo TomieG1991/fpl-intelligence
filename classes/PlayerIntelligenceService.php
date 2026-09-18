@@ -20,6 +20,20 @@ class PlayerIntelligenceService
      */
     private ?array $playerSummariesCache =
         null;
+        
+    /*
+     * Request-scoped cache of team-wide evidence used by
+     * multi-gameweek Expected Points projections.
+     *
+     * This evidence is independent of player identity and fixture
+     * limit, so repeated player projections within one service
+     * instance can safely reuse the same prepared team context.
+     *
+     * The cache exists only for the lifetime of this service
+     * instance and is rebuilt on the next request.
+     */
+    private ?array $multiGameweekTeamContextCache =
+        null;
     
     private PlayerFixtureHistoryRepository $playerFixtureHistoryRepository;
 
@@ -3411,6 +3425,204 @@ class PlayerIntelligenceService
     }
     
     /**
+     * Prepare team-wide evidence shared by multi-gameweek
+     * Expected Points projections.
+     *
+     * Team identities, complete fixture evidence, strength models
+     * and attack/defence ratings are identical for every player
+     * projected through this service instance.
+     *
+     * Preparing them once avoids rebuilding the same team context
+     * for every player while preserving the existing projection
+     * inputs exactly.
+     */
+    private function prepareMultiGameweekTeamContext(): array
+    {
+        /*
+         * ========================================================
+         * REQUEST-SCOPED CACHE
+         * ========================================================
+         */
+
+        if (
+            $this->multiGameweekTeamContextCache
+            !==
+            null
+        ) {
+
+            return
+                $this->multiGameweekTeamContextCache;
+        }
+
+
+        /*
+         * ========================================================
+         * LOAD TEAM / FIXTURE DATA
+         * ========================================================
+         */
+
+        $teams =
+            $this->teamRepository
+                ->getAll();
+
+
+        $fixtures =
+            $this->fixtureRepository
+                ->getAll();
+
+
+        /*
+         * ========================================================
+         * TEAM NAME LOOKUP
+         * ========================================================
+         */
+
+        $teamNameLookup =
+            [];
+
+
+        foreach (
+            $teams
+            as $teamRow
+        ) {
+
+            $lookupTeamId =
+                (int) (
+                    $teamRow[
+                        'id'
+                    ]
+                    ?? 0
+                );
+
+
+            $lookupTeamName =
+                trim(
+                    (string) (
+                        $teamRow[
+                            'name'
+                        ]
+                        ?? ''
+                    )
+                );
+
+
+            if (
+                $lookupTeamId <= 0
+                ||
+                $lookupTeamName === ''
+            ) {
+
+                continue;
+            }
+
+
+            $teamNameLookup[
+                $lookupTeamId
+            ] =
+                $lookupTeamName;
+        }
+
+
+        /*
+         * ========================================================
+         * CURRENT TEAM STRENGTH MODELS
+         * ========================================================
+         *
+         * This preserves the existing multi-gameweek Expected
+         * Points team-strength pipeline exactly.
+         */
+
+        $teamBaselines =
+            $this->teamStrength
+                ->calculateTeamStrengths(
+                    $teams
+                );
+
+
+        $completeTeamModels =
+            [];
+
+
+        $teamAttackDefenceLookup =
+            [];
+
+
+        foreach (
+            $teamBaselines
+            as $currentTeamId => $baseline
+        ) {
+
+            $currentTeamId =
+                (int) $currentTeamId;
+
+
+            $performance =
+                $this->teamPerformance
+                    ->analyse(
+                        $fixtures,
+                        $currentTeamId
+                    );
+
+
+            $completeTeamModels[
+                $currentTeamId
+            ] =
+                $this->teamStrengthModel
+                    ->buildTeamModel(
+                        $baseline,
+                        $performance,
+                        $this->teamPerformance
+                    );
+
+
+            /*
+             * Reuse the existing TeamPerformance rating methods
+             * rather than creating another opponent-strength model.
+             */
+            $teamAttackDefenceLookup[
+                $currentTeamId
+            ] = [
+
+                'attack_rating' =>
+                    $this->teamPerformance
+                        ->calculateAttackRating(
+                            $performance
+                        ),
+
+                'defence_rating' =>
+                    $this->teamPerformance
+                        ->calculateDefenceRating(
+                            $performance
+                        )
+            ];
+        }
+
+
+        /*
+         * ========================================================
+         * CACHE PREPARED CONTEXT
+         * ========================================================
+         */
+
+        $this->multiGameweekTeamContextCache = [
+
+            'team_name_lookup' =>
+                $teamNameLookup,
+
+            'complete_team_models' =>
+                $completeTeamModels,
+
+            'team_attack_defence_lookup' =>
+                $teamAttackDefenceLookup
+        ];
+
+
+        return
+            $this->multiGameweekTeamContextCache;
+    }
+
+
+    /**
      * Build fixture-specific Expected Points for one player across
      * the requested upcoming planning horizon.
      *
@@ -3625,60 +3837,29 @@ class PlayerIntelligenceService
          * ========================================================
          */
 
-        $teams =
-            $this->teamRepository
-                ->getAll();
+        $preparedTeamContext =
+            $this->prepareMultiGameweekTeamContext();
 
 
         $teamNameLookup =
-            [];
+            $preparedTeamContext[
+                'team_name_lookup'
+            ]
+            ?? [];
 
 
-        foreach (
-            $teams
-            as $teamRow
-        ) {
-
-            $lookupTeamId =
-                (int) (
-                    $teamRow[
-                        'id'
-                    ]
-                    ?? 0
-                );
+        $completeTeamModels =
+            $preparedTeamContext[
+                'complete_team_models'
+            ]
+            ?? [];
 
 
-            $lookupTeamName =
-                trim(
-                    (string) (
-                        $teamRow[
-                            'name'
-                        ]
-                        ?? ''
-                    )
-                );
-
-
-            if (
-                $lookupTeamId <= 0
-                ||
-                $lookupTeamName === ''
-            ) {
-
-                continue;
-            }
-
-
-            $teamNameLookup[
-                $lookupTeamId
-            ] =
-                $lookupTeamName;
-        }
-
-
-        $fixtures =
-            $this->fixtureRepository
-                ->getAll();
+        $teamAttackDefenceLookup =
+            $preparedTeamContext[
+                'team_attack_defence_lookup'
+            ]
+            ?? [];
 
 
         $upcomingFixtures =
@@ -3723,81 +3904,6 @@ class PlayerIntelligenceService
 
                 'next_6' =>
                     null
-            ];
-        }
-
-
-        /*
-         * ========================================================
-         * CURRENT TEAM STRENGTH MODELS
-         * ========================================================
-         *
-         * This mirrors the established Fixture Intelligence
-         * pipeline used elsewhere in PlayerIntelligenceService.
-         */
-
-        $teamBaselines =
-            $this->teamStrength
-                ->calculateTeamStrengths(
-                    $teams
-                );
-
-
-        $completeTeamModels =
-            [];
-
-
-        $teamAttackDefenceLookup =
-            [];
-
-
-        foreach (
-            $teamBaselines
-            as $currentTeamId => $baseline
-        ) {
-
-            $currentTeamId =
-                (int) $currentTeamId;
-
-
-            $performance =
-                $this->teamPerformance
-                    ->analyse(
-                        $fixtures,
-                        $currentTeamId
-                    );
-
-
-            $completeTeamModels[
-                $currentTeamId
-            ] =
-                $this->teamStrengthModel
-                    ->buildTeamModel(
-                        $baseline,
-                        $performance,
-                        $this->teamPerformance
-                    );
-
-
-            /*
-             * Reuse the existing TeamPerformance rating methods
-             * rather than creating another opponent-strength model.
-             */
-            $teamAttackDefenceLookup[
-                $currentTeamId
-            ] = [
-
-                'attack_rating' =>
-                    $this->teamPerformance
-                        ->calculateAttackRating(
-                            $performance
-                        ),
-
-                'defence_rating' =>
-                    $this->teamPerformance
-                        ->calculateDefenceRating(
-                            $performance
-                        )
             ];
         }
 
