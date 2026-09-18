@@ -38,7 +38,7 @@ The system should remain explainable, testable and robust throughout:
 
 Current stable release:
 
-**v0.37.0 — Data Update Reliability & Application Health**
+**v0.38.0 — Performance & Caching**
 
 GitHub `main` is the authoritative code baseline after every completed commit.
 
@@ -46,55 +46,46 @@ GitHub `main` is the authoritative code baseline after every completed commit.
 
 Current development milestone:
 
-**v0.38.0 — Performance & Caching — NOT STARTED**
+**v0.39.0 — v1.0 UX, Explainability & Release Hardening — NOT STARTED**
 
-v0.37.0 completes the Data Update Reliability & Application Health milestone.
+v0.38.0 completes the Performance & Caching milestone.
 
-The completed milestone adds:
+The completed milestone improves performance across:
 
-- persistent production update-run history
-- update lifecycle tracking
-- update-health evaluation
-- Healthy / Stale / Partial / Running / Failed / Unavailable health states
-- critical Bootstrap API-response validation
-- controlled Bootstrap, Fixtures and Player Fixture History instrumentation
-- a coordinated production data-update runner
-- PHP CLI production-runner infrastructure
-- dashboard Application Health visibility
-- daily Windows Task Scheduler automation
-- documented manual and automatic production update procedures
-- deadline-based actionable-gameweek resolution
-- explicit actionable-gameweek targeting for Free Hit, Bench Boost and Triple
-  Captain decisions
+- Free Hit optimisation
+- Player Intelligence construction
+- Player Fixture History retrieval
+- Player Form and Trend evaluation
+- multi-gameweek Player Intelligence
+- Transfer Optimisation
+- shared request-scoped intelligence context
 
-The controlled production update pipeline is now observable from execution through
-to dashboard health reporting.
+Performance work was driven by measured profiling rather than speculative
+optimisation.
 
-Invalid critical Bootstrap responses are rejected rather than silently replacing
-valid production data.
+The complete regression-suite runtime was reduced from the v0.37.0 baseline of
+482.884 seconds to 269.745 seconds at the final v0.38.0 validation checkpoint.
 
-The production updater has been verified both directly through PHP CLI and through
-Windows Task Scheduler, with all three controlled update areas recording Healthy
-results.
+This represents a reduction of 213.139 seconds, or approximately 44.1%.
 
-One-gameweek chip decisions now distinguish FPL's current event from the earliest
-gameweek whose transfer deadline has not passed.
+The complete v0.38.0 regression suite passes with:
 
-Wildcard retains its existing multi-gameweek timing semantics.
-
-No production model weights were changed during v0.37.0.
-
-The complete v0.37.0 regression suite passes with:
-
-- 328 test files
-- 328 test files passed
+- 341 test files
+- 341 test files passed
 - 0 test files failed
 - 0 test files with errors
-- 9,841 assertions passed
+- 9,972 assertions passed
 - 0 assertions failed
+- 269.745 seconds total runtime
 
-The next development milestone is v0.38.0, which will focus on Performance &
-Caching.
+Performance improvements preserve existing application behaviour.
+
+No production intelligence-model weights, optimizer objectives, Free Hit beam
+widths, candidate-pool semantics or deterministic tie-break rules were changed
+during v0.38.0.
+
+The next development milestone is v0.39.0 — v1.0 UX, Explainability & Release
+Hardening.
 
 
 ## Current Data Foundation
@@ -3287,29 +3278,149 @@ The project is now ready to move to v0.38.0 — Performance & Caching.
 
 ## v0.38.0 — Performance & Caching
 
+### Status
+
+**COMPLETE**
+
 ### Goal
 
-Reduce repeated expensive Player Intelligence calculations.
+Reduce expensive repeated calculations across the production intelligence and
+optimisation pipelines while preserving exact model and optimizer behaviour.
 
-### Current Motivation
+### Delivered
 
-Real-data services and tests now perform substantial repeated calculations.
+Optimised Free Hit search through:
 
-### Planned Work
+- prepared minimum-price pools
+- reusable remaining-player price evidence
+- bounded top-K descriptor ranking
+- preservation of the existing search-pool composition
+- preservation of existing beam widths and optimization objectives
 
-Profile:
+Optimised Player Intelligence through:
 
-- PlayerIntelligenceService
-- Wildcard Optimizer
-- Transfer Optimizer
-- Gameweek pages
-- Squad pages
+- bulk recent fixture-history retrieval
+- bulk recent appearance-history retrieval
+- prepared Player Form history pools
+- reuse of the existing long-form Player Form model during Trend evaluation
+- request-scoped prepared multi-gameweek team context
 
-Introduce caching only where correctness can be preserved.
+Shared multi-gameweek team context now prepares reusable:
 
-Cache invalidation should occur after relevant FPL data updates.
+- team-name lookup evidence
+- complete team models
+- team attack/defence lookup evidence
 
-Performance improvements must not change model output.
+Player-specific upcoming fixtures remain resolved for each player and are not
+incorrectly included in shared team-context caching.
+
+Optimised Transfer Intelligence through:
+
+- reusable individual Transfer Decision evaluation
+- prepared Transfer Combination evaluation
+- bounded top-K Transfer Combination ranking
+
+Transfer Optimizer ranking continues to preserve the authoritative ordering by:
+
+1. classification
+2. combination score
+3. combined Intelligence movement
+4. remaining budget
+
+### Performance Results
+
+The 660-player synthetic Free Hit benchmark was reduced from approximately
+38.037 seconds before v0.38.0 optimisation to approximately 8 seconds while
+preserving:
+
+- £99.1m deterministic squad cost
+- 102.613 deterministic Starting XI projected points
+
+A cold complete Player Intelligence build was reduced from approximately
+2.004 seconds to approximately 1.050 seconds.
+
+Free Hit candidate projection evidence in the profiled Chip Intelligence path
+was reduced from approximately 6.642 seconds to approximately 2.308 seconds.
+
+The profiled three-scenario Transfer Optimizer workload was reduced from
+approximately 16.966 seconds to approximately 4.945 seconds.
+
+The complete regression-suite runtime was reduced from:
+
+- v0.37.0 baseline: 482.884 seconds
+- v0.38.0 final validation: 269.745 seconds
+
+This is a reduction of 213.139 seconds, or approximately 44.1%.
+
+### Architecture Decisions
+
+Performance changes must preserve intelligence quality and deterministic
+behaviour.
+
+Caching and prepared evidence are used only where the correctness boundary is
+understood.
+
+Request-scoped evidence is preferred where persistent cache invalidation would
+introduce unnecessary correctness risk.
+
+No persistent cache was introduced merely to satisfy the milestone title.
+
+Player-specific fixture context remains player-specific.
+
+Bulk historical retrieval preserves existing per-player limiting and ordering
+semantics.
+
+Bounded ranking preserves the existing authoritative comparators.
+
+Free Hit candidate-pool composition and beam widths remain unchanged.
+
+No production intelligence-model weights, optimizer objectives or deterministic
+tie-break rules were changed during v0.38.0.
+
+Further Free Hit micro-optimisation was deliberately stopped once profiling
+showed diminishing returns relative to implementation and regression risk.
+
+### Testing
+
+Added dedicated regression and equivalence coverage for:
+
+- Free Hit descriptor ranking
+- Free Hit small-path descriptor ranking
+- prepared Free Hit minimum-price pools
+- bulk Player Fixture History retrieval
+- bulk history query boundaries
+- prepared Player Form history
+- prepared Player Form Trend long models
+- prepared multi-gameweek team context
+- prepared Transfer Combination decisions
+- Transfer Optimizer decision reuse
+- Transfer Optimizer bounded ranking
+
+The final complete v0.38.0 regression suite passes with:
+
+- 341 test files
+- 341 test files passed
+- 0 test files failed
+- 0 test files with errors
+- 9,972 assertions passed
+- 0 assertions failed
+- 269.745 seconds total runtime
+
+### Completion Notes
+
+v0.38.0 completes the Performance & Caching milestone.
+
+The complete regression suite is approximately 44.1% faster than the v0.37.0
+release baseline.
+
+The largest improvements came from removing repeated work rather than weakening
+the search or intelligence models.
+
+The application retains exact protected optimizer behaviour while performing
+substantially less duplicate computation.
+
+The project is now ready to move to v0.39.0 — v1.0 UX, Explainability & Release
+Hardening.
 
 
 ---
@@ -3474,125 +3585,4 @@ Before each release:
 9. commit
 10. push to `main`
 
-
 ---
-
-# Current Next Action
-
-**START: v0.35.0 — Recommendation History & Backtesting**
-
-v0.34.0 Chip Intelligence is complete.
-
-The final v0.34.0 regression baseline is:
-
-- 220 test files
-- 220 test files passed
-- 0 test files failed
-- 0 test files with errors
-- 6,104 assertions passed
-- 0 assertions failed
-- 222.901 seconds total runtime
-
-The completed v0.34.0 milestone now provides explainable decision support for all
-four FPL chips:
-
-- Wildcard
-- Free Hit
-- Bench Boost
-- Triple Captain
-
-The application can now:
-
-- compare the current squad with an optimised Wildcard squad
-- measure immediate Wildcard projected-points improvement
-- compare immediate Wildcard value with the projected value of waiting one
-  gameweek
-- optimise a legal one-gameweek Free Hit squad
-- compare the current Starting XI with the proposed Free Hit Starting XI
-- measure projected Bench Boost value
-- evaluate bench reliability
-- evaluate bench fixture quality
-- evaluate full-squad availability
-- identify Triple Captain opportunities using existing captain selection,
-  projected points and Captain Intelligence
-- produce Use / Consider / Hold recommendations
-- expose confidence and explanation for every chip decision
-- import a real FPL squad into the unified Chip Intelligence dashboard
-- present all four chip decisions together without introducing a synthetic
-  overall chip score or cross-chip ranking model
-
-The existing Expected Points architecture remains the source of player projection
-value.
-
-Chip Intelligence coordinates existing systems rather than duplicating their
-scoring models.
-
-The completed v0.34.0 architecture reuses:
-
-- Expected Points Intelligence
-- Multi-Gameweek Expected Points Intelligence
-- Squad Horizon Intelligence
-- Blank & Double Gameweek Intelligence
-- Captain Intelligence
-- Wildcard Intelligence
-
-Wildcard Timing continues to evaluate the value of restructuring the squad rather
-than replacing the existing Wildcard squad optimiser.
-
-Free Hit Intelligence remains a dedicated one-gameweek optimisation layer that
-uses existing Expected Points and normal FPL squad constraints.
-
-Bench Boost Intelligence evaluates the projected value and reliability of the
-complete 15-player squad without recalculating player projections.
-
-Triple Captain Intelligence builds on existing Captain Intelligence and Expected
-Points rather than introducing an independent captain-scoring model.
-
-Blank and Double Gameweek information continues to act through the schedule-aware
-projection architecture completed in v0.33.0.
-
-The next milestone is:
-
-**v0.35.0 — Recommendation History & Backtesting**
-
-Initial v0.35.0 focus:
-
-1. define a persistent recommendation-history architecture
-2. preserve pre-deadline recommendation snapshots
-3. record relevant model outputs at the time recommendations are made
-4. preserve captain recommendations
-5. preserve Starting XI recommendations
-6. preserve transfer recommendations
-7. preserve Gameweek Decision output
-8. preserve projected points and important supporting model components
-9. compare preserved recommendations with actual completed-gameweek outcomes
-10. add initial backtesting metrics for recommendation quality
-11. protect historical recommendation records from later live-data changes
-12. add controlled synthetic and real-data regression coverage for recommendation
-    history and backtesting
-
-v0.35.0 should begin by preserving what the application recommended before each
-deadline.
-
-The first implementation should avoid changing model weights or recommendation
-logic.
-
-Backtesting should initially measure existing behaviour rather than tune it.
-
-The system should preserve enough evidence to answer questions such as:
-
-- Did the recommended captain outperform realistic alternatives?
-- Did recommended transfers outperform the players they replaced?
-- Did the recommended Starting XI outperform available bench alternatives?
-- How accurate were projected minutes?
-- How accurate were projected points?
-- Did stronger Intelligence Scores correlate with stronger realised returns?
-- Were Use / Consider / Hold decisions supported by later outcomes?
-
-Historical recommendation records must remain immutable once captured.
-
-Future model calibration should be based on accumulated backtesting evidence
-rather than whether a current recommendation simply appears reasonable.
-
-All existing recommendation and decision behaviour must remain protected while
-Recommendation History & Backtesting is introduced.

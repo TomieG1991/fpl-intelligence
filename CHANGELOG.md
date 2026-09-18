@@ -6,6 +6,125 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.38.0] - Performance & Caching
+
+### Added
+
+- Added `FreeHitDescriptorRanker` for bounded top-K Free Hit descriptor ranking
+  while preserving the existing deterministic ranking comparator.
+- Added `FreeHitMinimumPriceCalculator` and prepared minimum-price pools so Free
+  Hit feasibility checks can reuse precomputed cheapest-player evidence.
+- Added bulk recent player fixture-history retrieval through
+  `PlayerFixtureHistoryRepository::getRecentForPlayerIds()`.
+- Added prepared Player Form history pools so bulk-loaded fixture and appearance
+  history can be reused across Player Intelligence evaluation.
+- Added request-scoped prepared multi-gameweek team context for shared team-name,
+  team-model and attack/defence lookup evidence.
+- Added `TransferCombinationRanker` for bounded top-K Transfer Optimizer ranking.
+- Added prepared Transfer Combination evaluation so already-computed individual
+  transfer decisions can be reused across transfer pairs.
+
+### Changed
+
+- Changed large-pool Free Hit search to reuse prepared minimum-price evidence
+  instead of repeatedly recalculating remaining-player price floors.
+- Changed Free Hit descriptor ranking to retain only the strongest required
+  descriptors using the existing projected-points, price and deterministic-key
+  ordering.
+- Changed Player Intelligence construction to bulk-load recent fixture and
+  appearance history for the complete player pool rather than issuing repeated
+  per-player history queries.
+- Changed Player Form Trend evaluation to reuse the already-built long-form
+  Player Form model instead of rebuilding the same 5/5 form evidence.
+- Changed multi-gameweek Player Intelligence evaluation to prepare shared
+  team-wide context once per service instance while continuing to resolve
+  player-specific upcoming fixtures per evaluation.
+- Changed Transfer Optimizer evaluation to calculate each reusable individual
+  transfer decision once and reuse it across candidate combinations.
+- Changed Transfer Optimizer final ranking from a full sort of every affordable
+  combination to bounded top-K ranking while preserving the authoritative
+  comparator and `total_found` semantics.
+- Removed a duplicate consecutive fixture-repository read from the multi-gameweek
+  Player Intelligence path.
+
+### Performance
+
+- Reduced the 660-player synthetic Free Hit benchmark from approximately
+  38.037 seconds before v0.38.0 optimization to approximately 8 seconds while
+  preserving the deterministic £99.1m squad and 102.613 Starting XI projected
+  points.
+- Reduced a cold complete Player Intelligence build from approximately
+  2.004 seconds to approximately 1.050 seconds, a reduction of about 47.6%.
+- Reduced Free Hit candidate projection evidence in Chip Intelligence from
+  approximately 6.642 seconds to 2.308 seconds, a reduction of about 65.2%.
+- Reduced the complete profiled Free Hit decision path from approximately
+  16.877 seconds to 12.225 seconds after prepared multi-gameweek team context,
+  a reduction of about 27.6%.
+- Reduced the complete profiled Chip Intelligence path from approximately
+  23.391 seconds to 18.205 seconds, a reduction of about 22.2%.
+- Reduced the profiled three-scenario Transfer Optimizer workload from
+  approximately 16.966 seconds before Transfer optimization to 4.945 seconds
+  after decision reuse and bounded ranking, a reduction of about 70.9%.
+- Reduced the complete regression-suite runtime from the v0.37.0 baseline of
+  482.884 seconds to 269.745 seconds at the final v0.38.0 validation checkpoint,
+  a reduction of 213.139 seconds or about 44.1%.
+
+### Architecture
+
+- Performance improvements reuse immutable or request-scoped evidence only where
+  the correctness boundary is understood.
+- Player-specific upcoming fixtures remain resolved per multi-gameweek player
+  evaluation and are not included in shared team-context caching.
+- Bulk fixture-history preparation preserves the existing per-player history
+  limits and ordering semantics.
+- Transfer decision reuse separates individual transfer evaluation from
+  combination evaluation without changing combination scoring.
+- Bounded ranking preserves the existing deterministic comparator semantics and
+  returned result limits.
+- Free Hit search-pool composition and beam widths remain unchanged.
+- No production intelligence-model weights, optimizer objectives, candidate-pool
+  semantics or deterministic tie-break rules were changed in v0.38.0.
+
+### Testing
+
+- Added dedicated regression and equivalence coverage for:
+  - Free Hit bounded descriptor ranking
+  - Free Hit small-path descriptor ranking
+  - prepared Free Hit minimum-price pools
+  - bulk player fixture-history retrieval
+  - bulk fixture-history query boundaries
+  - prepared Player Form history pools
+  - prepared Player Form Trend long models
+  - prepared multi-gameweek team context
+  - prepared Transfer Combination decisions
+  - Transfer Optimizer decision reuse
+  - Transfer Optimizer bounded ranking
+- Re-ran focused, downstream and complete regression coverage throughout the
+  performance milestone.
+- Final complete regression suite:
+  - 341 of 341 test files passed
+  - 9,972 of 9,972 assertions passed
+  - zero test failures
+  - zero test execution errors
+  - runtime: 269.745 seconds
+
+### Completion Notes
+
+- v0.38.0 completes the Performance & Caching milestone.
+- The complete regression suite is approximately 44.1% faster than the v0.37.0
+  release baseline while preserving application behaviour.
+- Free Hit, Player Intelligence and Transfer Optimizer were optimized only after
+  profiling identified measurable hotspots.
+- Additional Free Hit micro-optimization was deliberately stopped after profiling
+  showed diminishing returns relative to regression risk.
+- The final clean 660-player Free Hit scalability regression remains deterministic
+  at £99.1m squad cost and 102.613 Starting XI projected points.
+- No production model-weight changes or deliberate intelligence-quality
+  reductions were introduced during the performance milestone.
+
+---
+
+
 ## [0.37.0] - Data Update Reliability & Application Health
 
 ### Added
