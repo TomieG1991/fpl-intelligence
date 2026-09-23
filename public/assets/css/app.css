@@ -981,6 +981,133 @@ a {
 }
 
 
+
+/*
+ * ============================================================
+ * SHARED DATA HEALTH WARNING
+ * ============================================================
+ */
+
+.data-health-warning,
+.data-health-notice {
+    margin-bottom:
+        20px;
+
+    padding:
+        18px
+        20px;
+
+    border-radius:
+        10px;
+}
+
+
+.data-health-warning {
+    background:
+        rgba(239, 111, 123, 0.08);
+
+    border:
+        1px solid rgba(239, 111, 123, 0.28);
+}
+
+
+.data-health-notice {
+    background:
+        rgba(230, 178, 95, 0.08);
+
+    border:
+        1px solid rgba(230, 178, 95, 0.28);
+}
+
+
+.data-health-warning h2,
+.data-health-notice h2 {
+    margin:
+        0
+        0
+        8px;
+
+    color:
+        #f6f8fc;
+
+    font-size:
+        15px;
+
+    line-height:
+        1.4;
+}
+
+
+.data-health-warning ul,
+.data-health-notice ul {
+    margin:
+        0
+        0
+        12px;
+
+    padding-left:
+        20px;
+
+    color:
+        #b7c1d2;
+
+    font-size:
+        11px;
+
+    line-height:
+        1.6;
+}
+
+
+.data-health-warning li + li,
+.data-health-notice li + li {
+    margin-top:
+        4px;
+}
+
+
+.data-health-warning a,
+.data-health-notice a {
+    display:
+        inline-block;
+
+    color:
+        #c7c0ff;
+
+    font-size:
+        11px;
+
+    font-weight:
+        700;
+
+    text-decoration:
+        underline;
+
+    text-underline-offset:
+        3px;
+}
+
+
+.data-health-warning a:hover,
+.data-health-notice a:hover {
+    color:
+        #ffffff;
+}
+
+
+.data-health-warning a:focus-visible,
+.data-health-notice a:focus-visible {
+    outline:
+        2px solid #a99fff;
+
+    outline-offset:
+        3px;
+
+    border-radius:
+        2px;
+}
+
+
 /*
  * ============================================================
  * FOOTER
@@ -13502,3 +13629,756 @@ a {
         #f08b96;
 }
 
+/*
+ * ============================================================
+ * FIXTURES
+ * ============================================================
+ */
+
+
+/*
+ * ------------------------------------------------------------
+ * GAMEWEEK CONTROLS
+ * ------------------------------------------------------------
+ */
+
+.fixture-gameweek-controls {
+    padding:
+        20px
+        22px;
+
+    background:
+        #1b2335;
+
+    border:
+        1px solid #34405a;
+
+    border-radius:
+        12px;
+
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.16);
+}
+
+
+.fixture-gameweek-controls .section-heading {
+    margin-bottom:
+        18px;
+}
+
+
+.fixture-gameweek-controls .section-heading h2 {
+    margin:
+        4px
+        0
+        0;
+
+    color:
+        #ffffff;
+
+    font-size:
+        21px;
+}
+
+
+.fixture-gameweek-navigation {
+    display:
+        grid;
+
+    grid-template-columns:
+        minmax(120px, 1fr)
+        auto
+        minmax(120px, 1fr);
+
+    align-items:
+        end;
+
+    gap:
+        18px;
+}
+
+
+.fixture-gameweek-navigation-side {
+    display:
+        flex;
+
+    align-items:
+        center;
+}
+
+
+.fixture-gameweek-navigation-next {
+    justify-content:
+        flex-end;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * PREVIOUS / NEXT
+ * ------------------------------------------------------------
+ */
+
+.fixture-gameweek-link {
+    display:
+        inline-flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    min-height:
+        40px;
+
+    padding:
+        0
+        14px;
+
+    border:
+        1px solid #465370;
+
+    border-radius:
+        7px;
+
+    background:
+        #151c2c;
+
+    color:
+        #c8d0df;
+
+    font-size:
+        12px;
+
+    font-weight:
+        700;
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease;
+}
+
+
+.fixture-gameweek-link:hover {
+    background:
+        #232c40;
+
+    border-color:
+        #665aa8;
+
+    color:
+        #ffffff;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * GAMEWEEK SELECTOR
+ * ------------------------------------------------------------
+ */
+
+.fixture-gameweek-form {
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    gap:
+        7px;
+
+    min-width:
+        190px;
+}
+
+
+.fixture-gameweek-form label {
+    color:
+        #aab5c8;
+
+    font-size:
+        11px;
+
+    font-weight:
+        700;
+}
+
+
+.fixture-gameweek-form select {
+    min-height:
+        40px;
+
+    padding:
+        8px
+        34px
+        8px
+        11px;
+
+    border:
+        1px solid #465370;
+
+    border-radius:
+        7px;
+
+    outline:
+        none;
+
+    background:
+        #111725;
+
+    color:
+        #ffffff;
+
+    font-family:
+        inherit;
+
+    font-size:
+        13px;
+
+    font-weight:
+        600;
+
+    cursor:
+        pointer;
+
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+
+.fixture-gameweek-form select:focus {
+    border-color:
+        #8173ff;
+
+    box-shadow:
+        0 0 0 3px rgba(111, 92, 255, 0.15);
+}
+
+
+.fixture-gameweek-form button {
+    min-height:
+        40px;
+
+    padding:
+        0
+        16px;
+
+    border:
+        1px solid #7566ff;
+
+    border-radius:
+        7px;
+
+    background:
+        #6f5cff;
+
+    color:
+        #ffffff;
+
+    font-family:
+        inherit;
+
+    font-size:
+        12px;
+
+    font-weight:
+        700;
+
+    cursor:
+        pointer;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * FIXTURE TABLE
+ * ------------------------------------------------------------
+ */
+
+.fixture-gameweek-section {
+    margin-top:
+        24px;
+}
+
+
+.fixture-table td {
+    vertical-align:
+        middle;
+}
+
+
+.fixture-table td:nth-child(3),
+
+.fixture-table td:nth-child(5),
+
+.fixture-table th:nth-child(3),
+
+.fixture-table th:nth-child(5) {
+    width:
+        76px;
+
+    text-align:
+        center;
+}
+
+
+.fixture-table td:nth-child(2) a,
+
+.fixture-table td:nth-child(4) a {
+    color:
+        #f1f4fa;
+
+    font-weight:
+        600;
+
+    transition:
+        color 0.15s ease;
+}
+
+
+.fixture-table td:nth-child(2) a:hover,
+
+.fixture-table td:nth-child(4) a:hover {
+    color:
+        #b9b1ff;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * FPL FIXTURE DIFFICULTY
+ * ------------------------------------------------------------
+ */
+
+.fixture-fdr {
+    display:
+        inline-flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    width:
+        30px;
+
+    height:
+        30px;
+
+    border:
+        1px solid #465370;
+
+    border-radius:
+        7px;
+
+    background:
+        #20293d;
+
+    color:
+        #d7deea;
+
+    font-size:
+        11px;
+
+    font-weight:
+        800;
+}
+
+
+.fixture-fdr-1 {
+    background:
+        rgba(75, 209, 139, 0.16);
+
+    border-color:
+        rgba(75, 209, 139, 0.48);
+
+    color:
+        #72e2aa;
+}
+
+
+.fixture-fdr-2 {
+    background:
+        rgba(103, 211, 166, 0.11);
+
+    border-color:
+        rgba(103, 211, 166, 0.32);
+
+    color:
+        #91dfbd;
+}
+
+
+.fixture-fdr-3 {
+    background:
+        rgba(111, 92, 255, 0.14);
+
+    border-color:
+        rgba(129, 115, 255, 0.38);
+
+    color:
+        #c7c0ff;
+}
+
+
+.fixture-fdr-4 {
+    background:
+        rgba(239, 167, 110, 0.12);
+
+    border-color:
+        rgba(239, 167, 110, 0.38);
+
+    color:
+        #efa76e;
+}
+
+
+.fixture-fdr-5 {
+    background:
+        rgba(230, 95, 109, 0.13);
+
+    border-color:
+        rgba(230, 95, 109, 0.45);
+
+    color:
+        #f08b96;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * RESPONSIVE FIXTURES
+ * ------------------------------------------------------------
+ */
+
+@media (
+    max-width: 800px
+) {
+
+    .fixture-gameweek-navigation {
+        grid-template-columns:
+            1fr
+            1fr;
+    }
+
+
+    .fixture-gameweek-form {
+        grid-column:
+            1 / -1;
+
+        grid-row:
+            1;
+
+        width:
+            100%;
+    }
+
+
+    .fixture-gameweek-navigation-side {
+        grid-row:
+            2;
+    }
+
+
+    .fixture-gameweek-link {
+        width:
+            100%;
+    }
+}
+
+
+@media (
+    max-width: 600px
+) {
+
+    .fixture-gameweek-controls {
+        padding:
+            18px;
+    }
+
+
+    .fixture-gameweek-navigation {
+        gap:
+            10px;
+    }
+
+
+    .fixture-gameweek-form {
+        min-width:
+            0;
+    }
+
+
+    .fixture-gameweek-link {
+        padding:
+            0
+            10px;
+
+        font-size:
+            11px;
+    }
+
+
+    .fixture-table {
+        min-width:
+            620px;
+    }
+
+
+    .fixture-table th,
+
+    .fixture-table td {
+        white-space:
+            nowrap;
+    }
+}
+
+/*
+ * ------------------------------------------------------------
+ * RESPONSIVE FIXTURE TABLE GUIDANCE
+ * ------------------------------------------------------------
+ */
+
+.fixture-table-scroll-hint {
+    display:
+        none;
+}
+
+
+@media (
+    max-width: 600px
+) {
+
+    .fixture-table-scroll-hint {
+        display:
+            block;
+
+        margin:
+            0
+            0
+            10px;
+
+        color:
+            #8fa0b8;
+
+        font-size:
+            11px;
+
+        font-weight:
+            600;
+
+        line-height:
+            1.5;
+
+        text-align:
+            right;
+    }
+
+}
+
+/*
+ * ============================================================
+ * MOBILE PRIMARY NAVIGATION
+ * ============================================================
+ */
+
+.mobile-navigation-toggle {
+    display:
+        none;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * MOBILE NAVIGATION
+ * ------------------------------------------------------------
+ */
+
+@media (
+    max-width: 800px
+) {
+
+    .sidebar {
+        padding:
+            20px;
+    }
+
+
+    .brand {
+        margin-bottom:
+            18px;
+    }
+
+
+    .mobile-navigation-toggle {
+        width:
+            100%;
+
+        min-height:
+            44px;
+
+        display:
+            flex;
+
+        align-items:
+            center;
+
+        justify-content:
+            space-between;
+
+        gap:
+            12px;
+
+        padding:
+            0
+            14px;
+
+        border:
+            1px solid #34405a;
+
+        border-radius:
+            8px;
+
+        background:
+            #1b2335;
+
+        color:
+            #f1f4fa;
+
+        font-family:
+            inherit;
+
+        font-size:
+            13px;
+
+        font-weight:
+            700;
+
+        cursor:
+            pointer;
+    }
+
+
+    .mobile-navigation-toggle:hover {
+        background:
+            #232c40;
+    }
+
+
+    .mobile-navigation-toggle:focus-visible {
+        outline:
+            2px solid #8173ff;
+
+        outline-offset:
+            2px;
+    }
+
+
+    .mobile-navigation-toggle-icon {
+        color:
+            #a99fff;
+
+        font-size:
+            18px;
+    }
+
+
+    .main-navigation {
+        display:
+            none;
+
+        flex-direction:
+            column;
+
+        gap:
+            6px;
+
+        overflow:
+            visible;
+
+        margin-top:
+            10px;
+    }
+
+
+    .main-navigation.mobile-navigation-open {
+        display:
+            flex;
+    }
+
+
+    .main-navigation .nav-link {
+        width:
+            100%;
+    }
+
+}
+
+/*
+ * ============================================================
+ * SIDEBAR HEALTH LINK
+ * ============================================================
+ */
+
+.sidebar-health-link {
+    color:
+        inherit;
+
+    text-decoration:
+        none;
+}
+
+
+.sidebar-health-link:hover {
+    color:
+        #ffffff;
+}
+
+
+.sidebar-health-link:focus-visible {
+    outline:
+        2px solid #8173ff;
+
+    outline-offset:
+        3px;
+
+    border-radius:
+        3px;
+}
+
+/* ============================================================
+   SHARED BUTTON LINKS
+   ============================================================ */
+
+.button-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 12px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    background: #2563eb;
+    color: #ffffff;
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.button-link:hover {
+    background: #1d4ed8;
+    color: #ffffff;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.button-link:focus-visible {
+    outline: 3px solid currentColor;
+    outline-offset: 3px;
+}

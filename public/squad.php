@@ -4,6 +4,15 @@ require_once __DIR__
     . '/../classes/autoload.php';
 
 
+require_once __DIR__
+    . '/includes/data-health.php';
+
+
+$config =
+    require __DIR__
+        . '/../config/config.php';
+
+
 /*
  * ============================================================
  * ACTIVE NAVIGATION
@@ -38,15 +47,43 @@ $squadHorizonService =
     null;
 
 
+$dataHealth =
+    [];
+
+
 try {
 
     $database =
         new Database();
 
 
+    $db =
+        $database
+            ->getConnection();
+
+
+    $dataHealth =
+        evaluateDataHealth(
+            $db,
+            [
+                'bootstrap',
+                'fixtures',
+                'player_fixture_history'
+            ],
+            date(
+                'Y-m-d H:i:s'
+            ),
+            $config[
+                'data_health'
+            ][
+                'freshness_seconds'
+            ]
+        );
+
+
     $service =
         new PlayerIntelligenceService(
-            $database->getConnection()
+            $db
         );
 
 
@@ -56,8 +93,8 @@ try {
         
     $playerRepository =
         new PlayerRepository(
-            $database->getConnection()
-    );
+            $db
+        );
     
     
     $squadHorizonService =
@@ -121,1068 +158,13 @@ $previewMode =
         [
             '1',
             'true',
-            'generic',
-            'manual'
+            'generic'
         ],
         true
     );
 
 
-$manualPreviewMode =
-    $previewInput === 'manual';
 
-
-function buildManualSquadPreview(
-    PlayerIntelligenceService $service,
-    PlayerRepository $playerRepository
-): ?array {
-
-    /*
-     * ========================================================
-     * MANUAL PREVIEW SQUAD
-     * ========================================================
-     *
-     * Temporary real-world development squad for checking
-     * Squad Intelligence against the current GW1 selection.
-     */
-
-    $previewSquad = [
-
-        'GK' => [
-
-            [
-                'name' =>
-                    'Verbruggen',
-
-                'aliases' => [
-                    'Verbruggen'
-                ]
-            ],
-
-            [
-                'name' =>
-                    'Kinsky',
-
-                'aliases' => [
-                    'Kinsky',
-                    'Kinský'
-                ]
-            ]
-        ],
-
-
-        'DEF' => [
-
-            [
-                'name' =>
-                    'Maguire',
-
-                'aliases' => [
-                    'Maguire'
-                ]
-            ],
-
-            [
-                'name' =>
-                    'Calafiori',
-
-                'aliases' => [
-                    'Calafiori'
-                ]
-            ],
-
-            [
-                'name' =>
-                    'De Cuyper',
-
-                'aliases' => [
-                    'De Cuyper',
-                    'Decuyper',
-                    'DeCuyper'
-                ]
-            ],
-
-            [
-                'name' =>
-                    'Mitchell',
-
-                'aliases' => [
-                    'Mitchell',
-                    'Mitchel'
-                ]
-            ],
-
-            [
-                'name' =>
-                    'Thomas',
-
-                'aliases' => [
-                    'Thomas'
-                ]
-            ]
-        ],
-
-
-        'MID' => [
-
-            [
-                'name' =>
-                    'Tzolis',
-
-                'aliases' => [
-                    'Tzolis'
-                ]
-            ],
-
-            [
-                'name' =>
-                    'Mbeumo',
-
-                'aliases' => [
-                    'Mbeumo'
-                ]
-            ],
-
-            [
-                'name' =>
-                    'Anderson',
-
-                'aliases' => [
-                    'Anderson'
-                ]
-            ],
-
-            [
-                'name' =>
-                    'Gibbs-White',
-
-                'aliases' => [
-                    'Gibbs-White',
-                    'Gibbs White'
-                ]
-            ],
-
-            [
-                'name' =>
-                    'Rogers',
-
-                'aliases' => [
-                    'Rogers'
-                ]
-            ]
-        ],
-
-
-        'FWD' => [
-
-            [
-                'name' =>
-                    'Joao Pedro',
-
-                'aliases' => [
-                    'Joao Pedro',
-                    'João Pedro',
-                    'J.Pedro'
-                ]
-            ],
-
-            [
-                'name' =>
-                    'Haaland',
-
-                'aliases' => [
-                    'Haaland'
-                ]
-            ],
-
-            [
-                'name' =>
-                    'Brobbey',
-
-                'aliases' => [
-                    'Brobbey'
-                ]
-            ]
-        ]
-    ];
-
-
-    /*
-     * ========================================================
-     * NORMALISE PLAYER NAMES
-     * ========================================================
-     */
-
-    $normaliseName =
-        static function (
-            string $name
-        ): string {
-
-            $name =
-                trim(
-                    $name
-                );
-
-
-            /*
-             * Convert accented characters where possible.
-             */
-
-            if (
-                function_exists(
-                    'iconv'
-                )
-            ) {
-
-                $converted =
-                    @iconv(
-                        'UTF-8',
-                        'ASCII//TRANSLIT//IGNORE',
-                        $name
-                    );
-
-
-                if (
-                    is_string(
-                        $converted
-                    )
-                    &&
-                    $converted !== ''
-                ) {
-
-                    $name =
-                        $converted;
-                }
-            }
-
-
-            $name =
-                strtolower(
-                    $name
-                );
-
-
-            /*
-             * Remove spaces, punctuation and separators so:
-             *
-             * De Cuyper
-             * DeCuyper
-             * de-cuyper
-             *
-             * all resolve consistently.
-             */
-
-            $name =
-                preg_replace(
-                    '/[^a-z0-9]/',
-                    '',
-                    $name
-                )
-                ?? '';
-
-
-            return $name;
-        };
-
-
-    /*
-     * ========================================================
-     * LOAD CURRENT DATA
-     * ========================================================
-     */
-
-    $summaries =
-        $service
-            ->getAllPlayerSummaries();
-
-
-    $localPlayers =
-        $playerRepository
-            ->getAll();
-
-
-    /*
-     * ========================================================
-     * BUILD PLAYER LOOKUPS
-     * ========================================================
-     */
-
-    $localById =
-        [];
-
-
-    $localByName =
-        [];
-
-
-    foreach (
-        $localPlayers
-        as $localPlayer
-    ) {
-
-        $playerId =
-            (int) (
-                $localPlayer[
-                    'id'
-                ]
-                ?? 0
-            );
-
-
-        if (
-            $playerId <= 0
-        ) {
-
-            continue;
-        }
-
-
-        $localById[
-            $playerId
-        ] =
-            $localPlayer;
-
-
-        $possibleNames = [
-
-            $localPlayer[
-                'web_name'
-            ]
-            ?? '',
-
-            $localPlayer[
-                'first_name'
-            ]
-            ?? '',
-
-            $localPlayer[
-                'second_name'
-            ]
-            ?? ''
-        ];
-
-
-        foreach (
-            $possibleNames
-            as $possibleName
-        ) {
-
-            $normalised =
-                $normaliseName(
-                    (string) $possibleName
-                );
-
-
-            if (
-                $normalised !== ''
-            ) {
-
-                $localByName[
-                    $normalised
-                ] =
-                    $localPlayer;
-            }
-        }
-
-
-        /*
-         * Also index the complete first + second name.
-         */
-
-        $fullName =
-            trim(
-                (
-                    $localPlayer[
-                        'first_name'
-                    ]
-                    ?? ''
-                )
-                . ' '
-                . (
-                    $localPlayer[
-                        'second_name'
-                    ]
-                    ?? ''
-                )
-            );
-
-
-        if (
-            $fullName !== ''
-        ) {
-
-            $localByName[
-                $normaliseName(
-                    $fullName
-                )
-            ] =
-                $localPlayer;
-        }
-    }
-
-
-    $summaryByPlayerId =
-        [];
-
-
-    $summaryByName =
-        [];
-
-
-    foreach (
-        $summaries
-        as $summary
-    ) {
-
-        $playerId =
-            (int) (
-                $summary[
-                    'player_id'
-                ]
-                ?? 0
-            );
-
-
-        if (
-            $playerId > 0
-        ) {
-
-            $summaryByPlayerId[
-                $playerId
-            ] =
-                $summary;
-        }
-
-
-        $summaryName =
-            (string) (
-                $summary[
-                    'name'
-                ]
-                ?? ''
-            );
-
-
-        if (
-            $summaryName !== ''
-        ) {
-
-            $summaryByName[
-                $normaliseName(
-                    $summaryName
-                )
-            ] =
-                $summary;
-        }
-    }
-
-
-    /*
-     * ========================================================
-     * RESOLVE MANUAL SQUAD
-     * ========================================================
-     */
-
-    $players =
-        [];
-
-
-    $missingPlayers =
-        [];
-
-
-    foreach (
-        $previewSquad
-        as $requiredPosition => $requestedPlayers
-    ) {
-
-        foreach (
-            $requestedPlayers
-            as $requestedPlayer
-        ) {
-
-            $aliases =
-                $requestedPlayer[
-                    'aliases'
-                ]
-                ?? [];
-
-
-            $localPlayer =
-                null;
-
-
-            $summary =
-                null;
-
-
-            /*
-             * ------------------------------------------------
-             * TRY LOCAL PLAYER LOOKUP
-             * ------------------------------------------------
-             */
-
-            foreach (
-                $aliases
-                as $alias
-            ) {
-
-                $normalisedAlias =
-                    $normaliseName(
-                        $alias
-                    );
-
-
-                if (
-                    isset(
-                        $localByName[
-                            $normalisedAlias
-                        ]
-                    )
-                ) {
-
-                    $localPlayer =
-                        $localByName[
-                            $normalisedAlias
-                        ];
-
-
-                    break;
-                }
-            }
-
-
-            /*
-             * ------------------------------------------------
-             * TRY SUMMARY LOOKUP
-             * ------------------------------------------------
-             */
-
-            if (
-                $localPlayer !== null
-            ) {
-
-                $localPlayerId =
-                    (int) (
-                        $localPlayer[
-                            'id'
-                        ]
-                        ?? 0
-                    );
-
-
-                $summary =
-                    $summaryByPlayerId[
-                        $localPlayerId
-                    ]
-                    ?? null;
-            }
-
-
-            /*
-             * If the repository-name lookup missed, try the
-             * Player Intelligence display name directly.
-             */
-
-            if (
-                $summary === null
-            ) {
-
-                foreach (
-                    $aliases
-                    as $alias
-                ) {
-
-                    $normalisedAlias =
-                        $normaliseName(
-                            $alias
-                        );
-
-
-                    if (
-                        isset(
-                            $summaryByName[
-                                $normalisedAlias
-                            ]
-                        )
-                    ) {
-
-                        $summary =
-                            $summaryByName[
-                                $normalisedAlias
-                            ];
-
-
-                        $summaryPlayerId =
-                            (int) (
-                                $summary[
-                                    'player_id'
-                                ]
-                                ?? 0
-                            );
-
-
-                        $localPlayer =
-                            $localById[
-                                $summaryPlayerId
-                            ]
-                            ?? null;
-
-
-                        break;
-                    }
-                }
-            }
-
-
-            if (
-                $localPlayer === null
-                ||
-                $summary === null
-            ) {
-
-                $missingPlayers[] =
-                    $requestedPlayer[
-                        'name'
-                    ]
-                    ?? 'Unknown';
-
-
-                continue;
-            }
-
-
-            /*
-             * ------------------------------------------------
-             * VALIDATE POSITION
-             * ------------------------------------------------
-             */
-
-            $position =
-                strtoupper(
-                    trim(
-                        (string) (
-                            $summary[
-                                'position'
-                            ]
-                            ?? ''
-                        )
-                    )
-                );
-
-
-            if (
-                $position
-                !==
-                $requiredPosition
-            ) {
-
-                $missingPlayers[] =
-                    (
-                        $requestedPlayer[
-                            'name'
-                        ]
-                        ?? 'Unknown'
-                    )
-                    . ' (expected '
-                    . $requiredPosition
-                    . ', found '
-                    . (
-                        $position !== ''
-                            ? $position
-                            : 'unknown'
-                    )
-                    . ')';
-
-
-                continue;
-            }
-
-
-            /*
-             * ------------------------------------------------
-             * CONFIDENCE NORMALISATION
-             * ------------------------------------------------
-             */
-
-            $confidence =
-                $summary[
-                    'sample_confidence'
-                ]
-                ?? null;
-
-
-            if (
-                $confidence !== null
-                &&
-                is_numeric(
-                    $confidence
-                )
-            ) {
-
-                $confidence =
-                    (float) $confidence;
-
-
-                if (
-                    $confidence > 1
-                ) {
-
-                    $confidence /=
-                        100;
-                }
-            }
-
-
-            /*
-             * ------------------------------------------------
-             * BUILD STANDARD SQUAD PLAYER
-             * ------------------------------------------------
-             */
-
-            $players[] = [
-
-                'player_id' =>
-                    (int) (
-                        $summary[
-                            'player_id'
-                        ]
-                        ?? 0
-                    ),
-
-                'fpl_player_id' =>
-                    isset(
-                        $localPlayer[
-                            'fpl_player_id'
-                        ]
-                    )
-                        ? (int) $localPlayer[
-                            'fpl_player_id'
-                        ]
-                        : null,
-
-                'name' =>
-                    $summary[
-                        'name'
-                    ]
-                    ?? (
-                        $localPlayer[
-                            'web_name'
-                        ]
-                        ?? null
-                    ),
-
-                'team_id' =>
-                    (int) (
-                        $localPlayer[
-                            'team_id'
-                        ]
-                        ?? 0
-                    ),
-
-                'team_name' =>
-                    $summary[
-                        'team_name'
-                    ]
-                    ?? null,
-
-                'position' =>
-                    $position,
-
-                'price' =>
-                    $summary[
-                        'price'
-                    ]
-                    ?? null,
-
-                'intelligence_score' =>
-                    is_numeric(
-                        $summary[
-                            'intelligence_score'
-                        ]
-                        ?? null
-                    )
-                        ? (float) $summary[
-                            'intelligence_score'
-                        ]
-                        : null,
-
-                'strength_rating' =>
-                    $summary[
-                        'strength_rating'
-                    ]
-                    ?? null,
-
-                'value_rating' =>
-                    $summary[
-                        'value_rating'
-                    ]
-                    ?? null,
-
-                'fixture_rating' =>
-                    $summary[
-                        'fixture_rating'
-                    ]
-                    ?? null,
-
-                'availability_rating' =>
-                    $summary[
-                        'availability_rating'
-                    ]
-                    ?? null,
-
-                'sample_confidence' =>
-                    $confidence,
-
-                'verdict' =>
-                    $summary[
-                        'assessment_verdict'
-                    ]
-                    ?? null
-            ];
-        }
-    }
-
-
-    /*
-     * ========================================================
-     * REQUIRE ALL 15 PLAYERS
-     * ========================================================
-     */
-
-    if (
-        !empty(
-            $missingPlayers
-        )
-        ||
-        count(
-            $players
-        )
-        !== 15
-    ) {
-
-        throw new RuntimeException(
-            'Unable to resolve manual preview players: '
-            . implode(
-                ', ',
-                $missingPlayers
-            )
-        );
-    }
-
-
-    /*
-     * ========================================================
-     * VALIDATE FPL POSITION COUNTS
-     * ========================================================
-     */
-
-    $positionCounts = [
-
-        'GK' =>
-            0,
-
-        'DEF' =>
-            0,
-
-        'MID' =>
-            0,
-
-        'FWD' =>
-            0
-    ];
-
-
-    $teamCounts =
-        [];
-
-
-    foreach (
-        $players
-        as $player
-    ) {
-
-        $position =
-            $player[
-                'position'
-            ]
-            ?? '';
-
-
-        if (
-            isset(
-                $positionCounts[
-                    $position
-                ]
-            )
-        ) {
-
-            $positionCounts[
-                $position
-            ]++;
-        }
-
-
-        $teamId =
-            (int) (
-                $player[
-                    'team_id'
-                ]
-                ?? 0
-            );
-
-
-        $teamCounts[
-            $teamId
-        ] =
-            (
-                $teamCounts[
-                    $teamId
-                ]
-                ?? 0
-            )
-            +
-            1;
-    }
-
-
-    if (
-        $positionCounts[
-            'GK'
-        ]
-        !== 2
-        ||
-        $positionCounts[
-            'DEF'
-        ]
-        !== 5
-        ||
-        $positionCounts[
-            'MID'
-        ]
-        !== 5
-        ||
-        $positionCounts[
-            'FWD'
-        ]
-        !== 3
-    ) {
-
-        throw new RuntimeException(
-            'Manual preview squad does not contain a valid FPL positional structure.'
-        );
-    }
-
-
-    foreach (
-        $teamCounts
-        as $count
-    ) {
-
-        if (
-            $count > 3
-        ) {
-
-            throw new RuntimeException(
-                'Manual preview squad exceeds the three-player-per-club limit.'
-            );
-        }
-    }
-
-
-    /*
-     * ========================================================
-     * TEAM VALUE + BANK
-     * ========================================================
-     *
-     * Treat £100.0m as the total FPL starting budget and
-     * calculate the actual remaining bank from current prices.
-     */
-
-    $totalBudget =
-        100.0;
-
-
-    $teamValue =
-        0.0;
-
-
-    foreach (
-        $players
-        as $player
-    ) {
-
-        $teamValue +=
-            (float) (
-                $player[
-                    'price'
-                ]
-                ?? 0
-            );
-    }
-
-
-    $teamValue =
-        round(
-            $teamValue,
-            1
-        );
-
-
-    $bank =
-        round(
-            $totalBudget
-            -
-            $teamValue,
-            1
-        );
-
-
-    /*
-     * ========================================================
-     * COMPLETE PREVIEW IMPORT
-     * ========================================================
-     */
-
-    return [
-
-        'is_complete' =>
-            true,
-
-        'entry' => [
-
-            'entry_id' =>
-                0,
-
-            'team_name' =>
-                'Manual Squad Preview',
-
-            'manager_name' =>
-                'Manual Preview Mode'
-        ],
-
-        'gameweek' =>
-            1,
-
-        'team_value' =>
-            $teamValue,
-
-        'bank' =>
-            $bank,
-
-        'imported_count' =>
-            15,
-
-        'mapped_count' =>
-            15,
-
-        'unmapped_count' =>
-            0,
-
-        'players' =>
-            $players
-    ];
-}
 
 function buildSquadPreview(
     PlayerIntelligenceService $service,
@@ -1889,15 +871,10 @@ if (
     try {
 
         $mappedSquad =
-            $manualPreviewMode
-                ? buildManualSquadPreview(
-                    $service,
-                    $playerRepository
-                )
-                : buildSquadPreview(
-                    $service,
-                    $playerRepository
-                );
+            buildSquadPreview(
+                $service,
+                $playerRepository
+            );
 
 
         if (
@@ -2445,9 +1422,23 @@ function squadHorizonSeverityClass(
         <main class="dashboard squad-dashboard">
 
 
+            <?php
+
+            if (
+                !empty(
+                    $dataHealth
+                )
+            ) {
+
+                require __DIR__
+                    . '/includes/data-health-warning.php';
+            }
+
+            ?>
+
+
             <!-- ==============================================
-                 IMPORT PANEL
-                 ============================================== -->
+                 IMPORT PANEL============================== -->
 
             <section class="dashboard-section">
 
@@ -5789,35 +4780,35 @@ function squadHorizonSeverityClass(
 
                                         <tr>
 
-                                            <th>
+                                            <th scope="col">
                                                 Rank
                                             </th>
 
-                                            <th>
+                                            <th scope="col">
                                                 Player
                                             </th>
 
-                                            <th>
+                                            <th scope="col">
                                                 Pos
                                             </th>
 
-                                            <th>
+                                            <th scope="col">
                                                 Price
                                             </th>
 
-                                            <th>
+                                            <th scope="col">
                                                 Priority
                                             </th>
 
-                                            <th>
+                                            <th scope="col">
                                                 Level
                                             </th>
 
-                                            <th>
+                                            <th scope="col">
                                                 Intelligence
                                             </th>
 
-                                            <th>
+                                            <th scope="col">
                                                 Reason
                                             </th>
 
@@ -6376,6 +5367,32 @@ function squadHorizonSeverityClass(
                                     </article>
 
                                 <?php endforeach; ?>
+
+                            </div>
+
+                        </section>
+
+                    <?php else: ?>
+
+                        <section class="dashboard-section squad-action-section squad-action-section-single">
+
+                            <div class="section-heading">
+
+                                <div>
+
+                                    <p class="eyebrow">
+                                        Recommended Transfers
+                                    </p>
+
+                                    <h2>
+                                        Best Single Moves
+                                    </h2>
+
+                                    <p class="section-description">
+                                        No suitable single-transfer recommendations are available.
+                                    </p>
+
+                                </div>
 
                             </div>
 
@@ -6940,6 +5957,32 @@ function squadHorizonSeverityClass(
 
                         </section>
 
+                    <?php else: ?>
+
+                        <section class="dashboard-section squad-action-section squad-action-section-double">
+
+                            <div class="section-heading">
+
+                                <div>
+
+                                    <p class="eyebrow">
+                                        Squad Restructures
+                                    </p>
+
+                                    <h2>
+                                        Best Double Transfers
+                                    </h2>
+
+                                    <p class="section-description">
+                                        No suitable double-transfer recommendations are available.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </section>
+
                     <?php endif; ?>
 
                 <?php endif; ?>
@@ -6994,35 +6037,35 @@ function squadHorizonSeverityClass(
 
                                     <tr>
 
-                                        <th>
+                                        <th scope="col">
                                             Player
                                         </th>
 
-                                        <th>
+                                        <th scope="col">
                                             Team
                                         </th>
 
-                                        <th>
+                                        <th scope="col">
                                             Pos
                                         </th>
 
-                                        <th>
+                                        <th scope="col">
                                             Price
                                         </th>
 
-                                        <th>
+                                        <th scope="col">
                                             Intelligence
                                         </th>
 
-                                        <th>
+                                        <th scope="col">
                                             Strength
                                         </th>
 
-                                        <th>
+                                        <th scope="col">
                                             Value
                                         </th>
 
-                                        <th>
+                                        <th scope="col">
                                             Fixtures
                                         </th>
 
@@ -7322,7 +6365,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 });
 </script>
-
+<script src="assets/js/app.js"></script>
 </body>
 
 </html>

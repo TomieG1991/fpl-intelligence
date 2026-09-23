@@ -2,6 +2,14 @@
 
 require_once __DIR__
     . '/../classes/autoload.php';
+    
+require_once __DIR__
+    . '/includes/data-health.php';
+
+
+$config =
+    require __DIR__
+        . '/../config/config.php';
 
 
 /*
@@ -22,6 +30,10 @@ $activeNav =
 
 $setupError =
     null;
+
+
+$dataHealth =
+    [];
 
 
 $wildcardResult =
@@ -54,6 +66,25 @@ try {
     $db =
         $database
             ->getConnection();
+
+
+    $dataHealth =
+        evaluateDataHealth(
+            $db,
+            [
+                'bootstrap',
+                'fixtures',
+                'player_fixture_history'
+            ],
+            date(
+                'Y-m-d H:i:s'
+            ),
+            $config[
+                'data_health'
+            ][
+                'freshness_seconds'
+            ]
+        );
 
 
     $playerIntelligenceService =
@@ -300,6 +331,21 @@ if (
         <main class="dashboard wildcard-dashboard">
 
 
+            <?php
+
+            if (
+                !empty(
+                    $dataHealth
+                )
+            ) {
+
+                require __DIR__
+                    . '/includes/data-health-warning.php';
+            }
+
+            ?>
+
+
             <!-- ==============================================
                  INTRODUCTION
                  ============================================== -->
@@ -331,7 +377,7 @@ if (
 
                 <section class="dashboard-section">
 
-                    <div class="profile-panel">
+                    <div class="profile-panel" role="alert">
 
                         <p>
                             <?= htmlspecialchars(
@@ -349,7 +395,7 @@ if (
 
 
             <!-- ==============================================
-                 DEVELOPMENT PLACEHOLDER / Recommended Wildcard Squad
+                 Recommended Wildcard Squad
                  ============================================== -->
 
             <section class="dashboard-section">
@@ -504,7 +550,7 @@ if (
 
                 <?php elseif ($wildcardStatus !== null): ?>
 
-                    <div class="profile-panel">
+                    <div class="profile-panel" role="alert">
 
                         <p>
                             <?= htmlspecialchars(
@@ -1657,7 +1703,7 @@ if (
     </div>
 
 </div>
-
+<script src="assets/js/app.js"></script>
 </body>
 
 </html>

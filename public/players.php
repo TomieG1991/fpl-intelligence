@@ -4,9 +4,48 @@ require_once __DIR__
     . '/../classes/autoload.php';
 
 
+require_once __DIR__
+    . '/includes/data-health.php';
+
+
+$config =
+    require __DIR__
+        . '/../config/config.php';
+
+
 /*
  * ============================================================
- * DATABASE
+ * PAGE DATA
+ * ============================================================
+ */
+
+$players =
+    [];
+
+
+$rankedPlayers =
+    [];
+
+
+$topRatedPlayer =
+    null;
+
+
+$rankedPlayerCount =
+    0;
+
+
+$intelligenceRanks =
+    [];
+    
+    
+$dataHealth = 
+    [];
+
+
+/*
+ * ============================================================
+ * DATABASE AND PLAYER INTELLIGENCE
  * ============================================================
  */
 
@@ -15,37 +54,41 @@ try {
     $database =
         new Database();
 
+
     $db =
         $database->getConnection();
 
-} catch (Throwable $exception) {
 
-    http_response_code(500);
-
-    die(
-        'Unable to connect to the database.'
-    );
-}
-
-
-/*
- * ============================================================
- * PLAYER INTELLIGENCE
- * ============================================================
- */
-
-$playerIntelligenceService =
-    new PlayerIntelligenceService(
-        $db
-    );
+    $dataHealth =
+        evaluateDataHealth(
+            $db,
+            [
+                'bootstrap',
+                'fixtures',
+                'player_fixture_history'
+            ],
+            date(
+                'Y-m-d H:i:s'
+            ),
+            $config[
+                'data_health'
+            ][
+                'freshness_seconds'
+            ]
+        );
 
 
-try {
+    $playerIntelligenceService =
+        new PlayerIntelligenceService(
+            $db
+        );
+
 
     $players =
         $playerIntelligenceService
             ->getAllPlayerSummaries();
-            
+
+
     $rankedPlayers =
         $playerIntelligenceService
             ->getRankedPlayers();
@@ -54,14 +97,13 @@ try {
     $topRatedPlayer =
         $rankedPlayers[0]
         ?? null;
-            
+
+
     $rankedPlayerCount =
-    count(
-        $rankedPlayers
-    );
-    
-    $intelligenceRanks =
-        [];
+        count(
+            $rankedPlayers
+        );
+
 
     foreach (
         $rankedPlayers
@@ -86,7 +128,10 @@ try {
 
 } catch (Throwable $exception) {
 
-    $players = [];
+    http_response_code(
+        500
+    );
+
 
     $pageError =
         $exception->getMessage();
@@ -267,6 +312,21 @@ $activeNav = 'players';
             <main class="dashboard">
 
 
+                <?php
+
+                if (
+                    !empty(
+                        $dataHealth
+                    )
+                ) {
+
+                    require __DIR__
+                        . '/includes/data-health-warning.php';
+                }
+
+                ?>
+
+
                 <p class="page-description">
                     Explore and compare players using
                     strength, value, fixture opportunity
@@ -407,12 +467,17 @@ $activeNav = 'players';
                                 Player Pool
                             </label>
 
-                            <div class="player-pool-filters">
+                            <div
+                                class="player-pool-filters"
+                                role="group"
+                                aria-label="Player Pool"
+                            >
 
                                 <button
                                     type="button"
                                     class="player-pool-filter active"
                                     data-pool="ranked"
+                                    aria-pressed="true"
                                 >
                                     Ranked
                                 </button>
@@ -421,6 +486,7 @@ $activeNav = 'players';
                                     type="button"
                                     class="player-pool-filter"
                                     data-pool="all"
+                                    aria-pressed="false"
                                 >
                                     All Players
                                 </button>
@@ -705,12 +771,17 @@ $activeNav = 'players';
                                 Position
                             </label>
 
-                            <div class="position-filters">
+                            <div
+                                class="position-filters"
+                                role="group"
+                                aria-label="Position"
+                            >
 
                                 <button
                                     type="button"
                                     class="position-filter active"
                                     data-position=""
+                                    aria-pressed="true"
                                 >
                                     All
                                 </button>
@@ -719,6 +790,7 @@ $activeNav = 'players';
                                     type="button"
                                     class="position-filter"
                                     data-position="GK"
+                                    aria-pressed="false"
                                 >
                                     GK
                                 </button>
@@ -727,6 +799,7 @@ $activeNav = 'players';
                                     type="button"
                                     class="position-filter"
                                     data-position="DEF"
+                                    aria-pressed="false"
                                 >
                                     DEF
                                 </button>
@@ -735,6 +808,7 @@ $activeNav = 'players';
                                     type="button"
                                     class="position-filter"
                                     data-position="MID"
+                                    aria-pressed="false"
                                 >
                                     MID
                                 </button>
@@ -743,6 +817,7 @@ $activeNav = 'players';
                                     type="button"
                                     class="position-filter"
                                     data-position="FWD"
+                                    aria-pressed="false"
                                 >
                                     FWD
                                 </button>
@@ -790,6 +865,7 @@ $activeNav = 'players';
                                 <tr>
 
                                     <th
+                                        scope="col"
                                         class="rank-column sortable-column"
                                         data-sort="rank"
                                     >
@@ -797,6 +873,7 @@ $activeNav = 'players';
                                     </th>
 
                                     <th
+                                        scope="col"
                                         class="sortable-column"
                                         data-sort="name"
                                     >
@@ -804,6 +881,7 @@ $activeNav = 'players';
                                     </th>
 
                                     <th
+                                        scope="col"
                                         class="sortable-column"
                                         data-sort="team"
                                     >
@@ -811,6 +889,7 @@ $activeNav = 'players';
                                     </th>
 
                                     <th
+                                        scope="col"
                                         class="sortable-column"
                                         data-sort="position"
                                     >
@@ -818,6 +897,7 @@ $activeNav = 'players';
                                     </th>
 
                                     <th
+                                        scope="col"
                                         class="sortable-column"
                                         data-sort="price"
                                     >
@@ -825,6 +905,7 @@ $activeNav = 'players';
                                     </th>
                                     
                                     <th
+                                        scope="col"
                                         class="sortable-column"
                                         data-sort="availability"
                                     >
@@ -832,6 +913,7 @@ $activeNav = 'players';
                                     </th>
 
                                     <th
+                                        scope="col"
                                         class="sortable-column"
                                         data-sort="strength"
                                     >
@@ -839,6 +921,7 @@ $activeNav = 'players';
                                     </th>
 
                                     <th
+                                        scope="col"
                                         class="sortable-column"
                                         data-sort="value"
                                     >
@@ -846,6 +929,7 @@ $activeNav = 'players';
                                     </th>
 
                                     <th
+                                        scope="col"
                                         class="sortable-column"
                                         data-sort="fixture"
                                     >
@@ -853,6 +937,7 @@ $activeNav = 'players';
                                     </th>
 
                                     <th
+                                        scope="col"
                                         class="sortable-column active-sort"
                                         data-sort="intelligence"
                                     >
@@ -860,6 +945,7 @@ $activeNav = 'players';
                                     </th>
 
                                     <th
+                                        scope="col"
                                         class="sortable-column"
                                         data-sort="rating"
                                     >

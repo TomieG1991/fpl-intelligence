@@ -381,13 +381,6 @@ $pageUrl =
     . $projectWebPath
     . '/public/squad.php?preview=1';
     
-$manualPageUrl =
-    $scheme
-    . '://'
-    . $host
-    . $projectWebPath
-    . '/public/squad.php?preview=manual';
-
 
 /*
  * ============================================================
@@ -417,18 +410,6 @@ $html =
     ]
     ?? '';
     
-$manualResponse =
-    fetchSquadPreviewPage(
-        $manualPageUrl
-    );
-
-
-$manualHtml =
-    $manualResponse[
-        'body'
-    ]
-    ?? '';
-
 
 echo "============================================<br>";
 echo "Scenario A: Page Request<br>";
@@ -618,61 +599,81 @@ squadPageTest(
     !== false
 );
 
-squadPageTest(
-    'Manual squad preview request succeeds',
-    (
-        $manualResponse[
-            'success'
-        ]
-        ?? false
+
+
+
+/*
+ * ============================================================
+ * RELEASE PREVIEW CONTRACT
+ * ============================================================
+ */
+
+$squadPagePath =
+    __DIR__
+    . '/../public/squad.php';
+
+
+$squadPageSource =
+    is_file(
+        $squadPagePath
     )
-    === true
+        ? file_get_contents(
+            $squadPagePath
+        )
+        : false;
+
+
+$squadPageSource =
+    is_string(
+        $squadPageSource
+    )
+        ? $squadPageSource
+        : '';
+
+
+squadPageTest(
+    'Generic deterministic preview remains available',
+    strpos(
+        $squadPageSource,
+        'buildSquadPreview'
+    ) !== false
 );
 
 
 squadPageTest(
-    'Manual squad preview is rendered',
-    stripos(
-        $manualHtml,
-        'Manual Squad Preview'
-    )
-    !== false
+    'Obsolete manual preview builder has been removed',
+    strpos(
+        $squadPageSource,
+        'buildManualSquadPreview'
+    ) === false
 );
 
 
 squadPageTest(
-    'Manual preview contains fifteen-player squad indicator',
-    stripos(
-        preg_replace(
-            '/\s+/',
-            ' ',
-            $manualHtml
-        ),
-        '15 / 15'
-    )
-    !== false
+    'Obsolete manual preview mode has been removed',
+    strpos(
+        $squadPageSource,
+        '$manualPreviewMode'
+    ) === false
 );
 
 
 squadPageTest(
-    'Manual preview contains no PHP warning output',
-    stripos(
-        $manualHtml,
-        'Warning:'
+    'Manual preview is no longer accepted as a preview mode',
+    !preg_match(
+        '/[\'"]manual[\'"]/',
+        $squadPageSource
     )
-    === false
 );
 
 
 squadPageTest(
-    'Manual preview contains no PHP fatal error',
-    stripos(
-        $manualHtml,
-        'Fatal error'
-    )
-    === false
+    'Temporary GW1 manual squad description has been removed',
+    strpos(
+        $squadPageSource,
+        'Temporary real-world development squad'
+    ) === false
 );
-
 
 echo "<br>";
 
@@ -802,6 +803,16 @@ squadPageTest(
 );
 
 
+squadPageTest(
+    'Single transfer recommendations provide an explicit empty state',
+    strpos(
+        $squadPageSource,
+        'No suitable single-transfer recommendations are available.'
+    )
+    !== false
+);
+
+
 echo "<br>";
 
 
@@ -861,6 +872,16 @@ squadPageTest(
     stripos(
         $html,
         'Transfer B'
+    )
+    !== false
+);
+
+
+squadPageTest(
+    'Double transfer recommendations provide an explicit empty state',
+    strpos(
+        $squadPageSource,
+        'No suitable double-transfer recommendations are available.'
     )
     !== false
 );
@@ -1045,6 +1066,100 @@ squadPageTest(
 squadPageTest(
     'Page contains no PHP notice output',
     !$hasNotice
+);
+
+
+echo "<br>";
+
+
+/*
+ * ============================================================
+ * TABLE HEADER ACCESSIBILITY
+ * ============================================================
+ */
+
+echo "============================================<br>";
+echo "Scenario J: Table Header Accessibility<br>";
+echo "============================================<br>";
+
+
+preg_match_all(
+    '/<table\b[^>]*class=["\'][^"\']*\bplayer-table\b[^"\']*["\'][^>]*>.*?<\/table>/is',
+    $squadPageSource,
+    $squadPlayerTableMatches
+);
+
+
+squadPageTest(
+    'Squad page contains the two expected player tables',
+    count(
+        $squadPlayerTableMatches[0]
+        ?? []
+    )
+    === 2
+);
+
+
+$squadPlayerTableHeaders =
+    [];
+
+
+foreach (
+    $squadPlayerTableMatches[0]
+    ?? []
+    as $squadPlayerTable
+) {
+
+    preg_match_all(
+        '/<th\b[^>]*>/i',
+        $squadPlayerTable,
+        $squadTableHeaderMatches
+    );
+
+
+    foreach (
+        $squadTableHeaderMatches[0]
+        ?? []
+        as $squadTableHeader
+    ) {
+
+        $squadPlayerTableHeaders[] =
+            $squadTableHeader;
+    }
+}
+
+
+squadPageTest(
+    'Squad player tables contain the expected sixteen column headers',
+    count(
+        $squadPlayerTableHeaders
+    )
+    === 16
+);
+
+
+$squadScopedColumnHeaders =
+    array_filter(
+        $squadPlayerTableHeaders,
+        static function (
+            string $header
+        ): bool {
+
+            return preg_match(
+                '/\bscope\s*=\s*["\']col["\']/i',
+                $header
+            )
+            === 1;
+        }
+    );
+
+
+squadPageTest(
+    'Every Squad player table header is identified as a column header',
+    count(
+        $squadScopedColumnHeaders
+    )
+    === 16
 );
 
 

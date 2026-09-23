@@ -179,6 +179,33 @@ try {
         (int) $player[
             'team_id'
         ];
+        
+    /*
+     * Isolate the repository contract from genuine season history.
+     *
+     * This test runs inside a transaction, so Raya's real historical
+     * rows are restored automatically by the final rollback.
+     *
+     * Without this isolation, genuine later gameweeks eventually
+     * become newer than the synthetic rows used by this test.
+     */
+    $clearHistoryStatement =
+        $db->prepare(
+            "
+            DELETE FROM
+                player_fixture_history
+            WHERE
+                player_id = :player_id
+            "
+        );
+
+
+    $clearHistoryStatement
+        ->execute([
+
+            ':player_id' =>
+                $playerId
+        ]);
 
 
     /*
@@ -211,13 +238,11 @@ try {
                     OR
                     f.away_team_id = :away_team_id
                 )
-                AND
-                f.gameweek > 1
-            ORDER BY
-                f.gameweek ASC,
-                f.kickoff_time ASC,
-                f.id ASC
-            LIMIT 3
+                ORDER BY
+                    f.gameweek ASC,
+                    f.kickoff_time ASC,
+                    f.id ASC
+                LIMIT 4
             "
         );
 
@@ -244,11 +269,11 @@ try {
         count(
             $fixtures
         )
-        !== 3
+        !== 4
     ) {
 
         throw new RuntimeException(
-            'Three future fixtures could not be resolved for recent-history testing'
+            'Four fixtures could not be resolved for recent-history testing'
         );
     }
 
@@ -267,12 +292,14 @@ try {
 
     $syntheticMinutes = [
         90,
+        90,
         0,
         30
     ];
 
 
     $syntheticPoints = [
+        6,
         8,
         0,
         3
@@ -542,9 +569,9 @@ try {
         $recentThreeGameweeks
         ===
         [
-            (int) $fixtures[0]['gameweek'],
             (int) $fixtures[1]['gameweek'],
-            (int) $fixtures[2]['gameweek']
+            (int) $fixtures[2]['gameweek'],
+            (int) $fixtures[3]['gameweek']
         ]
     );
 
@@ -697,7 +724,7 @@ try {
     recentHistoryCheck(
         'Recent appearances can reach further back than fixture window',
         in_array(
-            1,
+            (int) $fixtures[0]['gameweek'],
             $appearanceGameweeks,
             true
         )
@@ -708,19 +735,11 @@ try {
         'Recent appearances remain chronological',
         $appearanceGameweeks
         ===
-        array_values(
-            array_unique(
-                array_merge(
-                    [
-                        1
-                    ],
-                    [
-                        (int) $fixtures[0]['gameweek'],
-                        (int) $fixtures[2]['gameweek']
-                    ]
-                )
-            )
-        )
+        [
+            (int) $fixtures[0]['gameweek'],
+            (int) $fixtures[1]['gameweek'],
+            (int) $fixtures[3]['gameweek']
+        ]
     );
 
 
@@ -773,7 +792,7 @@ try {
         )
         ===
         (int) $fixtures[
-            2
+            3
         ]['id']
     );
 

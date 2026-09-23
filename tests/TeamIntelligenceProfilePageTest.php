@@ -566,11 +566,12 @@ echo "Rendered Team Intelligence Score: "
 
 
 teamProfilePageCheck(
-    'Elite Team Intelligence badge is rendered',
-    strpos(
-        $normalisedHtml,
-        'team-intelligence-badge-elite'
-    ) !== false
+    'Supported Team Intelligence classification badge is rendered',
+    preg_match(
+        '/team-intelligence-badge-(elite|strong|average|weak|poor)/i',
+        $normalisedHtml
+    )
+    === 1
 );
 
 

@@ -146,17 +146,7 @@ $weakWin =
         1
     );
 
-
-echo "<h3>2-0 Win Against Weak Team</h3>";
-
-echo "<pre>";
-
-print_r(
-    $weakWin
-);
-
 echo "</pre>";
-
 
 /*
  * ============================================================
@@ -192,15 +182,6 @@ $strongWin =
         $teamStrengths,
         1
     );
-
-
-echo "<h3>2-0 Win Against Strong Team</h3>";
-
-echo "<pre>";
-
-print_r(
-    $strongWin
-);
 
 echo "</pre>";
 
@@ -253,14 +234,6 @@ $weakLoss =
     );
 
 
-echo "<h3>0-2 Loss Against Weak Team</h3>";
-
-echo "<pre>";
-
-print_r(
-    $weakLoss
-);
-
 echo "</pre>";
 
 
@@ -294,14 +267,6 @@ $strongLoss =
         1
     );
 
-
-echo "<h3>0-2 Loss Against Strong Team</h3>";
-
-echo "<pre>";
-
-print_r(
-    $strongLoss
-);
 
 echo "</pre>";
 
@@ -354,14 +319,6 @@ $weakDraw =
     );
 
 
-echo "<h3>1-1 Draw Against Weak Team</h3>";
-
-echo "<pre>";
-
-print_r(
-    $weakDraw
-);
-
 echo "</pre>";
 
 
@@ -395,14 +352,6 @@ $strongDraw =
         1
     );
 
-
-echo "<h3>1-1 Draw Against Strong Team</h3>";
-
-echo "<pre>";
-
-print_r(
-    $strongDraw
-);
 
 echo "</pre>";
 

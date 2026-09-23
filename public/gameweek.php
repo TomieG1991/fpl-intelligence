@@ -4,6 +4,15 @@ require_once __DIR__
     . '/../classes/autoload.php';
 
 
+require_once __DIR__
+    . '/includes/data-health.php';
+
+
+$config =
+    require __DIR__
+        . '/../config/config.php';
+
+
 /*
  * ============================================================
  * ACTIVE NAVIGATION
@@ -94,6 +103,10 @@ $pageError =
     null;
 
 
+$dataHealth =
+    [];
+
+
 try {
 
     $database =
@@ -103,6 +116,25 @@ try {
     $db =
         $database
             ->getConnection();
+
+
+    $dataHealth =
+        evaluateDataHealth(
+            $db,
+            [
+                'bootstrap',
+                'fixtures',
+                'player_fixture_history'
+            ],
+            date(
+                'Y-m-d H:i:s'
+            ),
+            $config[
+                'data_health'
+            ][
+                'freshness_seconds'
+            ]
+        );
 
 
     $service =
@@ -1128,8 +1160,23 @@ function gameweekPageEscape(
         <main class="dashboard gameweek-dashboard">
 
 
+            <?php
+
+            if (
+                !empty(
+                    $dataHealth
+                )
+            ) {
+
+                require __DIR__
+                    . '/includes/data-health-warning.php';
+            }
+
+            ?>
+
+
             <!-- ==============================================
-                 SQUAD INPUT
+                 SQUAD INPUTSQUAD INPUT
                  ============================================== -->
 
             <section class="dashboard-section">
@@ -1178,17 +1225,6 @@ function gameweekPageEscape(
                     </div>
 
                 </form>
-
-
-                <p class="gameweek-preview-link">
-
-                    Development mode:
-
-                    <a href="gameweek.php?preview=1">
-                        Load preview squad
-                    </a>
-
-                </p>
 
             </section>
 
@@ -2563,7 +2599,7 @@ function gameweekPageEscape(
                                     <div>
 
                                         <span>
-                                            Confidence
+                                            Decision Confidence
                                         </span>
 
                                         <strong>
@@ -2723,7 +2759,7 @@ function gameweekPageEscape(
     </div>
 
 </div>
-
+<script src="assets/js/app.js"></script>
 </body>
 
 </html>

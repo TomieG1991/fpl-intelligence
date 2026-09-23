@@ -26,36 +26,86 @@ document.addEventListener(
 
 function initialiseNavigation()
 {
+    const navigation =
+        document.getElementById(
+            'main-navigation'
+        );
+
+
+    const navigationToggle =
+        document.querySelector(
+            '.mobile-navigation-toggle'
+        );
+
+
     const navigationLinks =
         document.querySelectorAll(
             '.main-navigation .nav-link'
         );
 
 
-    navigationLinks.forEach(
-        function (link) {
+    /*
+     * --------------------------------------------------------
+     * MOBILE NAVIGATION
+     * --------------------------------------------------------
+     */
 
-            link.addEventListener(
-                'click',
-                function (event) {
+    if (
+        navigation
+        &&
+        navigationToggle
+    ) {
 
-                    /*
-                     * Pages that do not exist yet still use
-                     * placeholder "#" links.
-                     */
-                    if (
-                        link.getAttribute('href')
-                        === '#'
-                    ) {
+        navigationToggle.addEventListener(
+            'click',
+            function () {
 
-                        event.preventDefault();
+                const expanded =
+                    navigationToggle.getAttribute(
+                        'aria-expanded'
+                    ) === 'true';
+
+
+                navigationToggle.setAttribute(
+                    'aria-expanded',
+                    expanded
+                        ? 'false'
+                        : 'true'
+                );
+
+
+                navigation.classList.toggle(
+                    'mobile-navigation-open',
+                    !expanded
+                );
+
+            }
+        );
+
+
+        navigationLinks.forEach(
+            function (link) {
+
+                link.addEventListener(
+                    'click',
+                    function () {
+
+                        navigationToggle.setAttribute(
+                            'aria-expanded',
+                            'false'
+                        );
+
+
+                        navigation.classList.remove(
+                            'mobile-navigation-open'
+                        );
+
                     }
+                );
 
-                }
-            );
-
-        }
-    );
+            }
+        );
+    }
 }
 
 
@@ -520,12 +570,22 @@ function initialisePlayerExplorer()
                             item.classList.remove(
                                 'active'
                             );
+
+                            item.setAttribute(
+                                'aria-pressed',
+                                'false'
+                            );
                         }
                     );
 
 
                     button.classList.add(
                         'active'
+                    );
+
+                    button.setAttribute(
+                        'aria-pressed',
+                        'true'
                     );
 
 
@@ -562,12 +622,22 @@ function initialisePlayerExplorer()
                             item.classList.remove(
                                 'active'
                             );
+
+                            item.setAttribute(
+                                'aria-pressed',
+                                'false'
+                            );
                         }
                     );
 
 
                     button.classList.add(
                         'active'
+                    );
+
+                    button.setAttribute(
+                        'aria-pressed',
+                        'true'
                     );
 
 
@@ -630,12 +700,23 @@ function initialisePlayerExplorer()
                 positionButtons.forEach(
                     function (button) {
 
-                        button.classList.toggle(
-                            'active',
+                        const isActive =
                             (
                                 button.dataset.position
                                 ?? ''
-                            ) === ''
+                            ) === '';
+
+
+                        button.classList.toggle(
+                            'active',
+                            isActive
+                        );
+
+                        button.setAttribute(
+                            'aria-pressed',
+                            isActive
+                                ? 'true'
+                                : 'false'
                         );
 
                     }
@@ -653,12 +734,23 @@ function initialisePlayerExplorer()
                 poolButtons.forEach(
                     function (button) {
 
-                        button.classList.toggle(
-                            'active',
+                        const isActive =
                             (
                                 button.dataset.pool
                                 ?? ''
-                            ) === 'ranked'
+                            ) === 'ranked';
+
+
+                        button.classList.toggle(
+                            'active',
+                            isActive
+                        );
+
+                        button.setAttribute(
+                            'aria-pressed',
+                            isActive
+                                ? 'true'
+                                : 'false'
                         );
 
                     }

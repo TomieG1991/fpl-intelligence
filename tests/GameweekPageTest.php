@@ -401,12 +401,22 @@ gameweekPageCheck(
 
 
 gameweekPageCheck(
-    'Development preview link is rendered',
+    'Development preview link is not exposed on the normal page',
     stripos(
         $initialHtml,
         'gameweek.php?preview=1'
     )
-    !== false
+    === false
+);
+
+
+gameweekPageCheck(
+    'Development mode label is not exposed on the normal page',
+    stripos(
+        $initialHtml,
+        'Development mode:'
+    )
+    === false
 );
 
 
@@ -1565,6 +1575,15 @@ gameweekPageCheck(
     stripos(
         $previewHtml,
         'backup goalkeeper remains Bench 4'
+    )
+    !== false
+);
+
+gameweekPageCheck(
+    'Gameweek decision reliability is labelled Decision Confidence',
+    stripos(
+        $previewHtml,
+        'Decision Confidence'
     )
     !== false
 );

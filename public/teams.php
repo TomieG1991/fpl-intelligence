@@ -4,6 +4,15 @@ require_once __DIR__
     . '/../classes/autoload.php';
 
 
+require_once __DIR__
+    . '/includes/data-health.php';
+
+
+$config =
+    require __DIR__
+        . '/../config/config.php';
+
+
 /*
  * ============================================================
  * ACTIVE NAVIGATION
@@ -30,6 +39,10 @@ $teams =
 
 $pageError =
     null;
+    
+    
+$dataHealth =
+    [];
 
 
 try {
@@ -38,9 +51,32 @@ try {
         new Database();
 
 
+    $db =
+        $database
+            ->getConnection();
+
+
+    $dataHealth =
+        evaluateDataHealth(
+            $db,
+            [
+                'bootstrap',
+                'fixtures'
+            ],
+            date(
+                'Y-m-d H:i:s'
+            ),
+            $config[
+                'data_health'
+            ][
+                'freshness_seconds'
+            ]
+        );
+
+
     $service =
         new PlayerIntelligenceService(
-            $database->getConnection()
+            $db
         );
 
 
@@ -475,6 +511,21 @@ if (
             <main class="dashboard team-dashboard">
 
 
+                <?php
+
+                if (
+                    !empty(
+                        $dataHealth
+                    )
+                ) {
+
+                    require __DIR__
+                        . '/includes/data-health-warning.php';
+                }
+
+                ?>
+
+
                 <?php if (
                     $pageError !== null
                 ): ?>
@@ -632,59 +683,62 @@ if (
 
                                     <tr>
 
-                                        <th class="team-rank-column">
+                                        <th
+                                            scope="col"
+                                            class="team-rank-column"
+                                        >
                                             #
                                         </th>
-
-                                        <th>
+                                        
+                                        <th scope="col">
                                             Team
                                         </th>
-
-                                        <th>
+                                        
+                                        <th scope="col">
                                             Intelligence
                                         </th>
 
-                                        <th>
+                                        <th scope="col">
                                             Level
                                         </th>
 
-                                        <th>
+                                        <th scope="col">
                                             Overall
                                         </th>
 
-                                        <th>
+                                        <th scope="col">
                                             Home
                                         </th>
 
-                                        <th>
+                                        <th scope="col">
                                             Away
                                         </th>
 
-                                        <th>
+                                        <th scope="col">
                                             Attack
                                         </th>
 
-                                        <th>
+                                        <th scope="col">
                                             Defence
                                         </th>
 
-                                        <th>
+                                        <th scope="col">
                                             Next 5
                                         </th>
 
-                                        <th>
+                                        <th scope="col">
                                             Fixtures
                                         </th>
 
-                                        <th>
+                                        <th scope="col">
                                             Trend
                                         </th>
 
-                                        <th>
+                                        <th scope="col">
                                             Form
                                         </th>
 
-                                        <th>
+                                        <th scope="col">
                                             W-D-L
                                         </th>
 
@@ -1039,7 +1093,7 @@ if (
         </div>
 
     </div>
-
+<script src="assets/js/app.js"></script>
 </body>
 
 </html>

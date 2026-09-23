@@ -4,11 +4,32 @@ require_once __DIR__
     . '/../classes/autoload.php';
 
 
+require_once __DIR__
+    . '/includes/data-health.php';
+
+
+$config =
+    require __DIR__
+        . '/../config/config.php';
+
+
 /*
  * ============================================================
  * DATABASE
  * ============================================================
  */
+
+$db =
+    null;
+
+
+$databaseError =
+    null;
+    
+    
+$dataHealth =
+    [];
+
 
 try {
 
@@ -19,13 +40,34 @@ try {
     $db =
         $database->getConnection();
 
+
+    $dataHealth =
+        evaluateDataHealth(
+            $db,
+            [
+                'bootstrap',
+                'fixtures',
+                'player_fixture_history'
+            ],
+            date(
+                'Y-m-d H:i:s'
+            ),
+            $config[
+                'data_health'
+            ][
+                'freshness_seconds'
+            ]
+        );
+
 } catch (Throwable $exception) {
 
-    http_response_code(500);
-
-    die(
-        'Unable to connect to the database.'
+    http_response_code(
+        500
     );
+
+
+    $databaseError =
+        'Unable to load this Player Intelligence profile at the moment.';
 }
 
 
@@ -57,10 +99,14 @@ $marketSummary =
 
 
 $pageError =
-    null;
+    $databaseError;
 
 
 if (
+    $db !== null
+    &&
+    $pageError === null
+    &&
     $playerId !== false
     &&
     $playerId !== null
@@ -1051,6 +1097,21 @@ $activeNav = 'players';
             <main class="dashboard">
 
 
+                <?php
+
+                if (
+                    !empty(
+                        $dataHealth
+                    )
+                ) {
+
+                    require __DIR__
+                        . '/includes/data-health-warning.php';
+                }
+
+                ?>
+
+
                 <?php if (
                     $profile === null
                 ): ?>
@@ -1087,7 +1148,7 @@ $activeNav = 'players';
                                 $pageError !== null
                             ): ?>
 
-                                <p class="profile-error-detail">
+                                <p class="profile-error-detail" role="alert">
 
                                     <?= htmlspecialchars(
                                         $pageError,
@@ -4187,23 +4248,23 @@ $activeNav = 'players';
 
                                         <tr>
 
-                                            <th>
+                                            <th scope="col">
                                                 GW
                                             </th>
 
-                                            <th>
+                                            <th scope="col">
                                                 Opponent
                                             </th>
 
-                                            <th>
+                                            <th scope="col">
                                                 Venue
                                             </th>
 
-                                            <th>
+                                            <th scope="col">
                                                 Opportunity
                                             </th>
 
-                                            <th>
+                                            <th scope="col">
                                                 Difficulty
                                             </th>
 

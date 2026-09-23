@@ -3,6 +3,14 @@
 require_once __DIR__
     . '/../classes/autoload.php';
 
+require_once __DIR__
+    . '/includes/data-health.php';
+
+
+$config =
+    require __DIR__
+        . '/../config/config.php';
+
 
 /*
  * ============================================================
@@ -86,6 +94,10 @@ $entryId =
 
 $setupError =
     null;
+
+
+$dataHealth =
+    [];
 
 
 $integrationError =
@@ -174,6 +186,25 @@ if (
         $db =
             $database
                 ->getConnection();
+
+
+        $dataHealth =
+            evaluateDataHealth(
+                $db,
+                [
+                    'bootstrap',
+                    'fixtures',
+                    'player_fixture_history'
+                ],
+                date(
+                    'Y-m-d H:i:s'
+                ),
+                $config[
+                    'data_health'
+                ][
+                    'freshness_seconds'
+                ]
+            );
 
 
         $playerIntelligenceService =
@@ -2346,6 +2377,21 @@ function chipRecommendationClass(
         <main class="dashboard chip-dashboard">
 
 
+            <?php
+
+            if (
+                !empty(
+                    $dataHealth
+                )
+            ) {
+
+                require __DIR__
+                    . '/includes/data-health-warning.php';
+            }
+
+            ?>
+
+
             <!-- ==============================================
                  INTRODUCTION
                  ============================================== -->
@@ -2707,7 +2753,7 @@ function chipRecommendationClass(
 
                     <section class="dashboard-section">
 
-                        <div class="profile-panel">
+                        <div class="profile-panel" role="alert">
 
                             <p class="eyebrow">
                                 Integration Unavailable
@@ -2730,7 +2776,7 @@ function chipRecommendationClass(
 
                     <section class="dashboard-section">
 
-                        <div class="profile-panel">
+                        <div class="profile-panel" role="alert">
 
                             <p class="eyebrow">
                                 Integration Unavailable
@@ -3096,7 +3142,7 @@ function chipRecommendationClass(
 
         <section class="dashboard-section">
 
-            <div class="profile-panel">
+            <div class="profile-panel" role="alert">
 
                 <p class="eyebrow">
                     Chip Intelligence Unavailable
@@ -3367,7 +3413,7 @@ function chipRecommendationClass(
     </div>
 
 </div>
-
+<script src="assets/js/app.js"></script>
 </body>
 
 </html>

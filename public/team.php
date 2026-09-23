@@ -4,6 +4,15 @@ require_once __DIR__
     . '/../classes/autoload.php';
 
 
+require_once __DIR__
+    . '/includes/data-health.php';
+
+
+$config =
+    require __DIR__
+        . '/../config/config.php';
+
+
 /*
  * ============================================================
  * ACTIVE NAVIGATION
@@ -50,6 +59,10 @@ $profile =
 
 $pageError =
     null;
+    
+    
+$dataHealth =
+    [];
 
 
 try {
@@ -58,9 +71,32 @@ try {
         new Database();
 
 
+    $db =
+        $database
+            ->getConnection();
+
+
+    $dataHealth =
+        evaluateDataHealth(
+            $db,
+            [
+                'bootstrap',
+                'fixtures'
+            ],
+            date(
+                'Y-m-d H:i:s'
+            ),
+            $config[
+                'data_health'
+            ][
+                'freshness_seconds'
+            ]
+        );
+
+
     $service =
         new PlayerIntelligenceService(
-            $database->getConnection()
+            $db
         );
 
 
@@ -509,6 +545,21 @@ $players =
             >
                 ← Back to Team Intelligence
             </a>
+
+
+            <?php
+
+            if (
+                !empty(
+                    $dataHealth
+                )
+            ) {
+
+                require __DIR__
+                    . '/includes/data-health-warning.php';
+            }
+
+            ?>
 
 
             <?php if (
@@ -1177,39 +1228,39 @@ $players =
 
                                 <tr>
 
-                                    <th>
+                                    <th scope="col">
                                         #
                                     </th>
 
-                                    <th>
+                                    <th scope="col">
                                         Player
                                     </th>
 
-                                    <th>
+                                    <th scope="col">
                                         Pos
                                     </th>
 
-                                    <th>
+                                    <th scope="col">
                                         Price
                                     </th>
 
-                                    <th>
+                                    <th scope="col">
                                         Intelligence
                                     </th>
 
-                                    <th>
+                                    <th scope="col">
                                         Strength
                                     </th>
 
-                                    <th>
+                                    <th scope="col">
                                         Value
                                     </th>
 
-                                    <th>
+                                    <th scope="col">
                                         Fixtures
                                     </th>
 
-                                    <th>
+                                    <th scope="col">
                                         Availability
                                     </th>
 
@@ -1349,7 +1400,7 @@ $players =
     </div>
 
 </div>
-
+<script src="assets/js/app.js"></script>
 </body>
 
 </html>

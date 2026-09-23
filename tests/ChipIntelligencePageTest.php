@@ -1766,6 +1766,49 @@ chipPageTest(
     === true
 );
 
+echo "<br>";
+
+
+/*
+ * ============================================================
+ * SCENARIO — ACCESSIBILITY
+ * ============================================================
+ */
+
+echo "============================================<br>";
+echo "Scenario: Accessibility<br>";
+echo "============================================<br>";
+
+
+chipPageTest(
+    'Chip Intelligence integration setup error exposes alert semantics',
+    preg_match(
+        '/<div\s+class="profile-panel"\s+role="alert">\s*<p\s+class="eyebrow">\s*Integration Unavailable/s',
+        $chipsPageSource
+    )
+    === 1
+);
+
+
+chipPageTest(
+    'Chip Intelligence integration errors expose alert semantics',
+    preg_match_all(
+        '/<div\s+class="profile-panel"\s+role="alert">\s*<p\s+class="eyebrow">\s*Integration Unavailable/s',
+        $chipsPageSource,
+        $chipIntegrationAlertMatches
+    )
+    === 2
+);
+
+
+chipPageTest(
+    'Chip Intelligence entry error exposes alert semantics',
+    preg_match(
+        '/<div\s+class="profile-panel"\s+role="alert">\s*<p\s+class="eyebrow">\s*Chip Intelligence Unavailable/s',
+        $chipsPageSource
+    )
+    === 1
+);
 
 echo "<br>";
 

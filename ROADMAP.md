@@ -36,17 +36,17 @@ The system should remain explainable, testable and robust throughout:
 
 ---
 
-Current stable release:
+Current release being finalized:
 
-**v0.38.0 — Performance & Caching**
+**v0.39.0 — v1.0 UX, Explainability & Release Hardening**
 
 GitHub `main` is the authoritative code baseline after every completed commit.
 
 ---
 
-Current development milestone:
+Current release status:
 
-**v0.39.0 — v1.0 UX, Explainability & Release Hardening — NOT STARTED**
+**v0.39.0 — RELEASE READY — FINAL VALIDATION PASSED**
 
 v0.38.0 completes the Performance & Caching milestone.
 
@@ -3427,49 +3427,297 @@ Hardening.
 
 ## v0.39.0 — v1.0 UX, Explainability & Release Hardening
 
+### Status
+
+**RELEASE READY — FINAL VALIDATION PASSED**
+
 ### Goal
 
-Prepare the application as a coherent complete product.
+Prepare the application as a coherent complete product for the final path to
+v1.0.
 
-### Planned Work
+### Delivered So Far
 
-Review every public page for:
+Completed a systematic release-hardening review across the public application.
 
-- consistent terminology
-- consistent scores
+The review covered:
+
+- terminology
 - confidence labels
 - navigation
 - mobile behaviour
 - empty states
-- API failure states
-- explanatory text
-- stale-data warnings
-- profile links
+- failure states
+- stale-data awareness
+- profile navigation
 - accessibility
-
-Review code for:
-
-- duplicate calculations
+- development-only presentation
+- test robustness
+- obsolete compatibility code
 - temporary diagnostics
-- stale comments
-- unused methods
-- inconsistent naming
 
-Review tests for:
+### Fixtures & Navigation
 
-- brittle live-data assumptions
-- obsolete regression expectations
-- unnecessary diagnostics
+Added a first-class public Fixtures page using the existing FPL fixture data.
 
-Add project documentation covering:
+The Fixtures interface provides:
 
+- gameweek navigation
+- kickoff information
+- home and away teams
+- official FPL fixture difficulty
+- team-profile navigation
+- responsive table presentation
+- controlled empty/error states
+- stale-data awareness
+
+Removed the dead Fixtures navigation placeholder.
+
+Shared navigation was strengthened with:
+
+- working desktop links
+- working mobile navigation
+- conditional `aria-current="page"` state
+- regression coverage across sidebar pages
+
+### Dashboard Release Hardening
+
+Replaced development-oriented Dashboard placeholder content with genuine
+application gateways for:
+
+- Upcoming Fixtures
+- Player Analysis
+- Transfer Decisions
+
+The Dashboard now exposes application data availability using status semantics.
+
+Application Health remains visible through the shared update-health
+infrastructure.
+
+### Data Health & Stale-Data Awareness
+
+Extended the existing update-health architecture into reusable page-level data
+health evaluation.
+
+Added shared data-health presentation so public pages can distinguish unhealthy
+or stale dependencies without creating a second timestamp or freshness system.
+
+Page dependencies are evaluated against the data sources they actually require.
+
+Public intelligence surfaces now use the existing persisted update-run evidence
+for appropriate combinations of:
+
+- Bootstrap data
+- Fixtures
+- Player Fixture History
+
+Healthy data does not produce unnecessary warning noise.
+
+### Public Failure-State Hardening
+
+Replaced raw or fragile failure behaviour with controlled page-level handling
+where required.
+
+Release-hardening coverage now protects failure presentation across:
+
+- Player Explorer
+- Transfers
+- Transfer Planner
+- Transfer Optimizer
+- Wildcard
+- Chip Intelligence
+- Player Comparison
+- Player Profile
+
+User-facing failure states expose appropriate alert semantics without changing
+the underlying intelligence or optimisation behaviour.
+
+### Empty-State Hardening
+
+Added explicit Squad Intelligence empty states when no suitable:
+
+- single-transfer recommendation
+- double-transfer recommendation
+
+is available.
+
+The application no longer leaves those recommendation sections silently empty.
+
+### Development Preview & Diagnostic Cleanup
+
+Removed the public-facing Gameweek development-preview link while retaining the
+deterministic hidden preview route required by regression coverage.
+
+Removed the obsolete Squad manual-preview path while retaining the supported
+generic deterministic preview.
+
+Reviewed Chip Intelligence preview modes and retained them because they provide
+distinct deterministic presentation and real-pipeline integration coverage
+without being exposed as normal production navigation.
+
+Removed stale development wording and temporary diagnostic output where it no
+longer provided lasting value.
+
+### Terminology & Explainability
+
+Reviewed confidence terminology across the application.
+
+The application continues to keep distinct concepts explicit:
+
+- Sample Confidence
+- Effective / Decision Confidence
+- Projection Confidence
+- Reliability Confidence
+
+Transfer Planner and Transfer Optimizer presentation now identify
+`sample_confidence` explicitly as `Sample Confidence`.
+
+Gameweek presentation uses `Decision Confidence` where the value represents
+decision-level reliability.
+
+These terminology changes are presentation-only and do not alter confidence
+models or thresholds.
+
+### Accessibility
+
+Completed a targeted accessibility review of the major public application
+surfaces.
+
+Improvements include:
+
+- `aria-current="page"` for active navigation
+- grouped Player Explorer filters with accessible group labels
+- `aria-pressed` state for interactive Player Explorer filters
+- synchronized filter state during selection and reset
+- `scope="col"` on applicable data-table column headers
+- alert semantics for genuine error/failure states
+- status semantics for Dashboard data availability
+- preserved form-label associations
+- preserved mobile-navigation ARIA behaviour
+
+Table-header scope coverage was added to:
+
+- Player Explorer
+- Team Rankings
+- Team Profile
+- Squad
+- Fixtures
+- Player Profile Fixture Outlook
+
+Pages using card, pitch or other non-table layouts were not given artificial
+table semantics.
+
+### Compatibility & Code Cleanup
+
+Removed the obsolete `TeamPerformanceAdjusted` compatibility class after
+dedicated regression coverage proved it was no longer required.
+
+Retained similarly named classes where they represent genuinely distinct
+responsibilities.
+
+Retained intentional legacy compatibility methods and fallbacks where current
+public behaviour still depends on them.
+
+No speculative cleanup was performed merely because two names appeared
+similar.
+
+### Test Hardening
+
+Reviewed tests for changing live-data assumptions and obsolete diagnostic
+behaviour.
+
+Updated hard-coded real-data FPL entry references where required for the current
+season.
+
+Strengthened structural release-hardening coverage for public pages.
+
+During final regression validation,
+`PlayerFixtureHistoryRecentRetrievalTest.php` exposed a stale live-season
+assumption.
+
+The test was made deterministic by isolating its controlled player history
+inside its existing transaction.
+
+The production Player Fixture History repository was not changed.
+
+The corrected focused test passes with:
+
+- 16 assertions passed
+- 0 assertions failed
+
+### Model & Optimizer Protection
+
+v0.39 release hardening does not change production intelligence-model weights,
+optimizer objectives, search widths, candidate-pool semantics or deterministic
+tie-break rules.
+
+Presentation, reliability and accessibility work remains separate from model
+calibration.
+
+### Documentation
+
+Added a root `README.md` covering:
+
+- project purpose
 - installation
 - database setup
-- update scripts
+- data updates
 - architecture
-- model definitions
+- intelligence-model responsibilities
+- confidence terminology
+- historical evidence and backtesting
 - testing
 - development workflow
+- release process
+
+Existing dedicated update documentation remains in `DATA_UPDATES.md`.
+
+`ROADMAP.md` remains the detailed development and architecture history.
+
+`CHANGELOG.md` remains the release-by-release change record.
+
+### Release Validation
+
+The final v0.39 release regression suite passed with:
+
+- 355 test files
+- 355 test files passed
+- 0 test files failed
+- 0 test files with errors
+- 10,393 assertions passed
+- 0 assertions failed
+- 270.747 seconds total runtime
+
+During final release validation, `SidebarNavigationTest.php` identified a stale
+v0.38.0 application-version expectation after the displayed application version
+was intentionally updated to v0.39.0. The test expectation was updated to the
+current release version, passed 80/80 assertions in focused validation, and the
+complete regression suite was then rerun successfully.
+
+This final validation includes the accumulated v0.39 production, presentation,
+accessibility, data-health, test-hardening and release-preparation work.
+
+### Release Readiness
+
+Release preparation is complete:
+
+- updated `CHANGELOG.md`
+- updated the displayed application version in `public/includes/sidebar.php`
+- reviewed the final local Git diff
+- reviewed and reconciled all untracked files
+- completed final regression validation
+- completed the final release-state documentation update
+
+Final release validation passed with all 355 test files and all 10,393
+assertions passing.
+
+The release is ready for:
+
+- local commit
+- push to `main`
+
+v0.39.0 should be marked **COMPLETE** once the completed release has been
+committed and pushed to `main`.
 
 
 ---

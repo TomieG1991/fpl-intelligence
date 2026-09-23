@@ -21,7 +21,7 @@ $activeNav =
             </div>
 
             <div class="brand-version">
-                v0.38.0
+                v0.39.0
             </div>
 
         </div>
@@ -29,7 +29,28 @@ $activeNav =
     </div>
 
 
+    <button
+        type="button"
+        class="mobile-navigation-toggle"
+        aria-controls="main-navigation"
+        aria-expanded="false"
+        aria-label="Toggle main navigation"
+    >
+        <span class="mobile-navigation-toggle-label">
+            Menu
+        </span>
+
+        <span
+            class="mobile-navigation-toggle-icon"
+            aria-hidden="true"
+        >
+            ☰
+        </span>
+    </button>
+
+
     <nav
+        id="main-navigation"
         class="main-navigation"
         aria-label="Main navigation"
     >
@@ -39,6 +60,9 @@ $activeNav =
             class="nav-link <?= $activeNav === 'dashboard'
                 ? 'active'
                 : ''; ?>"
+            <?= $activeNav === 'dashboard'
+                ? 'aria-current="page"'
+                : ''; ?>
         >
             <span class="nav-icon">
                 ◫
@@ -53,6 +77,9 @@ $activeNav =
             class="nav-link <?= $activeNav === 'players'
                 ? 'active'
                 : ''; ?>"
+            <?= $activeNav === 'players'
+                ? 'aria-current="page"'
+                : ''; ?>
         >
             <span class="nav-icon">
                 👤
@@ -67,6 +94,9 @@ $activeNav =
             class="nav-link <?= $activeNav === 'compare'
                 ? 'active'
                 : ''; ?>"
+            <?= $activeNav === 'compare'
+                ? 'aria-current="page"'
+                : ''; ?>
         >
             <span class="nav-icon">
                 ⇄
@@ -81,6 +111,9 @@ $activeNav =
             class="nav-link <?= $activeNav === 'teams'
                 ? 'active'
                 : ''; ?>"
+            <?= $activeNav === 'teams'
+                ? 'aria-current="page"'
+                : ''; ?>
         >
             <span class="nav-icon">
                 ⚽
@@ -91,10 +124,13 @@ $activeNav =
 
 
         <a
-            href="#"
+            href="fixtures.php"
             class="nav-link <?= $activeNav === 'fixtures'
                 ? 'active'
                 : ''; ?>"
+            <?= $activeNav === 'fixtures'
+                ? 'aria-current="page"'
+                : ''; ?>
         >
             <span class="nav-icon">
                 ◈
@@ -109,6 +145,9 @@ $activeNav =
             class="nav-link <?= $activeNav === 'transfers'
                 ? 'active'
                 : ''; ?>"
+            <?= $activeNav === 'transfers'
+                ? 'aria-current="page"'
+                : ''; ?>
         >
             <span class="nav-icon">
                 ⇄
@@ -123,6 +162,9 @@ $activeNav =
             class="nav-link <?= $activeNav === 'transfer-planner'
                 ? 'active'
                 : ''; ?>"
+            <?= $activeNav === 'transfer-planner'
+                ? 'aria-current="page"'
+                : ''; ?>
         >
             <span class="nav-icon">
                 ⤢
@@ -130,12 +172,16 @@ $activeNav =
 
             Transfer Planner
         </a>
-        
+
+
         <a
             href="transfer-optimizer.php"
             class="nav-link <?= $activeNav === 'transfer-optimizer'
                 ? 'active'
                 : ''; ?>"
+            <?= $activeNav === 'transfer-optimizer'
+                ? 'aria-current="page"'
+                : ''; ?>
         >
             <span class="nav-icon">
                 ✦
@@ -150,6 +196,9 @@ $activeNav =
             class="nav-link <?= $activeNav === 'squad'
                 ? 'active'
                 : ''; ?>"
+            <?= $activeNav === 'squad'
+                ? 'aria-current="page"'
+                : ''; ?>
         >
             <span class="nav-icon">
                 ★
@@ -157,7 +206,8 @@ $activeNav =
 
             Squad Intelligence
         </a>
-        
+
+
         <a
             href="gameweek.php"
             class="nav-link <?= (
@@ -166,6 +216,12 @@ $activeNav =
             ) === 'gameweek'
                 ? 'active'
                 : ''; ?>"
+            <?= (
+                $activeNav
+                ?? ''
+            ) === 'gameweek'
+                ? 'aria-current="page"'
+                : ''; ?>
         >
             <span class="nav-icon">
                 ◉
@@ -173,7 +229,8 @@ $activeNav =
 
             Gameweek Intelligence
         </a>
-        
+
+
         <a
             href="wildcard.php"
             class="nav-link <?= (
@@ -182,6 +239,12 @@ $activeNav =
             ) === 'wildcard'
                 ? 'active'
                 : ''; ?>"
+            <?= (
+                $activeNav
+                ?? ''
+            ) === 'wildcard'
+                ? 'aria-current="page"'
+                : ''; ?>
         >
             <span class="nav-icon">
                 ✦
@@ -189,7 +252,8 @@ $activeNav =
 
             Wildcard Intelligence
         </a>
-        
+
+
         <a
             href="chips.php"
             class="nav-link <?= (
@@ -198,6 +262,12 @@ $activeNav =
             ) === 'chips'
                 ? 'active'
                 : ''; ?>"
+            <?= (
+                $activeNav
+                ?? ''
+            ) === 'chips'
+                ? 'aria-current="page"'
+                : ''; ?>
         >
             <span class="nav-icon">
                 ◇
@@ -211,9 +281,12 @@ $activeNav =
 
     <div class="sidebar-footer">
 
-        <span class="status-dot online"></span>
-
-        System Online
+        <a
+            href="index.php#data-health-title"
+            class="sidebar-health-link"
+        >
+            Health on Dashboard
+        </a>
 
     </div>
 

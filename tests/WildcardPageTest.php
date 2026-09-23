@@ -1191,6 +1191,73 @@ echo "Generated Runtime: "
 
 /*
  * ============================================================
+ * SCENARIO M: RELEASE HARDENING
+ * ============================================================
+ */
+
+echo "============================================<br>";
+echo "Scenario M: Release Hardening<br>";
+echo "============================================<br>";
+
+
+$wildcardPagePath =
+    __DIR__
+    . '/../public/wildcard.php';
+
+
+$wildcardPageSource =
+    is_file(
+        $wildcardPagePath
+    )
+        ? file_get_contents(
+            $wildcardPagePath
+        )
+        : false;
+
+
+$wildcardPageSource =
+    is_string(
+        $wildcardPageSource
+    )
+        ? $wildcardPageSource
+        : '';
+
+
+wildcardPageCheck(
+    'Wildcard page contains no obsolete development placeholder marker',
+    strpos(
+        $wildcardPageSource,
+        'DEVELOPMENT PLACEHOLDER'
+    )
+    === false
+);
+
+
+wildcardPageCheck(
+    'Wildcard setup error exposes alert semantics',
+    preg_match(
+        '/<div\s+class="profile-panel"\s+role="alert">/i',
+        $wildcardPageSource
+    )
+    === 1
+);
+
+
+wildcardPageCheck(
+    'Wildcard optimisation error exposes alert semantics',
+    preg_match_all(
+        '/<div\s+class="profile-panel"\s+role="alert">/i',
+        $wildcardPageSource,
+        $wildcardAlertMatches
+    )
+    === 2
+);
+
+
+echo "<br>";
+
+/*
+ * ============================================================
  * SUMMARY
  * ============================================================
  */

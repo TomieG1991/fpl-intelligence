@@ -2,6 +2,36 @@
 
 require_once __DIR__
     . '/../classes/autoload.php';
+    
+require_once __DIR__
+    . '/includes/data-health.php';
+
+
+$config =
+    require __DIR__
+        . '/../config/config.php';
+
+
+/*
+ * ============================================================
+ * PAGE DATA
+ * ============================================================
+ */
+
+$players =
+    [];
+
+
+$service =
+    null;
+
+
+$pageError =
+    null;
+    
+    
+$dataHealth =
+    [];
 
 
 /*
@@ -16,9 +46,33 @@ try {
         new Database();
 
 
+    $db =
+        $database
+            ->getConnection();
+
+
+    $dataHealth =
+        evaluateDataHealth(
+            $db,
+            [
+                'bootstrap',
+                'fixtures',
+                'player_fixture_history'
+            ],
+            date(
+                'Y-m-d H:i:s'
+            ),
+            $config[
+                'data_health'
+            ][
+                'freshness_seconds'
+            ]
+        );
+
+
     $service =
         new PlayerIntelligenceService(
-            $database->getConnection()
+            $db
         );
 
 
@@ -28,11 +82,13 @@ try {
 
 } catch (Throwable $exception) {
 
-    http_response_code(500);
-
-    die(
-        'Unable to initialise Transfer Intelligence.'
+    http_response_code(
+        500
     );
+
+
+    $pageError =
+        'Transfer Intelligence could not be loaded.';
 }
 
 
@@ -195,6 +251,10 @@ $transferError =
 
 
 if (
+    $pageError === null
+    &&
+    $service !== null
+    &&
     $playerId !== false
     &&
     $playerId !== null
@@ -581,6 +641,38 @@ $activeNav = 'transfers';
             <main class="dashboard">
 
 
+                <?php
+
+                if (
+                    !empty(
+                        $dataHealth
+                    )
+                ) {
+
+                    require __DIR__
+                        . '/includes/data-health-warning.php';
+                }
+
+                ?>
+
+            
+                <?php if (
+                    $pageError !== null
+                ): ?>
+
+                    <div class="alert alert-error" role="alert">
+
+                        <?= htmlspecialchars(
+                            $pageError,
+                            ENT_QUOTES,
+                            'UTF-8'
+                        ); ?>
+
+                    </div>
+
+                <?php endif; ?>
+
+
                 <!-- ==========================================
                      SEARCH CONTROLS
                      ========================================== -->
@@ -797,7 +889,7 @@ $activeNav = 'transfers';
                         $transferError !== null
                     ): ?>
 
-                        <div class="transfer-error">
+                        <div class="transfer-error" role="alert">
 
                             <?= htmlspecialchars(
                                 $transferError,

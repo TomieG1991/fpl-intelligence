@@ -3,6 +3,11 @@
 require_once __DIR__ . '/../classes/autoload.php';
 
 
+$config =
+    require __DIR__
+        . '/../config/config.php';
+
+
 /*
  * ============================================================
  * APPLICATION DATA
@@ -73,7 +78,11 @@ try {
 
 
     $healthFreshnessSeconds =
-        86400;
+        $config[
+            'data_health'
+        ][
+            'freshness_seconds'
+        ];
 
 
     $updateHealth = [
@@ -433,80 +442,7 @@ try {
         }
     }
     
-    /*
-     * --------------------------------------------------------
-     * POSITIONAL STRENGTH DIAGNOSTIC
-     * --------------------------------------------------------
-     */
-
-    $topStrengthByPosition = [
-
-        'GK' => [],
-        'DEF' => [],
-        'MID' => [],
-        'FWD' => []
-
-    ];
-
-
-    foreach ($playerSummaries as $playerSummary) {
-
-        $position =
-            $playerSummary['position']
-            ?? null;
-
-
-        $strengthRating =
-            $playerSummary['strength_rating']
-            ?? null;
-
-
-        if (
-            !isset(
-                $topStrengthByPosition[$position]
-            )
-            ||
-            $strengthRating === null
-        ) {
-
-            continue;
-        }
-
-
-        $topStrengthByPosition[$position][] =
-            $playerSummary;
-    }
-
-
-    foreach (
-        $topStrengthByPosition
-        as $position => $positionPlayers
-    ) {
-
-        usort(
-            $positionPlayers,
-            function (
-                array $a,
-                array $b
-            ): int {
-
-                return
-                    ($b['strength_rating'] ?? 0)
-                    <=>
-                    ($a['strength_rating'] ?? 0);
-            }
-        );
-
-
-        $topStrengthByPosition[$position] =
-            array_slice(
-                $positionPlayers,
-                0,
-                5
-            );
-    }
-
-
+    
     /*
      * --------------------------------------------------------
      * PLAYER RANKING
@@ -611,7 +547,7 @@ $activeNav = 'dashboard';
 
                 <div class="topbar-actions">
 
-                    <span class="data-status">
+                    <span class="data-status" role="status">
 
                         <span
                             class="status-dot <?= $databaseConnected
@@ -983,100 +919,7 @@ $activeNav = 'dashboard';
                             </div>
 
                         <?php endif; ?>
-<!-- testhere -->
-<section class="dashboard-card strength-diagnostic">
-
-    <div class="card-header">
-
-        <div>
-
-            <p class="card-kicker">
-                Calibration Diagnostic
-            </p>
-
-            <h2>
-                Top Strength by Position
-            </h2>
-
-        </div>
-
-    </div>
-
-
-    <div class="position-strength-grid">
-
-        <?php foreach (
-            $topStrengthByPosition
-            as $position => $positionPlayers
-        ): ?>
-
-            <div class="position-strength-group">
-
-                <h3>
-                    <?= htmlspecialchars(
-                        $position,
-                        ENT_QUOTES,
-                        'UTF-8'
-                    ); ?>
-                </h3>
-
-
-                <?php foreach (
-                    $positionPlayers
-                    as $index => $player
-                ): ?>
-
-                    <div class="position-strength-row">
-
-                        <span class="position-strength-rank">
-
-                            <?= $index + 1; ?>
-
-                        </span>
-
-
-                        <span class="position-strength-name">
-
-                            <?= htmlspecialchars(
-                                (string) (
-                                    $player['name']
-                                    ?? 'Unknown'
-                                ),
-                                ENT_QUOTES,
-                                'UTF-8'
-                            ); ?>
-
-                        </span>
-
-
-                        <strong>
-
-                            <?= number_format(
-                                (float) (
-                                    $player[
-                                        'strength_rating'
-                                    ]
-                                    ?? 0
-                                ),
-                                1
-                            ); ?>
-
-                        </strong>
-
-                    </div>
-
-                <?php endforeach; ?>
-
-            </div>
-
-        <?php endforeach; ?>
-
-    </div>
-
-</section>
-
-
-
+                        
                     </article>
 
 
@@ -1095,15 +938,10 @@ $activeNav = 'dashboard';
                                 </p>
 
                                 <h2>
-                                    Best Fixture Runs
+                                    Upcoming Fixtures
                                 </h2>
 
                             </div>
-
-
-                            <span class="card-badge">
-                                Next phase
-                            </span>
 
                         </div>
 
@@ -1115,13 +953,21 @@ $activeNav = 'dashboard';
                             </div>
 
                             <h3>
-                                Fixture opportunities
+                                Explore the fixture schedule
                             </h3>
 
                             <p>
-                                Teams with the strongest upcoming
-                                fixture runs will be ranked here.
+                                Review upcoming gameweeks,
+                                opponents and official FPL
+                                fixture difficulty ratings.
                             </p>
+
+                            <a
+                                href="fixtures.php"
+                                class="button-link"
+                            >
+                                View Fixtures
+                            </a>
 
                         </div>
 
@@ -1139,11 +985,11 @@ $activeNav = 'dashboard';
                             <div>
 
                                 <p class="card-kicker">
-                                    Player Value
+                                    Player Intelligence
                                 </p>
 
                                 <h2>
-                                    Value Picks
+                                    Player Analysis
                                 </h2>
 
                             </div>
@@ -1158,14 +1004,21 @@ $activeNav = 'dashboard';
                             </div>
 
                             <h3>
-                                Best value players
+                                Explore player intelligence
                             </h3>
 
                             <p>
-                                Strength-per-million rankings
-                                will highlight the strongest
-                                budget options.
+                                Compare player strength, value,
+                                availability and fixture
+                                intelligence.
                             </p>
+
+                            <a
+                                href="players.php"
+                                class="button-link"
+                            >
+                                View Players
+                            </a>
 
                         </div>
 
@@ -1187,7 +1040,7 @@ $activeNav = 'dashboard';
                                 </p>
 
                                 <h2>
-                                    Transfer Targets
+                                    Transfer Decisions
                                 </h2>
 
                             </div>
@@ -1202,106 +1055,26 @@ $activeNav = 'dashboard';
                             </div>
 
                             <h3>
-                                Transfer recommendations
+                                Explore transfer options
                             </h3>
 
                             <p>
-                                The strongest replacements and
-                                transfer opportunities will
-                                appear here.
+                                Review transfer intelligence and
+                                investigate potential squad
+                                changes.
                             </p>
+
+                            <a
+                                href="transfers.php"
+                                class="button-link"
+                            >
+                                View Transfers
+                            </a>
 
                         </div>
 
                     </article>
 
-
-                </section>
-
-
-                <!-- ==========================================
-                     DEVELOPMENT STATUS
-                     ========================================== -->
-
-                <section class="dashboard-card system-card">
-
-                    <div class="card-header">
-
-                        <div>
-
-                            <p class="card-kicker">
-                                Application
-                            </p>
-
-                            <h2>
-                                System Status
-                            </h2>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="system-grid">
-
-                        <div class="system-item">
-
-                            <span>
-                                Database
-                            </span>
-
-                            <strong class="<?= $databaseConnected
-                                ? 'status-success'
-                                : 'status-error'; ?>">
-
-                                <?= $databaseConnected
-                                    ? 'Connected'
-                                    : 'Unavailable'; ?>
-
-                            </strong>
-
-                        </div>
-
-
-                        <div class="system-item">
-
-                            <span>
-                                Team Models
-                            </span>
-
-                            <strong class="status-success">
-                                Ready
-                            </strong>
-
-                        </div>
-
-
-                        <div class="system-item">
-
-                            <span>
-                                Player Models
-                            </span>
-
-                            <strong class="status-success">
-                                Ready
-                            </strong>
-
-                        </div>
-
-
-                        <div class="system-item">
-
-                            <span>
-                                Fixture Intelligence
-                            </span>
-
-                            <strong class="status-success">
-                                Ready
-                            </strong>
-
-                        </div>
-
-                    </div>
 
                 </section>
 
