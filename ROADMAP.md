@@ -38,7 +38,7 @@ The system should remain explainable, testable and robust throughout:
 
 Current stable release:
 
-**v0.39.0 — v1.0 UX, Explainability & Release Hardening**
+**v0.40.0 — v1.0 Release Candidate & End-to-End Acceptance**
 
 GitHub `main` is the authoritative code baseline after every completed commit.
 
@@ -46,13 +46,12 @@ GitHub `main` is the authoritative code baseline after every completed commit.
 
 Current release status:
 
-**v0.40.0 — RELEASE CANDIDATE VALIDATION COMPLETE**
+**v1.0.0 — FINAL RELEASE PREPARATION**
 
-The v0.40.0 — v1.0 Release Candidate & End-to-End Acceptance milestone has
-completed its contract audit, end-to-end acceptance review and full regression
-validation.
+v0.40.0 completed the architectural contract audit, end-to-end acceptance
+review and full regression validation required before the v1.0 release.
 
-The complete v0.40.0 regression suite passes with:
+The validated release-candidate regression suite passes with:
 
 - 357 test files
 - 357 test files passed
@@ -62,16 +61,43 @@ The complete v0.40.0 regression suite passes with:
 - 0 assertions failed
 - 293.915 seconds total runtime
 
-No production defect or missing v1.0 feature was identified during the
-acceptance audit. One acceptance-coverage gap was identified in the complete
-Wildcard decision-service chain and was closed with dedicated real-data
-end-to-end coverage.
+The v1.0 acceptance audit verified the required end-to-end system across:
+
+- Player Intelligence
+- Team Intelligence
+- Fixture Intelligence
+- Player Form Intelligence
+- Expected Points
+- squad analysis
+- Starting XI
+- captaincy
+- transfers
+- multi-gameweek planning
+- Wildcard
+- Free Hit
+- Bench Boost
+- Triple Captain
+- Blank Gameweeks
+- Double Gameweeks
+- Market Intelligence
+- recommendation history
+- historical outcomes
+- backtesting and calibration
+- explainable recommendations
+- reliable data updates and data-health monitoring
+
+No production defect or missing v1.0 capability was identified during the
+acceptance audit.
+
+One acceptance-coverage gap in the complete Wildcard decision-service chain was
+identified and closed with dedicated real-data end-to-end coverage.
 
 No production model weights, optimizer objectives, optimizer search widths,
 candidate-pool semantics or deterministic tie-break rules were changed during
-v0.40.0.
+the release-candidate milestone.
 
-v0.40.0 is now ready for final release preparation before the v1.0 release.
+The v1.0 roadmap criteria are satisfied. v1.0.0 is now in final release
+preparation.
 
 v0.38.0 completes the Performance & Caching milestone.
 
@@ -3746,8 +3772,14 @@ release baseline.
 
 # v1.0.0 — FPL Intelligence
 
-v1.0 is reached when FPL Intelligence provides a stable end-to-end decision
-system covering:
+### Status
+
+**FINAL RELEASE PREPARATION**
+
+The v1.0 roadmap criteria have been satisfied.
+
+FPL Intelligence now provides the stable end-to-end decision-support
+architecture required by the roadmap, covering:
 
 - player evaluation
 - team evaluation
@@ -3771,7 +3803,101 @@ system covering:
 - explainable recommendations
 - reliable data updates
 
-The full regression suite must pass before v1.0 release.
+### Release Acceptance
+
+The v0.40.0 Release Candidate & End-to-End Acceptance milestone completed the
+final architectural contract audit and acceptance review before v1.0.
+
+Permanent release-contract coverage verifies the required production classes,
+public entry points, manager-facing application surfaces and specialised
+regression protection.
+
+Dedicated real-data acceptance coverage verifies the complete Wildcard
+decision-service chain after that was identified as the one remaining
+acceptance-coverage gap.
+
+The audit found no missing v1.0 production capability and no production defect
+requiring a behavioural change.
+
+### Season-State Validation
+
+The release architecture and permanent regression suite protect:
+
+- preseason and actionable-gameweek resolution
+- early-season evidence availability
+- normal gameweeks
+- partially completed and non-authoritative gameweeks
+- completed authoritative gameweeks
+- Blank Gameweeks
+- Double Gameweeks
+
+Incomplete gameweeks are prevented from contributing partial outcome evidence
+to historical backtesting and calibration.
+
+### Historical Evidence
+
+The v1.0 architecture protects the complete historical evidence lifecycle:
+
+- production recommendation generation
+- recommendation-candidate capture
+- immutable snapshot promotion
+- authoritative player outcomes
+- backtesting evidence
+- historical calibration
+
+Historical evidence remains separate from refreshable live player state.
+
+### Operational Validation
+
+The production update lifecycle remains protected across:
+
+- Bootstrap data
+- Fixtures data
+- Player Fixture History
+- persisted update-run state
+- update-health evaluation
+- public data-health and stale/failure warnings
+
+### Final Regression
+
+The final v1.0.0 regression suite passes with:
+
+- 357 test files
+- 357 test files passed
+- 0 test files failed
+- 0 test files with errors
+- 10,523 assertions passed
+- 0 assertions failed
+- 295.377 seconds total runtime
+
+`V1ReleaseAcceptanceTest.php` passes with all 86 assertions.
+
+`WildcardDecisionIntelligenceRealDataTest.php` passes with all 44 assertions.
+
+The final complete regression was run after the displayed application version
+was updated to v1.0.0 and the corresponding sidebar regression expectation was
+updated and validated.
+
+No production model weights, optimizer objectives, optimizer search widths,
+candidate-pool semantics or deterministic tie-break rules were changed merely
+to reach v1.0.
+
+### Release Gate
+
+All roadmap capability, acceptance and final regression gates required before
+v1.0 have been satisfied.
+
+Final release preparation has completed:
+
+- the displayed application version is v1.0.0
+- release documentation has been prepared
+- the complete final regression suite has passed
+- all 357 test files pass
+- all 10,523 assertions pass
+
+The remaining release-publication steps are to review the final local Git diff,
+review and reconcile all untracked files, then commit and push v1.0.0 to
+`main`.
 
 
 ---

@@ -6,6 +6,94 @@ The project follows a sprint-based development process.
 
 ---
 
+## [1.0.0] - FPL Intelligence
+
+### Release
+
+FPL Intelligence v1.0.0 is the first stable end-to-end release of the
+application.
+
+The release provides an integrated decision-support system covering:
+
+- Player Intelligence
+- Team Intelligence
+- Fixture Intelligence
+- Player Form Intelligence
+- Expected Points
+- multi-gameweek projections
+- Market Intelligence
+- squad analysis
+- Starting XI recommendations
+- captain and vice-captain recommendations
+- transfer analysis, planning and optimisation
+- Wildcard Intelligence
+- Free Hit Intelligence
+- Bench Boost Intelligence
+- Triple Captain Intelligence
+- Blank Gameweeks
+- Double Gameweeks
+- recommendation history
+- historical outcomes
+- backtesting and calibration
+- explainable recommendation evidence
+- production data-update and data-health monitoring
+
+### Release Acceptance
+
+v1.0.0 is released from the validated v0.40.0 Release Candidate & End-to-End
+Acceptance baseline.
+
+The release-candidate audit verified the complete v1.0 production contract,
+manager-facing application surfaces, season-state behaviour, historical evidence
+lifecycle and operational update lifecycle.
+
+The audit identified no production defect or missing v1.0 capability requiring
+a production-code change.
+
+The one identified acceptance-coverage gap in the complete Wildcard
+decision-service chain was closed with dedicated real-data end-to-end regression
+coverage before the v1.0 release.
+
+### Architecture
+
+v1.0.0 preserves the production architecture validated by the release
+candidate.
+
+No production intelligence-model weights, optimizer objectives, optimizer
+search widths, candidate-pool semantics or deterministic tie-break rules were
+changed merely for the v1.0 version transition.
+
+Historical evidence remains separate from refreshable live player state, and
+existing Player Intelligence, Expected Points, Squad Horizon, chip intelligence,
+recommendation-history, backtesting and calibration boundaries remain intact.
+
+### Validation
+
+The final v1.0.0 regression suite passes with:
+
+- 357 test files
+- 357 test files passed
+- 0 test files failed
+- 0 test files with errors
+- 10,523 assertions passed
+- 0 assertions failed
+- 295.377 seconds total runtime
+
+The permanent `V1ReleaseAcceptanceTest.php` release contract passes with all 86
+assertions passing.
+
+The complete real-data Wildcard decision acceptance test passes with all 44
+assertions passing.
+
+The final regression was run after the displayed application version was
+updated to v1.0.0 and the corresponding sidebar regression expectation was
+updated and validated.
+
+The v1.0 version transition contains release-version and documentation changes
+only; no intelligence-model behaviour was altered during the transition.
+
+---
+
 ## [0.40.0] - v1.0 Release Candidate & End-to-End Acceptance
 
 ### Added
