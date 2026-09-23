@@ -92,6 +92,15 @@ updated and validated.
 The v1.0 version transition contains release-version and documentation changes
 only; no intelligence-model behaviour was altered during the transition.
 
+### Release Status
+
+FPL Intelligence v1.0.0 is complete.
+
+The final release was committed and pushed to `main` after all roadmap
+capability, acceptance and regression gates were satisfied.
+
+The pushed `main` branch is the authoritative v1.0.0 stable release baseline.
+
 ---
 
 ## [0.40.0] - v1.0 Release Candidate & End-to-End Acceptance

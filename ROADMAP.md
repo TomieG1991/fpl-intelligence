@@ -38,7 +38,7 @@ The system should remain explainable, testable and robust throughout:
 
 Current stable release:
 
-**v0.40.0 — v1.0 Release Candidate & End-to-End Acceptance**
+**v1.0.0 — FPL Intelligence**
 
 GitHub `main` is the authoritative code baseline after every completed commit.
 
@@ -46,7 +46,7 @@ GitHub `main` is the authoritative code baseline after every completed commit.
 
 Current release status:
 
-**v1.0.0 — FINAL RELEASE PREPARATION**
+**v1.0.0 — COMPLETE**
 
 v0.40.0 completed the architectural contract audit, end-to-end acceptance
 review and full regression validation required before the v1.0 release.
@@ -3774,7 +3774,7 @@ release baseline.
 
 ### Status
 
-**FINAL RELEASE PREPARATION**
+**COMPLETE**
 
 The v1.0 roadmap criteria have been satisfied.
 
@@ -3882,22 +3882,25 @@ No production model weights, optimizer objectives, optimizer search widths,
 candidate-pool semantics or deterministic tie-break rules were changed merely
 to reach v1.0.
 
-### Release Gate
+### Release Completion
 
-All roadmap capability, acceptance and final regression gates required before
+All roadmap capability, acceptance and final regression gates required for
 v1.0 have been satisfied.
 
-Final release preparation has completed:
+Release preparation and publication are complete:
 
 - the displayed application version is v1.0.0
-- release documentation has been prepared
-- the complete final regression suite has passed
-- all 357 test files pass
-- all 10,523 assertions pass
+- release documentation has been completed
+- the complete final regression suite passed
+- all 357 test files passed
+- all 10,523 assertions passed
+- the final release diff was reviewed
+- untracked files were reviewed and reconciled
+- v1.0.0 was committed
+- v1.0.0 was pushed to `main`
 
-The remaining release-publication steps are to review the final local Git diff,
-review and reconcile all untracked files, then commit and push v1.0.0 to
-`main`.
+FPL Intelligence v1.0.0 is **COMPLETE** and the pushed `main` branch is the
+authoritative stable release baseline.
 
 
 ---

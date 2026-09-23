@@ -11,31 +11,25 @@ decisions an FPL manager faces.
 
 Current stable release:
 
-**v0.40.0 — v1.0 Release Candidate & End-to-End Acceptance**
-
-v0.40.0 is complete and has been committed and pushed to `main`.
-
-Current release preparation:
-
 **v1.0.0 — FPL Intelligence**
+
+v1.0.0 is complete and has been committed and pushed to `main`.
 
 The v1.0 roadmap criteria have been satisfied. The v0.40.0 release-candidate
 milestone completed the architectural contract audit, end-to-end acceptance
 review and complete regression validation required before the first stable
 v1.0 release.
 
-The validated release-candidate regression suite passes with all 357 test files
-and all 10,523 assertions passing.
+The final v1.0.0 regression suite passes with all 357 test files and all 10,523
+assertions passing.
 
 No production defect or missing v1.0 capability was identified during the
 acceptance audit. The identified Wildcard real-data acceptance-coverage gap was
-closed before final v1.0 release preparation.
+closed before the v1.0 release.
 
-The authoritative committed baseline is the `main` branch. v1.0.0 is currently
-in final release preparation and will become the stable release once the final
-release changes have been validated, committed and pushed.
+The authoritative committed baseline is the `main` branch.
 
-See `ROADMAP.md` for the full development history and v1.0 release criteria.
+See `ROADMAP.md` for the full development history and release architecture.
 
 ## Main Application Areas
 
