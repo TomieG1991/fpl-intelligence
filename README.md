@@ -317,15 +317,15 @@ each test in its own PHP CLI process.
 A release is not considered validated while any test file fails, produces an
 execution error, or reports failed assertions.
 
-The final v0.39 release validation completed with:
+The final v1.0.0 release validation completed with:
 
-- 355 test files
-- 355 test files passed
+- 357 test files
+- 357 test files passed
 - 0 test files failed
 - 0 test files with errors
-- 10,393 assertions passed
+- 10,523 assertions passed
 - 0 assertions failed
-- 270.747 seconds total runtime
+- 295.377 seconds total runtime
 
 ## Development Workflow
 
@@ -384,13 +384,14 @@ Before a release:
 
 ## Additional Documentation
 
-- `ROADMAP.md` — development history, architecture progress and path to v1.0
+- `ROADMAP.md` — development history, architecture progress and release milestones
 - `CHANGELOG.md` — release-by-release changes
 - `DATA_UPDATES.md` — production update pipeline, scheduling and troubleshooting
 
-## v1.0 Goal
+## v1.0 Release
 
-v1.0 represents a stable end-to-end FPL decision-support application covering:
+v1.0.0 established the first stable end-to-end FPL decision-support release,
+covering:
 
 - player and team evaluation
 - fixtures
@@ -408,8 +409,13 @@ v1.0 represents a stable end-to-end FPL decision-support application covering:
 - blank and double gameweeks
 - Market Intelligence
 - recommendation history
-- model backtesting
+- model backtesting and calibration
 - explainable recommendations
-- reliable data updates
+- reliable data updates and application-health monitoring
 
-The complete regression suite must pass before the v1.0 release.
+The v1.0.0 release completed its architectural acceptance audit and passed the
+complete regression suite before publication.
+
+Future development should build on the stable v1.0.0 baseline without changing
+established intelligence behaviour unless the change is supported by evidence
+and protected by regression tests.
