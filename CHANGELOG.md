@@ -6,6 +6,116 @@ The project follows a sprint-based development process.
 
 ---
 
+## [0.40.0] - v1.0 Release Candidate & End-to-End Acceptance
+
+### Added
+
+- Added `V1ReleaseAcceptanceTest.php` as the permanent v1.0 release-contract
+  boundary covering the required production architecture, public application
+  surfaces and specialised regression evidence.
+- Added `WildcardDecisionIntelligenceRealDataTest.php` to exercise the complete
+  production Wildcard decision pipeline against real current data:
+  - current-squad multi-gameweek horizon
+  - Wildcard optimisation
+  - Wildcard squad horizon
+  - Wildcard timing intelligence
+  - final `ChipDecision`
+
+### Acceptance Validation
+
+- Audited the v1.0 production contract across:
+  - Player Intelligence
+  - Team Intelligence
+  - Fixture Intelligence
+  - Expected Points
+  - manager squad import
+  - Starting XI
+  - captaincy
+  - transfers
+  - multi-gameweek planning
+  - Squad Horizon
+  - Wildcard
+  - Free Hit
+  - Bench Boost
+  - Triple Captain
+  - recommendation history
+  - historical outcomes
+  - backtesting
+  - calibration
+  - data updates
+  - data health
+  - public application surfaces
+- Verified season-state resilience across:
+  - preseason and actionable-gameweek resolution
+  - early-season evidence
+  - normal gameweeks
+  - partially completed/non-authoritative gameweeks
+  - completed authoritative gameweeks
+  - Blank Gameweeks
+  - Double Gameweeks
+- Confirmed that incomplete gameweeks cannot leak partial outcome evidence into
+  historical backtesting or calibration.
+- Confirmed that Blank and Double Gameweek behaviour continues to flow through
+  the established fixture, projection, Squad Horizon, Starting XI, captaincy and
+  transfer architecture.
+- Confirmed the complete recommendation-history lifecycle from production
+  recommendation capture through immutable promotion, authoritative outcomes,
+  backtesting and historical calibration.
+- Confirmed the operational update lifecycle from Bootstrap, Fixtures and Player
+  Fixture History updates through persisted run state, health evaluation and
+  public stale/failure warnings.
+
+### Gap Closure
+
+- Identified one genuine acceptance-coverage gap: the complete Wildcard
+  decision-service chain did not have an explicit real-data end-to-end test.
+- Closed that gap with `WildcardDecisionIntelligenceRealDataTest.php`.
+- No production defect or missing v1.0 feature was identified during the
+  acceptance audit.
+- No production-code change was required for acceptance gap closure.
+
+### Architecture
+
+- Preserved the existing production orchestration boundaries rather than adding
+  a release-only or duplicate v1.0 orchestration service.
+- Preserved the separation between live decision intelligence and authoritative
+  historical evidence.
+- Preserved the existing Expected Points and multi-gameweek projection
+  architecture.
+- Preserved existing chip decision-service boundaries.
+- Preserved existing recommendation-history, backtesting and calibration
+  architecture.
+- No production model weights, optimizer objectives, optimizer search widths,
+  candidate-pool semantics or deterministic tie-break rules were changed in
+  v0.40.0.
+
+### Testing
+
+- `V1ReleaseAcceptanceTest.php` passes with 86 assertions.
+- `WildcardDecisionIntelligenceRealDataTest.php` passes with 44 assertions.
+- The complete v0.40.0 regression suite passes with:
+  - 357 test files
+  - 357 test files passed
+  - 0 test files failed
+  - 0 test files with errors
+  - 10,523 assertions passed
+  - 0 assertions failed
+  - 293.915 seconds total runtime
+- Compared with the final v0.39.0 release baseline, permanent regression coverage
+  increased from 355 to 357 test files and from 10,393 to 10,523 assertions.
+- The complete acceptance and regression process found no production behaviour
+  requiring modification.
+
+### Release Status
+
+v0.40.0 completes the v1.0 Release Candidate & End-to-End Acceptance milestone.
+
+The application has now passed the architectural contract audit, end-to-end
+acceptance review and complete regression validation required before final v1.0
+release preparation.
+
+---
+
 ## [0.39.0] - v1.0 UX, Explainability & Release Hardening
 
 ### Added

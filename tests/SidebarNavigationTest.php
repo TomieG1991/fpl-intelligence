@@ -169,7 +169,7 @@ sidebarNavigationCheck(
     'Sidebar displays the current stable application version',
     strpos(
         $sidebarSource,
-        'v0.39.0'
+        'v0.40.0'
     ) !== false
 );
 

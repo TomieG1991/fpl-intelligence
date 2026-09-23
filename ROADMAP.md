@@ -46,7 +46,32 @@ GitHub `main` is the authoritative code baseline after every completed commit.
 
 Current release status:
 
-**v0.39.0 — COMPLETE**
+**v0.40.0 — RELEASE CANDIDATE VALIDATION COMPLETE**
+
+The v0.40.0 — v1.0 Release Candidate & End-to-End Acceptance milestone has
+completed its contract audit, end-to-end acceptance review and full regression
+validation.
+
+The complete v0.40.0 regression suite passes with:
+
+- 357 test files
+- 357 test files passed
+- 0 test files failed
+- 0 test files with errors
+- 10,523 assertions passed
+- 0 assertions failed
+- 293.915 seconds total runtime
+
+No production defect or missing v1.0 feature was identified during the
+acceptance audit. One acceptance-coverage gap was identified in the complete
+Wildcard decision-service chain and was closed with dedicated real-data
+end-to-end coverage.
+
+No production model weights, optimizer objectives, optimizer search widths,
+candidate-pool semantics or deterministic tie-break rules were changed during
+v0.40.0.
+
+v0.40.0 is now ready for final release preparation before the v1.0 release.
 
 v0.38.0 completes the Performance & Caching milestone.
 
