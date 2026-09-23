@@ -9,12 +9,11 @@ decisions an FPL manager faces.
 
 ## Current Development Status
 
-Current release:
+Current stable release:
 
 **v0.39.0 — v1.0 UX, Explainability & Release Hardening**
 
-v0.39.0 has completed release preparation and final regression validation and
-is ready for the release commit.
+v0.39.0 is complete and has been committed and pushed to `main`.
 
 The authoritative committed baseline is the `main` branch.
 

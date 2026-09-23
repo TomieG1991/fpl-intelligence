@@ -220,7 +220,8 @@ The project follows a sprint-based development process.
 - No production model weights, optimizer objectives, optimizer search widths,
   candidate-pool semantics or deterministic tie-break rules were changed during
   the milestone.
-- v0.39.0 is release-ready for the final local commit and push to `main`.
+- v0.39.0 has been committed and pushed to `main` and is the current stable
+  release baseline.
 
 ---
 

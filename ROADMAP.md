@@ -36,7 +36,7 @@ The system should remain explainable, testable and robust throughout:
 
 ---
 
-Current release being finalized:
+Current stable release:
 
 **v0.39.0 — v1.0 UX, Explainability & Release Hardening**
 
@@ -46,7 +46,7 @@ GitHub `main` is the authoritative code baseline after every completed commit.
 
 Current release status:
 
-**v0.39.0 — RELEASE READY — FINAL VALIDATION PASSED**
+**v0.39.0 — COMPLETE**
 
 v0.38.0 completes the Performance & Caching milestone.
 
@@ -3429,7 +3429,7 @@ Hardening.
 
 ### Status
 
-**RELEASE READY — FINAL VALIDATION PASSED**
+**COMPLETE**
 
 ### Goal
 
@@ -3697,27 +3697,24 @@ complete regression suite was then rerun successfully.
 This final validation includes the accumulated v0.39 production, presentation,
 accessibility, data-health, test-hardening and release-preparation work.
 
-### Release Readiness
+### Release Completion
 
-Release preparation is complete:
+Release preparation and publication are complete:
 
 - updated `CHANGELOG.md`
 - updated the displayed application version in `public/includes/sidebar.php`
 - reviewed the final local Git diff
 - reviewed and reconciled all untracked files
 - completed final regression validation
-- completed the final release-state documentation update
+- completed the release-state documentation
+- committed the completed v0.39.0 release
+- pushed the completed release to `main`
 
 Final release validation passed with all 355 test files and all 10,393
 assertions passing.
 
-The release is ready for:
-
-- local commit
-- push to `main`
-
-v0.39.0 should be marked **COMPLETE** once the completed release has been
-committed and pushed to `main`.
+v0.39.0 is **COMPLETE** and the pushed `main` branch is the authoritative
+release baseline.
 
 
 ---
