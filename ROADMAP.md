@@ -38,7 +38,7 @@ The system should remain explainable, testable and robust throughout:
 
 Current stable release:
 
-**v1.1.0 — Intelligence Quality & Outcome Evaluation**
+**v1.2.0 — Production Readiness & Deployment Preparation**
 
 GitHub `main` is the authoritative code baseline after every completed commit.
 
@@ -46,22 +46,170 @@ GitHub `main` is the authoritative code baseline after every completed commit.
 
 Current release status:
 
+**v1.2.0 — COMPLETE**
+
+v1.2.0 prepares the stable FPL Intelligence application for a future live-server
+deployment without changing the production intelligence models established by
+the previous releases.
+
+The milestone establishes explicit production contracts for:
+
+- environment-specific configuration
+- production database credentials
+- secret handling
+- public web-root isolation
+- browser-safe production error handling
+- database deployment
+- PHP CLI portability
+- scheduled-job failure signalling
+- production runtime requirements
+- deployment validation and operational preparation
+
+Production now uses an explicit application environment through:
+
+`FPL_APP_ENV`
+
+When the environment is `production`, the application requires:
+
+- `FPL_DB_HOST`
+- `FPL_DB_NAME`
+- `FPL_DB_USERNAME`
+- `FPL_DB_PASSWORD`
+
+Missing or empty production database configuration fails closed rather than
+silently falling back to the local WAMP database settings.
+
+Development mode retains the existing local defaults.
+
+The production web-server contract now explicitly requires:
+
+`public/`
+
+to be the web document root.
+
+Internal application areas including:
+
+- `classes/`
+- `config/`
+- `cron/`
+- `sql/`
+- `tests/`
+
+must remain outside the browser-accessible web tree.
+
+Browser-facing exception handling has also been hardened so production visitors
+are not shown raw technical exception messages. Technical detail remains
+available through server-side error logging, while development mode retains
+useful diagnostic output.
+
+The deployment database schema was hardened by:
+
+- correcting invalid `LONGTEXT DEFAULT NOT NULL` definitions
+- making `recommendation_candidates` table creation idempotent
+- removing hard-coded database creation
+- removing hard-coded selection of the `fpl_intelligence` database
+
+`sql/schema.sql` can therefore be imported into the database selected for the
+deployment environment.
+
+Production command-line orchestration no longer depends on the local WAMP PHP
+installation path.
+
+Both:
+
+- `cron/runDataUpdates.php`
+- `cron/runHistoricalEvidenceLifecycle.php`
+
+use the active PHP CLI executable through the portable PHP execution boundary.
+
+Scheduled update execution also exposes non-zero process status for
+unsuccessful execution so a future production scheduler can detect operational
+failure.
+
+A dedicated production-runtime acceptance test verifies the required local
+runtime capabilities, including:
+
+- PHP 8.2+
+- PDO
+- PDO MySQL
+- JSON support
+- HTTP stream support
+- `allow_url_fopen`
+- PHP CLI
+- `proc_open`
+- required deployment entry points
+
+`DEPLOYMENT.md` defines the provider-neutral deployment contract covering:
+
+- runtime requirements
+- production environment variables
+- secrets
+- database preparation
+- document-root security
+- HTTPS
+- PHP error handling
+- filesystem permissions
+- live-data updates
+- historical-evidence lifecycle execution
+- production scheduling
+- data-health verification
+- security validation
+- pre-deployment checks
+- post-upload checks
+- rollback preparation
+
+Actual live-server deployment remains deliberately outside v1.2.0.
+
+The following are therefore not configured by this milestone:
+
+- live server filesystem paths
+- production database credentials
+- DNS
+- production domain configuration
+- TLS certificate implementation
+- real production scheduler jobs
+- production upload mechanism
+
+Those decisions will be made when the target hosting environment is used for
+the actual deployment.
+
+No production intelligence-model weights, Projection Confidence thresholds,
+optimizer objectives, optimizer search widths, candidate-pool semantics or
+deterministic tie-break behaviour were changed during v1.2.0.
+
+No historical recommendation or realised-outcome evidence was reconstructed or
+manufactured.
+
+The final v1.2.0 complete regression suite passes with:
+
+- 374 test files
+- 374 test files passed
+- 0 test files failed
+- 0 test files with errors
+- 10,758 assertions passed
+- 0 assertions failed
+- 307.062 seconds total runtime
+
+v1.2.0 is therefore complete as the production-readiness and
+deployment-preparation baseline.
+
+---
+
+Previous stable release:
+
 **v1.1.0 — COMPLETE**
 
-v1.1.0 establishes the first validated post-v1.0 intelligence-quality and
+v1.1.0 established the first validated post-v1.0 intelligence-quality and
 outcome-evaluation baseline.
 
-The milestone evaluates genuine immutable recommendation-time evidence against
+The milestone evaluated genuine immutable recommendation-time evidence against
 authoritative realised outcomes without reconstructing missing historical
 recommendations or manufacturing unavailable evidence.
 
-The current authoritative historical sample contains one Ready gameweek,
+The authoritative v1.1.0 historical sample contained one Ready gameweek,
 Gameweek 4.
 
-Gameweeks 1-3 and 5 do not contain the required immutable recommendation
-snapshot. Later gameweeks do not yet have authoritative outcomes.
-
-The validated v1.1.0 baseline directly evaluates:
+The validated baseline directly evaluated:
 
 - Expected Points
 - Projection Confidence
@@ -71,7 +219,7 @@ The validated v1.1.0 baseline directly evaluates:
 - transfer recommendations
 - manager-facing Transfer Decision Intelligence
 
-Gameweek 4 provides:
+Gameweek 4 provided:
 
 - 15 genuine preserved player projections
 - 387 genuine preserved Player Intelligence rankings
@@ -81,58 +229,36 @@ Gameweek 4 provides:
 - preserved Hold transfer advice classified Not Supported by the existing
   directional backtesting contract
 
-Projection evaluation reports:
+Projection evaluation reported:
 
 - points mean error: +0.9807
 - points mean absolute error: 2.9367
 - minutes mean error: +3.1773
 - minutes mean absolute error: 4.2880
 
-Projection error is actual minus projected, so the positive points mean error
-represents under-projection in the current sample.
-
-All 15 evaluated Gameweek 4 projections carry the historical `High` Projection
-Confidence label. The current sample therefore cannot yet establish whether the
-different Projection Confidence bands discriminate projection accuracy.
-
-Full-player-pool Player Intelligence evaluation reports:
+Full-player-pool Player Intelligence evaluation reported:
 
 - Pearson correlation: 0.14349
 - Spearman correlation: 0.06272
 
-Historical calibration paths were also evaluated for:
+All 15 evaluated Gameweek 4 projections carried the historical `High`
+Projection Confidence label, so the sample could not establish whether the
+different Projection Confidence bands discriminated projection accuracy.
 
-- Captain weights
-- Gameweek / Starting XI weights
-- Transfer Priority weights
-- Transfer Decision weights
-- Effective Confidence weights
-- Player Intelligence weights
-- position-aware fixture weights
+The 387-player observations represented one independent gameweek rather than
+387 independent gameweeks. The evidence therefore supported continued
+observation rather than production model changes.
 
-The 387-player calibration observations are observations from one independent
-gameweek, not 387 independent gameweeks. The available evidence is therefore
-insufficient to justify production model changes.
-
-No production intelligence weights, Projection Confidence thresholds, optimizer
-objectives, optimizer search widths, candidate-pool semantics or deterministic
-tie-break behaviour were changed on the basis of the v1.1 historical sample.
-
-v1.1.0 also introduces a dedicated historical-evidence lifecycle, separate from
-the normal live-data update pipeline, which:
+v1.1.0 also introduced the dedicated historical-evidence lifecycle that:
 
 1. promotes eligible recommendation candidates
 2. promotes eligible player snapshot candidates
 3. captures the latest player snapshot candidates for the next deadline
 
-Promotion deliberately occurs before capture. The lifecycle is idempotent and
-is intended to run automatically in production so future gameweeks accumulate
-the immutable evidence required for longitudinal evaluation.
+Recommendation candidate capture remained dependent on genuine
+manager-specific recommendation generation.
 
-Recommendation candidate capture remains dependent on genuine manager-specific
-recommendation generation and is not manufactured by the unattended lifecycle.
-
-The final v1.1.0 complete regression suite passes with:
+The final v1.1.0 complete regression suite passed with:
 
 - 367 test files
 - 367 test files passed
@@ -141,9 +267,6 @@ The final v1.1.0 complete regression suite passes with:
 - 10,654 assertions passed
 - 0 assertions failed
 - 303.446 seconds total runtime
-
-The v1.1.0 evidence baseline supports continued observation rather than a
-production model change.
 
 ---
 

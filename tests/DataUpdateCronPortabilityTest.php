@@ -169,6 +169,46 @@ dataUpdateCronPortabilityCheck(
     )
 );
 
+echo "<br>";
+
+/*
+ * ============================================================
+ * FAILURE EXIT CONTRACT
+ * ============================================================
+ */
+
+echo "<br>";
+echo "============================================<br>";
+echo "Failure Exit Contract<br>";
+echo "============================================<br>";
+
+
+dataUpdateCronPortabilityCheck(
+    'Data update cron exposes an explicit failed result.',
+    str_contains(
+        $cronSource,
+        'RESULT: DATA UPDATE FAILED'
+    )
+);
+
+
+dataUpdateCronPortabilityCheck(
+    'Data update cron returns a non-zero exit status on failure.',
+    str_contains(
+        $cronSource,
+        'exit(1)'
+    )
+);
+
+dataUpdateCronPortabilityCheck(
+    'Partial data updates also return a non-zero exit status.',
+    preg_match(
+        '/RESULT: DATA UPDATE PARTIAL.*?exit\s*\(\s*1\s*\)/s',
+        $cronSource
+    )
+    === 1
+);
+
 
 /*
  * ============================================================

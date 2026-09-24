@@ -4,7 +4,163 @@ All notable changes to this project will be documented in this file.
 
 The project follows a sprint-based development process.
 
---
+---
+
+## [1.2.0] - Production Readiness & Deployment Preparation
+
+### Production Configuration
+
+- Added an explicit application environment contract through `FPL_APP_ENV`.
+- Production environments now require all database connection values to be
+  supplied through:
+  - `FPL_DB_HOST`
+  - `FPL_DB_NAME`
+  - `FPL_DB_USERNAME`
+  - `FPL_DB_PASSWORD`
+- Production configuration fails closed when a required database environment
+  variable is missing or empty.
+- Preserved the existing local-development database defaults when the
+  application is running in development mode.
+- Kept the runtime `config/config.php` tracked because it now contains only the
+  non-secret environment-driven configuration contract.
+- Continued excluding machine-specific configuration and environment files from
+  version control.
+
+### Production Error Handling
+
+- Added `ApplicationErrorPresenter` as the shared environment-aware boundary for
+  browser-facing exception presentation.
+- Development mode retains useful exception detail for local diagnosis.
+- Production mode logs technical exception detail and returns safe
+  user-facing messages.
+- Applied the production-safe error boundary to:
+  - Player Intelligence profile
+  - Players
+  - Wildcard Intelligence
+  - Chip Intelligence
+- Preserved CLI diagnostic output for operational jobs where detailed failures
+  are required for server and scheduler logs.
+
+### Web-Root Security
+
+- Established `public/` as the required production web-server document root.
+- Added regression protection confirming that internal application areas remain
+  outside the public web tree, including:
+  - `classes/`
+  - `config/`
+  - `cron/`
+  - `sql/`
+  - `tests/`
+- Audited public navigation and application URLs for local WAMP, localhost and
+  project-path coupling.
+- No browser-facing URL rewrite or application routing change was required.
+
+### Database Deployment
+
+- Corrected invalid `LONGTEXT DEFAULT NOT NULL` definitions in the deployment
+  schema.
+- Made `recommendation_candidates` table creation idempotent with
+  `CREATE TABLE IF NOT EXISTS`.
+- Removed hard-coded database creation and selection from `sql/schema.sql`.
+- The deployment schema can now be imported into the database selected for the
+  target environment without assuming the database is named
+  `fpl_intelligence`.
+- Added focused database-deployment schema regression coverage.
+
+### PHP CLI Portability
+
+- Extended `PhpCliExecutableLocator` to accept an explicit PHP executable path.
+- Production orchestration now uses `PHP_BINARY` rather than a hard-coded WAMP
+  PHP installation.
+- Removed the WAMP-path dependency from:
+  - `cron/runDataUpdates.php`
+  - `cron/runHistoricalEvidenceLifecycle.php`
+- Preserved the existing process execution and lifecycle ordering semantics.
+
+### Scheduled-Job Failure Signalling
+
+- Hardened the live-data update runner so unsuccessful execution returns a
+  non-zero process exit status.
+- This allows a production scheduler to distinguish successful execution from
+  incomplete or failed update execution.
+- Historical-evidence lifecycle execution continues to fail closed and return a
+  non-zero status when a required lifecycle step fails.
+
+### Production Runtime Acceptance
+
+- Added `ProductionRuntimeRequirementsTest.php`.
+- The deployment runtime acceptance boundary verifies:
+  - PHP 8.2+
+  - PDO
+  - PDO MySQL
+  - JSON support
+  - PHP stream support
+  - `allow_url_fopen`
+  - PHP CLI availability
+  - `proc_open`
+  - required project deployment entry points
+- The current development environment passes all runtime requirement checks.
+
+### Deployment Documentation
+
+- Added `DEPLOYMENT.md` as the provider-neutral production deployment guide.
+- Documented:
+  - production runtime requirements
+  - environment variables
+  - secret handling
+  - database deployment
+  - public web-root isolation
+  - HTTPS expectations
+  - production PHP error handling
+  - filesystem permissions
+  - live-data update execution
+  - historical-evidence lifecycle execution
+  - production scheduling boundaries
+  - data-health verification
+  - security checks
+  - pre-deployment validation
+  - post-upload validation
+  - rollback preparation
+- Exact production server paths, database credentials, DNS, TLS implementation
+  and scheduler configuration remain intentionally deferred until the live
+  hosting environment is known.
+- v1.2.0 prepares the application for deployment; it does not itself deploy the
+  application to the live server.
+
+### Intelligence Behaviour
+
+- No production intelligence-model weights were changed.
+- No Projection Confidence thresholds were changed.
+- No optimizer objectives or search widths were changed.
+- No candidate-pool semantics were changed.
+- No deterministic tie-break behaviour was changed.
+- No historical recommendation or outcome evidence was manufactured.
+- v1.2.0 is a production-readiness and deployment-preparation release rather
+  than an intelligence-model release.
+
+### Testing
+
+- Added or extended focused regression coverage for:
+  - production web-root isolation
+  - environment configuration
+  - production-safe browser error handling
+  - PHP CLI portability
+  - data-update cron portability
+  - database deployment safety
+  - production runtime requirements
+  - application version presentation
+- The focused production-readiness regression passes with no failures.
+- The final v1.2.0 complete regression suite passes with:
+  - 374 test files
+  - 374 test files passed
+  - 0 test files failed
+  - 0 test files with errors
+  - 10,758 assertions passed
+  - 0 assertions failed
+  - 307.062 seconds total runtime
+
+---
+
 ## [1.1.0] - Intelligence Quality & Outcome Evaluation
 
 ### Intelligence Quality Baseline

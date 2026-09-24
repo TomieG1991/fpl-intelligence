@@ -222,9 +222,11 @@ try {
 
         echo "RESULT: DATA UPDATE PARTIAL ⚠️\n";
 
-    } else {
+        } else {
 
         echo "RESULT: DATA UPDATE FAILED ❌\n";
+
+        exit(1);
     }
 
 
@@ -240,5 +242,7 @@ try {
         . $exception->getMessage()
         . "\n\n";
 
-    echo "RESULT: DATA UPDATE FAILED ❌\n";
+        echo "RESULT: DATA UPDATE FAILED ❌\n";
+
+    exit(1);
 }

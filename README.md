@@ -11,38 +11,46 @@ decisions an FPL manager faces.
 
 Current stable release:
 
-**v1.1.0 — Intelligence Quality & Outcome Evaluation**
+**v1.2.0 — Production Readiness & Deployment Preparation**
 
-v1.1.0 is complete and has passed its full release-validation regression.
+v1.2.0 is complete and has passed its full release-validation regression.
 
-The release establishes the first validated post-v1.0 intelligence-quality
-baseline using genuine immutable recommendation-time evidence and authoritative
-realised outcomes.
+The release prepares the stable FPL Intelligence application for a future
+live-server deployment by establishing tested production contracts for:
 
-The currently available authoritative sample contains one Ready gameweek,
-Gameweek 4. This is sufficient to validate the evaluation architecture and
-establish an initial baseline, but not sufficient to justify production model
-weight or threshold changes.
+- environment-specific configuration
+- production database credentials
+- secret handling
+- public web-root isolation
+- production-safe browser error handling
+- database deployment
+- PHP CLI portability
+- scheduled-job failure signalling
+- production runtime requirements
+- deployment and operational validation
 
-v1.1.0 directly evaluates:
+Production environments explicitly use `FPL_APP_ENV=production` and require
+database connection values through environment variables.
 
-- Expected Points
-- Projection Confidence
-- Player Intelligence rankings
-- Starting XI selection
-- Captain Intelligence
-- transfer recommendations
-- manager-facing Transfer Decision Intelligence
+The production web-server document root must point to `public/`, keeping
+application configuration, classes, cron jobs, SQL files and tests outside the
+browser-accessible web tree.
 
-The release also introduces the dedicated historical-evidence lifecycle needed
-to accumulate immutable evidence for future longitudinal evaluation.
+The deployment schema is database-name neutral, and production command-line
+orchestration no longer depends on the local WAMP PHP installation path.
 
-No production intelligence-model weights, Projection Confidence thresholds,
-optimizer objectives, optimizer search widths, candidate-pool semantics or
-deterministic tie-break behaviour were changed on the basis of the current
-historical sample.
+`DEPLOYMENT.md` provides the provider-neutral deployment guide for the future
+live-server deployment.
 
-The final v1.1.0 regression suite passes with all 367 test files and all 10,654
+Actual production hosting configuration, database credentials, DNS, TLS,
+scheduler setup and application upload remain intentionally deferred until the
+target hosting environment is used.
+
+v1.2.0 does not change production intelligence-model weights, Projection
+Confidence thresholds, optimizer objectives, optimizer search widths,
+candidate-pool semantics or deterministic tie-break behaviour.
+
+The final v1.2.0 regression suite passes with all 374 test files and all 10,758
 assertions passing.
 
 The authoritative committed baseline is the `main` branch after the completed
@@ -85,7 +93,7 @@ presenting recommendations as unexplained rankings.
 
 ## Requirements
 
-The project is developed locally using:
+The project is currently developed locally using:
 
 - Windows
 - WAMP
@@ -95,11 +103,25 @@ The project is developed locally using:
 - phpMyAdmin
 - Git
 
+The application runtime requires:
+
+- PHP 8.2 or newer
+- MySQL 5.7 or newer
+- PDO
+- PDO MySQL
+- JSON support
+- PHP HTTP stream support
+- `allow_url_fopen`
+- PHP CLI
+- `proc_open` for coordinated update jobs
+- outbound HTTPS access to the FPL API
+
 The current development environment uses the project directory:
 
 `C:\wamp64\www\fpl-intelligence`
 
-The application expects PHP PDO MySQL support to be available.
+Production requirements and deployment validation are documented in
+`DEPLOYMENT.md`.
 
 ## Installation
 
@@ -145,8 +167,11 @@ including:
 - recommendation snapshots
 - update-run history
 
-Use the SQL files in `sql/` to create the required schema for a new local
-database.
+Create or select the target database first, then import `sql/schema.sql` into
+that database.
+
+The deployment schema deliberately does not create or select a hard-coded
+database, allowing the database name to remain environment-specific.
 
 The application deliberately separates refreshable live player data from
 historical evidence that must remain stable for backtesting and calibration.
@@ -156,7 +181,7 @@ FPL state.
 
 ## Data Updates
 
-Production data updates are coordinated through:
+Controlled live-data updates are coordinated through:
 
 `cron/runDataUpdates.php`
 
@@ -172,10 +197,15 @@ Stale, Partial, Running, Failed and Unavailable data states.
 The main dashboard exposes Application Health information derived from this
 persisted update history.
 
-For full setup, scheduling, manual execution and troubleshooting instructions,
-see:
+For update execution, current local scheduling, manual execution and
+troubleshooting instructions, see:
 
 `DATA_UPDATES.md`
+
+Future live-server scheduling and production operational requirements are
+documented separately in:
+
+`DEPLOYMENT.md`
 
 ## Architecture
 
@@ -337,15 +367,15 @@ each test in its own PHP CLI process.
 A release is not considered validated while any test file fails, produces an
 execution error, or reports failed assertions.
 
-The final v1.1.0 release validation completed with:
+The final v1.2.0 release validation completed with:
 
-- 367 test files
-- 367 test files passed
+- 374 test files
+- 374 test files passed
 - 0 test files failed
 - 0 test files with errors
-- 10,654 assertions passed
+- 10,758 assertions passed
 - 0 assertions failed
-- 303.446 seconds total runtime
+- 307.062 seconds total runtime
 
 ## Development Workflow
 
@@ -406,7 +436,8 @@ Before a release:
 
 - `ROADMAP.md` — development history, architecture progress and release milestones
 - `CHANGELOG.md` — release-by-release changes
-- `DATA_UPDATES.md` — production update pipeline, scheduling and troubleshooting
+- `DATA_UPDATES.md` — data-update pipeline, local scheduling and troubleshooting
+- `DEPLOYMENT.md` — production deployment requirements, security and validation
 
 ## v1.0 Release
 
@@ -457,3 +488,37 @@ historical sample to grow before intelligence weights or confidence thresholds
 are reconsidered. Any future model change should be supported by evidence
 across a materially broader historical sample and protected by regression
 tests.
+
+
+## v1.2 Release
+
+v1.2.0 establishes the production-readiness and deployment-preparation baseline
+for FPL Intelligence.
+
+The release introduces tested production contracts for environment
+configuration, secret handling, web-root isolation, browser-safe error
+presentation, database deployment, PHP CLI portability, scheduler failure
+signalling and runtime acceptance.
+
+The deployment schema is environment-neutral, and the live-data and historical
+evidence runners no longer depend on hard-coded WAMP PHP paths.
+
+`DEPLOYMENT.md` defines the provider-neutral process that will be followed when
+the application is eventually moved to the live server.
+
+The release deliberately does not configure a real production server,
+production database credentials, DNS, TLS or production scheduler. Those steps
+remain deferred until the target hosting environment is known.
+
+No production intelligence-model behaviour or historical evidence was changed
+as part of the deployment-preparation work.
+
+The final v1.2.0 complete regression suite passed:
+
+- 374 test files
+- 374 test files passed
+- 0 test files failed
+- 0 test files with errors
+- 10,758 assertions passed
+- 0 assertions failed
+- 307.062 seconds total runtime

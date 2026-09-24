@@ -1,28 +1,25 @@
-# FPL Intelligence — Production Data Updates
+# FPL Intelligence — Data Updates
 
-This document describes how the FPL Intelligence production data-update pipeline is run and monitored.
+This document describes how the FPL Intelligence live-data update pipeline is
+run and monitored.
 
-## Production Update Runner
+The current Windows Task Scheduler configuration belongs to the local WAMP
+development environment.
 
-The controlled production update pipeline is executed by:
+Future live-server scheduling must use the production server's available
+scheduler and environment. See `DEPLOYMENT.md` for the production deployment
+contract.
+
+## Data Update Runner
+
+The controlled live-data update pipeline is executed by:
 
 ```text
 cron/runDataUpdates.php
 ```
 
-On the current WAMP installation, it can be run manually from Windows using:
-
-```text
-C:\wamp64\bin\php\php8.2.3\php.exe C:\wamp64\www\fpl-intelligence\cron\runDataUpdates.php
-```
-
-The working directory should be:
-
-```text
-C:\wamp64\www\fpl-intelligence
-```
-
-The runner coordinates the production updates rather than requiring each updater to be run manually.
+The runner coordinates the required updates rather than requiring each updater
+to be run manually.
 
 The controlled pipeline currently includes:
 
@@ -30,13 +27,22 @@ The controlled pipeline currently includes:
 2. Fixtures
 3. Player Fixture History
 
-Each update records its execution through the update-run persistence and health infrastructure.
+Each update records its execution through the update-run persistence and health
+infrastructure.
+
+The runner uses the active PHP CLI executable rather than depending on a
+hard-coded WAMP PHP installation.
+
+Successful complete execution returns a successful process exit status.
+
+Partial or failed execution returns a non-zero process exit status so a
+scheduler can detect that the controlled update did not complete successfully.
 
 ---
 
-## Automatic Schedule
+## Current Local Development Schedule
 
-Production data updates are scheduled through Windows Task Scheduler.
+The current development installation uses Windows Task Scheduler.
 
 Task name:
 
@@ -44,13 +50,13 @@ Task name:
 FPL Intelligence Data Update
 ```
 
-Schedule:
+Current local schedule:
 
 ```text
 Daily at 06:00
 ```
 
-The task runs:
+The local WAMP task runs:
 
 ```text
 Program/script:
@@ -63,7 +69,7 @@ Start in:
 C:\wamp64\www\fpl-intelligence
 ```
 
-### Task Scheduler Configuration
+### Local Task Scheduler Configuration
 
 General:
 
@@ -85,7 +91,16 @@ Settings:
 - Do not impose an execution time limit
 - Do not start a new instance if the task is already running
 
-The task does not shut down, sleep or hibernate the computer when the update finishes.
+The local task does not shut down, sleep or hibernate the computer when the
+update finishes.
+
+This Windows configuration is not the production deployment contract. When the
+application is eventually deployed, the equivalent job should be configured
+using the live server's scheduler, PHP CLI executable, project path,
+permissions and production environment variables.
+
+The exact production schedule is intentionally deferred until the live hosting
+environment is known.
 
 ---
 

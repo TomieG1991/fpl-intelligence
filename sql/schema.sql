@@ -9,14 +9,6 @@ SET time_zone = "+00:00";
 
 SET NAMES utf8mb4;
 
-
-CREATE DATABASE IF NOT EXISTS `fpl_intelligence`
-    DEFAULT CHARACTER SET utf8mb4
-    COLLATE utf8mb4_unicode_ci;
-
-USE `fpl_intelligence`;
-
-
 /*
  * ============================================================
  * TEAMS
@@ -640,7 +632,7 @@ CREATE TABLE IF NOT EXISTS `recommendation_snapshots` (
         longtext
         NOT NULL,
         
-    `bench` LONGTEXT DEFAULT NOT NULL,
+    `bench` LONGTEXT NOT NULL,
 
     `captain_recommendation`
         longtext
@@ -946,7 +938,7 @@ CREATE TABLE IF NOT EXISTS `player_fixture_history` (
  * remains unchanged by database JSON normalisation.
  */
 
-CREATE TABLE recommendation_candidates (
+CREATE TABLE IF NOT EXISTS recommendation_candidates (
     id INT NOT NULL AUTO_INCREMENT,
 
     gameweek_id INT NOT NULL,
@@ -963,7 +955,7 @@ CREATE TABLE recommendation_candidates (
 
     starting_xi LONGTEXT NOT NULL,
     
-    bench LONGTEXT DEFAULT NOT NULL,
+    bench LONGTEXT NOT NULL,
 
     captain_recommendation LONGTEXT NOT NULL,
 

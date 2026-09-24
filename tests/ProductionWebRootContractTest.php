@@ -344,7 +344,81 @@ productionWebRootCheck(
         "'freshness_seconds'"
     )
 );
+echo "<br>";
 
+
+/*
+ * ============================================================
+ * F. CONFIGURATION TRACKING CONTRACT
+ * ============================================================
+ */
+
+echo "<br>";
+echo "============================================<br>";
+echo "F. Configuration Tracking Contract<br>";
+echo "============================================<br>";
+
+
+$gitignorePath =
+    $projectRoot
+    . DIRECTORY_SEPARATOR
+    . '.gitignore';
+
+
+$gitignoreSource =
+    is_file(
+        $gitignorePath
+    )
+        ? file_get_contents(
+            $gitignorePath
+        )
+        : false;
+
+
+productionWebRootCheck(
+    'Git ignore configuration exists.',
+    is_string(
+        $gitignoreSource
+    )
+);
+
+
+$gitignoreSource =
+    is_string(
+        $gitignoreSource
+    )
+        ? $gitignoreSource
+        : '';
+
+
+productionWebRootCheck(
+    'Runtime config.php is not treated as a local secret file.',
+    preg_match(
+        '/^\s*\/config\/config\.php\s*$/mi',
+        $gitignoreSource
+    )
+    !== 1
+);
+
+
+productionWebRootCheck(
+    'Optional local configuration remains ignored.',
+    preg_match(
+        '/^\s*\/config\/config\.local\.php\s*$/mi',
+        $gitignoreSource
+    )
+    === 1
+);
+
+
+productionWebRootCheck(
+    'Environment files remain ignored.',
+    preg_match(
+        '/^\s*\.env\s*$/mi',
+        $gitignoreSource
+    )
+    === 1
+);
 
 /*
  * ============================================================
