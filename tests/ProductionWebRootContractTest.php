@@ -230,6 +230,121 @@ productionWebRootCheck(
     )
 );
 
+echo "<br>";
+/*
+ * ============================================================
+ * CONFIGURATION EXAMPLE
+ * ============================================================
+ */
+
+echo "<br>";
+echo "============================================<br>";
+echo "E. Configuration Example<br>";
+echo "============================================<br>";
+
+
+$configExamplePath =
+    $projectRoot
+    . DIRECTORY_SEPARATOR
+    . 'config'
+    . DIRECTORY_SEPARATOR
+    . 'config.example.php';
+
+
+$configExampleSource =
+    is_file(
+        $configExamplePath
+    )
+        ? file_get_contents(
+            $configExamplePath
+        )
+        : false;
+
+
+productionWebRootCheck(
+    'Example configuration exists.',
+    is_file(
+        $configExamplePath
+    )
+);
+
+
+productionWebRootCheck(
+    'Example configuration documents FPL_APP_ENV.',
+    $configExampleSource !== false
+    &&
+    str_contains(
+        $configExampleSource,
+        'FPL_APP_ENV'
+    )
+);
+
+
+productionWebRootCheck(
+    'Example configuration documents FPL_DB_HOST.',
+    $configExampleSource !== false
+    &&
+    str_contains(
+        $configExampleSource,
+        'FPL_DB_HOST'
+    )
+);
+
+
+productionWebRootCheck(
+    'Example configuration documents FPL_DB_NAME.',
+    $configExampleSource !== false
+    &&
+    str_contains(
+        $configExampleSource,
+        'FPL_DB_NAME'
+    )
+);
+
+
+productionWebRootCheck(
+    'Example configuration documents FPL_DB_USERNAME.',
+    $configExampleSource !== false
+    &&
+    str_contains(
+        $configExampleSource,
+        'FPL_DB_USERNAME'
+    )
+);
+
+
+productionWebRootCheck(
+    'Example configuration documents FPL_DB_PASSWORD.',
+    $configExampleSource !== false
+    &&
+    str_contains(
+        $configExampleSource,
+        'FPL_DB_PASSWORD'
+    )
+);
+
+
+productionWebRootCheck(
+    'Example configuration documents FPL_API_BASE_URL.',
+    $configExampleSource !== false
+    &&
+    str_contains(
+        $configExampleSource,
+        'FPL_API_BASE_URL'
+    )
+);
+
+
+productionWebRootCheck(
+    'Example configuration retains the data-health freshness setting.',
+    $configExampleSource !== false
+    &&
+    str_contains(
+        $configExampleSource,
+        "'freshness_seconds'"
+    )
+);
+
 
 /*
  * ============================================================
