@@ -504,7 +504,24 @@ class TransferDecisionWeightCalibrationHistoryService
              * recommendation.
              */
 
-            $recommendations =
+            /*
+             * Production recommendation snapshots preserve the
+             * complete getSquadTransferRecommendations() result:
+             *
+             * transfer_recommendations
+             *   -> recommendations
+             *      -> SquadTransferOptimizer result
+             *         -> recommendations
+             *            -> outgoing-player rows
+             *
+             * Older controlled historical fixtures may already
+             * contain the optimizer result directly.
+             *
+             * Support both preserved contracts without
+             * recalculating or interpreting recommendation
+             * evidence.
+             */
+            $optimizerResult =
                 $transferRecommendations[
                     'recommendations'
                 ]
@@ -512,10 +529,38 @@ class TransferDecisionWeightCalibrationHistoryService
 
 
             if (
-                !is_array($recommendations)
+                !is_array($optimizerResult)
                 ||
-                empty($recommendations)
+                empty($optimizerResult)
             ) {
+
+                continue;
+            }
+
+
+            $hasNestedProductionResult =
+                isset(
+                    $optimizerResult[
+                        'recommendations'
+                    ]
+                )
+                &&
+                is_array(
+                    $optimizerResult[
+                        'recommendations'
+                    ]
+                );
+
+
+            $recommendations =
+                $hasNestedProductionResult
+                    ? $optimizerResult[
+                        'recommendations'
+                    ]
+                    : $optimizerResult;
+
+
+            if (empty($recommendations)) {
 
                 continue;
             }
@@ -591,9 +636,15 @@ class TransferDecisionWeightCalibrationHistoryService
              * ----------------------------------------------------
              */
 
+            $bankSource =
+                $hasNestedProductionResult
+                    ? $optimizerResult
+                    : $transferRecommendations;
+
+
             $bank =
                 $this->preserveNumericOrNull(
-                    $transferRecommendations[
+                    $bankSource[
                         'bank'
                     ]
                     ?? null

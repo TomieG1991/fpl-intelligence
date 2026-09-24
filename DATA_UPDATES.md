@@ -230,4 +230,161 @@ Therefore a complete production update taking several minutes can be normal.
 
 Repeated or overlapping update executions should be avoided.
 
-Recommendation capture, historical snapshot capture and promotion are separate processes from the controlled production data-update pipeline and should not be added to this scheduled task without a deliberate design change.
+---
+
+## Historical Evidence Lifecycle
+
+Historical evidence is maintained by a separate production lifecycle from the
+controlled live-data update pipeline.
+
+The lifecycle is executed by:
+
+```text
+cron/runHistoricalEvidenceLifecycle.php
+```
+
+On the current WAMP development installation, it can be run manually using:
+
+```text
+C:\wamp64\bin\php\php8.2.3\php.exe C:\wamp64\www\fpl-intelligence\cron\runHistoricalEvidenceLifecycle.php
+```
+
+The working directory should be:
+
+```text
+C:\wamp64\www\fpl-intelligence
+```
+
+### Lifecycle Order
+
+The historical-evidence lifecycle runs these operations in order:
+
+1. Promote eligible recommendation candidates.
+2. Promote eligible player gameweek snapshot candidates.
+3. Capture the latest player gameweek snapshot candidates for the next
+   deadline.
+
+Promotion deliberately occurs before capture.
+
+This ensures that evidence belonging to a deadline that has passed is promoted
+to its immutable historical form before mutable candidate evidence is captured
+for the next actionable gameweek.
+
+### Historical Integrity
+
+The lifecycle preserves the distinction between mutable pre-deadline candidate
+evidence and immutable historical evidence.
+
+Repeated execution is safe because the lifecycle uses the existing idempotent
+promotion and candidate-storage boundaries.
+
+The lifecycle does not:
+
+- reconstruct missing historical recommendations
+- manufacture recommendation evidence
+- recalculate historical recommendations using current data
+- overwrite immutable evidence merely because live FPL state has changed
+
+Recommendation candidate capture is deliberately not performed by the
+unattended historical-evidence lifecycle.
+
+Recommendation candidates contain manager-specific decision evidence and must
+originate from genuine production recommendation generation. The current
+production Chips flow captures this evidence after the manager's imported squad
+and the four chip decisions have been produced.
+
+Public FPL data cannot be used to reconstruct private manager-specific
+pre-deadline recommendation evidence reliably.
+
+Therefore, if genuine recommendation evidence was not captured before the
+relevant deadline, the historical gameweek remains incomplete rather than
+receiving manufactured evidence.
+
+### Production Scheduling
+
+The historical-evidence lifecycle is intended to run automatically on the
+production server.
+
+A recommended production cadence is once per hour:
+
+```cron
+0 * * * * /path/to/php /path/to/fpl-intelligence/cron/runHistoricalEvidenceLifecycle.php
+```
+
+Replace `/path/to/php` and `/path/to/fpl-intelligence` with the paths used by
+the production hosting environment.
+
+The hourly lifecycle is safe because its promotion and candidate-storage
+boundaries are idempotent.
+
+Before a deadline, repeated executions can refresh the mutable player snapshot
+candidate for the upcoming gameweek.
+
+After a deadline, eligible recommendation and player snapshot candidates can
+be promoted to immutable historical evidence.
+
+The lifecycle schedule does not itself guarantee that the underlying live FPL
+data is fresh.
+
+Player snapshot candidate capture reads the application's locally stored data.
+The production live-data update schedule must therefore also be frequent enough
+for the required pre-deadline evidence quality.
+
+The historical-evidence lifecycle and live-data update pipeline should remain
+separate even when both are automated on the production server.
+
+### Relationship to Live Data Updates
+
+`cron/runHistoricalEvidenceLifecycle.php` is intentionally separate from:
+
+```text
+cron/runDataUpdates.php
+```
+
+The historical lifecycle is not added to `DataUpdateCoordinator` or
+`DataUpdateProcessRunner`.
+
+Historical-evidence execution is also not recorded as one of the normal
+Application Health `update_runs`.
+
+The normal controlled live-data pipeline remains responsible for:
+
+1. Bootstrap data
+2. Fixtures
+3. Player Fixture History
+
+The historical lifecycle remains responsible for preserving eligible
+pre-deadline evidence for later backtesting and calibration.
+
+This separation prevents historical-evidence preservation from changing the
+established live-data update contract.
+
+### Failure Behaviour
+
+The historical-evidence lifecycle fails closed.
+
+The next lifecycle step is not executed when a required earlier step fails.
+
+A successful run reports success for:
+
+```text
+recommendation_promotion
+player_snapshot_promotion
+player_snapshot_capture
+```
+
+A failure should be investigated before changing production code or attempting
+to manufacture the missing historical evidence.
+
+### Deployment Note
+
+The Windows Task Scheduler instructions earlier in this document describe the
+current WAMP development environment.
+
+When FPL Intelligence is deployed to the live web server, scheduling should use
+the production server's available scheduler, such as cron, with the appropriate
+production PHP executable, project paths and permissions.
+
+The live deployment should automate both the required live-data updates and the
+historical-evidence lifecycle at suitable cadences while preserving their
+separate architectural responsibilities.

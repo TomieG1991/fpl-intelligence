@@ -732,6 +732,146 @@ try {
         . "<br>";
 
 
+    /*
+     * ========================================================
+     * PROJECTION CONFIDENCE DIAGNOSTICS
+     * ========================================================
+     *
+     * These metrics are already calculated by the production
+     * diagnostics service from immutable historical
+     * recommendation-time Projection Confidence labels.
+     *
+     * This output is observational only. It does not
+     * recalculate confidence, change thresholds or select a
+     * preferred confidence model.
+     */
+
+    echo "<br>";
+    echo "============================================<br>";
+    echo "PROJECTION CONFIDENCE DIAGNOSTICS<br>";
+    echo "============================================<br>";
+
+
+    foreach (
+        $diagnostics[
+            'by_confidence'
+        ]
+        ?? []
+        as $confidenceLabel =>
+            $confidenceMetrics
+    ) {
+
+        if (
+            !is_array(
+                $confidenceMetrics
+            )
+        ) {
+
+            continue;
+        }
+
+
+        $pointsMetrics =
+            is_array(
+                $confidenceMetrics[
+                    'points'
+                ]
+                ?? null
+            )
+                ? $confidenceMetrics[
+                    'points'
+                ]
+                : [];
+
+
+        $minutesMetrics =
+            is_array(
+                $confidenceMetrics[
+                    'minutes'
+                ]
+                ?? null
+            )
+                ? $confidenceMetrics[
+                    'minutes'
+                ]
+                : [];
+
+
+        echo htmlspecialchars(
+            (string) $confidenceLabel,
+            ENT_QUOTES,
+            'UTF-8'
+        )
+            . " | Points Sample: "
+            . htmlspecialchars(
+                (string) (
+                    $pointsMetrics[
+                        'sample_size'
+                    ]
+                    ?? 0
+                ),
+                ENT_QUOTES,
+                'UTF-8'
+            )
+            . " | Points Mean Error: "
+            . htmlspecialchars(
+                (string) (
+                    $pointsMetrics[
+                        'mean_error'
+                    ]
+                    ?? 'N/A'
+                ),
+                ENT_QUOTES,
+                'UTF-8'
+            )
+            . " | Points MAE: "
+            . htmlspecialchars(
+                (string) (
+                    $pointsMetrics[
+                        'mean_absolute_error'
+                    ]
+                    ?? 'N/A'
+                ),
+                ENT_QUOTES,
+                'UTF-8'
+            )
+            . " | Minutes Sample: "
+            . htmlspecialchars(
+                (string) (
+                    $minutesMetrics[
+                        'sample_size'
+                    ]
+                    ?? 0
+                ),
+                ENT_QUOTES,
+                'UTF-8'
+            )
+            . " | Minutes Mean Error: "
+            . htmlspecialchars(
+                (string) (
+                    $minutesMetrics[
+                        'mean_error'
+                    ]
+                    ?? 'N/A'
+                ),
+                ENT_QUOTES,
+                'UTF-8'
+            )
+            . " | Minutes MAE: "
+            . htmlspecialchars(
+                (string) (
+                    $minutesMetrics[
+                        'mean_absolute_error'
+                    ]
+                    ?? 'N/A'
+                ),
+                ENT_QUOTES,
+                'UTF-8'
+            )
+            . "<br>";
+    }
+
+
 } catch (
     Throwable $exception
 ) {

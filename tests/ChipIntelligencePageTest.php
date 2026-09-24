@@ -1681,9 +1681,19 @@ chipPageTest(
 
 
 chipPageTest(
-    'Free Hit production decision receives the actionable gameweek',
+    'Chip Intelligence page uses the shared production chip orchestrator',
+    strpos(
+        $chipsPageSource,
+        'new ChipRecommendationProductionOrchestrator'
+    )
+    !== false
+);
+
+
+chipPageTest(
+    'Production chip orchestration receives the actionable gameweek',
     preg_match(
-        '/\$freeHitDecisionIntelligenceService\s*->build\s*\(\s*\$importedSquad\s*,\s*\$playerPool\s*,\s*\$budget\s*,\s*\$actionableGameweek\s*\)/s',
+        '/\$chipRecommendationProductionOrchestrator\s*->build\s*\(\s*\$importedSquad\s*,\s*\$playerPool\s*,\s*\$budget\s*,\s*\$actionableGameweek\s*\)/s',
         $chipsPageSource
     )
     ===
@@ -1692,23 +1702,24 @@ chipPageTest(
 
 
 chipPageTest(
-    'Bench Boost production decision receives the actionable gameweek',
-    preg_match(
-        '/\$benchBoostDecisionIntelligenceService\s*->build\s*\(\s*\$importedSquad\s*,\s*\$actionableGameweek\s*\)/s',
-        $chipsPageSource
+    'Chip Intelligence page does not bypass the shared production chip orchestrator',
+    strpos(
+        $chipsPageSource,
+        '$freeHitDecisionIntelligenceService->build'
     )
-    ===
-    1
-);
-
-chipPageTest(
-    'Triple Captain production decision receives the actionable gameweek',
-    preg_match(
-        '/\$tripleCaptainDecisionIntelligenceService\s*->build\s*\(\s*\$importedSquad\s*,\s*\$actionableGameweek\s*\)/s',
-        $chipsPageSource
+    === false
+    &&
+    strpos(
+        $chipsPageSource,
+        '$benchBoostDecisionIntelligenceService->build'
     )
-    ===
-    1
+    === false
+    &&
+    strpos(
+        $chipsPageSource,
+        '$tripleCaptainDecisionIntelligenceService->build'
+    )
+    === false
 );
 
 chipPageTest(

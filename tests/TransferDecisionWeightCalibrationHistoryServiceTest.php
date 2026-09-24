@@ -1172,58 +1172,88 @@ $evidenceByGameweek = [
              * player for this first TransferDecision calibration
              * layer.
              */
-            'transfer_recommendations' => [
+                        'transfer_recommendations' => [
 
-                'status' =>
-                    'success',
+                /*
+                 * Preserve the genuine production transfer result
+                 * contract returned by
+                 * getSquadTransferRecommendations().
+                 *
+                 * The outer result contains squad analysis and the
+                 * complete SquadTransferOptimizer result.
+                 */
+                'analysis' => [
 
-                'bank' =>
-                    1.0,
+                    'validation' => [
+
+                        'is_valid' =>
+                            true
+                    ]
+                ],
 
                 'recommendations' => [
 
-                    [
-                        'outgoing' => [
+                    'status' =>
+                        'success',
 
-                            'player_id' =>
-                                108
+                    'bank' =>
+                        1.0,
+
+                    'priority_limit' =>
+                        5,
+
+                    'replacement_limit' =>
+                        5,
+
+                    'players_considered' =>
+                        2,
+
+                    'recommendations' => [
+
+                        [
+                            'outgoing' => [
+
+                                'player_id' =>
+                                    108
+                            ],
+
+                            /*
+                             * Preserved replacement list is
+                             * deliberately incomplete.
+                             *
+                             * History calibration must reconstruct
+                             * the complete legal universe from
+                             * player_rankings rather than calibrating
+                             * only against the production top-five
+                             * replacements.
+                             */
+                            'replacements' => [
+
+                                [
+                                    'player' => [
+
+                                        'player_id' =>
+                                            201
+                                    ]
+                                ]
+                            ]
                         ],
 
                         /*
-                         * Preserved replacement list is deliberately
-                         * incomplete.
-                         *
-                         * History calibration must reconstruct the
-                         * complete legal universe from player_rankings
-                         * rather than calibrating only against the
-                         * production top-five replacements.
+                         * A second outgoing recommendation exists
+                         * but must not enter this first incoming-
+                         * weight calibration layer.
                          */
-                        'replacements' => [
+                        [
+                            'outgoing' => [
 
-                            [
-                                'player' => [
+                                'player_id' =>
+                                    109
+                            ],
 
-                                    'player_id' =>
-                                        201
-                                ]
-                            ]
+                            'replacements' =>
+                                []
                         ]
-                    ],
-
-                    /*
-                     * A second outgoing recommendation exists but
-                     * must not enter this first incoming-weight
-                     * calibration layer.
-                     */
-                    [
-                        'outgoing' => [
-
-                            'player_id' =>
-                                109
-                        ],
-
-                        'replacements' =>
-                            []
                     ]
                 ]
             ]

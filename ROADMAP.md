@@ -38,13 +38,116 @@ The system should remain explainable, testable and robust throughout:
 
 Current stable release:
 
-**v1.0.0 — FPL Intelligence**
+**v1.1.0 — Intelligence Quality & Outcome Evaluation**
 
 GitHub `main` is the authoritative code baseline after every completed commit.
 
 ---
 
 Current release status:
+
+**v1.1.0 — COMPLETE**
+
+v1.1.0 establishes the first validated post-v1.0 intelligence-quality and
+outcome-evaluation baseline.
+
+The milestone evaluates genuine immutable recommendation-time evidence against
+authoritative realised outcomes without reconstructing missing historical
+recommendations or manufacturing unavailable evidence.
+
+The current authoritative historical sample contains one Ready gameweek,
+Gameweek 4.
+
+Gameweeks 1-3 and 5 do not contain the required immutable recommendation
+snapshot. Later gameweeks do not yet have authoritative outcomes.
+
+The validated v1.1.0 baseline directly evaluates:
+
+- Expected Points
+- Projection Confidence
+- Player Intelligence rankings
+- Starting XI selection
+- Captain Intelligence
+- transfer recommendations
+- manager-facing Transfer Decision Intelligence
+
+Gameweek 4 provides:
+
+- 15 genuine preserved player projections
+- 387 genuine preserved Player Intelligence rankings
+- Starting XI result of 68 points against a best legal realised XI of 71
+- captain result of 11 points against a best preserved alternative of 12
+- top preserved transfer with a realised gain of +1 point
+- preserved Hold transfer advice classified Not Supported by the existing
+  directional backtesting contract
+
+Projection evaluation reports:
+
+- points mean error: +0.9807
+- points mean absolute error: 2.9367
+- minutes mean error: +3.1773
+- minutes mean absolute error: 4.2880
+
+Projection error is actual minus projected, so the positive points mean error
+represents under-projection in the current sample.
+
+All 15 evaluated Gameweek 4 projections carry the historical `High` Projection
+Confidence label. The current sample therefore cannot yet establish whether the
+different Projection Confidence bands discriminate projection accuracy.
+
+Full-player-pool Player Intelligence evaluation reports:
+
+- Pearson correlation: 0.14349
+- Spearman correlation: 0.06272
+
+Historical calibration paths were also evaluated for:
+
+- Captain weights
+- Gameweek / Starting XI weights
+- Transfer Priority weights
+- Transfer Decision weights
+- Effective Confidence weights
+- Player Intelligence weights
+- position-aware fixture weights
+
+The 387-player calibration observations are observations from one independent
+gameweek, not 387 independent gameweeks. The available evidence is therefore
+insufficient to justify production model changes.
+
+No production intelligence weights, Projection Confidence thresholds, optimizer
+objectives, optimizer search widths, candidate-pool semantics or deterministic
+tie-break behaviour were changed on the basis of the v1.1 historical sample.
+
+v1.1.0 also introduces a dedicated historical-evidence lifecycle, separate from
+the normal live-data update pipeline, which:
+
+1. promotes eligible recommendation candidates
+2. promotes eligible player snapshot candidates
+3. captures the latest player snapshot candidates for the next deadline
+
+Promotion deliberately occurs before capture. The lifecycle is idempotent and
+is intended to run automatically in production so future gameweeks accumulate
+the immutable evidence required for longitudinal evaluation.
+
+Recommendation candidate capture remains dependent on genuine manager-specific
+recommendation generation and is not manufactured by the unattended lifecycle.
+
+The final v1.1.0 complete regression suite passes with:
+
+- 367 test files
+- 367 test files passed
+- 0 test files failed
+- 0 test files with errors
+- 10,654 assertions passed
+- 0 assertions failed
+- 303.446 seconds total runtime
+
+The v1.1.0 evidence baseline supports continued observation rather than a
+production model change.
+
+---
+
+Previous stable release:
 
 **v1.0.0 — COMPLETE**
 

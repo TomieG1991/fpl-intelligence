@@ -11,25 +11,45 @@ decisions an FPL manager faces.
 
 Current stable release:
 
-**v1.0.0 — FPL Intelligence**
+**v1.1.0 — Intelligence Quality & Outcome Evaluation**
 
-v1.0.0 is complete and has been committed and pushed to `main`.
+v1.1.0 is complete and has passed its full release-validation regression.
 
-The v1.0 roadmap criteria have been satisfied. The v0.40.0 release-candidate
-milestone completed the architectural contract audit, end-to-end acceptance
-review and complete regression validation required before the first stable
-v1.0 release.
+The release establishes the first validated post-v1.0 intelligence-quality
+baseline using genuine immutable recommendation-time evidence and authoritative
+realised outcomes.
 
-The final v1.0.0 regression suite passes with all 357 test files and all 10,523
+The currently available authoritative sample contains one Ready gameweek,
+Gameweek 4. This is sufficient to validate the evaluation architecture and
+establish an initial baseline, but not sufficient to justify production model
+weight or threshold changes.
+
+v1.1.0 directly evaluates:
+
+- Expected Points
+- Projection Confidence
+- Player Intelligence rankings
+- Starting XI selection
+- Captain Intelligence
+- transfer recommendations
+- manager-facing Transfer Decision Intelligence
+
+The release also introduces the dedicated historical-evidence lifecycle needed
+to accumulate immutable evidence for future longitudinal evaluation.
+
+No production intelligence-model weights, Projection Confidence thresholds,
+optimizer objectives, optimizer search widths, candidate-pool semantics or
+deterministic tie-break behaviour were changed on the basis of the current
+historical sample.
+
+The final v1.1.0 regression suite passes with all 367 test files and all 10,654
 assertions passing.
 
-No production defect or missing v1.0 capability was identified during the
-acceptance audit. The identified Wildcard real-data acceptance-coverage gap was
-closed before the v1.0 release.
+The authoritative committed baseline is the `main` branch after the completed
+release is committed and pushed.
 
-The authoritative committed baseline is the `main` branch.
-
-See `ROADMAP.md` for the full development history and release architecture.
+See `ROADMAP.md` for the full development history, evidence baseline and release
+architecture.
 
 ## Main Application Areas
 
@@ -317,15 +337,15 @@ each test in its own PHP CLI process.
 A release is not considered validated while any test file fails, produces an
 execution error, or reports failed assertions.
 
-The final v1.0.0 release validation completed with:
+The final v1.1.0 release validation completed with:
 
-- 357 test files
-- 357 test files passed
+- 367 test files
+- 367 test files passed
 - 0 test files failed
 - 0 test files with errors
-- 10,523 assertions passed
+- 10,654 assertions passed
 - 0 assertions failed
-- 295.377 seconds total runtime
+- 303.446 seconds total runtime
 
 ## Development Workflow
 
@@ -416,6 +436,24 @@ covering:
 The v1.0.0 release completed its architectural acceptance audit and passed the
 complete regression suite before publication.
 
-Future development should build on the stable v1.0.0 baseline without changing
-established intelligence behaviour unless the change is supported by evidence
-and protected by regression tests.
+## v1.1 Release
+
+v1.1.0 establishes the first post-v1.0 intelligence-quality and outcome
+evaluation baseline.
+
+The release validates direct historical evaluation of preserved Expected
+Points, Projection Confidence, Player Intelligence rankings, Starting XI,
+Captain Intelligence, transfer recommendations and manager-facing Transfer
+Decision Intelligence.
+
+It also adds the production historical-evidence lifecycle required to accumulate
+future immutable recommendation and player-state evidence.
+
+The current baseline contains one authoritative Ready gameweek. The evidence
+therefore supports continued observation rather than production model changes.
+
+Future development should build on the stable v1.1.0 baseline and allow the
+historical sample to grow before intelligence weights or confidence thresholds
+are reconsidered. Any future model change should be supported by evidence
+across a materially broader historical sample and protected by regression
+tests.

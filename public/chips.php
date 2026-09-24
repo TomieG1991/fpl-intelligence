@@ -140,6 +140,10 @@ $tripleCaptainDecisionIntelligenceService =
     null;
 
 
+$chipRecommendationProductionOrchestrator =
+    null;
+
+
 $fplSquadImporter =
     null;
 
@@ -384,12 +388,34 @@ if (
          * --------------------------------------------------------
          */
 
-        $tripleCaptainDecisionIntelligenceService =
+                $tripleCaptainDecisionIntelligenceService =
             new TripleCaptainDecisionIntelligenceService(
                 $squadHorizonIntelligenceService,
                 $playerIntelligenceService,
                 new CaptainIntelligence(),
                 new TripleCaptainIntelligence()
+            );
+
+
+        /*
+         * --------------------------------------------------------
+         * SHARED CHIP PRODUCTION ORCHESTRATOR
+         * --------------------------------------------------------
+         *
+         * The orchestrator contains no new Chip Intelligence.
+         *
+         * It provides one reusable production boundary around the
+         * four existing decision pipelines so the same production
+         * evidence can be consumed by both the manager-facing page
+         * and historical-evidence infrastructure.
+         */
+
+        $chipRecommendationProductionOrchestrator =
+            new ChipRecommendationProductionOrchestrator(
+                $wildcardDecisionIntelligenceService,
+                $freeHitDecisionIntelligenceService,
+                $benchBoostDecisionIntelligenceService,
+                $tripleCaptainDecisionIntelligenceService
             );
 
     } catch (Throwable $exception) {
@@ -1120,6 +1146,8 @@ if (
     $benchBoostDecisionIntelligenceService !== null
     &&
     $tripleCaptainDecisionIntelligenceService !== null
+    &&
+    $chipRecommendationProductionOrchestrator !== null
 ) {
 
     try {
@@ -1485,43 +1513,48 @@ if (
 
         /*
          * --------------------------------------------------------
-         * RUN ALL FOUR EXISTING PRODUCTION DECISION PIPELINES
+         * RUN EXISTING PRODUCTION CHIP INTELLIGENCE
          * --------------------------------------------------------
+         *
+         * Delegate the complete calculation to the shared
+         * production orchestration boundary.
+         *
+         * The underlying four decision services and all of their
+         * established inputs remain unchanged.
          */
 
-        $wildcardResult =
-            $wildcardDecisionIntelligenceService
+        $chipProductionResult =
+            $chipRecommendationProductionOrchestrator
                 ->build(
                     $importedSquad,
                     $playerPool,
                     $budget,
-                    3
+                    $actionableGameweek
                 );
+
+
+        $wildcardResult =
+            $chipProductionResult[
+                'wildcard'
+            ];
 
 
         $freeHitResult =
-            $freeHitDecisionIntelligenceService
-                ->build(
-                    $importedSquad,
-                    $playerPool,
-                    $budget,
-                    $actionableGameweek
-                );
+            $chipProductionResult[
+                'free_hit'
+            ];
+
 
         $benchBoostResult =
-            $benchBoostDecisionIntelligenceService
-                ->build(
-                    $importedSquad,
-                    $actionableGameweek
-                );
+            $chipProductionResult[
+                'bench_boost'
+            ];
 
 
         $tripleCaptainResult =
-            $tripleCaptainDecisionIntelligenceService
-                ->build(
-                    $importedSquad,
-                    $actionableGameweek
-                );
+            $chipProductionResult[
+                'triple_captain'
+            ];
 
 
                 /*

@@ -4,6 +4,208 @@ All notable changes to this project will be documented in this file.
 
 The project follows a sprint-based development process.
 
+--
+## [1.1.0] - Intelligence Quality & Outcome Evaluation
+
+### Intelligence Quality Baseline
+
+- Added direct real-data historical outcome evaluation for the preserved
+  recommendation-time intelligence produced by FPL Intelligence.
+- Established an initial v1.1 evidence baseline from the currently available
+  authoritative historical sample.
+- Historical evaluation remains observational: missing recommendation snapshots
+  are not reconstructed and unavailable future outcomes are not manufactured.
+- The current authoritative sample contains one Ready gameweek, Gameweek 4.
+- Gameweeks 1-3 and 5 are historically incomplete because no immutable
+  recommendation snapshot is available.
+- Later gameweeks remain unavailable until their outcomes become authoritative.
+
+### Projection Evaluation
+
+- Evaluated 15 genuine preserved Gameweek 4 player projections.
+- Gameweek 4 projection results:
+  - points mean error: `+0.9807`
+  - points mean absolute error: `2.9367`
+  - minutes mean error: `+3.1773`
+  - minutes mean absolute error: `4.2880`
+- Projection error is defined as actual minus projected, so the positive points
+  mean error represents under-projection in this sample.
+- Added explicit real-data output for the existing Projection Confidence
+  diagnostics.
+- All 15 evaluated Gameweek 4 squad projections were historically classified
+  `High` Projection Confidence.
+- No Moderate, Low, Very Low or Unavailable projection observations are yet
+  present in the Ready historical sample, so the current evidence cannot
+  establish whether Projection Confidence bands discriminate projection
+  accuracy.
+
+### Player Intelligence Evaluation
+
+- Added direct real-data evaluation of the immutable full-player-pool Player
+  Intelligence ranking.
+- Gameweek 4 contains 387 comparable preserved player rankings.
+- Gameweek 4 ranking metrics:
+  - Pearson correlation between Intelligence Score and realised FPL points:
+    `0.14349`
+  - Spearman correlation between preserved Intelligence ordering and realised
+    points ordering: `0.06272`
+- The direct Pearson result is consistent with the existing Player Intelligence
+  weight-calibration evidence for the same historical sample.
+
+### Starting XI Evaluation
+
+- Added `GameweekStartingXIBacktestingService` as a thin historical composition
+  boundary around the existing Starting XI selection backtester.
+- Added direct real-data evaluation of the genuine preserved Starting XI rather
+  than relying only on calibration replay.
+- Gameweek 4:
+  - preserved recommended XI points: `68`
+  - best legal realised XI points from the same preserved squad: `71`
+  - selection points lost: `3`
+- This independently agrees with the current-production candidate result from
+  the Gameweek weight-calibration path.
+
+### Captain Evaluation
+
+- Added direct real-data evaluation of the genuine preserved Captain
+  Intelligence recommendation.
+- Gameweek 4:
+  - preserved captain actual points: `11`
+  - best preserved alternative actual points: `12`
+  - captain points lost: `1`
+- This independently agrees with the existing Captain weight-calibration result
+  for the same gameweek.
+
+### Transfer Evaluation
+
+- Added direct real-data evaluation of the genuine preserved top transfer
+  recommendation and manager-facing Transfer Decision.
+- Gameweek 4 preserved top transfer:
+  - outgoing player actual points: `1`
+  - incoming player actual points: `2`
+  - realised transfer points gain: `+1`
+- The preserved manager-facing advice was:
+  - action: `Hold`
+  - priority: `Low`
+  - decision score: `47.9`
+- Under the existing directional Transfer Decision backtesting contract, the
+  positive realised transfer gain means that Gameweek 4 Hold advice is
+  classified `Not Supported`.
+- No transfer-hit cost is inferred because the preserved evidence does not
+  establish that the move would have required a hit.
+
+### Historical Transfer Contract Fix
+
+- Fixed `TransferDecisionWeightCalibrationHistoryService` so genuine production
+  recommendation snapshots are read through the preserved nested
+  `getSquadTransferRecommendations()` / optimizer-result contract.
+- Preserved compatibility with older controlled flattened historical fixtures.
+- The fix changes historical evidence interpretation only; it does not alter
+  Transfer Intelligence, recommendation ordering, decision weights or live
+  transfer behaviour.
+- The genuine Gameweek 4 Transfer Decision calibration sample is now correctly
+  evaluable.
+
+### Historical Evidence Lifecycle
+
+- Added a dedicated historical-evidence lifecycle separate from the normal live
+  data-update pipeline.
+- Added:
+  - `HistoricalEvidenceLifecycleCoordinator`
+  - `HistoricalEvidenceLifecycleLauncher`
+  - `HistoricalEvidenceProcessRunner`
+  - `cron/runHistoricalEvidenceLifecycle.php`
+- The lifecycle runs in the required order:
+  1. promote eligible recommendation candidates
+  2. promote eligible player snapshot candidates
+  3. capture the latest player snapshot candidates for the next deadline
+- Promotion occurs before capture so post-deadline evidence is made immutable
+  before the next mutable candidate state is collected.
+- The lifecycle is idempotent and fails closed when a required step fails.
+- Recommendation candidate capture remains deliberately outside unattended
+  scheduling because it depends on genuine manager-specific recommendation
+  evidence.
+- Missing historical recommendation evidence is never reconstructed or
+  manufactured.
+
+### Recommendation Capture
+
+- Added `ChipRecommendationProductionOrchestrator` as a thin shared production
+  composition boundary for Wildcard, Free Hit, Bench Boost and Triple Captain
+  decisions.
+- Updated the Chips production page to use the shared orchestrator before
+  capturing genuine recommendation candidates.
+- The orchestrator does not introduce new scoring or intelligence behaviour and
+  preserves the existing specialist chip-decision results unchanged.
+
+### Calibration Findings
+
+- Existing historical calibration paths were exercised against the genuine
+  authoritative sample for:
+  - Captain weights
+  - Gameweek / Starting XI weights
+  - Transfer Priority weights
+  - Transfer Decision weights
+  - Effective Confidence weights
+  - Player Intelligence weights
+  - position-aware fixture weights
+- The 387-player calibration samples represent player observations from one
+  Ready gameweek, not 387 independent gameweeks.
+- Several one-gameweek calibration sweeps produce different candidate metrics,
+  but the historical sample is insufficient to justify production model
+  changes.
+- No production intelligence weights, Projection Confidence thresholds,
+  optimizer objectives, search widths, candidate-pool semantics or
+  deterministic tie-break behaviour have been changed from the v1.0 baseline.
+
+### Testing
+
+- Added permanent real-data observational coverage for:
+  - genuine Starting XI outcome evaluation
+  - genuine Player Intelligence ranking evaluation
+  - genuine Captain outcome evaluation
+  - genuine transfer outcome evaluation
+  - genuine manager-facing Transfer Decision outcome evaluation
+  - Projection Confidence diagnostic output
+- Added focused regression coverage for the Starting XI historical composition
+  boundary and corrected Transfer Decision historical evidence contract.
+- Relevant focused v1.1 regression coverage passes with no failures.
+- The final v1.1.0 complete regression suite passes with:
+  - 367 test files
+  - 367 test files passed
+  - 0 test files failed
+  - 0 test files with errors
+  - 10,654 assertions passed
+  - 0 assertions failed
+  - 303.446 seconds total runtime
+
+### Evidence Conclusion
+
+The v1.1 historical evaluation infrastructure is functioning across the core
+decision-intelligence domains.
+
+The available historical sample is currently too small to support evidence-based
+production model changes. The validated v1.1 baseline therefore preserves the
+v1.0 intelligence model while accumulating additional immutable recommendation
+and outcome evidence for future longitudinal evaluation.
+
+No production intelligence-model weights, Projection Confidence thresholds,
+optimizer objectives, optimizer search widths, candidate-pool semantics or
+deterministic tie-break behaviour were changed on the basis of the current
+one-gameweek historical sample.
+
+### Release Status
+
+FPL Intelligence v1.1.0 — Intelligence Quality & Outcome Evaluation is
+complete.
+
+The milestone establishes the first validated post-v1.0 intelligence-quality
+baseline using genuine immutable recommendation evidence and authoritative
+realised outcomes.
+
+The final complete regression suite passes with all 367 test files and all
+10,654 assertions passing.
+
 ---
 
 ## [1.0.0] - FPL Intelligence
