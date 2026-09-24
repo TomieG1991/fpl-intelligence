@@ -282,6 +282,23 @@ $activeNav =
     <div class="sidebar-footer">
 
         <a
+            href="https://ko-fi.com/fplintelligence"
+            class="sidebar-support-link"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            <span
+                class="sidebar-support-icon"
+                aria-hidden="true"
+            >
+                ☕
+            </span>
+
+            Support FPL Intelligence
+        </a>
+
+
+        <a
             href="index.php#data-health-title"
             class="sidebar-health-link"
         >

@@ -205,9 +205,11 @@ a {
 
     display: flex;
 
-    align-items: center;
+    flex-direction: column;
 
-    gap: 8px;
+    align-items: stretch;
+
+    gap: 10px;
 
     padding-top: 20px;
 
@@ -218,6 +220,88 @@ a {
 
     color:
         #9eabc0;
+}
+
+
+.sidebar-support-link {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    padding:
+        10px
+        12px;
+
+    border:
+        1px solid #6f5cff;
+
+    border-radius: 8px;
+
+    background:
+        #302b55;
+
+    color:
+        #ffffff;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    text-align: center;
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        transform 0.15s ease;
+}
+
+
+.sidebar-support-link:hover {
+    background:
+        #3a3468;
+
+    border-color:
+        #8b7cff;
+
+    color:
+        #ffffff;
+
+    transform:
+        translateY(-1px);
+}
+
+
+.sidebar-support-link:focus-visible {
+    outline:
+        2px solid #a99fff;
+
+    outline-offset:
+        2px;
+}
+
+
+.sidebar-support-icon {
+    font-size: 15px;
+
+    line-height: 1;
+}
+
+
+.sidebar-health-link {
+    align-self: center;
+
+    color:
+        #9eabc0;
+
+    text-align: center;
+}
+
+
+.sidebar-health-link:hover {
+    color:
+        #ffffff;
 }
 
 

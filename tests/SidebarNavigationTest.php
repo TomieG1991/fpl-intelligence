@@ -658,6 +658,66 @@ sidebarNavigationCheck(
     ) === 1
 );
 
+echo "<br>";
+/*
+ * ============================================================
+ * SCENARIO M
+ * SUPPORT FPL INTELLIGENCE
+ * ============================================================
+ */
+
+echo "============================================<br>";
+echo "Scenario M: Support FPL Intelligence<br>";
+echo "============================================<br>";
+
+
+sidebarNavigationCheck(
+    'Sidebar provides a Support FPL Intelligence link',
+    strpos(
+        $sidebarSource,
+        'Support FPL Intelligence'
+    ) !== false
+);
+
+
+sidebarNavigationCheck(
+    'Support link uses the official FPL Intelligence Ko-fi page',
+    strpos(
+        $sidebarSource,
+        'href="https://ko-fi.com/fplintelligence"'
+    ) !== false
+);
+
+
+sidebarNavigationCheck(
+    'Ko-fi support page opens in a new tab',
+    strpos(
+        $sidebarSource,
+        'target="_blank"'
+    ) !== false
+);
+
+
+sidebarNavigationCheck(
+    'External Ko-fi link protects the opener relationship',
+    strpos(
+        $sidebarSource,
+        'rel="noopener noreferrer"'
+    ) !== false
+);
+
+
+sidebarNavigationCheck(
+    'Ko-fi support link has a dedicated sidebar support class',
+    strpos(
+        $sidebarSource,
+        'class="sidebar-support-link"'
+    ) !== false
+);
+
+
+echo "<br>";
+
 echo "<br><br>";
 
 /*
