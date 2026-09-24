@@ -335,6 +335,63 @@ echo "<br>";
 
 /*
  * ============================================================
+ * PRODUCTION ERROR HANDLING
+ * ============================================================
+ */
+
+echo "<br>";
+echo "============================================<br>";
+echo "Production Error Handling<br>";
+echo "============================================<br>";
+
+
+playersPageReleaseHardeningCheck(
+    'Players page creates the shared ApplicationErrorPresenter',
+    strpos(
+        $pageSource,
+        'new ApplicationErrorPresenter'
+    ) !== false
+);
+
+
+playersPageReleaseHardeningCheck(
+    'Players page supplies the configured application environment',
+    preg_match(
+        "/\\\$config\\s*\\[\\s*'environment'\\s*\\]/s",
+        $pageSource
+    ) === 1
+);
+
+
+playersPageReleaseHardeningCheck(
+    'Players page failure is passed through the shared error presenter',
+    strpos(
+        $pageSource,
+        '$errorPresenter->present('
+    ) !== false
+);
+
+
+playersPageReleaseHardeningCheck(
+    'Players page failure retains its safe user-facing fallback message',
+    strpos(
+        $pageSource,
+        'Player data could not be loaded.'
+    ) !== false
+);
+
+
+playersPageReleaseHardeningCheck(
+    'Players page does not assign the raw exception message directly',
+    preg_match(
+        '/\\$pageError\\s*=\\s*\\$exception\\s*->\\s*getMessage\\s*\\(\\s*\\)\\s*;/s',
+        $pageSource
+    ) !== 1
+);
+
+
+/*
+ * ============================================================
  * SUMMARY
  * ============================================================
  */

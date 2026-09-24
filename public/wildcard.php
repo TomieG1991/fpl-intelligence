@@ -10,6 +10,14 @@ require_once __DIR__
 $config =
     require __DIR__
         . '/../config/config.php';
+        
+        
+$errorPresenter =
+    new ApplicationErrorPresenter(
+        $config[
+            'environment'
+        ]
+    );
 
 
 /*
@@ -101,8 +109,10 @@ try {
 ) {
 
     $setupError =
-        $exception
-            ->getMessage();
+        $errorPresenter->present(
+            $exception,
+            'Wildcard Intelligence could not be generated at the moment.'
+        );
 }
 
 
@@ -215,8 +225,10 @@ if (
     ) {
 
         $setupError =
-            $exception
-                ->getMessage();
+            $errorPresenter->present(
+                $exception,
+                'Wildcard Intelligence could not be generated at the moment.'
+            );
     }
 }
 
@@ -250,8 +262,10 @@ if (
     ) {
 
         $setupError =
-            $exception
-                ->getMessage();
+            $errorPresenter->present(
+                $exception,
+                'Wildcard Intelligence could not be generated at the moment.'
+            );
     }
 }
 

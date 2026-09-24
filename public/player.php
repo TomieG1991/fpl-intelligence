@@ -11,6 +11,13 @@ require_once __DIR__
 $config =
     require __DIR__
         . '/../config/config.php';
+        
+$errorPresenter =
+    new ApplicationErrorPresenter(
+        $config[
+            'environment'
+        ]
+    );
 
 
 /*
@@ -128,10 +135,13 @@ if (
                     $playerId
                 );
 
-    } catch (Throwable $exception) {
+        } catch (Throwable $exception) {
 
         $pageError =
-            $exception->getMessage();
+            $errorPresenter->present(
+                $exception,
+                'Unable to load this Player Intelligence profile at the moment.'
+            );
     }
 }
 

@@ -10,6 +10,13 @@ require_once __DIR__
 $config =
     require __DIR__
         . '/../config/config.php';
+        
+$errorPresenter =
+    new ApplicationErrorPresenter(
+        $config[
+            'environment'
+        ]
+    );
 
 
 /*
@@ -2060,8 +2067,10 @@ if (
     } catch (Throwable $exception) {
 
         $integrationError =
-            $exception
-                ->getMessage();
+            $errorPresenter->present(
+                $exception,
+                'Unable to generate Chip Intelligence at the moment.'
+            );
     }
 }
 

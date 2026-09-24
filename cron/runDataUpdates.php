@@ -70,9 +70,9 @@ try {
         new PhpCliExecutableLocator();
 
 
-    $phpExecutable =
+        $phpExecutable =
         $phpCliLocator->locate(
-            'C:\\wamp64\\bin\\php',
+            PHP_BINARY,
             PHP_MAJOR_VERSION
             . '.'
             . PHP_MINOR_VERSION

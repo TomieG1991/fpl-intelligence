@@ -1256,6 +1256,70 @@ wildcardPageCheck(
 
 echo "<br>";
 
+
+/*
+ * ============================================================
+ * SCENARIO: PRODUCTION ERROR HANDLING
+ * ============================================================
+ */
+
+echo "============================================<br>";
+echo "Production Error Handling<br>";
+echo "============================================<br>";
+
+
+wildcardPageCheck(
+    'Wildcard page creates the shared ApplicationErrorPresenter',
+    strpos(
+        $wildcardPageSource,
+        'new ApplicationErrorPresenter'
+    )
+    !== false
+);
+
+
+wildcardPageCheck(
+    'Wildcard page supplies the configured application environment',
+    preg_match(
+        "/\\\$config\\s*\\[\\s*'environment'\\s*\\]/s",
+        $wildcardPageSource
+    )
+    === 1
+);
+
+
+wildcardPageCheck(
+    'Wildcard failures are passed through the shared error presenter',
+    substr_count(
+        $wildcardPageSource,
+        '$errorPresenter->present('
+    )
+    === 3
+);
+
+
+wildcardPageCheck(
+    'Wildcard page provides a safe user-facing failure message',
+    strpos(
+        $wildcardPageSource,
+        'Wildcard Intelligence could not be generated at the moment.'
+    )
+    !== false
+);
+
+
+wildcardPageCheck(
+    'Wildcard page does not assign raw exception messages directly',
+    preg_match(
+        '/\\$setupError\\s*=\\s*\\$exception\\s*->\\s*getMessage\\s*\\(\\s*\\)\\s*;/s',
+        $wildcardPageSource
+    )
+    !== 1
+);
+
+
+echo "<br>";
+
 /*
  * ============================================================
  * SUMMARY

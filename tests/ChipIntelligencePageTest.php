@@ -1826,6 +1826,70 @@ echo "<br>";
 
 /*
  * ============================================================
+ * SCENARIO — PRODUCTION ERROR HANDLING
+ * ============================================================
+ */
+
+echo "============================================<br>";
+echo "Scenario: Production Error Handling<br>";
+echo "============================================<br>";
+
+
+chipPageTest(
+    'Chip Intelligence page creates the shared ApplicationErrorPresenter',
+    strpos(
+        $chipsPageSource,
+        'new ApplicationErrorPresenter'
+    )
+    !== false
+);
+
+
+chipPageTest(
+    'Chip Intelligence page supplies the configured application environment',
+    preg_match(
+        "/\\\$config\\s*\\[\\s*'environment'\\s*\\]/s",
+        $chipsPageSource
+    )
+    === 1
+);
+
+
+chipPageTest(
+    'Chip Intelligence integration failure is passed through the shared error presenter',
+    strpos(
+        $chipsPageSource,
+        '$errorPresenter->present('
+    )
+    !== false
+);
+
+
+chipPageTest(
+    'Chip Intelligence integration failure has a safe user-facing fallback message',
+    strpos(
+        $chipsPageSource,
+        'Unable to generate Chip Intelligence at the moment.'
+    )
+    !== false
+);
+
+
+chipPageTest(
+    'Chip Intelligence integration error does not assign the raw exception message directly',
+    preg_match(
+        '/\\$integrationError\\s*=\\s*\\$exception\\s*->\\s*getMessage\\s*\\(\\s*\\)\\s*;/s',
+        $chipsPageSource
+    )
+    !== 1
+);
+
+
+echo "<br>";
+
+
+/*
+ * ============================================================
  * SUMMARY
  * ============================================================
  */

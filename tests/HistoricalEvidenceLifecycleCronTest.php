@@ -212,9 +212,18 @@ historicalLifecycleCronAssert(
 historicalLifecycleCronAssert(
     str_contains(
         $cronSource,
-        "'C:\\\\wamp64\\\\bin\\\\php'"
+        'PHP_BINARY'
     ),
-    'Historical lifecycle cron uses the established WAMP PHP root.'
+    'Historical lifecycle cron uses the current PHP CLI executable portably.'
+);
+
+
+historicalLifecycleCronAssert(
+    !str_contains(
+        $cronSource,
+        'C:\\\\wamp64'
+    ),
+    'Historical lifecycle cron contains no hard-coded WAMP installation path.'
 );
 
 

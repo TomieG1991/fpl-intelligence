@@ -11,6 +11,14 @@ require_once __DIR__
 $config =
     require __DIR__
         . '/../config/config.php';
+        
+        
+$errorPresenter =
+    new ApplicationErrorPresenter(
+        $config[
+            'environment'
+        ]
+    );
 
 
 /*
@@ -134,7 +142,10 @@ try {
 
 
     $pageError =
-        $exception->getMessage();
+        $errorPresenter->present(
+            $exception,
+            'Player data could not be loaded.'
+        );
 }
 
 

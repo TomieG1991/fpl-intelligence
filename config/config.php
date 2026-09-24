@@ -2,6 +2,11 @@
 
 return [
 
+    'environment' =>
+        getenv('FPL_APP_ENV')
+        ?: 'development',
+
+
     'database' => [
 
         'host' =>

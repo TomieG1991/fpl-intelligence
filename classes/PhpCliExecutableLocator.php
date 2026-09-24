@@ -28,6 +28,31 @@ class PhpCliExecutableLocator
             );
 
 
+        /*
+         * ----------------------------------------------------
+         * EXPLICIT PHP EXECUTABLE
+         * ----------------------------------------------------
+         *
+         * Production environments commonly expose PHP as a
+         * directly executable binary rather than through the
+         * WAMP php<version>/php.exe directory structure.
+         *
+         * Preserve the existing WAMP discovery behaviour while
+         * allowing callers to provide an explicit executable.
+         */
+
+        if (
+            $phpRoot !== ''
+            &&
+            is_file(
+                $phpRoot
+            )
+        ) {
+
+            return $phpRoot;
+        }
+
+
         if (
             $phpRoot === ''
             ||
@@ -37,7 +62,7 @@ class PhpCliExecutableLocator
         ) {
 
             throw new InvalidArgumentException(
-                'PHP installation root could not be found.'
+                'PHP installation root or executable could not be found.'
             );
         }
 

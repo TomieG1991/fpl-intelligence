@@ -472,6 +472,53 @@ phpCliExecutableLocatorCheck(
 
 /*
  * ============================================================
+ * SCENARIO G
+ * CURRENT PHP CLI EXECUTABLE
+ * ============================================================
+ */
+
+phpCliExecutableLocatorSection(
+    'Scenario G: Current PHP CLI Executable'
+);
+
+
+$currentExecutable =
+    PHP_BINARY;
+
+
+$currentExecutableLocated =
+    false;
+
+
+try {
+
+    $locatedCurrentExecutable =
+        $locator->locate(
+            $currentExecutable,
+            $preferredVersion
+        );
+
+
+    $currentExecutableLocated =
+        $locatedCurrentExecutable
+        ===
+        $currentExecutable;
+
+} catch (Throwable $exception) {
+
+    $currentExecutableLocated =
+        false;
+}
+
+
+phpCliExecutableLocatorCheck(
+    'An explicit PHP CLI executable can be used directly.',
+    $currentExecutableLocated
+);
+
+
+/*
+ * ============================================================
  * SUMMARY
  * ============================================================
  */
