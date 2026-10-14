@@ -11,53 +11,51 @@ decisions an FPL manager faces.
 
 Current stable release:
 
-**v1.2.0 — Production Readiness & Deployment Preparation**
+**v1.3.0 — Gameweek Command Centre**
 
-v1.2.0 is complete and has passed its full release-validation regression.
+v1.3.0 is complete, committed and pushed to the `main` branch.
 
-The release prepares the stable FPL Intelligence application for a future
-live-server deployment by establishing tested production contracts for:
+The Gameweek Command Centre brings together the manager's most important
+weekly FPL decisions on the Dashboard, including:
 
-- environment-specific configuration
-- production database credentials
-- secret handling
-- public web-root isolation
-- production-safe browser error handling
-- database deployment
-- PHP CLI portability
-- scheduled-job failure signalling
-- production runtime requirements
-- deployment and operational validation
+- Starting XI and bench recommendations
+- Captain and vice-captain guidance
+- Transfer decisions and opportunities
+- Multi-gameweek squad outlook
+- Chip context and specialist analysis links
+- Manager-specific warnings and opportunities
+- Data-health and confidence information
 
-Production environments explicitly use `FPL_APP_ENV=production` and require
-database connection values through environment variables.
+The Dashboard reuses existing authoritative intelligence services rather than
+introducing competing decision models.
 
-The production web-server document root must point to `public/`, keeping
-application configuration, classes, cron jobs, SQL files and tests outside the
-browser-accessible web tree.
+Manager selection is preserved through session-based context, and Dashboard
+performance has been improved through prepared squad intelligence and deferred
+heavyweight chip analysis.
 
-The deployment schema is database-name neutral, and production command-line
-orchestration no longer depends on the local WAMP PHP installation path.
+The release preserves existing intelligence weights, optimiser objectives,
+search widths, candidate eligibility, tie-breaks, confidence semantics and
+historical-evidence integrity.
 
-`DEPLOYMENT.md` provides the provider-neutral deployment guide for the future
-live-server deployment.
+The final v1.3.0 browser regression completed successfully:
 
-Actual production hosting configuration, database credentials, DNS, TLS,
-scheduler setup and application upload remain intentionally deferred until the
-target hosting environment is used.
+- 405 test files passed
+- 0 test files failed
+- 0 test files with errors
+- 11,343 assertions passed
+- 0 assertions failed
+- 301.021 seconds total runtime
 
-v1.2.0 does not change production intelligence-model weights, Projection
-Confidence thresholds, optimizer objectives, optimizer search widths,
-candidate-pool semantics or deterministic tie-break behaviour.
+The Dashboard visual review was also approved.
 
-The final v1.2.0 regression suite passes with all 374 test files and all 10,758
-assertions passing.
+Production deployment remains deferred. The production-readiness contracts
+established in v1.2.0 remain in place, with deployment requirements documented
+in `DEPLOYMENT.md`.
 
-The authoritative committed baseline is the `main` branch after the completed
-release is committed and pushed.
+The authoritative committed baseline is GitHub `main`, at release commit
+`afa7c196b07d2362f914348517cb2973fa4a368c`.
 
-See `ROADMAP.md` for the full development history, evidence baseline and release
-architecture.
+See `ROADMAP.md` for the development history and future milestones.
 
 ## Main Application Areas
 
@@ -367,15 +365,15 @@ each test in its own PHP CLI process.
 A release is not considered validated while any test file fails, produces an
 execution error, or reports failed assertions.
 
-The final v1.2.0 release validation completed with:
+The final v1.3.0 release validation completed with:
 
-- 374 test files
-- 374 test files passed
+- 405 test files
+- 405 test files passed
 - 0 test files failed
 - 0 test files with errors
-- 10,758 assertions passed
+- 11,343 assertions passed
 - 0 assertions failed
-- 307.062 seconds total runtime
+- 301.021 seconds total runtime
 
 ## Development Workflow
 
@@ -419,18 +417,27 @@ historical integrity:
 
 ## Release Process
 
-Before a release:
+The normal release workflow uses **one planned commit per version upgrade**,
+unless additional commits are necessary for a specific technical reason.
 
-1. complete focused development and regression testing
-2. run the complete test suite
-3. review local changes and untracked files
-4. remove temporary diagnostics
-5. update project documentation
-6. update `CHANGELOG.md`
-7. update displayed application version where applicable
-8. perform final regression validation
-9. commit locally
-10. push the completed release to `main`
+Before the release commit:
+
+1. Complete focused development and regression testing.
+2. Complete required browser visual checks.
+3. Review local changes and untracked files.
+4. Exclude temporary diagnostics and unrelated changes.
+5. Finalise `README.md`, `ROADMAP.md`, `CHANGELOG.md` and `PROJECT_STATUS.md`.
+6. Update the displayed application version in `public/includes/sidebar.php`.
+7. Ensure release documentation describes the intended completed release state.
+8. Run the final complete browser regression.
+9. Obtain explicit approval before committing.
+10. Commit the completed release locally and push to `main` with explicit approval.
+
+Version numbers and release-status wording should be finalised as part of
+release preparation, not through routine follow-up commits.
+
+GitHub `main` becomes the authoritative committed baseline after the release
+is pushed.
 
 ## Additional Documentation
 

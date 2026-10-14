@@ -6,7 +6,7 @@ The project follows a sprint-based development process.
 
 ---
 
-## [1.3.0] - Gameweek Command Centre (Release Preparation)
+## [1.3.0] - Gameweek Command Centre
 
 ### Dashboard & Manager Context
 
@@ -32,9 +32,12 @@ The project follows a sprint-based development process.
 
 ### Release State
 
-- Dashboard visual verification and full browser regression are complete.
-- Release documentation and displayed-version update are being prepared; v1.3.0 has not yet been committed or published.
-- The displayed application version is maintained in `public/includes/sidebar.php`; no `version.txt` file is used.
+- v1.3.0 is complete, committed and pushed to GitHub `main`.
+- Dashboard visual verification was approved before release.
+- Final browser regression passed: 405/405 test files, 11,343 assertions, 0 failures and 0 errors.
+- The displayed application version is `v1.3.0`, maintained in `public/includes/sidebar.php`; no `version.txt` file is used.
+- Release commit: `afa7c196b07d2362f914348517cb2973fa4a368c`.
+- Production deployment remains deferred; the v1.2.0 production-readiness contracts remain in place.
 
 ---
 

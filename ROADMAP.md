@@ -38,13 +38,32 @@ The system should remain explainable, testable and robust throughout:
 
 Current stable release:
 
-**v1.2.0 — Production Readiness & Deployment Preparation**
+**v1.3.0 — Gameweek Command Centre**
 
-GitHub `main` is the authoritative code baseline after every completed commit.
+v1.3.0 is complete, committed and pushed to GitHub `main`.
+
+The release brings together the existing authoritative FPL intelligence
+services into a manager-facing Gameweek Command Centre Dashboard.
+
+The final release validation passed:
+
+- 405 test files passed
+- 0 test files failed
+- 0 test files with errors
+- 11,343 assertions passed
+- 0 assertions failed
+
+The Dashboard visual review was approved before release.
+
+Release commit:
+`afa7c196b07d2362f914348517cb2973fa4a368c`
+
+GitHub `main` is the authoritative committed baseline after every completed
+release. Local uncommitted changes must be preserved.
 
 ---
 
-Current release status:
+Previous release status:
 
 **v1.2.0 — COMPLETE**
 
@@ -4131,17 +4150,38 @@ authoritative stable release baseline.
 
 ---
 
+
 # v1.3.0 — Gameweek Command Centre
 
 ### Status
 
-**IN DEVELOPMENT — release validation pending**
+**COMPLETE — committed and pushed to GitHub `main`**
 
-The Dashboard implementation and visual refinements have been developed locally.
-Final release remains gated on confirmed Dashboard visual approval, a fresh
-complete browser regression, and release review. GitHub `main` remains the
-authoritative committed baseline. The application version is displayed in
-`public/includes/sidebar.php`; no `version.txt` file is used.
+The Gameweek Command Centre implementation, visual refinements, release review
+and regression validation are complete.
+
+The Dashboard visual review was approved.
+
+The final complete browser regression passed:
+
+- 405 test files
+- 405 test files passed
+- 0 test files failed
+- 0 test files with errors
+- 11,343 assertions passed
+- 0 assertions failed
+
+The release was committed and pushed to GitHub `main`.
+
+Release commit:
+`afa7c196b07d2362f914348517cb2973fa4a368c`
+
+The application displays `v1.3.0` through
+`public/includes/sidebar.php`. No `version.txt` file is used.
+
+The existing intelligence models, weightings, optimisation objectives,
+candidate eligibility, search widths, tie-breaks, confidence semantics and
+historical-evidence boundaries remain protected.
 
 ### Goal
 
@@ -4887,17 +4927,26 @@ unless the test deliberately uses controlled synthetic data.
 
 ## 8. Every Release
 
-Before each release:
+The normal workflow uses one planned commit per version release, unless a
+specific technical complication requires an additional commit.
 
-1. run targeted tests during development
-2. run `RunAllTests.php`
-3. review `git diff`
-4. review untracked files
-5. remove temporary diagnostics
-6. update `CHANGELOG.md`
-7. update displayed application version
-8. rerun final regression suite when appropriate
-9. commit
-10. push to `main`
+Before committing a release:
+
+1. Complete focused development and regression testing.
+2. Complete required browser visual checks.
+3. Review local changes and untracked files.
+4. Exclude temporary diagnostics and unrelated changes.
+5. Finalise `README.md`, `ROADMAP.md`, `CHANGELOG.md` and `PROJECT_STATUS.md`.
+6. Update the displayed application version in `public/includes/sidebar.php`.
+7. Ensure version numbers and release-status wording reflect the intended
+   completed release.
+8. Run the final complete browser regression.
+9. Obtain explicit approval before committing.
+10. Commit the completed release and push to `main` with explicit approval.
+
+Avoid routine post-release commits solely to correct version numbers or
+release-status wording.
+
+Once pushed, GitHub `main` becomes the authoritative committed release baseline.
 
 ---
