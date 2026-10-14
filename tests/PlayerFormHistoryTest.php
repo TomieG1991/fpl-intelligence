@@ -264,6 +264,36 @@ try {
 
 
     /*
+     * Isolate this controlled sample from later imported history.
+     *
+     * Appearance history intentionally looks beyond the last five
+     * fixtures for non-zero-minute rows. Retaining genuine GW2+
+     * history would therefore make this test depend on how many
+     * gameweeks have been imported since it was written.
+     *
+     * Keep the authoritative GW1 row and replace later history
+     * inside the existing transaction. The final rollback restores
+     * every original row, including any removed here.
+     */
+
+    $isolationStatement =
+        $db->prepare(
+            "
+            DELETE pfh
+            FROM player_fixture_history pfh
+            INNER JOIN gameweeks g
+                ON g.id = pfh.gameweek_id
+            WHERE pfh.player_id = :player_id
+                AND g.fpl_gameweek_id > 1
+            "
+        );
+
+    $isolationStatement->execute([
+        ':player_id' => $playerId
+    ]);
+
+
+    /*
      * Synthetic sequence after genuine GW1:
      *
      * GW2: 90

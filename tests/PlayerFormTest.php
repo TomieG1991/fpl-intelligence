@@ -243,6 +243,33 @@ try {
 
 
     /*
+     * Isolate the controlled five-fixture sample from later
+     * imported player history. Appearance windows intentionally
+     * look further back than fixture windows when zero-minute
+     * rows occur, so unrelated GW6+ appearances would otherwise
+     * change the expected sample size.
+     *
+     * The existing transaction rollback restores these rows.
+     */
+
+    $isolationStatement =
+        $db->prepare(
+            "
+            DELETE pfh
+            FROM player_fixture_history pfh
+            INNER JOIN gameweeks g
+                ON g.id = pfh.gameweek_id
+            WHERE pfh.player_id = :player_id
+                AND g.fpl_gameweek_id > 1
+            "
+        );
+
+    $isolationStatement->execute([
+        ':player_id' => $playerId
+    ]);
+
+
+    /*
      * Controlled post-GW1 sequence:
      *
      * GW2: 90 mins, 8 points

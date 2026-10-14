@@ -6,6 +6,38 @@ The project follows a sprint-based development process.
 
 ---
 
+## [1.3.0] - Gameweek Command Centre (Release Preparation)
+
+### Dashboard & Manager Context
+
+- Reorganised the Dashboard into a Gameweek Command Centre focused on the manager's next gameweek decisions.
+- Added `CommandCentreService` to assemble manager, gameweek, decision, Starting XI, captaincy, transfers, squad outlook, chips, attention and data-health information into a stable presentation contract.
+- Added session-based manager selection through the Dashboard POST form; normal navigation no longer requires `entry_id` query parameters.
+- Reused the existing Gameweek Decision Intelligence outputs rather than creating a competing Dashboard decision model.
+- Kept heavyweight chip recommendation processing on specialist pages instead of running it during initial Dashboard loading.
+- Optimised squad import mapping to reuse prepared player summaries rather than repeatedly constructing individual player profiles.
+
+### Presentation & Usability
+
+- Reworked Dashboard information hierarchy around the primary decision, captaincy, Starting XI and bench, transfer intelligence, squad outlook, chip context, attention/opportunities and data health.
+- Refined responsive Dashboard layouts, card sizing and section hierarchy, including clearer separation of supplementary intelligence.
+- Completed user visual review of the Dashboard for the v1.3.0 milestone.
+
+### Validation & Model Protection
+
+- Added and refined Command Centre contract, presentation, responsive, integration and release-hardening test coverage.
+- Updated historical-data-sensitive test fixtures to isolate controlled scenarios from subsequently imported real FPL history, without weakening assertions or changing production decision logic.
+- Final browser regression: **405/405 test files passed**, **11,343 assertions passed**, **0 failures**, **0 errors**, runtime **301.021 seconds**.
+- Preserved existing intelligence weights, candidate eligibility, optimiser objectives and search widths, deterministic tie-breaks, confidence semantics and historical-evidence integrity.
+
+### Release State
+
+- Dashboard visual verification and full browser regression are complete.
+- Release documentation and displayed-version update are being prepared; v1.3.0 has not yet been committed or published.
+- The displayed application version is maintained in `public/includes/sidebar.php`; no `version.txt` file is used.
+
+---
+
 ## [1.2.0] - Production Readiness & Deployment Preparation
 
 ### Production Configuration

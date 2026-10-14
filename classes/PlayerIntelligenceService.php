@@ -6799,6 +6799,63 @@ class PlayerIntelligenceService
 
         /*
          * ========================================================
+         * PREPARE AUTHORITATIVE PLAYER SUMMARIES ONCE
+         * ========================================================
+         *
+         * Squad mapping only needs the player-facing summary fields
+         * already produced by getAllPlayerSummaries(). Building a
+         * complete individual player profile for each of the fifteen
+         * imported players repeats shared team, fixture and form work.
+         *
+         * Reuse the request-scoped prepared summary collection instead.
+         */
+
+        $playerSummaries =
+            $this->getAllPlayerSummaries();
+
+
+        $summariesByFplPlayerId =
+            [];
+
+
+        foreach (
+            $playerSummaries
+            as $summary
+        ) {
+
+            if (
+                !is_array(
+                    $summary
+                )
+            ) {
+
+                continue;
+            }
+
+
+            $summaryFplPlayerId =
+                (int) (
+                    $summary[
+                        'fpl_player_id'
+                    ]
+                    ?? 0
+                );
+
+
+            if ($summaryFplPlayerId <= 0) {
+                continue;
+            }
+
+
+            $summariesByFplPlayerId[
+                $summaryFplPlayerId
+            ] =
+                $summary;
+        }
+
+
+        /*
+         * ========================================================
          * MAP PLAYERS
          * ========================================================
          */
@@ -6840,14 +6897,14 @@ class PlayerIntelligenceService
             }
 
 
-            $localPlayer =
-                $this->playerRepository
-                    ->getByFplPlayerId(
-                        $fplPlayerId
-                    );
+            $summary =
+                $summariesByFplPlayerId[
+                    $fplPlayerId
+                ]
+                ?? null;
 
 
-            if ($localPlayer === null) {
+            if ($summary === null) {
 
                 $unmapped[] = [
 
@@ -6855,66 +6912,159 @@ class PlayerIntelligenceService
                         $fplPlayerId,
 
                     'reason' =>
-                        'No matching local player'
+                        'No matching local player summary'
                 ];
 
                 continue;
             }
 
 
-            $localPlayerId =
-                (int) (
-                    $localPlayer[
-                        'id'
+            $mappedPlayers[] = [
+
+                'player_id' =>
+                    (int) (
+                        $summary[
+                            'player_id'
+                        ]
+                        ?? 0
+                    ),
+
+                'fpl_player_id' =>
+                    $fplPlayerId,
+
+                'name' =>
+                    $summary[
+                        'name'
                     ]
-                    ?? 0
-                );
+                    ?? null,
 
+                'position' =>
+                    $summary[
+                        'position'
+                    ]
+                    ?? null,
 
-            if ($localPlayerId <= 0) {
+                'team_id' =>
+                    isset(
+                        $summary[
+                            'team_id'
+                        ]
+                    )
+                        ? (int) $summary[
+                            'team_id'
+                        ]
+                        : null,
 
-                $unmapped[] = [
+                'team_name' =>
+                    $summary[
+                        'team_name'
+                    ]
+                    ?? null,
 
-                    'fpl_player_id' =>
-                        $fplPlayerId,
+                'price' =>
+                    $summary[
+                        'price'
+                    ]
+                    ?? null,
 
-                    'reason' =>
-                        'Local player has invalid ID'
-                ];
+                'strength_rating' =>
+                    $summary[
+                        'strength_rating'
+                    ]
+                    ?? null,
 
-                continue;
-            }
+                'value_rating' =>
+                    $summary[
+                        'value_rating'
+                    ]
+                    ?? null,
 
+                'fixture_rating' =>
+                    $summary[
+                        'fixture_rating'
+                    ]
+                    ?? null,
 
-            $profile =
-                $this->getPlayerProfile(
-                    $localPlayerId
-                );
+                'availability_rating' =>
+                    $summary[
+                        'availability_rating'
+                    ]
+                    ?? null,
 
+                'intelligence_score' =>
+                    $summary[
+                        'intelligence_score'
+                    ]
+                    ?? null,
 
-            if ($profile === null) {
+                'sample_confidence' =>
+                    $summary[
+                        'sample_confidence'
+                    ]
+                    ?? null,
 
-                $unmapped[] = [
+                'effective_confidence' =>
+                    $summary[
+                        'effective_confidence'
+                    ]
+                    ?? null,
 
-                    'fpl_player_id' =>
-                        $fplPlayerId,
+                'team_available_minutes' =>
+                    $summary[
+                        'team_available_minutes'
+                    ]
+                    ?? null,
 
-                    'player_id' =>
-                        $localPlayerId,
+                'participation_rate' =>
+                    $summary[
+                        'participation_rate'
+                    ]
+                    ?? null,
 
-                    'reason' =>
-                        'Local player profile could not be built'
-                ];
+                'verdict' =>
+                    $summary[
+                        'assessment_verdict'
+                    ]
+                    ?? null,
 
-                continue;
-            }
+                'squad_position' =>
+                    isset(
+                        $pick[
+                            'squad_position'
+                        ]
+                    )
+                        ? (int) $pick[
+                            'squad_position'
+                        ]
+                        : null,
 
+                'multiplier' =>
+                    isset(
+                        $pick[
+                            'multiplier'
+                        ]
+                    )
+                        ? (int) $pick[
+                            'multiplier'
+                        ]
+                        : null,
 
-            $mappedPlayers[] =
-                $this->buildSquadPlayer(
-                    $profile,
-                    $pick
-                );
+                'is_captain' =>
+                    (bool) (
+                        $pick[
+                            'is_captain'
+                        ]
+                        ?? false
+                    ),
+
+                'is_vice_captain' =>
+                    (bool) (
+                        $pick[
+                            'is_vice_captain'
+                        ]
+                        ?? false
+                    )
+            ];
         }
 
 
@@ -6983,7 +7133,7 @@ class PlayerIntelligenceService
                 $mappedPlayers
         ];
     }
-    
+
     /**
      * Build the strongest legal Starting XI for the immediate
      * gameweek from a complete 15-player FPL squad.

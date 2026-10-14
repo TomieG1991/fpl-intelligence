@@ -269,6 +269,31 @@ try {
 
 
     /*
+     * Isolate the controlled GW1-GW5 trend sample from later
+     * imported player history. Both trend windows must evaluate
+     * the intended fixtures rather than newer genuine records.
+     * The transaction rollback restores the original history
+     * before Scenario H evaluates current real data.
+     */
+
+    $isolationStatement =
+        $db->prepare(
+            "
+            DELETE pfh
+            FROM player_fixture_history pfh
+            INNER JOIN gameweeks g
+                ON g.id = pfh.gameweek_id
+            WHERE pfh.player_id = :player_id
+                AND g.fpl_gameweek_id > 1
+            "
+        );
+
+    $isolationStatement->execute([
+        ':player_id' => $playerId
+    ]);
+
+
+    /*
      * Controlled pattern:
      *
      * Real GW1:

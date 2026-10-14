@@ -8,6 +8,10 @@ require_once __DIR__
     . '/includes/data-health.php';
 
 
+require_once __DIR__
+    . '/includes/manager-context.php';
+
+
 $config =
     require __DIR__
         . '/../config/config.php';
@@ -47,24 +51,8 @@ $setupError =
  * ============================================================
  */
 
-$entryIdInput =
-    filter_input(
-        INPUT_GET,
-        'entry_id',
-        FILTER_VALIDATE_INT
-    );
-
-
 $entryId =
-    (
-        $entryIdInput !== false
-        &&
-        $entryIdInput !== null
-        &&
-        $entryIdInput > 0
-    )
-        ? (int) $entryIdInput
-        : null;
+    $activeManagerEntryId;
 
 
 $previewMode =

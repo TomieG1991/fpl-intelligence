@@ -1,5 +1,9 @@
 <?php
 
+require_once __DIR__
+    . '/../classes/autoload.php';
+
+
 echo "============================================<br>";
 echo "Sidebar Navigation Test<br>";
 echo "============================================<br><br>";
@@ -104,6 +108,60 @@ $sidebarSource =
 
 /*
  * ============================================================
+ * RENDER SIDEBAR WITHOUT MANAGER CONTEXT
+ * ============================================================
+ */
+
+$activeNav =
+    'dashboard';
+
+
+$activeManagerEntryId =
+    null;
+
+
+ob_start();
+
+
+if ($sidebarExists) {
+
+    require $sidebarPath;
+}
+
+
+$sidebarHtml =
+    ob_get_clean();
+
+
+/*
+ * ============================================================
+ * RENDER SIDEBAR WITH MANAGER CONTEXT
+ * ============================================================
+ */
+
+$activeNav =
+    'dashboard';
+
+
+$activeManagerEntryId =
+    2702264;
+
+
+ob_start();
+
+
+if ($sidebarExists) {
+
+    require $sidebarPath;
+}
+
+
+$managerSidebarHtml =
+    ob_get_clean();
+
+
+/*
+ * ============================================================
  * SCENARIO A
  * SHARED SIDEBAR
  * ============================================================
@@ -126,6 +184,15 @@ sidebarNavigationCheck(
 );
 
 
+sidebarNavigationCheck(
+    'Shared sidebar renders HTML',
+    trim(
+        $sidebarHtml
+    )
+    !== ''
+);
+
+
 echo "<br>";
 
 
@@ -144,9 +211,10 @@ echo "============================================<br>";
 sidebarNavigationCheck(
     'Main navigation has an accessible label',
     strpos(
-        $sidebarSource,
+        $sidebarHtml,
         'aria-label="Main navigation"'
-    ) !== false
+    )
+    !== false
 );
 
 
@@ -168,9 +236,10 @@ echo "============================================<br>";
 sidebarNavigationCheck(
     'Sidebar displays the current stable application version',
     strpos(
-        $sidebarSource,
-        'v1.2.0'
-    ) !== false
+        $sidebarHtml,
+        'v1.3.0'
+    )
+    !== false
 );
 
 
@@ -211,14 +280,15 @@ foreach (
 ) {
 
     sidebarNavigationCheck(
-        'Sidebar contains destination '
+        'Rendered sidebar contains destination '
             . $destination,
         strpos(
-            $sidebarSource,
+            $sidebarHtml,
             'href="'
             . $destination
             . '"'
-        ) !== false
+        )
+        !== false
     );
 
 
@@ -251,11 +321,12 @@ echo "============================================<br>";
 
 
 sidebarNavigationCheck(
-    'Sidebar contains no placeholder navigation destinations',
+    'Rendered sidebar contains no placeholder navigation destinations',
     strpos(
-        $sidebarSource,
+        $sidebarHtml,
         'href="#"'
-    ) === false
+    )
+    === false
 );
 
 
@@ -276,7 +347,7 @@ echo "============================================<br>";
 
 preg_match_all(
     '/href="([^"]+\.php)"/',
-    $sidebarSource,
+    $sidebarHtml,
     $destinationMatches
 );
 
@@ -293,7 +364,7 @@ $sidebarDestinations =
 
 
 sidebarNavigationCheck(
-    'Sidebar contains public PHP destinations',
+    'Rendered sidebar contains public PHP destinations',
     !empty(
         $sidebarDestinations
     )
@@ -363,9 +434,10 @@ foreach (
         'Sidebar contains navigation item '
             . $label,
         strpos(
-            $sidebarSource,
+            $sidebarHtml,
             $label
-        ) !== false
+        )
+        !== false
     );
 }
 
@@ -388,45 +460,50 @@ echo "============================================<br>";
 sidebarNavigationCheck(
     'Sidebar provides a mobile navigation toggle',
     strpos(
-        $sidebarSource,
+        $sidebarHtml,
         'class="mobile-navigation-toggle"'
-    ) !== false
+    )
+    !== false
 );
 
 
 sidebarNavigationCheck(
     'Mobile navigation toggle identifies its controlled navigation',
     strpos(
-        $sidebarSource,
+        $sidebarHtml,
         'aria-controls="main-navigation"'
-    ) !== false
+    )
+    !== false
 );
 
 
 sidebarNavigationCheck(
     'Mobile navigation toggle exposes its expanded state',
     strpos(
-        $sidebarSource,
+        $sidebarHtml,
         'aria-expanded="false"'
-    ) !== false
+    )
+    !== false
 );
 
 
 sidebarNavigationCheck(
     'Main navigation has a stable navigation ID',
     strpos(
-        $sidebarSource,
+        $sidebarHtml,
         'id="main-navigation"'
-    ) !== false
+    )
+    !== false
 );
 
 
 sidebarNavigationCheck(
     'Mobile navigation toggle has an accessible label',
     strpos(
-        $sidebarSource,
+        $sidebarHtml,
         'aria-label="Toggle main navigation"'
-    ) !== false
+    )
+    !== false
 );
 
 
@@ -448,27 +525,30 @@ echo "============================================<br>";
 sidebarNavigationCheck(
     'Sidebar does not claim that the overall system is online',
     strpos(
-        $sidebarSource,
+        $sidebarHtml,
         'System Online'
-    ) === false
+    )
+    === false
 );
 
 
 sidebarNavigationCheck(
     'Sidebar does not hard-code an online status indicator',
     strpos(
-        $sidebarSource,
+        $sidebarHtml,
         '<span class="status-dot online"></span>'
-    ) === false
+    )
+    === false
 );
 
 
 sidebarNavigationCheck(
     'Sidebar directs users to Dashboard for application health',
     strpos(
-        $sidebarSource,
+        $sidebarHtml,
         'Health on Dashboard'
-    ) !== false
+    )
+    !== false
 );
 
 
@@ -535,7 +615,8 @@ sidebarNavigationCheck(
     strpos(
         $navigationScriptSource,
         'Pages that do not exist yet still use'
-    ) === false
+    )
+    === false
 );
 
 
@@ -544,7 +625,8 @@ sidebarNavigationCheck(
     preg_match(
         '/getAttribute\s*\(\s*[\'"]href[\'"]\s*\)\s*===\s*[\'"]#[\'"]/',
         $navigationScriptSource
-    ) !== 1
+    )
+    !== 1
 );
 
 
@@ -599,7 +681,8 @@ foreach (
         strpos(
             $publicPageSource,
             '/includes/sidebar.php'
-        ) === false
+        )
+        === false
     ) {
 
         continue;
@@ -621,7 +704,8 @@ foreach (
         strpos(
             $publicPageSource,
             'src="assets/js/app.js"'
-        ) !== false
+        )
+        !== false
     );
 }
 
@@ -644,21 +728,25 @@ echo "Sidebar Pages Checked: "
  * ============================================================
  */
 
-echo "<br>";
 echo "============================================<br>";
 echo "Scenario L: Active Page Accessibility<br>";
 echo "============================================<br>";
 
 
 sidebarNavigationCheck(
-    'Active navigation links expose the current page with aria-current.',
+    'Active navigation links expose the current page with aria-current',
     preg_match(
         '/aria-current\s*=\s*["\']page["\']/i',
-        $sidebarSource
-    ) === 1
+        $sidebarHtml
+    )
+    ===
+    1
 );
 
+
 echo "<br>";
+
+
 /*
  * ============================================================
  * SCENARIO M
@@ -674,51 +762,147 @@ echo "============================================<br>";
 sidebarNavigationCheck(
     'Sidebar provides a Support FPL Intelligence link',
     strpos(
-        $sidebarSource,
+        $sidebarHtml,
         'Support FPL Intelligence'
-    ) !== false
+    )
+    !== false
 );
 
 
 sidebarNavigationCheck(
     'Support link uses the official FPL Intelligence Ko-fi page',
     strpos(
-        $sidebarSource,
+        $sidebarHtml,
         'href="https://ko-fi.com/fplintelligence"'
-    ) !== false
+    )
+    !== false
 );
 
 
 sidebarNavigationCheck(
     'Ko-fi support page opens in a new tab',
     strpos(
-        $sidebarSource,
+        $sidebarHtml,
         'target="_blank"'
-    ) !== false
+    )
+    !== false
 );
 
 
 sidebarNavigationCheck(
     'External Ko-fi link protects the opener relationship',
     strpos(
-        $sidebarSource,
+        $sidebarHtml,
         'rel="noopener noreferrer"'
-    ) !== false
+    )
+    !== false
 );
 
 
 sidebarNavigationCheck(
     'Ko-fi support link has a dedicated sidebar support class',
     strpos(
-        $sidebarSource,
+        $sidebarHtml,
         'class="sidebar-support-link"'
-    ) !== false
+    )
+    !== false
 );
 
 
 echo "<br>";
 
+
+/*
+ * ============================================================
+ * SCENARIO N
+ * CLEAN NAVIGATION WITH ACTIVE MANAGER
+ * ============================================================
+ */
+
+echo "============================================<br>";
+echo "Scenario N: Clean Navigation With Active Manager<br>";
+echo "============================================<br>";
+
+
+foreach (
+    $expectedDestinations
+    as $destination
+) {
+
+    sidebarNavigationCheck(
+        'Active-manager sidebar keeps clean destination '
+            . $destination,
+        strpos(
+            $managerSidebarHtml,
+            'href="'
+            . $destination
+            . '"'
+        ) !== false
+    );
+}
+
+
+sidebarNavigationCheck(
+    'Active-manager Dashboard health link keeps its fragment and clean URL',
+    strpos(
+        $managerSidebarHtml,
+        'href="index.php#data-health-title"'
+    ) !== false
+);
+
+
+sidebarNavigationCheck(
+    'External Ko-fi URL remains unchanged when manager context exists',
+    strpos(
+        $managerSidebarHtml,
+        'href="https://ko-fi.com/fplintelligence"'
+    ) !== false
+);
+
+
+sidebarNavigationCheck(
+    'Manager entry context is not leaked to the external Ko-fi URL',
+    strpos(
+        $managerSidebarHtml,
+        'ko-fi.com/fplintelligence?entry_id='
+    ) === false
+);
+
+
+echo "<br>";
+
+
+/*
+ * ============================================================
+ * SCENARIO O
+ * SESSION-BASED MANAGER CONTEXT BOUNDARY
+ * ============================================================
+ */
+
+echo "============================================<br>";
+echo "Scenario O: Session-Based Manager Context Boundary<br>";
+echo "============================================<br>";
+
+
+sidebarNavigationCheck(
+    'Sidebar never embeds an entry_id query parameter',
+    strpos(
+        $managerSidebarHtml,
+        'entry_id='
+    ) === false
+);
+
+
+sidebarNavigationCheck(
+    'Sidebar renders identical navigation links with or without manager context',
+    preg_match_all('/href="([^"]+)"/', $sidebarHtml, $withoutManagerMatches)
+        === preg_match_all('/href="([^"]+)"/', $managerSidebarHtml, $withManagerMatches)
+    && ($withoutManagerMatches[1] ?? []) === ($withManagerMatches[1] ?? [])
+);
+
+
 echo "<br><br>";
+
 
 /*
  * ============================================================

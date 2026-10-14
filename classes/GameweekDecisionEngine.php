@@ -1161,10 +1161,9 @@ class GameweekDecisionEngine
                 . ' squad reliability risk'
                 . (
                     $riskCount === 1
-                        ? ''
-                        : 's'
-                )
-                . ' require attention.';
+                    ? ' requires attention.'
+                    : ' require attention.'
+                );
         }
 
 

@@ -13,12 +13,6 @@ $failed =
     0;
 
 
-/*
- * ============================================================
- * TEST HELPER
- * ============================================================
- */
-
 function dashboardReleaseHardeningCheck(
     string $description,
     bool $condition
@@ -55,12 +49,6 @@ function dashboardReleaseHardeningCheck(
     $failed++;
 }
 
-
-/*
- * ============================================================
- * DASHBOARD SOURCE
- * ============================================================
- */
 
 $dashboardPath =
     __DIR__
@@ -102,13 +90,6 @@ $dashboardSource =
         : '';
 
 
-/*
- * ============================================================
- * SCENARIO A
- * DASHBOARD SOURCE
- * ============================================================
- */
-
 echo "============================================<br>";
 echo "Scenario A: Dashboard Source<br>";
 echo "============================================<br>";
@@ -128,13 +109,6 @@ dashboardReleaseHardeningCheck(
 
 echo "<br>";
 
-
-/*
- * ============================================================
- * SCENARIO B
- * TEMPORARY DEVELOPMENT MARKERS
- * ============================================================
- */
 
 echo "============================================<br>";
 echo "Scenario B: Temporary Development Markers<br>";
@@ -171,13 +145,6 @@ dashboardReleaseHardeningCheck(
 echo "<br>";
 
 
-/*
- * ============================================================
- * SCENARIO C
- * TEMPORARY DIAGNOSTIC CALCULATION
- * ============================================================
- */
-
 echo "============================================<br>";
 echo "Scenario C: Temporary Diagnostic Calculation<br>";
 echo "============================================<br>";
@@ -203,13 +170,6 @@ dashboardReleaseHardeningCheck(
 
 echo "<br>";
 
-
-/*
- * ============================================================
- * SCENARIO D
- * PRODUCT PLAYER RANKING REMAINS
- * ============================================================
- */
 
 echo "============================================<br>";
 echo "Scenario D: Product Player Ranking Remains<br>";
@@ -245,13 +205,6 @@ dashboardReleaseHardeningCheck(
 
 echo "<br>";
 
-
-/*
- * ============================================================
- * SCENARIO E
- * STALE DEVELOPMENT PLACEHOLDERS
- * ============================================================
- */
 
 echo "============================================<br>";
 echo "Scenario E: Stale Development Placeholders<br>";
@@ -296,13 +249,6 @@ dashboardReleaseHardeningCheck(
 
 echo "<br>";
 
-
-/*
- * ============================================================
- * SCENARIO F
- * DEVELOPMENT STATUS PRESENTATION
- * ============================================================
- */
 
 echo "============================================<br>";
 echo "Scenario F: Development Status Presentation<br>";
@@ -358,13 +304,6 @@ dashboardReleaseHardeningCheck(
 echo "<br>";
 
 
-/*
- * ============================================================
- * SCENARIO G
- * DASHBOARD GATEWAY PRESENTATION
- * ============================================================
- */
-
 echo "============================================<br>";
 echo "Scenario G: Dashboard Gateway Presentation<br>";
 echo "============================================<br>";
@@ -393,14 +332,37 @@ $dashboardCss =
         : '';
 
 
-dashboardReleaseHardeningCheck(
-    'Dashboard gateway links use the shared button-link presentation hook',
-    substr_count(
-        $dashboardSource,
-        'class="button-link"'
-    )
-    === 3
-);
+$legacyGatewayLinks = [
+
+    'View Fixtures',
+
+    'View Players',
+
+    'View Transfers'
+];
+
+
+foreach (
+    $legacyGatewayLinks
+    as $legacyGatewayLink
+) {
+
+        dashboardReleaseHardeningCheck(
+        'Dashboard retains the '
+        . $legacyGatewayLink
+        . ' gateway using button-link presentation',
+        preg_match(
+            '/<a\b[\s\S]*?class="button-link"[\s\S]*?>\s*'
+            . preg_quote(
+                $legacyGatewayLink,
+                '/'
+            )
+            . '\s*<\/a>/',
+            $dashboardSource
+        )
+        === 1
+    );
+}
 
 
 dashboardReleaseHardeningCheck(
@@ -426,13 +388,6 @@ dashboardReleaseHardeningCheck(
 echo "<br>";
 
 
-/*
- * ============================================================
- * SCENARIO H
- * ACCESSIBILITY
- * ============================================================
- */
-
 echo "============================================<br>";
 echo "Scenario H: Accessibility<br>";
 echo "============================================<br>";
@@ -449,12 +404,6 @@ dashboardReleaseHardeningCheck(
 
 echo "<br>";
 
-
-/*
- * ============================================================
- * SUMMARY
- * ============================================================
- */
 
 echo "============================================<br>";
 echo "Dashboard Release Hardening Test Summary<br>";

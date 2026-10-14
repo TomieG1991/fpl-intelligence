@@ -14466,3 +14466,786 @@ a {
     outline: 3px solid currentColor;
     outline-offset: 3px;
 }
+
+
+/*
+ * ============================================================
+ * GAMEWEEK COMMAND CENTRE
+ * ============================================================
+ */
+
+.command-centre {
+    min-width: 0;
+
+    margin-bottom: 20px;
+}
+
+
+.command-centre > .dashboard-grid {
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    margin-top: 20px;
+    margin-bottom: 0;
+}
+
+
+.command-centre .dashboard-card {
+    min-width: 0;
+}
+
+
+.command-centre .player-name {
+    overflow: visible;
+
+    text-overflow: clip;
+
+    white-space: normal;
+
+    overflow-wrap: anywhere;
+}
+
+
+.command-centre .player-meta {
+    overflow-wrap: anywhere;
+}
+
+
+.command-centre .stat-footer {
+    overflow-wrap: anywhere;
+
+    line-height: 1.5;
+}
+
+
+.command-centre-entry-form {
+    width: 100%;
+    max-width: 430px;
+
+    display: flex;
+
+    align-items: flex-end;
+
+    gap: 10px;
+
+    margin-top: 18px;
+
+    text-align: left;
+}
+
+
+.command-centre-entry-form label {
+    flex: 0 0 auto;
+
+    color: #aeb9cb;
+
+    font-size: 10px;
+    font-weight: 700;
+}
+
+
+.command-centre-entry-form input {
+    min-width: 0;
+    height: 38px;
+
+    flex: 1 1 180px;
+
+    padding:
+        0
+        11px;
+
+    border:
+        1px solid #46536d;
+
+    border-radius: 7px;
+
+    outline: none;
+
+    background: #151d2d;
+
+    color: #f3f5fa;
+
+    font: inherit;
+    font-size: 12px;
+}
+
+
+.command-centre-entry-form input:hover {
+    border-color: #63708d;
+}
+
+
+.command-centre-entry-form input:focus-visible {
+    border-color: #9287ff;
+
+    outline:
+        2px solid #a99fff;
+
+    outline-offset:
+        2px;
+
+    box-shadow:
+        0 0 0 2px rgba(146, 135, 255, 0.15);
+}
+
+
+.command-centre-entry-form .button-link {
+    flex: 0 0 auto;
+
+    margin-top: 0;
+}
+
+/*
+ * ============================================================
+ * COMMAND CENTRE PRESENTATION
+ * ============================================================
+ */
+
+
+/*
+ * ------------------------------------------------------------
+ * MANAGER / GAMEWEEK CONTEXT
+ * ------------------------------------------------------------
+ */
+
+.command-centre-context-row {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap:
+        12px;
+
+    margin-top:
+        20px;
+}
+
+
+.command-centre-context-row > .dashboard-card {
+    min-width:
+        0;
+
+    padding:
+        16px
+        18px;
+
+    background:
+        #182133;
+
+    box-shadow:
+        none;
+}
+
+
+.command-centre-context-row .card-header {
+    margin-bottom:
+        12px;
+}
+
+
+.command-centre-context-row .card-header h3 {
+    margin:
+        2px
+        0
+        0;
+
+    font-size:
+        15px;
+}
+
+
+.command-centre-context-row .stat-value {
+    margin-top:
+        5px;
+
+    font-size:
+        22px;
+}
+
+
+.command-centre-context-row .stat-footer {
+    margin-top:
+        5px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * DECISION HIERARCHY
+ * ------------------------------------------------------------
+ */
+
+.command-centre-decision-row {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 2fr)
+        minmax(280px, 1fr);
+
+    gap:
+        16px;
+
+    align-items:
+        stretch;
+
+    margin-top:
+        16px;
+}
+
+
+.command-centre-decision-row
+.command-centre-primary-decision {
+    min-width:
+        0;
+
+    border-color:
+        #5b518d;
+
+    background:
+        #202844;
+}
+
+
+.command-centre-primary-decision .stat-value {
+    color:
+        #c7c0ff;
+}
+
+
+.command-centre-captaincy {
+    min-width:
+        0;
+
+    border-color:
+        #465370;
+
+    background:
+        #1d2639;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * TEAM SELECTION
+ * ------------------------------------------------------------
+ */
+
+.command-centre-team-selection {
+    grid-column:
+        1 / -1;
+
+    margin-top:
+        20px;
+}
+
+
+.command-centre-team-layout {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap:
+        12px;
+
+    padding:
+        18px;
+
+    background:
+        #151d2d;
+
+    border:
+        1px solid #303b51;
+
+    border-radius:
+        10px;
+}
+
+
+.command-centre-team-layout .player-ranking-row {
+    min-width:
+        0;
+
+    min-height:
+        0;
+
+    align-items:
+        flex-start;
+
+    padding:
+        14px;
+
+    background:
+        #1b2335;
+
+    border:
+        1px solid #34405a;
+
+    border-radius:
+        8px;
+}
+
+
+.command-centre-team-layout
+.player-ranking-row:last-child {
+    border-bottom:
+        1px solid #34405a;
+}
+
+
+.command-centre-team-layout .player-rank {
+    width:
+        28px;
+
+    height:
+        28px;
+}
+
+
+.command-centre-team-layout .player-score {
+    margin-left:
+        auto;
+}
+
+
+.command-centre-bench-row {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap:
+        12px;
+
+    margin-top:
+        14px;
+
+    padding:
+        14px;
+
+    background:
+        #111725;
+
+    border:
+        1px solid #273247;
+
+    border-radius:
+        10px;
+}
+
+
+.command-centre-bench-row .player-ranking-row {
+    min-width:
+        0;
+
+    min-height:
+        0;
+
+    padding:
+        12px;
+
+    background:
+        #182133;
+
+    border:
+        1px solid #303b51;
+
+    border-radius:
+        8px;
+}
+
+
+.command-centre-bench-row
+.player-ranking-row:last-child {
+    border-bottom:
+        1px solid #303b51;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * PLANNING SURFACES
+ * ------------------------------------------------------------
+ */
+
+.command-centre-planning-row {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap:
+        16px;
+
+    grid-column:
+        1 / -1;
+
+    margin-top:
+        20px;
+}
+
+
+.command-centre-transfer-card,
+.command-centre-horizon-card,
+.command-centre-chip-card {
+    min-width:
+        0;
+}
+
+
+/* Keep the transfer recommendations card at its content height. */
+.command-centre-planning-row > .command-centre-transfer-card {
+    align-self:
+        start;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * ATTENTION & OPPORTUNITIES
+ * ------------------------------------------------------------
+ */
+
+.command-centre-attention-row {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap:
+        16px;
+
+    grid-column:
+        1 / -1;
+
+    align-items:
+        start;
+
+    margin-top:
+        20px;
+}
+
+
+.command-centre-attention-row > .dashboard-card {
+    min-width:
+        0;
+
+    align-self:
+        start;
+}
+
+
+.command-centre-attention-row .player-ranking-row {
+    min-height:
+        0;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * ATTENTION & OPPORTUNITIES READABILITY
+ * ------------------------------------------------------------
+ */
+
+.command-centre-attention-row .player-meta {
+    font-size: 12px;
+
+    line-height: 1.5;
+
+    color: #b7c4d8;
+}
+
+
+.command-centre-attention-row .player-ranking-row {
+    padding: 10px 0;
+}
+
+
+.command-centre-attention-row .stat-footer {
+    margin-top: 12px;
+
+    margin-bottom: 10px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * DATA HEALTH
+ * ------------------------------------------------------------
+ */
+
+.command-centre-data-health-card {
+    grid-column:
+        1 / -1;
+
+    margin-top:
+        20px;
+
+    padding:
+        12px
+        16px;
+}
+
+
+.command-centre-data-health-card .card-header {
+    margin-bottom:
+        8px;
+}
+
+
+.command-centre-data-health-card
+#command-centre-data-health-status
+> .player-ranking {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap:
+        12px;
+}
+
+
+.command-centre-data-health-card
+#command-centre-data-health-status
+> .player-ranking
+> .player-ranking-row {
+    min-height:
+        0;
+
+    padding:
+        12px;
+
+    background:
+        #182133;
+
+    border:
+        1px solid #303b51;
+
+    border-radius:
+        8px;
+}
+
+
+.command-centre-data-health-card
+#command-centre-data-health-status
+> .player-ranking
+> .player-ranking-row:last-child {
+    border-bottom:
+        1px solid #303b51;
+}
+
+
+.command-centre-data-health-card
+#command-centre-data-health-status
+> .stat-footer {
+    margin-top:
+        12px;
+}
+
+
+/*
+ * ------------------------------------------------------------
+ * SECONDARY DASHBOARD CONTENT
+ * ------------------------------------------------------------
+ */
+
+.dashboard-secondary-content {
+    margin-top:
+        36px;
+
+    padding-top:
+        30px;
+
+    border-top:
+        1px solid #273247;
+
+    opacity:
+        0.78;
+}
+
+
+.dashboard-secondary-content .dashboard-card,
+.dashboard-secondary-content .stat-card {
+    box-shadow:
+        none;
+}
+
+
+.dashboard-secondary-content .card-kicker {
+    color:
+        #8f9bb0;
+}
+
+
+/*
+ * ============================================================
+ * RESPONSIVE COMMAND CENTRE PRESENTATION
+ * ============================================================
+ */
+
+@media (
+    max-width: 1200px
+) {
+
+    .command-centre-decision-row {
+        grid-template-columns:
+            minmax(0, 3fr)
+            minmax(260px, 2fr);
+    }
+
+
+    .command-centre-planning-row {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+
+    .command-centre-chip-card {
+        grid-column:
+            1 / -1;
+    }
+
+
+    .command-centre-team-layout {
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+    }
+
+
+    .command-centre-bench-row {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+}
+
+
+@media (
+    max-width: 900px
+) {
+
+    .command-centre-context-row,
+    .command-centre-decision-row,
+    .command-centre-planning-row,
+    .command-centre-attention-row {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .command-centre-chip-card {
+        grid-column:
+            auto;
+    }
+
+
+    .command-centre-team-layout {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+
+    .command-centre-data-health-card
+    #command-centre-data-health-status
+    > .player-ranking {
+        grid-template-columns:
+            1fr;
+    }
+}
+
+
+@media (
+    max-width: 560px
+) {
+
+    .command-centre-context-row > .dashboard-card {
+        padding:
+            14px;
+    }
+
+
+    .command-centre-team-layout,
+    .command-centre-bench-row {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .command-centre-team-layout,
+    .command-centre-bench-row {
+        padding:
+            10px;
+    }
+
+
+    .command-centre-data-health-card {
+        padding:
+            16px;
+    }
+
+
+    .dashboard-secondary-content {
+        margin-top:
+            24px;
+
+        padding-top:
+            20px;
+    }
+}
+
+
+/*
+ * ============================================================
+ * RESPONSIVE COMMAND CENTRE
+ * ============================================================
+ */
+
+@media (
+    max-width: 800px
+) {
+
+    .command-centre > .dashboard-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .command-centre .dashboard-card {
+        min-width: 0;
+    }
+}
+
+
+@media (
+    max-width: 560px
+) {
+
+    .command-centre {
+        padding:
+            18px;
+    }
+
+
+    .command-centre-entry-form {
+        max-width: none;
+
+        align-items: stretch;
+
+        flex-direction: column;
+    }
+
+
+    .command-centre-entry-form input,
+    .command-centre-entry-form .button-link {
+        width: 100%;
+    }
+
+
+    .command-centre-entry-form input {
+        flex:
+            0
+            0
+            38px;
+    }
+}

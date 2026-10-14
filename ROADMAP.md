@@ -4131,6 +4131,696 @@ authoritative stable release baseline.
 
 ---
 
+# v1.3.0 — Gameweek Command Centre
+
+### Status
+
+**IN DEVELOPMENT — release validation pending**
+
+The Dashboard implementation and visual refinements have been developed locally.
+Final release remains gated on confirmed Dashboard visual approval, a fresh
+complete browser regression, and release review. GitHub `main` remains the
+authoritative committed baseline. The application version is displayed in
+`public/includes/sidebar.php`; no `version.txt` file is used.
+
+### Goal
+
+Transform the FPL Intelligence Dashboard into the primary manager-facing
+decision hub.
+
+The application already contains specialist intelligence for:
+
+- squad analysis
+- Starting XI selection
+- bench ordering
+- captaincy
+- transfers
+- multi-gameweek squad planning
+- Wildcard
+- Free Hit
+- Bench Boost
+- Triple Captain
+- player availability
+- Expected Points
+- fixture intelligence
+- data health
+
+These capabilities currently exist across several specialist application
+pages.
+
+v1.3.0 will bring the most important outputs together into one coherent
+Gameweek Command Centre so a manager can answer the central question:
+
+**What should I do with my FPL team this gameweek?**
+
+The Command Centre will not replace the specialist analysis pages.
+
+It will provide a concise decision overview and allow the manager to drill
+down into the existing specialist pages when deeper analysis is required.
+
+
+## Product Direction
+
+The Dashboard will evolve from a primarily application/data overview into the
+main FPL decision-support surface.
+
+The Command Centre should prioritise:
+
+1. the manager's current squad and gameweek context
+2. decisions requiring action
+3. recommended Starting XI and bench order
+4. captain and vice-captain recommendations
+5. transfer guidance
+6. multi-gameweek squad outlook
+7. chip intelligence
+8. player availability and other actionable warnings
+9. confidence and data-health information
+10. links to deeper specialist analysis
+
+Infrastructure statistics and general application information may remain
+available where useful, but they should be secondary to manager-facing
+decision intelligence.
+
+
+## Architecture Principles
+
+v1.3.0 must reuse the existing authoritative production intelligence
+boundaries wherever possible.
+
+The Command Centre must not create independent replacement implementations of
+existing intelligence models merely for Dashboard presentation.
+
+Existing production responsibilities include:
+
+- `PlayerIntelligenceService`
+- `GameweekDecisionEngine`
+- `GameweekStartingXI`
+- `CaptainIntelligence`
+- `SquadHorizonIntelligenceService`
+- existing transfer intelligence services
+- `ChipRecommendationProductionOrchestrator`
+- existing chip decision services
+- existing Expected Points and Player Intelligence services
+- existing data-health infrastructure
+
+The existing `PlayerIntelligenceService` already exposes manager-facing
+operations including:
+
+- FPL squad mapping
+- Gameweek Starting XI
+- captain recommendations
+- complete Gameweek Decision Intelligence
+- single-transfer recommendations
+- double-transfer recommendations
+
+`SquadHorizonIntelligenceService` provides the established multi-gameweek squad
+outlook.
+
+`ChipRecommendationProductionOrchestrator` provides a reusable production
+boundary over:
+
+- Wildcard
+- Free Hit
+- Bench Boost
+- Triple Captain
+
+and deliberately preserves the outputs of the existing chip pipelines without
+introducing new scoring or recommendation logic.
+
+Where additional coordination is required, v1.3.0 may introduce a dedicated
+Command Centre orchestration boundary.
+
+Any such boundary must compose existing intelligence rather than duplicate it.
+
+
+## Manager Context
+
+The Command Centre must support a real FPL entry as its primary manager
+context.
+
+The manager should not need to repeatedly re-enter the same FPL entry ID while
+moving between related decision-support pages.
+
+v1.3.0 will establish an appropriate shared manager-context mechanism while
+preserving:
+
+- explicit validation
+- predictable URLs/navigation
+- graceful handling of unavailable or private FPL squads
+- deterministic development/test behaviour
+
+Persistent user accounts and authentication are outside the scope of v1.3.0.
+
+The implementation should prefer the smallest appropriate mechanism rather than
+introducing an account system merely to retain an FPL entry ID.
+
+
+## Command Centre Gameweek Overview
+
+The Command Centre should provide an immediately understandable overview of
+the manager's current decision context.
+
+Where trustworthy source data is available, this may include:
+
+- FPL team name
+- manager identity
+- actionable gameweek
+- gameweek deadline
+- squad value
+- bank
+- available manager state relevant to the current decision
+
+The interface must distinguish authoritative imported data from derived
+intelligence.
+
+Unsupported manager state must not be invented or inferred merely to fill a
+Dashboard field.
+
+
+## Primary Gameweek Decision
+
+The Command Centre will prominently surface the existing complete Gameweek
+Decision Intelligence.
+
+The presentation should make the recommended course of action understandable
+without requiring the manager to visit several separate pages.
+
+The Command Centre must preserve the existing decision semantics and
+explainability.
+
+It must not create a second competing Gameweek decision model.
+
+
+## Starting XI & Bench
+
+The Command Centre will provide a compact representation of the recommended
+Gameweek team.
+
+This should include, where available:
+
+- recommended Starting XI
+- legal formation
+- bench players
+- bench order
+- relevant projected output
+- appropriate confidence evidence
+
+Existing Starting XI intelligence remains authoritative.
+
+A compact pitch-style presentation may be reused or adapted where appropriate,
+provided this does not duplicate the underlying selection logic.
+
+
+## Captaincy
+
+The Command Centre will surface the established captaincy recommendation.
+
+This should include, where available:
+
+- recommended captain
+- recommended vice-captain
+- strongest relevant alternatives
+- Expected Points
+- Projection Confidence
+- useful recommendation reasoning
+
+Captaincy presentation must reuse the existing Captain Intelligence and
+Expected Points evidence.
+
+No independent Dashboard captain model will be introduced.
+
+
+## Transfer Intelligence
+
+The Command Centre will provide a concise transfer decision summary.
+
+The section should distinguish clearly between outcomes such as:
+
+- Hold
+- single-transfer opportunity
+- multi-transfer opportunity
+- insufficient evidence
+
+Where a transfer is recommended, the Command Centre should expose the most
+useful existing recommendation evidence without reproducing the complete
+specialist Transfers experience.
+
+Where holding is recommended, the interface should explain why rather than
+leaving the section empty.
+
+Detailed transfer exploration will remain available through the specialist
+transfer pages.
+
+
+## Multi-Gameweek Squad Outlook
+
+The Command Centre will include a compact forward-looking squad assessment.
+
+The established `SquadHorizonIntelligenceService` should remain authoritative
+for multi-gameweek squad evidence.
+
+The Command Centre may surface useful horizons such as:
+
+- Next 3
+- Next 5
+
+where supported by the existing production intelligence.
+
+The presentation should help identify:
+
+- emerging squad concerns
+- improving opportunities
+- fixture-run changes
+- players becoming stronger holds
+- players requiring future attention
+
+The Command Centre must distinguish longer-term planning evidence from the
+immediate Gameweek decision.
+
+
+## Chip Intelligence
+
+The Command Centre will provide a compact view of the four FPL chip decisions:
+
+- Wildcard
+- Free Hit
+- Bench Boost
+- Triple Captain
+
+The existing `ChipRecommendationProductionOrchestrator` and its underlying
+production services remain authoritative.
+
+The Command Centre must not recreate chip scoring or timing logic.
+
+Chip presentation should prioritise actionable information.
+
+Normal gameweeks should not be visually dominated by chips when the existing
+intelligence does not identify a meaningful chip opportunity.
+
+Detailed chip analysis remains available through the specialist Chip
+Intelligence page.
+
+
+## Attention Required
+
+The Command Centre should provide a concise area for manager-specific issues
+that may require attention.
+
+Supported warnings may include:
+
+- unavailable players
+- injury or availability concerns
+- suspension/unavailability evidence
+- projected-minutes concerns
+- incomplete squad imports
+- stale or unhealthy application data
+- other existing intelligence evidence that materially affects a manager
+  decision
+
+Warnings must be evidence-based.
+
+The Command Centre must not manufacture urgency or introduce unsupported
+injury/availability conclusions.
+
+
+## Opportunities
+
+Where useful and supported by existing production intelligence, the Command
+Centre may surface a small number of relevant opportunities outside the
+manager's squad.
+
+This should remain concise and decision-oriented.
+
+The Command Centre must not duplicate the complete Player Explorer or player
+ranking interfaces.
+
+Detailed player discovery remains the responsibility of the specialist player
+analysis pages.
+
+
+## Data Health & Confidence
+
+Existing data-health infrastructure remains authoritative.
+
+The Command Centre must warn the manager when stale or unhealthy dependencies
+could affect decision quality.
+
+Healthy infrastructure should not dominate the interface.
+
+Confidence terminology must preserve the established distinctions between:
+
+- Sample Confidence
+- Decision Confidence
+- Projection Confidence
+- Reliability Confidence
+
+The Command Centre must not merge these concepts into a generic confidence
+score.
+
+
+## Specialist Page Integration
+
+Existing specialist pages remain first-class application surfaces.
+
+Command Centre sections should provide appropriate drill-down navigation to
+deeper analysis such as:
+
+- Player Intelligence
+- Squad Intelligence
+- Gameweek Intelligence
+- Transfer Intelligence
+- Chip Intelligence
+- Fixtures
+- Team Intelligence
+
+The Command Centre is an orchestration and presentation layer, not a
+replacement for detailed analysis.
+
+
+## Performance
+
+The Command Centre will combine several potentially expensive intelligence
+pipelines on one request.
+
+Performance must therefore be treated as an explicit v1.3.0 requirement.
+
+Implementation should:
+
+- reuse prepared/request-scoped evidence where appropriate
+- avoid rebuilding identical Player Intelligence evidence unnecessarily
+- avoid repeated repository retrieval where existing prepared boundaries can
+  be reused
+- preserve established production intelligence behaviour
+- measure expensive paths before speculative optimisation
+
+Performance work must not weaken:
+
+- model quality
+- optimizer search behaviour
+- candidate-pool semantics
+- deterministic ordering
+- recommendation quality
+
+
+## Responsive UX & Accessibility
+
+The Command Centre must remain usable across desktop and mobile layouts.
+
+v1.3.0 should preserve the accessibility standards established during the
+v1.0 release path, including:
+
+- semantic headings
+- accessible navigation
+- appropriate status and alert semantics
+- keyboard-accessible controls
+- visible focus behaviour
+- meaningful link text
+- responsive content ordering
+
+The most important manager decisions should remain understandable without
+depending solely on colour.
+
+
+## Failure & Empty States
+
+The Command Centre must degrade cleanly when complete intelligence cannot be
+produced.
+
+Controlled states are required for situations including:
+
+- no FPL entry supplied
+- invalid FPL entry
+- unavailable/private squad
+- incomplete squad mapping
+- database or setup failure
+- unavailable intelligence evidence
+- unavailable chip evidence
+- stale or unhealthy data
+
+A failure in one supporting intelligence section should not unnecessarily make
+the entire Command Centre unusable where other trustworthy evidence remains
+available.
+
+
+## Testing Strategy
+
+v1.3.0 development will continue to use the established TDD workflow:
+
+1. RED
+2. minimum production change
+3. GREEN
+4. relevant regression
+5. complete regression at meaningful checkpoints
+
+Permanent coverage should protect:
+
+- Command Centre page contracts
+- manager-context behaviour
+- orchestration boundaries
+- authoritative service reuse
+- Gameweek overview presentation
+- Starting XI presentation
+- captaincy presentation
+- transfer presentation
+- squad-horizon presentation
+- chip presentation
+- attention/warning states
+- data-health behaviour
+- failure and empty states
+- drill-down navigation
+- accessibility
+- responsive integration where structurally testable
+
+Existing production intelligence tests remain authoritative for the underlying
+models.
+
+
+## Model & Optimizer Protection
+
+v1.3.0 is primarily an orchestration, integration and user-experience
+milestone.
+
+The milestone must not change production intelligence behaviour merely to make
+the Command Centre easier to implement.
+
+Unless separately justified by evidence and explicitly developed as an
+intelligence-model change, v1.3.0 will preserve existing:
+
+- production model weights
+- Projection Confidence thresholds
+- optimizer objectives
+- optimizer search widths
+- candidate-pool semantics
+- deterministic tie-break behaviour
+- chip decision semantics
+- transfer decision semantics
+
+Presentation requirements must adapt to authoritative intelligence outputs,
+not the reverse.
+
+
+## Deferred Calibration
+
+Broader Intelligence Validation & Adaptive Calibration is deliberately deferred
+until substantially more genuine authoritative gameweek evidence exists.
+
+At the start of v1.3.0, only one authoritative gameweek is available for the
+existing historical evaluation pipeline.
+
+That sample is insufficient to justify broad production-model recalibration.
+
+Historical recommendation and outcome evidence should continue to accumulate
+naturally.
+
+Missing historical recommendations or outcomes must not be reconstructed or
+manufactured merely to increase the calibration sample.
+
+
+## Potential Future Milestones
+
+The following ideas remain candidates for development after the Command Centre
+and are not required for v1.3.0 completion:
+
+### What-if Transfer Lab
+
+Directly compare alternative manager plans such as:
+
+- Hold
+- Transfer A
+- Transfer B
+- two-transfer plan
+
+across appropriate future gameweek horizons.
+
+### Recommendation Change Tracking
+
+Explain why a recommendation has changed between trustworthy data updates.
+
+Potential evidence could include changes in:
+
+- fixtures
+- availability
+- projected minutes
+- Expected Points
+- player form
+- squad context
+
+This must distinguish genuine evidence changes from incidental recalculation.
+
+### Historical Decision Review
+
+Provide a manager-facing view of:
+
+- what FPL Intelligence knew before a deadline
+- what it recommended
+- what subsequently happened
+
+This should use genuine immutable historical recommendation evidence only.
+
+### Intelligence Validation & Calibration
+
+Once a sufficiently broad authoritative historical sample exists, extend the
+existing backtesting and calibration architecture across multiple independent
+gameweeks.
+
+Potential evaluation areas include:
+
+- Expected Points accuracy
+- projected-minutes accuracy
+- Projection Confidence discrimination
+- Player Intelligence ranking quality
+- Starting XI decisions
+- captaincy decisions
+- transfer decisions
+- chip decisions
+
+Production model changes should remain evidence-led rather than automatically
+applied from small samples.
+
+
+## Implementation Plan
+
+### Phase 1 — Architecture & Contracts
+
+- audit the existing Dashboard and specialist decision surfaces
+- map every proposed Command Centre output to its authoritative source
+- identify reusable orchestration boundaries
+- identify genuine integration gaps
+- define the Command Centre result contract
+- add permanent contract tests before production implementation
+
+No intelligence model changes should occur during this phase.
+
+
+### Phase 2 — Shared Manager Context
+
+- establish the manager entry context used by the Command Centre
+- preserve manager context across relevant drill-down navigation
+- validate invalid/unavailable entries cleanly
+- preserve deterministic development/test routes
+- avoid introducing unnecessary authentication or account infrastructure
+
+
+### Phase 3 — Core Gameweek Decision
+
+- integrate real squad import
+- resolve actionable gameweek context
+- expose relevant manager/gameweek overview information
+- surface complete existing Gameweek Decision Intelligence
+- implement controlled loading, empty and failure states
+
+
+### Phase 4 — Starting XI & Captaincy
+
+- integrate authoritative Starting XI selection
+- present formation and bench order
+- integrate captain and vice-captain recommendations
+- expose useful Expected Points and confidence evidence
+- provide drill-down routes to detailed analysis
+
+
+### Phase 5 — Transfer Intelligence
+
+- integrate existing transfer-decision evidence
+- surface Hold versus transfer guidance
+- present strongest appropriate transfer opportunities
+- preserve single/double-transfer semantics
+- provide deeper transfer-analysis navigation
+
+
+### Phase 6 — Squad Horizon
+
+- integrate `SquadHorizonIntelligenceService`
+- expose concise multi-gameweek squad outlook
+- distinguish immediate decisions from longer-term planning
+- identify supported future concerns and opportunities
+
+
+### Phase 7 — Chips & Attention
+
+- integrate `ChipRecommendationProductionOrchestrator`
+- present the four existing chip decisions compactly
+- avoid unnecessary chip noise
+- consolidate supported availability and decision warnings
+- integrate stale/unhealthy-data warnings appropriately
+
+
+### Phase 8 — UX, Accessibility & Performance Hardening
+
+- refine information hierarchy
+- complete responsive behaviour
+- complete accessibility review
+- measure Command Centre runtime
+- remove avoidable duplicate computation
+- verify controlled partial-failure behaviour
+- review specialist-page drill-down experience
+
+
+### Phase 9 — Release Validation
+
+- complete focused Command Centre regression coverage
+- run the complete test suite
+- review production behaviour
+- review `git diff`
+- review untracked files
+- remove temporary diagnostics
+- update `CHANGELOG.md`
+- update `ROADMAP.md`
+- update displayed application version in `public/includes/sidebar.php` to `v1.3.0`
+- rerun final regression where appropriate
+- commit the completed release
+- push the completed release to `main`
+
+
+## Completion Criteria
+
+v1.3.0 will be complete when:
+
+- the Dashboard functions as the primary Gameweek Command Centre
+- a manager can load their FPL squad and understand the main recommended
+  actions from one central surface
+- Starting XI and bench order are visible
+- captain and vice-captain guidance is visible
+- transfer guidance is visible
+- multi-gameweek squad outlook is visible
+- chip guidance is visible
+- important manager-specific warnings are visible
+- unhealthy/stale data is communicated appropriately
+- specialist pages remain available for deeper analysis
+- manager context is preserved appropriately between related pages
+- existing intelligence models remain authoritative
+- duplicate intelligence implementations have not been introduced
+- Command Centre performance is acceptable
+- desktop and mobile presentation are usable
+- accessibility and controlled failure states are protected
+- permanent regression coverage protects the new integration
+- the complete project regression suite passes
+- release documentation is complete
+- v1.3.0 is committed and pushed to `main`
+
+
+---
+
 # Development Rules
 
 ## 1. GitHub Baseline

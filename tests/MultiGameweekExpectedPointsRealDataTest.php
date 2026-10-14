@@ -295,6 +295,7 @@ function multiGwOpponentAttackFromDifficulty(
  *
  * - MID or FWD
  * - real historical appearance evidence
+ * - strongest available positive weighted attacking xG + xA evidence
  * - at least six upcoming fixtures
  * - stored difficulty available
  * - at least two distinct difficulty values in the first six
@@ -314,6 +315,10 @@ $selectedFixtures =
 
 $selectedContexts =
     [];
+
+
+$bestFixtureSensitivity =
+    0.0;
 
 
 foreach (
@@ -401,6 +406,34 @@ foreach (
         continue;
     }
 
+
+    /*
+     * The fixture multiplier only affects attacking xG/xA.
+     * A player with no projected minutes cannot demonstrate that
+     * effect, regardless of their historical per-90 attacking rate.
+     */
+    $weightedMetrics =
+        is_array($form['weighted_metrics'] ?? null)
+            ? $form['weighted_metrics']
+            : [];
+
+    $attackingEvidence =
+        max(0.0, (float) ($weightedMetrics['expected_goals_per_90'] ?? 0))
+        + max(0.0, (float) ($weightedMetrics['expected_assists_per_90'] ?? 0));
+
+    if ($attackingEvidence <= 0.0) {
+        continue;
+    }
+
+    $minutesModel =
+        (new ExpectedMinutes())->calculate($player, $form);
+
+    $projectedMinutes =
+        max(0.0, (float) ($minutesModel['projected_minutes'] ?? 0));
+
+    if ($projectedMinutes <= 0.0) {
+        continue;
+    }
 
     $upcomingFixtures =
         $fixtureRepository
@@ -590,6 +623,29 @@ foreach (
     }
 
 
+    /*
+     * Rank candidates by the size of the genuine fixture-sensitive
+     * attacking signal, not raw per-90 output. This avoids selecting
+     * a rarely-used player whose projection rounds to zero.
+     * A two-decimal xP difference needs a meaningful signal.
+     */
+    $opportunities = array_map(
+        'multiGwDifficultyToOpportunity',
+        $difficultyValues
+    );
+
+    $opportunitySpread =
+        max($opportunities) - min($opportunities);
+
+    $fixtureSensitivity =
+        $attackingEvidence
+        * ($projectedMinutes / 90.0)
+        * ($opportunitySpread / 200.0);
+
+    if ($fixtureSensitivity <= $bestFixtureSensitivity) {
+        continue;
+    }
+
     $selectedPlayer =
         $player;
 
@@ -606,7 +662,8 @@ foreach (
         $contexts;
 
 
-    break;
+    $bestFixtureSensitivity =
+        $fixtureSensitivity;
 }
 
 
